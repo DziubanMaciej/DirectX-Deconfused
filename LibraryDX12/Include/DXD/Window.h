@@ -1,15 +1,29 @@
 #pragma once
 
 #include "DXD/Export.h"
+#include "DXD/NonCopyableAndMovable.h"
+#include "DXD/ExternalHeadersWrappers/windows.h"
 
 #include <memory>
+#include <string>
 
-class EXPORT Window {
+class EXPORT Window : NonCopyableAndMovable {
+public:
+    struct Bounds {
+        int x, y, width, height;
+    };
+
+    virtual void setShowState(int nCmdShow) = 0;
+    virtual void show() = 0;
+    virtual void messageLoop() = 0;
+    virtual void destroy() = 0;
+    virtual HINSTANCE getInstance() const = 0;
+    virtual HWND getHandle() const = 0;
+
+    virtual ~Window() = default;
+    static std::unique_ptr<Window> create(const std::wstring &windowClassName, const std::wstring &windowTitle, HINSTANCE hInstance, Bounds bounds);
+    static std::unique_ptr<Window> create(const std::wstring &windowClassName, const std::wstring &windowTitle, HINSTANCE hInstance, int width, int height);
+
 protected:
     Window() = default;
-
-public:
-    static std::unique_ptr<Window> createWindow(int width, int height);
-
-    virtual void printSomething() = 0;
 };
