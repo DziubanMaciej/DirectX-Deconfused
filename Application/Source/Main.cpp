@@ -2,8 +2,9 @@
 
 #include <iostream>
 
-int main() {
-    auto window = Window::createWindow(10, 20);
-    window->printSomething();
-    std::cin.get();
+int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int show) {
+    auto window = Window::create(L"asd", L"XDD", hInstance, 300, 300);
+    window->show();
+    window->messageLoop();
+    return 0;
 }
