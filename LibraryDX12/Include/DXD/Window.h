@@ -7,6 +7,7 @@
 #include <memory>
 #include <string>
 
+namespace DXD {
 class Application;
 
 class EXPORT Window : NonCopyableAndMovable {
@@ -29,3 +30,4 @@ public:
 protected:
     Window() = default;
 };
+} // namespace DXD

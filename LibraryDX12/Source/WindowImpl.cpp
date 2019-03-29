@@ -7,6 +7,7 @@
 
 // -------------------------------------------------------------------------------- Creating
 
+namespace DXD {
 std::unique_ptr<Window> Window::create(Application &application, const std::wstring &windowClassName, const std::wstring &windowTitle,
                                        HINSTANCE hInstance, Bounds bounds) {
     return std::unique_ptr<Window>{new WindowImpl(application, windowClassName, windowTitle, hInstance, bounds)};
@@ -28,8 +29,9 @@ std::unique_ptr<Window> Window::create(Application &application, const std::wstr
     Window::Bounds bounds{windowLeft, windowTop, windowWidth, windowHeight};
     return Window::create(application, windowClassName, windowTitle, hInstance, bounds);
 }
+} // namespace DXD
 
-WindowImpl::WindowImpl(Application &application, const std::wstring &windowClassName, const std::wstring &windowTitle, HINSTANCE hInstance, Bounds bounds)
+WindowImpl::WindowImpl(DXD::Application &application, const std::wstring &windowClassName, const std::wstring &windowTitle, HINSTANCE hInstance, Bounds bounds)
     : windowClassName(windowClassName), hInstance(hInstance),
       application(*static_cast<ApplicationImpl *>(&application)) {
     registerClass();

@@ -4,9 +4,11 @@
 
 // ------------------------------------------------------------- Creating
 
+namespace DXD {
 std::unique_ptr<Application> Application::create(bool debugLayer) {
     return std::unique_ptr<Application>{new ApplicationImpl(debugLayer)};
 }
+} // namespace DXD
 
 ApplicationImpl::ApplicationImpl(bool debugLayer) : factory(createFactory(debugLayer)),
                                                     adapter(createAdapter(factory, false)),
@@ -68,10 +70,10 @@ ID3D12DevicePtr ApplicationImpl::createDevice(IDXGIAdapterPtr &adapter, bool deb
 
 // ------------------------------------------------------------- Accessors
 
-void ApplicationImpl::setCallbackHandler(CallbackHandler *callbackHandler) {
+void ApplicationImpl::setCallbackHandler(DXD::CallbackHandler *callbackHandler) {
     this->callbackHandler = callbackHandler;
 }
 
-CallbackHandler *ApplicationImpl::getCallbackHandler() const {
+DXD::CallbackHandler *ApplicationImpl::getCallbackHandler() const {
     return this->callbackHandler;
 }

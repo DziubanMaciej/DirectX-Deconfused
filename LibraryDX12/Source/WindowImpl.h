@@ -4,10 +4,10 @@
 
 class ApplicationImpl;
 
-class WindowImpl : public Window {
+class WindowImpl : public DXD::Window {
 protected:
-    friend class Window;
-    WindowImpl(Application &application, const std::wstring &windowClassName, const std::wstring &windowTitle, HINSTANCE hInstanc, Bounds bounds);
+    friend class DXD::Window;
+    WindowImpl(DXD::Application &application, const std::wstring &windowClassName, const std::wstring &windowTitle, HINSTANCE hInstanc, Bounds bounds);
 
 public:
     ~WindowImpl() override;

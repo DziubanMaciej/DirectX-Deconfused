@@ -5,6 +5,7 @@
 #include <memory>
 #include <string>
 
+namespace DXD {
 class Window;
 
 class EXPORT CallbackHandler {
@@ -15,3 +16,4 @@ public:
     virtual void onKeyUp(unsigned int vkCode) {}
     virtual void onUpdate() {}
 };
+} // namespace DXD

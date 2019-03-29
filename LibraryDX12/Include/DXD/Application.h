@@ -8,6 +8,7 @@
 #include <memory>
 #include <string>
 
+namespace DXD {
 class EXPORT Application : NonCopyableAndMovable {
 public:
     virtual void setCallbackHandler(CallbackHandler *callbackHandler) = 0;
@@ -18,3 +19,4 @@ public:
 protected:
     Application() = default;
 };
+} // namespace DXD

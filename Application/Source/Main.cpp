@@ -5,7 +5,7 @@
 #include <iostream>
 #include <string>
 
-struct MyCallbackHandler : CallbackHandler {
+struct MyCallbackHandler : DXD::CallbackHandler {
     void onResize(int newWidth, int newHeight) override {
         OutputDebugString((std::to_string(newWidth) + ", " + std::to_string(newHeight) + "\n").c_str());
     }
@@ -13,9 +13,9 @@ struct MyCallbackHandler : CallbackHandler {
 
 int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int show) {
     MyCallbackHandler h;
-    auto application = Application::create(true);
+    auto application = DXD::Application::create(true);
     application->setCallbackHandler(&h);
-    auto window = Window::create(*application, L"myClass", L"myWindow", hInstance, 300, 300);
+    auto window = DXD::Window::create(*application, L"myClass", L"myWindow", hInstance, 300, 300);
     window->show();
     window->messageLoop();
     return 0;

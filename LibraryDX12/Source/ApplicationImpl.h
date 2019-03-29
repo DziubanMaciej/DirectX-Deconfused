@@ -3,14 +3,14 @@
 #include "DXD/Application.h"
 #include "DXD/ExternalHeadersWrappers/dxgi.h"
 
-class ApplicationImpl : public Application {
+class ApplicationImpl : public DXD::Application {
 protected:
-    friend class Application;
+    friend class DXD::Application;
     ApplicationImpl(bool debugLayer);
 
 public:
-    void setCallbackHandler(CallbackHandler *callbackHandler) override;
-    CallbackHandler *getCallbackHandler() const;
+    void setCallbackHandler(DXD::CallbackHandler *callbackHandler) override;
+    DXD::CallbackHandler *getCallbackHandler() const;
 
     auto getFactory() { return factory; }
     auto getAdapter() { return adapter; }
@@ -21,7 +21,7 @@ protected:
     static IDXGIAdapterPtr createAdapter(IDXGIFactoryPtr factory, bool useWarp);
     static ID3D12DevicePtr createDevice(IDXGIAdapterPtr &adapter, bool debugLayer);
 
-    CallbackHandler *callbackHandler;
+    DXD::CallbackHandler *callbackHandler;
     IDXGIFactoryPtr factory;
     IDXGIAdapterPtr adapter;
     ID3D12DevicePtr device;
