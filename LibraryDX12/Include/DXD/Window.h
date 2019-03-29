@@ -7,6 +7,8 @@
 #include <memory>
 #include <string>
 
+class Application;
+
 class EXPORT Window : NonCopyableAndMovable {
 public:
     struct Bounds {
@@ -21,8 +23,8 @@ public:
     virtual HWND getHandle() const = 0;
 
     virtual ~Window() = default;
-    static std::unique_ptr<Window> create(const std::wstring &windowClassName, const std::wstring &windowTitle, HINSTANCE hInstance, Bounds bounds);
-    static std::unique_ptr<Window> create(const std::wstring &windowClassName, const std::wstring &windowTitle, HINSTANCE hInstance, int width, int height);
+    static std::unique_ptr<Window> create(Application &application, const std::wstring &windowClassName, const std::wstring &windowTitle, HINSTANCE hInstance, Bounds bounds);
+    static std::unique_ptr<Window> create(Application &application, const std::wstring &windowClassName, const std::wstring &windowTitle, HINSTANCE hInstance, int width, int height);
 
 protected:
     Window() = default;

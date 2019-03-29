@@ -1,16 +1,18 @@
 #include "WindowImpl.h"
 
+#include "Source/ApplicationImpl.h"
+
 #include <algorithm>
 #include <cassert>
 
 // -------------------------------------------------------------------------------- Creating
 
-std::unique_ptr<Window> Window::create(const std::wstring &windowClassName, const std::wstring &windowTitle,
+std::unique_ptr<Window> Window::create(Application &application, const std::wstring &windowClassName, const std::wstring &windowTitle,
                                        HINSTANCE hInstance, Bounds bounds) {
-    return std::unique_ptr<Window>{new WindowImpl(windowClassName, windowTitle, hInstance, bounds)};
+    return std::unique_ptr<Window>{new WindowImpl(application, windowClassName, windowTitle, hInstance, bounds)};
 }
 
-std::unique_ptr<Window> Window::create(const std::wstring &windowClassName, const std::wstring &windowTitle,
+std::unique_ptr<Window> Window::create(Application &application, const std::wstring &windowClassName, const std::wstring &windowTitle,
                                        HINSTANCE hInstance, int width, int height) {
     const auto screenWidth = ::GetSystemMetrics(SM_CXSCREEN);
     const auto screenHeight = ::GetSystemMetrics(SM_CYSCREEN);
@@ -24,11 +26,12 @@ std::unique_ptr<Window> Window::create(const std::wstring &windowClassName, cons
     const auto windowTop = std::max<int>(0, (screenHeight - windowHeight) / 2);
 
     Window::Bounds bounds{windowLeft, windowTop, windowWidth, windowHeight};
-    return Window::create(windowClassName, windowTitle, hInstance, bounds);
+    return Window::create(application, windowClassName, windowTitle, hInstance, bounds);
 }
 
-WindowImpl::WindowImpl(const std::wstring &windowClassName, const std::wstring &windowTitle, HINSTANCE hInstance, Bounds bounds)
-    : windowClassName(windowClassName), hInstance(hInstance) {
+WindowImpl::WindowImpl(Application &application, const std::wstring &windowClassName, const std::wstring &windowTitle, HINSTANCE hInstance, Bounds bounds)
+    : windowClassName(windowClassName), hInstance(hInstance),
+      application(*static_cast<ApplicationImpl *>(&application)) {
     registerClass();
     this->windowHandle = createWindow(windowTitle, bounds);
 }
@@ -112,19 +115,57 @@ LRESULT WindowImpl::windowProcNative(HWND windowHandle, UINT message, WPARAM wPa
 LRESULT WindowImpl::windowProcImpl(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam) {
     switch (message) {
     case WM_PAINT:
+        handlePaint();
         break;
     case WM_SYSKEYDOWN:
     case WM_KEYDOWN:
-        if (wParam == VK_ESCAPE) {
-            destroy();
-        }
+        handleKeyDown(static_cast<unsigned int>(wParam));
+        break;
+    case WM_SYSKEYUP:
+    case WM_KEYUP:
+        handleKeyUp(static_cast<unsigned int>(wParam));
         break;
     case WM_SIZE:
+        handleResize();
         break;
     default:
         return ::DefWindowProcW(windowHandle, message, wParam, lParam);
     }
     return 0;
+}
+
+// -------------------------------------------------------------------------------- Window events handlers
+
+void WindowImpl::handlePaint() {
+    auto handler = application.getCallbackHandler();
+    if (handler != nullptr) {
+        handler->onUpdate();
+    }
+}
+
+void WindowImpl::handleKeyDown(unsigned int vkCode) {
+    auto handler = application.getCallbackHandler();
+    if (handler != nullptr) {
+        handler->onKeyDown(vkCode);
+    }
+}
+
+void WindowImpl::handleKeyUp(unsigned int vkCode) {
+    auto handler = application.getCallbackHandler();
+    if (handler != nullptr) {
+        handler->onKeyUp(vkCode);
+    }
+}
+
+void WindowImpl::handleResize() {
+    auto handler = application.getCallbackHandler();
+    if (handler != nullptr) {
+        RECT clientRect;
+        ::GetClientRect(windowHandle, &clientRect);
+        const auto newWidth = clientRect.right - clientRect.left;
+        const auto newHeight = clientRect.bottom - clientRect.top;
+        handler->onResize(newWidth, newHeight);
+    }
 }
 
 // -------------------------------------------------------------------------------- Window instance accessors

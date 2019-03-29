@@ -2,10 +2,12 @@
 
 #include "DXD/Window.h"
 
-class WindowImpl : Window {
+class ApplicationImpl;
+
+class WindowImpl : public Window {
 protected:
     friend class Window;
-    WindowImpl(const std::wstring &windowClassName, const std::wstring &windowTitle, HINSTANCE hInstanc, Bounds bounds);
+    WindowImpl(Application &application, const std::wstring &windowClassName, const std::wstring &windowTitle, HINSTANCE hInstanc, Bounds bounds);
 
 public:
     ~WindowImpl() override;
@@ -29,6 +31,12 @@ protected:
     static LRESULT CALLBACK windowProcNative(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam); // called by win32
     LRESULT windowProcImpl(HWND windowHandle, UINT message, WPARAM wParam, LPARAM lParam);                   // actual procedure, called by windowProcNative
 
+    // Window events handlers
+    void handlePaint();
+    void handleKeyDown(unsigned int vkCode);
+    void handleKeyUp(unsigned int vkCode);
+    void handleResize();
+
     // Window instance accessors (for WNDPROC usage)
     static void setWindowInstanceForHandle(HWND windowHandle, WindowImpl *windowProcImpl);
     static WindowImpl *getWindowInstanceFromHandle(HWND windowHandle);
@@ -36,5 +44,6 @@ protected:
 
     const std::wstring windowClassName;
     const HINSTANCE hInstance;
+    ApplicationImpl &application;
     HWND windowHandle;
 };

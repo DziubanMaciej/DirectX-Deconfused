@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ExternalHeadersWrappers/windows.h"
+#include "DXD/ExternalHeadersWrappers/windows.h"
 #include <exception>
 
 inline void throwIfFailed(HRESULT hr) {

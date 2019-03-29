@@ -1,9 +1,21 @@
+#include "DXD/Application.h"
+#include "DXD/CallbackHandler.h"
 #include "DXD/Window.h"
 
 #include <iostream>
+#include <string>
+
+struct MyCallbackHandler : CallbackHandler {
+    void onResize(int newWidth, int newHeight) override {
+        OutputDebugString((std::to_string(newWidth) + ", " + std::to_string(newHeight) + "\n").c_str());
+    }
+};
 
 int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int show) {
-    auto window = Window::create(L"asd", L"XDD", hInstance, 300, 300);
+    MyCallbackHandler h;
+    auto application = Application::create(true);
+    application->setCallbackHandler(&h);
+    auto window = Window::create(*application, L"myClass", L"myWindow", hInstance, 300, 300);
     window->show();
     window->messageLoop();
     return 0;
