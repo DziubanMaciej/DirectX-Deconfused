@@ -167,12 +167,21 @@ void WindowImpl::handleKeyUp(unsigned int vkCode) {
 }
 
 void WindowImpl::handleResize() {
+    RECT clientRect = {};
+    ::GetClientRect(windowHandle, &clientRect);
+    const int newWidth = clientRect.right - clientRect.left;
+    const int newHeight = clientRect.bottom - clientRect.top;
+
+
+    if (swapChain.getWidth() != newWidth || swapChain.getHeight() != newHeight) {
+        // Finish all work
+        application.flushAllQueues();
+        swapChain.resize(newWidth, newHeight);
+    }
+
+
     auto handler = application.getCallbackHandler();
     if (handler != nullptr) {
-        RECT clientRect;
-        ::GetClientRect(windowHandle, &clientRect);
-        const auto newWidth = clientRect.right - clientRect.left;
-        const auto newHeight = clientRect.bottom - clientRect.top;
         handler->onResize(newWidth, newHeight);
     }
 }

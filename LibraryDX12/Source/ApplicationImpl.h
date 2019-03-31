@@ -13,6 +13,8 @@ public:
     void setCallbackHandler(DXD::CallbackHandler *callbackHandler) override;
     DXD::CallbackHandler *getCallbackHandler() const;
 
+    void flushAllQueues();
+
     auto getFactory() { return factory; }
     auto getAdapter() { return adapter; }
     auto getDevice() { return device; }

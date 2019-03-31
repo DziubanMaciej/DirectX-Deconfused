@@ -78,3 +78,9 @@ void ApplicationImpl::setCallbackHandler(DXD::CallbackHandler *callbackHandler) 
 DXD::CallbackHandler *ApplicationImpl::getCallbackHandler() const {
     return this->callbackHandler;
 }
+
+void ApplicationImpl::flushAllQueues() {
+    Event event; // TODO create event in one place?
+    copyCommandQueue.flush(event);
+    directCommandQueue.flush(event);
+}
