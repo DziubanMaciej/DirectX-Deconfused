@@ -1,8 +1,8 @@
 #pragma once
 
 #include "DXD/ExternalHeadersWrappers/windows.h"
-#include <wrl.h>
 #include <d3d12.h>
+#include <wrl.h>
 
 using ID3D12CommandQueuePtr = Microsoft::WRL::ComPtr<ID3D12CommandQueue>;
 using ID3D12DevicePtr = Microsoft::WRL::ComPtr<ID3D12Device4>;

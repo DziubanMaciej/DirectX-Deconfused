@@ -3,9 +3,8 @@
 #include "Source/Event.h"
 #include "Source/Fence.h"
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
-
-#include <vector>
 #include <deque>
+#include <vector>
 
 /*
     CommandAllocator cannot be reused until CommandList allocated by it has finished executing.

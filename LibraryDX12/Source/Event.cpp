@@ -1,5 +1,4 @@
 #include "Event.h"
-
 #include <cassert>
 
 Event::Event() : Event(false) {}

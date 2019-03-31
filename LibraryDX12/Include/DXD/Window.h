@@ -3,7 +3,6 @@
 #include "DXD/Export.h"
 #include "DXD/NonCopyableAndMovable.h"
 #include "DXD/ExternalHeadersWrappers/windows.h"
-
 #include <memory>
 #include <string>
 

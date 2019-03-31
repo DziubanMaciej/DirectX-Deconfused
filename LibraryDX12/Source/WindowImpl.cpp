@@ -1,7 +1,5 @@
 #include "WindowImpl.h"
-
 #include "Source/ApplicationImpl.h"
-
 #include <algorithm>
 #include <cassert>
 

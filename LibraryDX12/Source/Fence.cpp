@@ -1,5 +1,4 @@
 #include "Fence.h"
-
 #include "Source/Event.h"
 #include "Utility/ThrowIfFailed.h"
 
@@ -40,7 +39,6 @@ bool Fence::isComplete(UINT64 fenceValue) const {
     return fence->GetCompletedValue() >= fenceValue;
 }
 
-bool Fence::getFenceValue() const
-{
+bool Fence::getFenceValue() const {
     return fenceValue;
 }

@@ -1,5 +1,4 @@
 #include "CommandQueue.h"
-
 #include "Utility/ThrowIfFailed.h"
 #include <cassert>
 

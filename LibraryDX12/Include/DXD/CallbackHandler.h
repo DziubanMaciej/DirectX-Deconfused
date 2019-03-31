@@ -1,7 +1,6 @@
 #pragma once
 
 #include "DXD/Export.h"
-
 #include <memory>
 #include <string>
 

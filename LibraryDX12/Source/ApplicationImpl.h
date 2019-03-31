@@ -1,8 +1,8 @@
 #pragma once
 
 #include "DXD/Application.h"
-#include "DXD/ExternalHeadersWrappers/dxgi.h"
 #include "Source/CommandQueue.h"
+#include "DXD/ExternalHeadersWrappers/dxgi.h"
 
 class ApplicationImpl : public DXD::Application {
 protected:

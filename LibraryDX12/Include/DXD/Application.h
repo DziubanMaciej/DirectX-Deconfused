@@ -2,9 +2,8 @@
 
 #include "DXD/CallbackHandler.h"
 #include "DXD/Export.h"
-#include "DXD/ExternalHeadersWrappers/d3d12.h"
 #include "DXD/NonCopyableAndMovable.h"
-
+#include "DXD/ExternalHeadersWrappers/d3d12.h"
 #include <memory>
 #include <string>
 
