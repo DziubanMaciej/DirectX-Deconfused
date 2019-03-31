@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DXD/Window.h"
+#include "Source/SwapChain.h"
 
 class ApplicationImpl;
 
@@ -22,6 +23,7 @@ public:
 
 protected:
     // Construction/destruction helpers
+    HWND registerClassAndCreateWindow(const std::wstring &windowTitle, Bounds bounds);
     void registerClass();
     HWND createWindow(const std::wstring &windowTitle, Bounds bounds);
     void destroyWindow();
@@ -42,8 +44,11 @@ protected:
     static WindowImpl *getWindowInstanceFromHandle(HWND windowHandle);
     static WindowImpl *getWindow(HWND windowHandle, UINT message, LPARAM lParam);
 
+    ApplicationImpl &application;
     const std::wstring windowClassName;
     const HINSTANCE hInstance;
-    ApplicationImpl &application;
-    HWND windowHandle;
+    const HWND windowHandle;
+    SwapChain swapChain;
+
+    static constexpr uint32_t swapChainBufferCount = 3u; // TODO make this configurable from api?
 };

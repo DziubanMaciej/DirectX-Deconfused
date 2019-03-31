@@ -30,10 +30,14 @@ std::unique_ptr<Window> Window::create(Application &application, const std::wstr
 } // namespace DXD
 
 WindowImpl::WindowImpl(DXD::Application &application, const std::wstring &windowClassName, const std::wstring &windowTitle, HINSTANCE hInstance, Bounds bounds)
-    : windowClassName(windowClassName), hInstance(hInstance),
-      application(*static_cast<ApplicationImpl *>(&application)) {
+    : application(*static_cast<ApplicationImpl *>(&application)), windowClassName(windowClassName), hInstance(hInstance),
+      windowHandle(registerClassAndCreateWindow(windowTitle, bounds)),
+      swapChain(windowHandle, this->application.getDevice(), this->application.getFactory(), this->application.getDirectCommandQueue(), bounds.width, bounds.height, swapChainBufferCount) {
+}
+
+HWND WindowImpl::registerClassAndCreateWindow(const std::wstring &windowTitle, Bounds bounds) {
     registerClass();
-    this->windowHandle = createWindow(windowTitle, bounds);
+    return createWindow(windowTitle, bounds);
 }
 
 void WindowImpl::registerClass() {
@@ -135,6 +139,9 @@ LRESULT WindowImpl::windowProcImpl(HWND windowHandle, UINT message, WPARAM wPara
 }
 
 // -------------------------------------------------------------------------------- Window events handlers
+
+#include "Utility/ThrowIfFailed.h"
+#include "DXD/ExternalHeadersWrappers/d3dx12.h"
 
 void WindowImpl::handlePaint() {
     auto handler = application.getCallbackHandler();

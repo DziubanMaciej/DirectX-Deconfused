@@ -16,6 +16,8 @@ public:
     auto getFactory() { return factory; }
     auto getAdapter() { return adapter; }
     auto getDevice() { return device; }
+    auto &getDirectCommandQueue() { return directCommandQueue; }
+    auto &getCopyCommandQueue() { return copyCommandQueue; }
 
 protected:
     static IDXGIFactoryPtr createFactory(bool debugLayer);
