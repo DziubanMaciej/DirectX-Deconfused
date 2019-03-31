@@ -8,6 +8,7 @@
 
 namespace DXD {
 class Application;
+class Scene;
 
 class EXPORT Window : NonCopyableAndMovable {
 public:
@@ -15,6 +16,7 @@ public:
         int x, y, width, height;
     };
 
+    virtual void setScene(Scene &scene) = 0;
     virtual void setShowState(int nCmdShow) = 0;
     virtual void show() = 0;
     virtual void messageLoop() = 0;

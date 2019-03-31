@@ -4,6 +4,7 @@
 #include "Source/SwapChain.h"
 
 class ApplicationImpl;
+class SceneImpl;
 
 class WindowImpl : public DXD::Window {
 protected:
@@ -13,6 +14,7 @@ protected:
 public:
     ~WindowImpl() override;
 
+    void setScene(DXD::Scene &scene) override;
     void setShowState(int nCmdShow) override;
     void show() override;
     void messageLoop() override;
@@ -49,6 +51,7 @@ protected:
     const HINSTANCE hInstance;
     const HWND windowHandle;
     SwapChain swapChain;
+    SceneImpl *scene;
 
     static constexpr uint32_t swapChainBufferCount = 3u; // TODO make this configurable from api?
 };

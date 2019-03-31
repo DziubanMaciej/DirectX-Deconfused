@@ -1,5 +1,6 @@
 #include "WindowImpl.h"
 #include "Source/ApplicationImpl.h"
+#include "Source/SceneImpl.h"
 #include <algorithm>
 #include <cassert>
 
@@ -140,13 +141,14 @@ LRESULT WindowImpl::windowProcImpl(HWND windowHandle, UINT message, WPARAM wPara
 
 // -------------------------------------------------------------------------------- Window events handlers
 
-#include "Utility/ThrowIfFailed.h"
-#include "DXD/ExternalHeadersWrappers/d3dx12.h"
-
 void WindowImpl::handlePaint() {
     auto handler = application.getCallbackHandler();
     if (handler != nullptr) {
         handler->onUpdate();
+    }
+
+    if (scene != nullptr) {
+        scene->render(application, swapChain);
     }
 }
 
@@ -197,6 +199,10 @@ WindowImpl *WindowImpl::getWindow(HWND windowHandle, UINT message, LPARAM lParam
 }
 
 // --------------------------------------------------------------------------------
+
+void WindowImpl::setScene(DXD::Scene &scene) {
+    this->scene = reinterpret_cast<SceneImpl *>(&scene);
+}
 
 void WindowImpl::setShowState(int nCmdShow) {
     ::ShowWindow(getHandle(), nCmdShow);

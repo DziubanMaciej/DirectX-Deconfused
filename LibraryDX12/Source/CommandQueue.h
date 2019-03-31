@@ -57,6 +57,7 @@ public:
 
     auto getCommandQueue() { return commandQueue; }
     auto &getFence() { return fence; }
+    auto &getCommandAllocatorManager() { return commandAllocatorManager; }
 
     uint64_t executeCommandListsAndSignal(std::vector<ID3D12CommandList *> &commandListsPtrs);
     uint64_t executeCommandListsAndSignal(std::vector<ID3D12GraphicsCommandListPtr> &commandListComPtrs);
