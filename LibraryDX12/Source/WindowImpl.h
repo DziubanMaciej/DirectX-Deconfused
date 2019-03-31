@@ -2,6 +2,7 @@
 
 #include "DXD/Window.h"
 #include "Source/SwapChain.h"
+#include "DXD/ExternalHeadersWrappers/windows.h"
 
 class ApplicationImpl;
 class SceneImpl;
@@ -14,6 +15,7 @@ protected:
 public:
     ~WindowImpl() override;
 
+    void setFullscreen(bool fullscreen) override;
     void setScene(DXD::Scene &scene) override;
     void setShowState(int nCmdShow) override;
     void show() override;
@@ -46,12 +48,19 @@ protected:
     static WindowImpl *getWindowInstanceFromHandle(HWND windowHandle);
     static WindowImpl *getWindow(HWND windowHandle, UINT message, LPARAM lParam);
 
+    struct FullscreenData {
+        bool enabled = false;
+        Bounds savedBounds = {};
+        LONG savedStyle = 0;
+    };
+
     ApplicationImpl &application;
     const std::wstring windowClassName;
     const HINSTANCE hInstance;
     const HWND windowHandle;
     SwapChain swapChain;
     SceneImpl *scene;
+    FullscreenData fullscreenData; // Used to restore position and size after exiting fullscreen mode
 
     static constexpr uint32_t swapChainBufferCount = 3u; // TODO make this configurable from api?
 };

@@ -16,6 +16,7 @@ public:
         int x, y, width, height;
     };
 
+    virtual void setFullscreen(bool fullscreen) = 0;
     virtual void setScene(Scene &scene) = 0;
     virtual void setShowState(int nCmdShow) = 0;
     virtual void show() = 0;

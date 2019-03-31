@@ -172,13 +172,11 @@ void WindowImpl::handleResize() {
     const int newWidth = clientRect.right - clientRect.left;
     const int newHeight = clientRect.bottom - clientRect.top;
 
-
     if (swapChain.getWidth() != newWidth || swapChain.getHeight() != newHeight) {
         // Finish all work
         application.flushAllQueues();
         swapChain.resize(newWidth, newHeight);
     }
-
 
     auto handler = application.getCallbackHandler();
     if (handler != nullptr) {
@@ -208,6 +206,51 @@ WindowImpl *WindowImpl::getWindow(HWND windowHandle, UINT message, LPARAM lParam
 }
 
 // --------------------------------------------------------------------------------
+
+void WindowImpl::setFullscreen(bool fullscreen) {
+    if (fullscreenData.enabled == fullscreen) {
+        return;
+    }
+
+    if (fullscreen) {
+        // Store current bounds and style
+        RECT rect;
+        ::GetWindowRect(windowHandle, &rect);
+        fullscreenData.savedBounds.x = rect.left;
+        fullscreenData.savedBounds.y = rect.top;
+        fullscreenData.savedBounds.width = rect.right - rect.left;
+        fullscreenData.savedBounds.height = rect.bottom - rect.top;
+        fullscreenData.savedStyle = ::GetWindowLong(windowHandle, GWL_STYLE);
+
+        // Set the window style to a borderless window so the client area fills the entire screen.
+        UINT windowStyle = WS_OVERLAPPEDWINDOW & ~(WS_CAPTION | WS_SYSMENU | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
+        ::SetWindowLongW(windowHandle, GWL_STYLE, windowStyle);
+
+        // Query the name of monitor that is nearest to the window. Required to set dimensions for multi-monitor setup
+        HMONITOR hMonitor = ::MonitorFromWindow(windowHandle, MONITOR_DEFAULTTONEAREST);
+        MONITORINFOEX monitorInfo = {};
+        monitorInfo.cbSize = sizeof(MONITORINFOEX);
+        ::GetMonitorInfo(hMonitor, &monitorInfo);
+
+        // Set dimensions to size of the monitor and maximize
+        ::SetWindowPos(windowHandle, HWND_TOPMOST,
+                       monitorInfo.rcMonitor.left,
+                       monitorInfo.rcMonitor.top,
+                       monitorInfo.rcMonitor.right - monitorInfo.rcMonitor.left,
+                       monitorInfo.rcMonitor.bottom - monitorInfo.rcMonitor.top,
+                       SWP_FRAMECHANGED | SWP_NOACTIVATE);
+        ::ShowWindow(windowHandle, SW_MAXIMIZE);
+    } else {
+        // Restore all the window decorators.
+        ::SetWindowLong(windowHandle, GWL_STYLE, fullscreenData.savedStyle);
+        ::SetWindowPos(windowHandle, HWND_NOTOPMOST,
+                       fullscreenData.savedBounds.x, fullscreenData.savedBounds.y,
+                       fullscreenData.savedBounds.width, fullscreenData.savedBounds.height,
+                       SWP_FRAMECHANGED | SWP_NOACTIVATE);
+        ::ShowWindow(windowHandle, SW_NORMAL);
+    }
+    fullscreenData.enabled = fullscreen;
+}
 
 void WindowImpl::setScene(DXD::Scene &scene) {
     this->scene = reinterpret_cast<SceneImpl *>(&scene);
