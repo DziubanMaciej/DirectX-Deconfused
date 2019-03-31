@@ -12,7 +12,9 @@ std::unique_ptr<Application> Application::create(bool debugLayer) {
 
 ApplicationImpl::ApplicationImpl(bool debugLayer) : factory(createFactory(debugLayer)),
                                                     adapter(createAdapter(factory, false)),
-                                                    device(createDevice(adapter, debugLayer)) {}
+                                                    device(createDevice(adapter, debugLayer)),
+                                                    copyCommandQueue(device, D3D12_COMMAND_LIST_TYPE_COPY),
+                                                    directCommandQueue(device, D3D12_COMMAND_LIST_TYPE_DIRECT) {}
 
 IDXGIFactoryPtr ApplicationImpl::createFactory(bool debugLayer) {
     IDXGIFactoryPtr factory;

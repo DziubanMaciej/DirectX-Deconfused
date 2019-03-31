@@ -2,6 +2,7 @@
 
 #include "DXD/Application.h"
 #include "DXD/ExternalHeadersWrappers/dxgi.h"
+#include "Source/CommandQueue.h"
 
 class ApplicationImpl : public DXD::Application {
 protected:
@@ -25,4 +26,6 @@ protected:
     IDXGIFactoryPtr factory;
     IDXGIAdapterPtr adapter;
     ID3D12DevicePtr device;
+    CommandQueue copyCommandQueue;
+    CommandQueue directCommandQueue;
 };
