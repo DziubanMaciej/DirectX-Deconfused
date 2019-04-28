@@ -3,6 +3,7 @@
 #include "DXD/NonCopyableAndMovable.h"
 #include "DXD/ExternalHeadersWrappers/d3dx12.h"
 #include <cstdint>
+#include <vector>
 
 class CommandAllocatorManager;
 
@@ -10,6 +11,14 @@ class CommandList : DXD::NonCopyableAndMovable {
 public:
     CommandList(CommandAllocatorManager &commandAllocatorManager, ID3D12PipelineState *initialPipelineState);
     ~CommandList();
+
+    void transitionBarrierSingle(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter);
+    void transitionBarrierMultiple(const std::vector<D3D12_RESOURCE_BARRIER> &barriers);
+
+    void clearRenderTargetView(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT colorRGBA[4]);
+    void clearDepthStencilView(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags, FLOAT depth, UINT8 stencil);
+
+    void close();
 
     void setFenceValue(uint64_t fenceValue) { this->fenceValue = fenceValue; }
 

@@ -23,32 +23,25 @@ void SceneImpl::setBackgroundColor(float r, float g, float b) {
 
 void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     auto &commandQueue = application.getDirectCommandQueue();
-    CommandList _commandList{commandQueue.getCommandAllocatorManager(), nullptr};
-    const auto commandList = _commandList.getCommandList();
+    CommandList commandList{commandQueue.getCommandAllocatorManager(), nullptr};
     const auto &backBuffer = swapChain.getCurrentBackBuffer();
 
     // Transition to RENDER_TARGET
-    const auto renderTargetTransition = CD3DX12_RESOURCE_BARRIER::Transition(backBuffer.Get(),
-                                                                             D3D12_RESOURCE_STATE_PRESENT,
-                                                                             D3D12_RESOURCE_STATE_RENDER_TARGET);
-    commandList->ResourceBarrier(1, &renderTargetTransition);
+    commandList.transitionBarrierSingle(backBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     // Render (clear color)
     const FLOAT clearColor[] = {0.0f, 0.8f, 0.8f};
-    commandList->ClearRenderTargetView(swapChain.getCurrentBackBufferDescriptor(), clearColor, 0, nullptr);
-    commandList->ClearDepthStencilView(swapChain.getDepthStencilBufferDescriptor(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0, 0, nullptr);
+    commandList.clearRenderTargetView(swapChain.getCurrentBackBufferDescriptor(), clearColor);
+    commandList.clearDepthStencilView(swapChain.getDepthStencilBufferDescriptor(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
     // Transition to PRESENT
-    CD3DX12_RESOURCE_BARRIER presentTransition = CD3DX12_RESOURCE_BARRIER::Transition(backBuffer.Get(),
-                                                                                      D3D12_RESOURCE_STATE_RENDER_TARGET,
-                                                                                      D3D12_RESOURCE_STATE_PRESENT);
-    commandList->ResourceBarrier(1, &presentTransition);
+    commandList.transitionBarrierSingle(backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 
     // Close command list
-    throwIfFailed(commandList->Close());
+    commandList.close();
 
     // Execute and register obtained allocator and lists to the manager
-    std::vector<CommandList *> commandLists{&_commandList};
+    std::vector<CommandList *> commandLists{&commandList};
     const uint64_t fenceValue = commandQueue.executeCommandListsAndSignal(commandLists);
 
     // Present (swap back buffers) and wait for next frame's fence
