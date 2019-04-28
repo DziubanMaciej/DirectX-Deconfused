@@ -20,28 +20,21 @@ ID3D12CommandAllocatorPtr CommandAllocatorManager::getCommandAllocator() {
 }
 
 ID3D12GraphicsCommandListPtr CommandAllocatorManager::getCommandList(ID3D12CommandAllocatorPtr commandAllocator, ID3D12PipelineState *initialPipelineState) {
-    if (!commandLists.empty()) {
-        // We can reuse any command list
-        ID3D12GraphicsCommandListPtr commandList = commandLists.front();
-        commandLists.pop_front();
-        commandList->Reset(commandAllocator.Get(), initialPipelineState);
-        return commandList;
-    } else {
-        // No command lists registered, create new
-        return createCommandList(commandAllocator, initialPipelineState);
+    if (commandLists.empty()) {
+        return nullptr;
     }
+
+    // We can reuse any command list
+    ID3D12GraphicsCommandListPtr commandList = commandLists.front();
+    commandLists.pop_front();
+    commandList->Reset(commandAllocator.Get(), initialPipelineState);
+    return commandList;
 }
 
 ID3D12CommandAllocatorPtr CommandAllocatorManager::createCommandAllocator() {
     ID3D12CommandAllocatorPtr commandAllocator;
     throwIfFailed(device->CreateCommandAllocator(type, IID_PPV_ARGS(&commandAllocator)));
     return commandAllocator;
-}
-
-ID3D12GraphicsCommandListPtr CommandAllocatorManager::createCommandList(ID3D12CommandAllocatorPtr commandAllocator, ID3D12PipelineState *initialPipelineState) {
-    ID3D12GraphicsCommandListPtr commandList;
-    throwIfFailed(device->CreateCommandList(0, type, commandAllocator.Get(), initialPipelineState, IID_PPV_ARGS(&commandList)));
-    return commandList;
 }
 
 void CommandAllocatorManager::registerAllocatorAndList(ID3D12CommandAllocatorPtr commandAllocator, ID3D12GraphicsCommandListPtr commandList, uint64_t fence) {

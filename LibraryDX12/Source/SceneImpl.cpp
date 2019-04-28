@@ -1,5 +1,6 @@
 #include "SceneImpl.h"
 #include "Source/ApplicationImpl.h"
+#include "Source/CommandList.h"
 #include "Source/CommandQueue.h"
 #include "Source/WindowImpl.h"
 #include "Utility/ThrowIfFailed.h"
@@ -22,9 +23,8 @@ void SceneImpl::setBackgroundColor(float r, float g, float b) {
 
 void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     auto &commandQueue = application.getDirectCommandQueue();
-    auto &commandAllocatorManager = commandQueue.getCommandAllocatorManager();
-    const auto commandAllocator = commandAllocatorManager.getCommandAllocator();
-    const auto commandList = commandAllocatorManager.getCommandList(commandAllocator, nullptr);
+    CommandList _commandList{commandQueue.getCommandAllocatorManager(), nullptr};
+    const auto commandList = _commandList.getCommandList();
     const auto &backBuffer = swapChain.getCurrentBackBuffer();
 
     // Transition to RENDER_TARGET
@@ -48,9 +48,8 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     throwIfFailed(commandList->Close());
 
     // Execute and register obtained allocator and lists to the manager
-    std::vector<ID3D12GraphicsCommandListPtr> commandLists{commandList};
+    std::vector<CommandList *> commandLists{&_commandList};
     const uint64_t fenceValue = commandQueue.executeCommandListsAndSignal(commandLists);
-    commandAllocatorManager.registerAllocatorAndList(commandAllocator, commandList, fenceValue);
 
     // Present (swap back buffers) and wait for next frame's fence
     swapChain.present(fenceValue);

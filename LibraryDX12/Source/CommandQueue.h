@@ -6,6 +6,8 @@
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
 #include <vector>
 
+class CommandList;
+
 class CommandQueue : DXD::NonCopyableAndMovable {
 public:
     CommandQueue(ID3D12DevicePtr device, D3D12_COMMAND_LIST_TYPE type);
@@ -15,7 +17,7 @@ public:
     auto &getCommandAllocatorManager() { return commandAllocatorManager; }
 
     uint64_t executeCommandListsAndSignal(std::vector<ID3D12CommandList *> &commandListsPtrs);
-    uint64_t executeCommandListsAndSignal(std::vector<ID3D12GraphicsCommandListPtr> &commandListComPtrs);
+    uint64_t executeCommandListsAndSignal(std::vector<CommandList*> &commandLists);
 
     void flush(Event &fenceEvent);
     void wait(Event &fenceEvent);

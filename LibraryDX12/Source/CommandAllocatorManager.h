@@ -37,9 +37,11 @@ public:
     // Allocator and list should be registered (added to queues) for later reuse after call to executeCommandLists().
     void registerAllocatorAndList(ID3D12CommandAllocatorPtr commandAllocator, ID3D12GraphicsCommandListPtr commandList, uint64_t fence);
 
+    auto getDevice() { return device; }
+    auto getType() { return type; }
+
 protected:
     ID3D12CommandAllocatorPtr createCommandAllocator();
-    ID3D12GraphicsCommandListPtr createCommandList(ID3D12CommandAllocatorPtr commandAllocator, ID3D12PipelineState *initialPipelineState);
     void validateCommandAllocators();
     void validateCommandLists();
 

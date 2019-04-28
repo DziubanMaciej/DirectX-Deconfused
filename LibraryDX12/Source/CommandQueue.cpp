@@ -1,4 +1,5 @@
 #include "CommandQueue.h"
+#include "Source/CommandList.h"
 #include "Utility/ThrowIfFailed.h"
 
 // ------------------------------------------------------------------------------ Creating
@@ -32,12 +33,18 @@ uint64_t CommandQueue::executeCommandListsAndSignal(std::vector<ID3D12CommandLis
     return fence.signal(commandQueue);
 }
 
-uint64_t CommandQueue::executeCommandListsAndSignal(std::vector<ID3D12GraphicsCommandListPtr> &commandListComPtrs) {
+uint64_t CommandQueue::executeCommandListsAndSignal(std::vector<CommandList*> &commandLists) {
     std::vector<ID3D12CommandList *> commandListPtrs;
-    for (auto &commandListComPtr : commandListComPtrs) {
-        commandListPtrs.push_back(commandListComPtr.Get());
+    for (auto &commandList : commandLists) {
+        commandListPtrs.push_back(commandList->getCommandList().Get());
     }
-    return executeCommandListsAndSignal(commandListPtrs);
+    const uint64_t fenceValue = executeCommandListsAndSignal(commandListPtrs);
+
+    for (auto &commandList : commandLists) {
+        commandList->setFenceValue(fenceValue);
+    }
+
+    return fenceValue;
 }
 
 // ------------------------------------------------------------------------------ Wait and signal
