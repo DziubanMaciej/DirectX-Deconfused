@@ -6,7 +6,7 @@
 CommandAllocatorManager::CommandAllocatorManager(ID3D12DevicePtr device, Fence &fence, D3D12_COMMAND_LIST_TYPE type)
     : device(device), fence(fence), type(type) {}
 
-ID3D12CommandAllocatorPtr CommandAllocatorManager::getCommandAllocator() {
+ID3D12CommandAllocatorPtr CommandAllocatorManager::retieveCommandAllocator() {
     if (!commandAllocators.empty() && fence.isComplete(commandAllocators.front().lastFence)) {
         // First allocator is done, we can reuse it
         ID3D12CommandAllocatorPtr result = commandAllocators.front().commandAllocator;
@@ -19,7 +19,7 @@ ID3D12CommandAllocatorPtr CommandAllocatorManager::getCommandAllocator() {
     }
 }
 
-ID3D12GraphicsCommandListPtr CommandAllocatorManager::getCommandList(ID3D12CommandAllocatorPtr commandAllocator, ID3D12PipelineState *initialPipelineState) {
+ID3D12GraphicsCommandListPtr CommandAllocatorManager::retrieveCommandList(ID3D12CommandAllocatorPtr commandAllocator, ID3D12PipelineState *initialPipelineState) {
     if (commandLists.empty()) {
         return nullptr;
     }

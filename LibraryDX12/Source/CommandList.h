@@ -7,9 +7,12 @@
 
 class CommandAllocatorManager;
 
+/// Class encapsulating DX12 command list
 class CommandList : DXD::NonCopyableAndMovable {
 public:
+    /// Retrieves command list and allocator from the commandAllocatorManager's pool
     CommandList(CommandAllocatorManager &commandAllocatorManager, ID3D12PipelineState *initialPipelineState);
+    /// Registers the command list and allocator back to the commandAllocatorManager for later reuse
     ~CommandList();
 
     void transitionBarrierSingle(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter);
