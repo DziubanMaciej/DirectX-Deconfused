@@ -28,8 +28,6 @@ public:
     auto getCommandList() { return commandList; }
 
 private:
-    ID3D12GraphicsCommandListPtr createCommandList(CommandAllocatorManager &commandAllocatorManager, ID3D12CommandAllocatorPtr commandAllocator, ID3D12PipelineState *initialPipelineState);
-
     CommandAllocatorManager &commandAllocatorManager;
     ID3D12CommandAllocatorPtr commandAllocator;
     ID3D12GraphicsCommandListPtr commandList;

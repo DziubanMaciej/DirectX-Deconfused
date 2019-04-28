@@ -21,7 +21,10 @@ ID3D12CommandAllocatorPtr CommandAllocatorManager::retieveCommandAllocator() {
 
 ID3D12GraphicsCommandListPtr CommandAllocatorManager::retrieveCommandList(ID3D12CommandAllocatorPtr commandAllocator, ID3D12PipelineState *initialPipelineState) {
     if (commandLists.empty()) {
-        return nullptr;
+        // Allocate new command list
+        ID3D12GraphicsCommandListPtr commandList;
+        throwIfFailed(device->CreateCommandList(0, type, commandAllocator.Get(), initialPipelineState, IID_PPV_ARGS(&commandList)));
+        return commandList;
     }
 
     // We can reuse any command list

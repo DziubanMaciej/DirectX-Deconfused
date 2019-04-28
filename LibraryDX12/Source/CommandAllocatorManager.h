@@ -36,10 +36,10 @@ public:
 
     /// Retrieves command list that was registered to this manager
     /// (see registerAllocatorAndList(ID3D12CommandAllocatorPtr, ID3D12GraphicsCommandListPtr, uint64_t))
-    /// or return nullptr
+    /// or created a new one if there is nothing for reuse.
     /// \param commandAllocator Object returned by retrieveCommandAllocator()
     /// \param initialPipelineState Optional pointer to pipeline state object for the command list to be initialized with
-    /// \return valid DX12 command list or nullptr
+    /// \return valid DX12 command list
     ID3D12GraphicsCommandListPtr retrieveCommandList(ID3D12CommandAllocatorPtr commandAllocator, ID3D12PipelineState *initialPipelineState);
 
     /// Registers command allocator and command list for later reuse. Allocators are paired with the fence value and can be reused
