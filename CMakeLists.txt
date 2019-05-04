@@ -16,6 +16,10 @@ set(TARGET_NAME "Documentation")
 add_subdirectory("Documentation")
 set_target_properties(${TARGET_NAME} PROPERTIES FOLDER Development)
 
+set(TARGET_NAME "CopyResources")
+add_subdirectory("Resources")
+set_target_properties(${TARGET_NAME} PROPERTIES FOLDER Development)
+
 set(TARGET_NAME "LibraryDX12")
 add_subdirectory("LibraryDX12")
 set_target_properties(${TARGET_NAME} PROPERTIES FOLDER Development)
