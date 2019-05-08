@@ -30,8 +30,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     commandList.transitionBarrierSingle(backBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     // Render (clear color)
-    const FLOAT clearColor[] = {0.0f, 0.8f, 0.8f};
-    commandList.clearRenderTargetView(swapChain.getCurrentBackBufferDescriptor(), clearColor);
+    commandList.clearRenderTargetView(swapChain.getCurrentBackBufferDescriptor(), backgroundColor);
     commandList.clearDepthStencilView(swapChain.getDepthStencilBufferDescriptor(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
     // Transition to PRESENT
