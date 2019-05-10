@@ -1,5 +1,6 @@
 #include "DXD/Application.h"
 #include "DXD/CallbackHandler.h"
+#include "DXD/Mesh.h"
 #include "DXD/Scene.h"
 #include "DXD/Window.h"
 #include <iostream>
@@ -31,6 +32,11 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int s
     MyCallbackHandler handler{*window};
     application->setCallbackHandler(&handler);
     scene->setBackgroundColor(0.7f, 0.4f, 0.2f);
+
+    auto my_mesh = DXD::Mesh::create();
+    if (my_mesh->loadFromObj("Resources/teapot.obj") != 0)
+        return -1;
+
     window->setScene(*scene);
 
     window->show();
