@@ -2,6 +2,7 @@
 
 #include "DXD/Application.h"
 #include "Source/CommandQueue.h"
+#include "Source/PipelineStateController.h"
 #include "DXD/ExternalHeadersWrappers/dxgi.h"
 
 class ApplicationImpl : public DXD::Application {
@@ -18,6 +19,7 @@ public:
     auto getFactory() { return factory; }
     auto getAdapter() { return adapter; }
     auto getDevice() { return device; }
+    auto &getPipelineStateController() { return pipelineStateController; }
     auto &getDirectCommandQueue() { return directCommandQueue; }
     auto &getCopyCommandQueue() { return copyCommandQueue; }
 
@@ -30,6 +32,7 @@ protected:
     IDXGIFactoryPtr factory;
     IDXGIAdapterPtr adapter;
     ID3D12DevicePtr device;
+    PipelineStateController pipelineStateController;
     CommandQueue copyCommandQueue;
     CommandQueue directCommandQueue;
 };
