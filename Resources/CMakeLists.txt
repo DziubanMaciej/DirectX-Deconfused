@@ -1,5 +1,13 @@
+file(GLOB_RECURSE sources
+    "*.obj"
+    "*.hlsl"
+)
+message(${sources})
+
+
+source_group (TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${sources})
 set_output_directories()
-add_custom_target (${TARGET_NAME})
+add_custom_target (${TARGET_NAME} SOURCES ${sources})
 
 set(resources_dir_name "Resources")
 set(resources_dir_src ${PROJECT_SOURCE_DIR}/${resources_dir_name})
