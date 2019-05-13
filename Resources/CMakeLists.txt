@@ -7,6 +7,7 @@ message(${sources})
 
 source_group (TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${sources})
 set_output_directories()
+set_source_files_properties(${sources} PROPERTIES VS_TOOL_OVERRIDE "None")
 add_custom_target (${TARGET_NAME} SOURCES ${sources})
 
 set(resources_dir_name "Resources")
