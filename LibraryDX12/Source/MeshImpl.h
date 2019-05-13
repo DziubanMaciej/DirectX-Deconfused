@@ -2,6 +2,7 @@
 
 #include "DXD/Mesh.h"
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
+#include <vector>
 
 enum MeshType {
     NONE,
@@ -19,15 +20,15 @@ protected:
 
 public:
     int loadFromObj(const std::string filePath);
-    FLOAT *getVertices() { return vertices; }
-    INT *getIndices() { return indices; }
-    FLOAT *getNormals() { return normals; }
-    FLOAT *getTextureCoordinates() { return textureCoordinates; }
+    FLOAT *getVertices() { return vertices.data(); }
+    INT *getIndices() { return indices.data(); }
+    FLOAT *getNormals() { return normals.data(); }
+    FLOAT *getTextureCoordinates() { return textureCoordinates.data(); }
 
 protected:
-    FLOAT *vertices;
-    INT *indices;
-    FLOAT *normals;
-    FLOAT *textureCoordinates;
+    std::vector<FLOAT> vertices;
+    std::vector<INT> indices;
+    std::vector<FLOAT> normals;
+    std::vector<FLOAT> textureCoordinates;
     MeshType meshType;
 };
