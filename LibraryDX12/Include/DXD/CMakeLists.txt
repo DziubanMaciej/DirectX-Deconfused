@@ -4,6 +4,7 @@ add_sources_and_cmake_file(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/Export.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Mesh.h
     ${CMAKE_CURRENT_SOURCE_DIR}/NonCopyableAndMovable.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Object.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Scene.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Window.h
 )

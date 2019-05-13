@@ -13,6 +13,8 @@ add_sources_and_cmake_file(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/CommandQueue.h
     ${CMAKE_CURRENT_SOURCE_DIR}/MeshImpl.h
     ${CMAKE_CURRENT_SOURCE_DIR}/MeshImpl.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ObjectImpl.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ObjectImpl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/SceneImpl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/SceneImpl.h
     ${CMAKE_CURRENT_SOURCE_DIR}/SwapChain.cpp

@@ -1,6 +1,7 @@
 #include "DXD/Application.h"
 #include "DXD/CallbackHandler.h"
 #include "DXD/Mesh.h"
+#include "DXD/Object.h"
 #include "DXD/Scene.h"
 #include "DXD/Window.h"
 #include <iostream>
@@ -36,6 +37,13 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int s
     auto my_mesh = DXD::Mesh::create();
     if (my_mesh->loadFromObj("Resources/teapot.obj") != 0)
         return -1;
+
+    auto my_object = DXD::Object::create();
+    my_object->setMesh(my_mesh.get());
+
+    my_object->setPosition(0, 6, 9);
+
+    XMFLOAT3 pos = my_object->getPosition();
 
     window->setScene(*scene);
 
