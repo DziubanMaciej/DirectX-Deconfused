@@ -35,7 +35,7 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int s
     scene->setBackgroundColor(0.7f, 0.4f, 0.2f);
 
     auto my_mesh = DXD::Mesh::create();
-    if (my_mesh->loadFromObj("Resources/teapot.obj") != 0)
+    if (my_mesh->loadFromObj("Resources/meshes/teapot.obj") != 0)
         return -1;
 
     auto my_object = DXD::Object::create();
