@@ -32,7 +32,7 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int s
     MyCallbackHandler handler{*window};
     application->setCallbackHandler(&handler);
 
-    auto my_mesh = DXD::Mesh::create();
+    auto my_mesh = DXD::Mesh::create(*application);
     if (my_mesh->loadFromObj("Resources/meshes/teapot.obj") != 0)
         return -1;
 

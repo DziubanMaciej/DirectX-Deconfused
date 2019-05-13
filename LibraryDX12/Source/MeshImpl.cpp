@@ -1,13 +1,17 @@
 #include "MeshImpl.h"
+#include "ApplicationImpl.h"
+#include "CommandList.h"
+#include "Utility/ThrowIfFailed.h"
 #include <fstream>
 
 namespace DXD {
-std::unique_ptr<Mesh> Mesh::create() {
-    return std::unique_ptr<Mesh>{new MeshImpl()};
+std::unique_ptr<Mesh> Mesh::create(Application &application) {
+    return std::unique_ptr<Mesh>{new MeshImpl(application)};
 }
 } // namespace DXD
 
-MeshImpl::MeshImpl() {
+MeshImpl::MeshImpl(DXD::Application &application)
+    : application(*static_cast<ApplicationImpl *>(&application)) {
     meshType = MeshType::NONE;
 }
 
@@ -57,5 +61,90 @@ int MeshImpl::loadFromObj(const std::string filePath) {
 
     meshType = MeshType::TRIANGLE_STRIP;
 
+    //uploadToGPU();
+
     return 0;
+}
+
+void MeshImpl::uploadToGPU() {
+    ID3D12DevicePtr device = application.getDevice();
+
+    auto &commandQueue = application.getDirectCommandQueue();
+    CommandList commandList{commandQueue.getCommandAllocatorManager(), nullptr};
+
+    {
+        ID3D12ResourcePtr vertexBufferUploadHeap;
+        size_t verticesSize = vertices.size();
+
+        throwIfFailed(device->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+            D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_RESOURCE_DESC::Buffer(verticesSize),
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            IID_PPV_ARGS(&vertexBuffer)));
+
+        throwIfFailed(device->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+            D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_RESOURCE_DESC::Buffer(verticesSize),
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&vertexBufferUploadHeap)));
+
+        // Copy the triangle data to the vertex buffer.
+        D3D12_SUBRESOURCE_DATA vertexData = {};
+        vertexData.pData = vertices.data();
+        vertexData.RowPitch = verticesSize;
+        vertexData.SlicePitch = verticesSize;
+
+        UpdateSubresources<1>(commandList.getCommandList().Get(), vertexBuffer.Get(), vertexBufferUploadHeap.Get(), 0, 0, 1, &vertexData);
+        commandList.getCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
+
+        // Initialize the vertex buffer view.
+        vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
+        vertexBufferView.StrideInBytes = 12; // 3 x FLOAT, TODO
+        vertexBufferView.SizeInBytes = verticesSize;
+    }
+
+    {
+        ID3D12ResourcePtr indexBufferUploadHeap;
+        size_t indicesSize = indices.size();
+
+        throwIfFailed(device->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+            D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_RESOURCE_DESC::Buffer(indicesSize),
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            IID_PPV_ARGS(&indexBuffer)));
+
+        throwIfFailed(device->CreateCommittedResource(
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+            D3D12_HEAP_FLAG_NONE,
+            &CD3DX12_RESOURCE_DESC::Buffer(indicesSize),
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&indexBufferUploadHeap)));
+
+        // Copy the triangle data to the index buffer.
+        D3D12_SUBRESOURCE_DATA indexData = {};
+        indexData.pData = indices.data();
+        indexData.RowPitch = indicesSize;
+        indexData.SlicePitch = indicesSize;
+
+        UpdateSubresources<1>(commandList.getCommandList().Get(), indexBuffer.Get(), indexBufferUploadHeap.Get(), 0, 0, 1, &indexData);
+        commandList.getCommandList().Get()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(indexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
+
+        // Initialize the index buffer view.
+        indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
+        indexBufferView.Format = DXGI_FORMAT_R32_UINT;
+        indexBufferView.SizeInBytes = indicesSize;
+    }
+
+    commandList.close();
+
+    // Execute and register obtained allocator and lists to the manager
+    std::vector<CommandList *> commandLists{&commandList};
+    const uint64_t fenceValue = commandQueue.executeCommandListsAndSignal(commandLists);
 }
