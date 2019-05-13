@@ -28,11 +28,9 @@ private:
 int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int show) {
     auto application = DXD::Application::create(true);
     auto window = DXD::Window::create(*application, L"myClass", L"myWindow", hInstance, 300, 300);
-    auto scene = DXD::Scene::create();
 
     MyCallbackHandler handler{*window};
     application->setCallbackHandler(&handler);
-    scene->setBackgroundColor(0.7f, 0.4f, 0.2f);
 
     auto my_mesh = DXD::Mesh::create();
     if (my_mesh->loadFromObj("Resources/meshes/teapot.obj") != 0)
@@ -40,11 +38,12 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int s
 
     auto my_object = DXD::Object::create();
     my_object->setMesh(my_mesh.get());
-
     my_object->setPosition(0, 6, 9);
 
-    XMFLOAT3 pos = my_object->getPosition();
-
+    auto scene = DXD::Scene::create();
+    scene->addObject(*my_object);
+    scene->removeObject(*my_object);
+    scene->setBackgroundColor(0.7f, 0.4f, 0.2f);
     window->setScene(*scene);
 
     window->show();

@@ -5,6 +5,8 @@
 #include "Source/WindowImpl.h"
 #include "Utility/ThrowIfFailed.h"
 #include "DXD/ExternalHeadersWrappers/d3dx12.h"
+#include <algorithm>
+#include <cassert>
 
 namespace DXD {
 std::unique_ptr<Scene> Scene::create() {
@@ -19,6 +21,16 @@ void SceneImpl::setBackgroundColor(float r, float g, float b) {
     backgroundColor[0] = r;
     backgroundColor[1] = g;
     backgroundColor[2] = b;
+}
+
+void SceneImpl::addObject(DXD::Object &object) {
+    objects.insert(static_cast<ObjectImpl *>(&object));
+}
+
+bool SceneImpl::removeObject(DXD::Object &object) {
+    const auto elementsRemoved = objects.erase(static_cast<ObjectImpl *>(&object));
+    assert(elementsRemoved < 2u);
+    return elementsRemoved == 1;
 }
 
 void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
