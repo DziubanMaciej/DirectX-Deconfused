@@ -61,7 +61,7 @@ int MeshImpl::loadFromObj(const std::string filePath) {
 
     meshType = MeshType::TRIANGLE_STRIP;
 
-    //uploadToGPU();
+    uploadToGPU();
 
     return 0;
 }
@@ -72,8 +72,10 @@ void MeshImpl::uploadToGPU() {
     auto &commandQueue = application.getDirectCommandQueue();
     CommandList commandList{commandQueue.getCommandAllocatorManager(), nullptr};
 
+    ID3D12ResourcePtr vertexBufferUploadHeap;
+    ID3D12ResourcePtr indexBufferUploadHeap;
+
     {
-        ID3D12ResourcePtr vertexBufferUploadHeap;
         size_t verticesSize = vertices.size();
 
         throwIfFailed(device->CreateCommittedResource(
@@ -108,7 +110,6 @@ void MeshImpl::uploadToGPU() {
     }
 
     {
-        ID3D12ResourcePtr indexBufferUploadHeap;
         size_t indicesSize = indices.size();
 
         throwIfFailed(device->CreateCommittedResource(
@@ -147,4 +148,6 @@ void MeshImpl::uploadToGPU() {
     // Execute and register obtained allocator and lists to the manager
     std::vector<CommandList *> commandLists{&commandList};
     const uint64_t fenceValue = commandQueue.executeCommandListsAndSignal(commandLists);
+
+    commandQueue.getFence().wait(fenceValue);
 }
