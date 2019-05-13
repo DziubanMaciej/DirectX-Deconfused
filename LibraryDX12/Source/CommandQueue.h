@@ -11,6 +11,7 @@ class CommandList;
 class CommandQueue : DXD::NonCopyableAndMovable {
 public:
     CommandQueue(ID3D12DevicePtr device, D3D12_COMMAND_LIST_TYPE type);
+    ~CommandQueue();
 
     auto getCommandQueue() { return commandQueue; }
     auto &getFence() { return fence; }

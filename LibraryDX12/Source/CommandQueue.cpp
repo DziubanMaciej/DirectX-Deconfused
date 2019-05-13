@@ -12,6 +12,11 @@ CommandQueue::CommandQueue(ID3D12DevicePtr device, D3D12_COMMAND_LIST_TYPE type)
       commandAllocatorManager(device, fence, type) {
 }
 
+CommandQueue::~CommandQueue() {
+    Event event;
+    flush(event);
+}
+
 ID3D12CommandQueuePtr CommandQueue::createCommandQueue(ID3D12DevicePtr &device, D3D12_COMMAND_LIST_TYPE type) {
     ID3D12CommandQueuePtr commandQueue;
 
@@ -33,7 +38,7 @@ uint64_t CommandQueue::executeCommandListsAndSignal(std::vector<ID3D12CommandLis
     return fence.signal(commandQueue);
 }
 
-uint64_t CommandQueue::executeCommandListsAndSignal(std::vector<CommandList*> &commandLists) {
+uint64_t CommandQueue::executeCommandListsAndSignal(std::vector<CommandList *> &commandLists) {
     std::vector<ID3D12CommandList *> commandListPtrs;
     for (auto &commandList : commandLists) {
         commandListPtrs.push_back(commandList->getCommandList().Get());
