@@ -9,13 +9,23 @@ std::unique_ptr<Application> Application::create(bool debugLayer) {
 }
 } // namespace DXD
 
-ApplicationImpl::ApplicationImpl(bool debugLayer) : factory(createFactory(debugLayer)),
+ApplicationImpl::ApplicationImpl(bool debugLayer) : debugLayerEnabled(enableDebugLayer(debugLayer)),
+                                                    factory(createFactory(debugLayer)),
                                                     adapter(createAdapter(factory, false)),
                                                     device(createDevice(adapter, debugLayer)),
                                                     pipelineStateController(device),
                                                     copyCommandQueue(device, D3D12_COMMAND_LIST_TYPE_COPY),
                                                     directCommandQueue(device, D3D12_COMMAND_LIST_TYPE_DIRECT) {
     pipelineStateController.compileAll();
+}
+
+bool ApplicationImpl::enableDebugLayer(bool debugLayer) {
+    if (debugLayer) {
+        ID3D12DebugPtr debugInterface;
+        throwIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface)));
+        debugInterface->EnableDebugLayer();
+    }
+    return debugLayer;
 }
 
 IDXGIFactoryPtr ApplicationImpl::createFactory(bool debugLayer) {

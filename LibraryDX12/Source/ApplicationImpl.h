@@ -24,10 +24,12 @@ public:
     auto &getCopyCommandQueue() { return copyCommandQueue; }
 
 protected:
+    static bool enableDebugLayer(bool debugLayer);
     static IDXGIFactoryPtr createFactory(bool debugLayer);
     static IDXGIAdapterPtr createAdapter(IDXGIFactoryPtr factory, bool useWarp);
     static ID3D12DevicePtr createDevice(IDXGIAdapterPtr &adapter, bool debugLayer);
 
+    const bool debugLayerEnabled;
     DXD::CallbackHandler *callbackHandler;
     IDXGIFactoryPtr factory;
     IDXGIAdapterPtr adapter;
