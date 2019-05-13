@@ -7,7 +7,7 @@
 inline void throwIfFailed(HRESULT hr) {
     if (FAILED(hr)) {
         const auto lastError = GetLastError();
-        throw std::exception();
+        abort();
     }
 }
 
