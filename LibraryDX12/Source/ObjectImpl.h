@@ -2,6 +2,7 @@
 
 #include "DXD/Mesh.h"
 #include "DXD/Object.h"
+#include "MeshImpl.h"
 
 class ObjectImpl : public DXD::Object {
 protected:
@@ -10,13 +11,13 @@ protected:
     ~ObjectImpl();
 
 public:
-    void setMesh(DXD::Mesh *mesh) { this->mesh = mesh; }
+    void setMesh(DXD::Mesh &mesh) { this->mesh = static_cast<MeshImpl *>(&mesh); }
     void setPosition(FLOAT x, FLOAT y, FLOAT z);
     void setPosition(XMFLOAT3 pos) { this->position = pos; }
     XMFLOAT3 getPosition() { return position; }
-    DXD::Mesh *getMesh() { return mesh; }
+    MeshImpl *getMesh() { return mesh; }
 
 protected:
-    DXD::Mesh *mesh;
+    MeshImpl *mesh;
     XMFLOAT3 position;
 };

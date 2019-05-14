@@ -37,7 +37,7 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int s
         return -1;
 
     auto my_object = DXD::Object::create();
-    my_object->setMesh(my_mesh.get());
+    my_object->setMesh(*my_mesh);
     my_object->setPosition(0, 6, 9);
 
     auto scene = DXD::Scene::create();
