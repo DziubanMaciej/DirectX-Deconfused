@@ -10,9 +10,9 @@ std::unique_ptr<Application> Application::create(bool debugLayer) {
 } // namespace DXD
 
 ApplicationImpl::ApplicationImpl(bool debugLayer) : debugLayerEnabled(enableDebugLayer(debugLayer)),
-                                                    factory(createFactory(debugLayer)),
+                                                    factory(createFactory(debugLayerEnabled)),
                                                     adapter(createAdapter(factory, false)),
-                                                    device(createDevice(adapter, debugLayer)),
+                                                    device(createDevice(adapter, debugLayerEnabled)),
                                                     pipelineStateController(device),
                                                     copyCommandQueue(device, D3D12_COMMAND_LIST_TYPE_COPY),
                                                     directCommandQueue(device, D3D12_COMMAND_LIST_TYPE_DIRECT) {
@@ -22,10 +22,17 @@ ApplicationImpl::ApplicationImpl(bool debugLayer) : debugLayerEnabled(enableDebu
 bool ApplicationImpl::enableDebugLayer(bool debugLayer) {
     if (debugLayer) {
         ID3D12DebugPtr debugInterface;
-        throwIfFailed(D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface)));
-        debugInterface->EnableDebugLayer();
+        const auto result = D3D12GetDebugInterface(IID_PPV_ARGS(&debugInterface));
+        if (SUCCEEDED(result)) {
+            DXD::log("Debug layer enabling SUCCESS\n");
+            debugInterface->EnableDebugLayer();
+            return true;
+        } else {
+            DXD::log("Debug layer enabling FAILED\n");
+            return false;
+        }
     }
-    return debugLayer;
+    return false;
 }
 
 IDXGIFactoryPtr ApplicationImpl::createFactory(bool debugLayer) {
