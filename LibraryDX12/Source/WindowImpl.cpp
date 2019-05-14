@@ -1,4 +1,5 @@
 #include "WindowImpl.h"
+#include "DXD/Logger.h"
 #include "Source/ApplicationImpl.h"
 #include "Source/SceneImpl.h"
 #include <algorithm>
@@ -104,7 +105,7 @@ LRESULT WindowImpl::windowProcNative(HWND windowHandle, UINT message, WPARAM wPa
         ::PostQuitMessage(0);
         return 0;
     case WM_SYSCHAR: // empty handling of Alt+Key combinations
-        OutputDebugString((std::string{"WM_KEYDOWN "} + std::to_string(wParam) + " " + std::to_string(lParam) + "\n").c_str());
+        DXD::log("WM_KEYDOWN %d %d\n", wParam, lParam);
         return 0;
     }
 

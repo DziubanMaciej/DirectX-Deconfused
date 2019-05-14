@@ -3,6 +3,7 @@
 #include "DXD/Mesh.h"
 #include "DXD/Object.h"
 #include "DXD/Scene.h"
+#include "DXD/Logger.h"
 #include "DXD/Window.h"
 #include <iostream>
 #include <string>
@@ -11,7 +12,7 @@ struct MyCallbackHandler : DXD::CallbackHandler {
     MyCallbackHandler(DXD::Window &window) : window(window) {}
 
     void onResize(int newWidth, int newHeight) override {
-        OutputDebugString((std::to_string(newWidth) + ", " + std::to_string(newHeight) + "\n").c_str());
+        DXD::log("Resized to: %d, %d\n", newWidth, newHeight);
     }
     void onKeyDown(unsigned int vkCode) override {
         if (vkCode == 'F') {

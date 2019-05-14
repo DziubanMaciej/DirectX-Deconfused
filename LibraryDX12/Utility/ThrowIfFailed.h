@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DXD/Logger.h"
 #include "DXD/ExternalHeadersWrappers/d3dcompiler.h"
 #include "DXD/ExternalHeadersWrappers/windows.h"
 #include <exception>
@@ -13,7 +14,7 @@ inline void throwIfFailed(HRESULT hr) {
 
 inline void throwIfFailed(HRESULT hr, ID3DBlob *blob) {
     if (blob != nullptr) {
-        OutputDebugStringA(static_cast<char *>(blob->GetBufferPointer()));
+        DXD::log(static_cast<char *>(blob->GetBufferPointer()));
     }
     throwIfFailed(hr);
 }
