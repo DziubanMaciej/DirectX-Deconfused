@@ -30,6 +30,70 @@ void CommandList::clearDepthStencilView(D3D12_CPU_DESCRIPTOR_HANDLE depthStencil
     commandList->ClearDepthStencilView(depthStencilView, clearFlags, depth, stencil, 0, nullptr);
 }
 
+void CommandList::setPipelineState(ID3D12PipelineStatePtr pipelineState) {
+    commandList->SetPipelineState(pipelineState.Get());
+}
+
+void CommandList::setGraphicsRootSignature(ID3D12RootSignaturePtr rootSignature) {
+    commandList->SetGraphicsRootSignature(rootSignature.Get());
+}
+
+void CommandList::IASetVertexBuffers(UINT startSlot, UINT numBuffers, const D3D12_VERTEX_BUFFER_VIEW *views) {
+    commandList->IASetVertexBuffers(startSlot, numBuffers, views);
+}
+
+void CommandList::IASetVertexBuffer(UINT slot, const D3D12_VERTEX_BUFFER_VIEW &view) {
+    commandList->IASetVertexBuffers(slot, 1, &view);
+}
+
+void CommandList::IASetVertexBuffer(const D3D12_VERTEX_BUFFER_VIEW &view) {
+    commandList->IASetVertexBuffers(0, 1, &view);
+}
+
+void CommandList::IASetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW &view) {
+    commandList->IASetIndexBuffer(&view);
+}
+
+void CommandList::IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY primitiveTopology) {
+    commandList->IASetPrimitiveTopology(primitiveTopology);
+}
+
+void CommandList::IASetPrimitiveTopologyTriangleList() {
+    commandList->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+}
+
+void CommandList::RSSetViewports(UINT numViewports, const D3D12_VIEWPORT *viewports) {
+    commandList->RSSetViewports(numViewports, viewports);
+}
+
+void CommandList::RSSetViewport(const D3D12_VIEWPORT &viewport) {
+    commandList->RSSetViewports(1, &viewport);
+}
+
+void CommandList::RSSetScissorRects(UINT numRects, const D3D12_RECT *rects) {
+    commandList->RSSetScissorRects(numRects, rects);
+}
+
+void CommandList::RSSetScissorRect(const D3D12_RECT &rect) {
+    commandList->RSSetScissorRects(1, &rect);
+}
+
+void CommandList::OMSetRenderTargets(UINT rtDescriptorsCount, const D3D12_CPU_DESCRIPTOR_HANDLE *rtDescriptors, BOOL singleHandleToDescriptorRange, const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor) {
+    commandList->OMSetRenderTargets(rtDescriptorsCount, rtDescriptors, singleHandleToDescriptorRange, &depthStencilDescriptor);
+}
+
+void CommandList::OMSetRenderTarget(const D3D12_CPU_DESCRIPTOR_HANDLE &rtDescriptor, const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor) {
+    commandList->OMSetRenderTargets(1, &rtDescriptor, TRUE, &depthStencilDescriptor);
+}
+
+void CommandList::drawIndexedInstanced(UINT indexCountPerInstance, UINT instanceCount, UINT startIndexLocation, INT baseVertexLocation, UINT startInstanceLocation) {
+    commandList->DrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
+}
+
+void CommandList::drawIndexed(UINT indexCount, UINT startIndexLocation, INT baseVertexLocation, UINT startInstanceLocation) {
+    commandList->DrawIndexedInstanced(indexCount, 1, startIndexLocation, baseVertexLocation, startInstanceLocation);
+}
+
 void CommandList::close() {
     throwIfFailed(commandList->Close());
 }
