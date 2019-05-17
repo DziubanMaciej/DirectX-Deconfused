@@ -3,6 +3,7 @@
 #include "Source/CommandAllocatorManager.h"
 #include "Source/Event.h"
 #include "Source/Fence.h"
+#include "Source/ResourceUsageTracker.h"
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
 #include <vector>
 
@@ -18,7 +19,8 @@ public:
     auto &getCommandAllocatorManager() { return commandAllocatorManager; }
 
     uint64_t executeCommandListsAndSignal(std::vector<ID3D12CommandList *> &commandListsPtrs);
-    uint64_t executeCommandListsAndSignal(std::vector<CommandList*> &commandLists);
+    uint64_t executeCommandListsAndSignal(std::vector<CommandList *> &commandLists);
+    void performResourcesDeletion();
 
     void flush(Event &fenceEvent);
     void wait(Event &fenceEvent);
@@ -30,6 +32,6 @@ private:
     ID3D12CommandQueuePtr commandQueue;
     D3D12_COMMAND_LIST_TYPE type;
     CommandAllocatorManager commandAllocatorManager;
+    ResourceUsageTracker resourceUsageTracker;
     Fence fence;
-    uint64_t lastFence;
 };

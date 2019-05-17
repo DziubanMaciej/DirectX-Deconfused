@@ -102,6 +102,7 @@ void MeshImpl::uploadToGPU() {
 
         UpdateSubresources<1>(commandList.getCommandList().Get(), vertexBuffer.Get(), vertexBufferUploadHeap.Get(), 0, 0, 1, &vertexData);
         commandList.transitionBarrierSingle(vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+        commandList.addUsedResource(vertexBufferUploadHeap);
 
         // Initialize the vertex buffer view.
         vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
@@ -136,6 +137,7 @@ void MeshImpl::uploadToGPU() {
 
         UpdateSubresources<1>(commandList.getCommandList().Get(), indexBuffer.Get(), indexBufferUploadHeap.Get(), 0, 0, 1, &indexData);
         commandList.transitionBarrierSingle(indexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+        commandList.addUsedResource(indexBufferUploadHeap);
 
         // Initialize the index buffer view.
         indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
@@ -148,6 +150,4 @@ void MeshImpl::uploadToGPU() {
     // Execute and register obtained allocator and lists to the manager
     std::vector<CommandList *> commandLists{&commandList};
     const uint64_t fenceValue = commandQueue.executeCommandListsAndSignal(commandLists);
-
-    commandQueue.getFence().wait(fenceValue);
 }

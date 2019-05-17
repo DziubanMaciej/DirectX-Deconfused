@@ -47,9 +47,14 @@ uint64_t CommandQueue::executeCommandListsAndSignal(std::vector<CommandList *> &
 
     for (auto &commandList : commandLists) {
         commandList->setFenceValue(fenceValue);
+        resourceUsageTracker.registerUsage(commandList->getUsedResources(), fenceValue);
     }
 
     return fenceValue;
+}
+
+void CommandQueue::performResourcesDeletion() {
+    resourceUsageTracker.performDeletion(fence.getFenceValue());
 }
 
 // ------------------------------------------------------------------------------ Wait and signal

@@ -3,6 +3,7 @@
 #include "DXD/NonCopyableAndMovable.h"
 #include "DXD/ExternalHeadersWrappers/d3dx12.h"
 #include <cstdint>
+#include <set>
 #include <vector>
 
 class CommandAllocatorManager;
@@ -16,7 +17,6 @@ public:
     ~CommandList();
 
     void transitionBarrierSingle(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter);
-    void transitionBarrierMultiple(const std::vector<D3D12_RESOURCE_BARRIER> &barriers);
 
     void clearRenderTargetView(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT colorRGBA[4]);
     void clearDepthStencilView(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags, FLOAT depth, UINT8 stencil);
@@ -24,10 +24,10 @@ public:
     void setPipelineState(ID3D12PipelineStatePtr pipelineState);
     void setGraphicsRootSignature(ID3D12RootSignaturePtr rootSignature);
 
-    void IASetVertexBuffers(UINT startSlot, UINT numBuffers, const D3D12_VERTEX_BUFFER_VIEW *views);
-    void IASetVertexBuffer(UINT slot, const D3D12_VERTEX_BUFFER_VIEW &view);
-    void IASetVertexBuffer(const D3D12_VERTEX_BUFFER_VIEW &view);
-    void IASetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW &view);
+    void IASetVertexBuffers(UINT startSlot, UINT numBuffers, const D3D12_VERTEX_BUFFER_VIEW *views, const ID3D12ResourcePtr *buffers);
+    void IASetVertexBuffer(UINT slot, const D3D12_VERTEX_BUFFER_VIEW &view, const ID3D12ResourcePtr &buffer);
+    void IASetVertexBuffer(const D3D12_VERTEX_BUFFER_VIEW &view, const ID3D12ResourcePtr &buffer);
+    void IASetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW &view, const ID3D12ResourcePtr &buffer);
     void IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY primitiveTopology);
     void IASetPrimitiveTopologyTriangleList();
 
@@ -36,8 +36,11 @@ public:
     void RSSetScissorRects(UINT numRects, const D3D12_RECT *rects);
     void RSSetScissorRect(const D3D12_RECT &rect);
 
-    void OMSetRenderTargets(UINT rtDescriptorsCount, const D3D12_CPU_DESCRIPTOR_HANDLE *rtDescriptors, BOOL singleHandleToDescriptorRange, const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor);
-    void OMSetRenderTarget(const D3D12_CPU_DESCRIPTOR_HANDLE &rtDescriptor, const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor);
+    void OMSetRenderTargets(UINT renderTargetsCount, const D3D12_CPU_DESCRIPTOR_HANDLE *renderTargetDescriptors,
+                            const ID3D12ResourcePtr *renderTargets, BOOL singleHandleToDescriptorRange,
+                            const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor, const ID3D12ResourcePtr &depthStencilBuffer);
+    void OMSetRenderTarget(const D3D12_CPU_DESCRIPTOR_HANDLE &renderTargetDescriptor, const ID3D12ResourcePtr &renderTarget,
+                           const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor, const ID3D12ResourcePtr &depthStencilBuffer);
 
     template <typename ConstantType>
     void setGraphicsRoot32BitConstant(UINT rootParameterIndex, const ConstantType &constant);
@@ -47,15 +50,19 @@ public:
 
     void close();
 
+    void addUsedResource(const ID3D12ResourcePtr &resource);
+    void addUsedResources(const ID3D12ResourcePtr *resources, UINT resourcesCount);
     void setFenceValue(uint64_t fenceValue) { this->fenceValue = fenceValue; }
 
     auto getCommandList() { return commandList; }
+    auto &getUsedResources() { return usedResources; }
 
 private:
     CommandAllocatorManager &commandAllocatorManager;
     ID3D12CommandAllocatorPtr commandAllocator;
     ID3D12GraphicsCommandListPtr commandList;
     uint64_t fenceValue;
+    std::set<ID3D12ResourcePtr> usedResources;
 };
 
 template <typename ConstantType>

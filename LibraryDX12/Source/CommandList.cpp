@@ -14,12 +14,7 @@ CommandList::~CommandList() {
 void CommandList::transitionBarrierSingle(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter) {
     const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource.Get(), stateBefore, stateAfter);
     commandList->ResourceBarrier(1, &barrier);
-}
-
-void CommandList::transitionBarrierMultiple(const std::vector<D3D12_RESOURCE_BARRIER> &barriers) {
-    if (barriers.size() != 0) {
-        commandList->ResourceBarrier(static_cast<UINT>(barriers.size()), barriers.data());
-    }
+    addUsedResource(resource);
 }
 
 void CommandList::clearRenderTargetView(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT colorRGBA[4]) {
@@ -38,20 +33,24 @@ void CommandList::setGraphicsRootSignature(ID3D12RootSignaturePtr rootSignature)
     commandList->SetGraphicsRootSignature(rootSignature.Get());
 }
 
-void CommandList::IASetVertexBuffers(UINT startSlot, UINT numBuffers, const D3D12_VERTEX_BUFFER_VIEW *views) {
+void CommandList::IASetVertexBuffers(UINT startSlot, UINT numBuffers, const D3D12_VERTEX_BUFFER_VIEW *views, const ID3D12ResourcePtr *buffers) {
     commandList->IASetVertexBuffers(startSlot, numBuffers, views);
+    addUsedResources(buffers, numBuffers);
 }
 
-void CommandList::IASetVertexBuffer(UINT slot, const D3D12_VERTEX_BUFFER_VIEW &view) {
+void CommandList::IASetVertexBuffer(UINT slot, const D3D12_VERTEX_BUFFER_VIEW &view, const ID3D12ResourcePtr &buffer) {
     commandList->IASetVertexBuffers(slot, 1, &view);
+    addUsedResource(buffer);
 }
 
-void CommandList::IASetVertexBuffer(const D3D12_VERTEX_BUFFER_VIEW &view) {
+void CommandList::IASetVertexBuffer(const D3D12_VERTEX_BUFFER_VIEW &view, const ID3D12ResourcePtr &buffer) {
     commandList->IASetVertexBuffers(0, 1, &view);
+    addUsedResource(buffer);
 }
 
-void CommandList::IASetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW &view) {
+void CommandList::IASetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW &view, const ID3D12ResourcePtr &buffer) {
     commandList->IASetIndexBuffer(&view);
+    addUsedResource(buffer);
 }
 
 void CommandList::IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY primitiveTopology) {
@@ -78,12 +77,19 @@ void CommandList::RSSetScissorRect(const D3D12_RECT &rect) {
     commandList->RSSetScissorRects(1, &rect);
 }
 
-void CommandList::OMSetRenderTargets(UINT rtDescriptorsCount, const D3D12_CPU_DESCRIPTOR_HANDLE *rtDescriptors, BOOL singleHandleToDescriptorRange, const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor) {
-    commandList->OMSetRenderTargets(rtDescriptorsCount, rtDescriptors, singleHandleToDescriptorRange, &depthStencilDescriptor);
+void CommandList::OMSetRenderTargets(UINT renderTargetsCount, const D3D12_CPU_DESCRIPTOR_HANDLE *renderTargetDescriptors,
+                                     const ID3D12ResourcePtr *renderTargets, BOOL singleHandleToDescriptorRange,
+                                     const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor, const ID3D12ResourcePtr &depthStencilBuffer) {
+    commandList->OMSetRenderTargets(renderTargetsCount, renderTargetDescriptors, singleHandleToDescriptorRange, &depthStencilDescriptor);
+    addUsedResources(renderTargets, renderTargetsCount);
+    addUsedResource(depthStencilBuffer);
 }
 
-void CommandList::OMSetRenderTarget(const D3D12_CPU_DESCRIPTOR_HANDLE &rtDescriptor, const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor) {
-    commandList->OMSetRenderTargets(1, &rtDescriptor, TRUE, &depthStencilDescriptor);
+void CommandList::OMSetRenderTarget(const D3D12_CPU_DESCRIPTOR_HANDLE &renderTargetDescriptor, const ID3D12ResourcePtr &renderTarget,
+                                    const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor, const ID3D12ResourcePtr &depthStencilBuffer) {
+    commandList->OMSetRenderTargets(1, &renderTargetDescriptor, TRUE, &depthStencilDescriptor);
+    addUsedResource(renderTarget);
+    addUsedResource(depthStencilBuffer);
 }
 
 void CommandList::drawIndexedInstanced(UINT indexCountPerInstance, UINT instanceCount, UINT startIndexLocation, INT baseVertexLocation, UINT startInstanceLocation) {
@@ -96,4 +102,12 @@ void CommandList::drawIndexed(UINT indexCount, UINT startIndexLocation, INT base
 
 void CommandList::close() {
     throwIfFailed(commandList->Close());
+}
+
+void CommandList::addUsedResource(const ID3D12ResourcePtr &resource) {
+    usedResources.insert(resource);
+}
+
+void CommandList::addUsedResources(const ID3D12ResourcePtr *resources, UINT resourcesCount) {
+    usedResources.insert(resources, resources + resourcesCount);
 }

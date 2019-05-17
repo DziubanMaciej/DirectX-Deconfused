@@ -21,5 +21,5 @@ public:
 
 private:
     ID3D12FencePtr fence;
-    uint64_t fenceValue;
+    uint64_t fenceValue = 0ull;
 };
