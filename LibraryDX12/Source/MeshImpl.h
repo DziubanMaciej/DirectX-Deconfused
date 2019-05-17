@@ -21,12 +21,19 @@ protected:
 
 public:
     int loadFromObj(const std::string filePath);
-    FLOAT *getVertices() { return vertices.data(); }
-    INT *getIndices() { return indices.data(); }
-    FLOAT *getNormals() { return normals.data(); }
-    FLOAT *getTextureCoordinates() { return textureCoordinates.data(); }
-    D3D12_VERTEX_BUFFER_VIEW *getVertexBufferView() { return &vertexBufferView; }
-    D3D12_INDEX_BUFFER_VIEW *getIndexBufferView() { return &indexBufferView; }
+
+    const FLOAT *getVertices() const { return vertices.data(); }
+    const UINT *getIndices() const { return indices.data(); }
+    const FLOAT *getNormals() const { return normals.data(); }
+    const FLOAT *getTextureCoordinates() const { return textureCoordinates.data(); }
+
+    size_t getVerticesCount() const { return vertices.size(); }
+    size_t getIndicesCount() const { return indices.size(); }
+    size_t getNormalsCount() const { return normals.size(); }
+    size_t getTextureCoordinatesCount() const { return textureCoordinates.size(); }
+
+    const D3D12_VERTEX_BUFFER_VIEW &getVertexBufferView() const { return vertexBufferView; }
+    const D3D12_INDEX_BUFFER_VIEW &getIndexBufferView() const { return indexBufferView; }
 
 protected:
     ApplicationImpl &application;
@@ -35,7 +42,7 @@ protected:
     ID3D12ResourcePtr indexBuffer;
     D3D12_INDEX_BUFFER_VIEW indexBufferView;
     std::vector<FLOAT> vertices;
-    std::vector<INT> indices;
+    std::vector<UINT> indices;
     std::vector<FLOAT> normals;
     std::vector<FLOAT> textureCoordinates;
     MeshType meshType;

@@ -32,7 +32,7 @@ int MeshImpl::loadFromObj(const std::string filePath) {
 
     char lineType;
     FLOAT x, y, z, w;
-    INT i1, i2, i3;
+    UINT i1, i2, i3;
 
     while (inputFile >> lineType) { //TODO change reading method in order to parse vertices with 4 values, parse faces with normals etc.
         switch (lineType) {
@@ -76,7 +76,7 @@ void MeshImpl::uploadToGPU() {
     ID3D12ResourcePtr indexBufferUploadHeap;
 
     {
-        size_t verticesSize = vertices.size();
+        const size_t verticesSize = vertices.size() * sizeof(FLOAT);
 
         throwIfFailed(device->CreateCommittedResource(
             &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
@@ -101,16 +101,16 @@ void MeshImpl::uploadToGPU() {
         vertexData.SlicePitch = verticesSize;
 
         UpdateSubresources<1>(commandList.getCommandList().Get(), vertexBuffer.Get(), vertexBufferUploadHeap.Get(), 0, 0, 1, &vertexData);
-        commandList.getCommandList()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
+        commandList.transitionBarrierSingle(vertexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
 
         // Initialize the vertex buffer view.
         vertexBufferView.BufferLocation = vertexBuffer->GetGPUVirtualAddress();
-        vertexBufferView.StrideInBytes = 12; // 3 x FLOAT, TODO
+        vertexBufferView.StrideInBytes = 3 * sizeof(FLOAT); // TODO
         vertexBufferView.SizeInBytes = verticesSize;
     }
 
     {
-        size_t indicesSize = indices.size();
+        const size_t indicesSize = indices.size() * sizeof(UINT);
 
         throwIfFailed(device->CreateCommittedResource(
             &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
@@ -135,7 +135,7 @@ void MeshImpl::uploadToGPU() {
         indexData.SlicePitch = indicesSize;
 
         UpdateSubresources<1>(commandList.getCommandList().Get(), indexBuffer.Get(), indexBufferUploadHeap.Get(), 0, 0, 1, &indexData);
-        commandList.getCommandList().Get()->ResourceBarrier(1, &CD3DX12_RESOURCE_BARRIER::Transition(indexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER));
+        commandList.transitionBarrierSingle(indexBuffer.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
 
         // Initialize the index buffer view.
         indexBufferView.BufferLocation = indexBuffer->GetGPUVirtualAddress();
