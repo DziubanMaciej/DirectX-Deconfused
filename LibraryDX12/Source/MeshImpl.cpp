@@ -31,7 +31,7 @@ int MeshImpl::loadFromObj(const std::string filePath) {
     }
 
     char lineType;
-    FLOAT x, y, z, w;
+    FLOAT x, y, z;
     UINT i1, i2, i3;
 
     while (inputFile >> lineType) { //TODO change reading method in order to parse vertices with 4 values, parse faces with normals etc.
@@ -76,7 +76,7 @@ void MeshImpl::uploadToGPU() {
     ID3D12ResourcePtr indexBufferUploadHeap;
 
     {
-        const size_t verticesSize = vertices.size() * sizeof(FLOAT);
+        const UINT verticesSize = static_cast<UINT>(vertices.size()) * sizeof(FLOAT);
 
         throwIfFailed(device->CreateCommittedResource(
             &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
@@ -111,7 +111,7 @@ void MeshImpl::uploadToGPU() {
     }
 
     {
-        const size_t indicesSize = indices.size() * sizeof(UINT);
+        const UINT indicesSize = static_cast<UINT>(indices.size()) * sizeof(UINT);
 
         throwIfFailed(device->CreateCommittedResource(
             &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),

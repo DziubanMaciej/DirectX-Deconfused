@@ -83,7 +83,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     mvpMatrix = XMMatrixMultiply(mvpMatrix, projectionMatrix);
     commandList.setGraphicsRoot32BitConstant(0, mvpMatrix);
 
-    commandList.drawIndexed(mesh.getIndicesCount());
+    commandList.drawIndexed(static_cast<UINT>(mesh.getIndicesCount()));
 
     // Transition to PRESENT
     commandList.transitionBarrierSingle(backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
