@@ -168,6 +168,10 @@ D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::getDepthStencilBufferDescriptor() const {
     return depthStencilDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
 }
 
+ID3D12ResourcePtr &SwapChain::getDepthStencilBuffer() {
+    return depthStencilBuffer;
+}
+
 D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::getCurrentBackBufferDescriptor() const {
     const auto rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
     return CD3DX12_CPU_DESCRIPTOR_HANDLE{

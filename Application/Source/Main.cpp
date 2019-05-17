@@ -43,7 +43,6 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int s
 
     auto scene = DXD::Scene::create();
     scene->addObject(*my_object);
-    scene->removeObject(*my_object);
     scene->setBackgroundColor(0.7f, 0.4f, 0.2f);
     window->setScene(*scene);
 

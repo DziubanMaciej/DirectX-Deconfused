@@ -32,6 +32,8 @@ public:
     size_t getNormalsCount() const { return normals.size(); }
     size_t getTextureCoordinatesCount() const { return textureCoordinates.size(); }
 
+    ID3D12ResourcePtr getVertexBuffer() const { return vertexBuffer; }
+    ID3D12ResourcePtr getIndexBuffer() const { return indexBuffer; }
     const D3D12_VERTEX_BUFFER_VIEW &getVertexBufferView() const { return vertexBufferView; }
     const D3D12_INDEX_BUFFER_VIEW &getIndexBufferView() const { return indexBufferView; }
 

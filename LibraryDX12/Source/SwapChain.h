@@ -25,6 +25,7 @@ public:
     D3D12_CPU_DESCRIPTOR_HANDLE getCurrentBackBufferDescriptor() const;
     ID3D12ResourcePtr &getCurrentBackBuffer();
     D3D12_CPU_DESCRIPTOR_HANDLE getDepthStencilBufferDescriptor() const;
+    ID3D12ResourcePtr &getDepthStencilBuffer();
 
 private:
     static bool checkTearingSupport(IDXGIFactoryPtr &factory);
