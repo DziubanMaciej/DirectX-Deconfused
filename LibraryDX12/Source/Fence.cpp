@@ -14,12 +14,16 @@ Fence &Fence::operator=(Fence &&other) {
     return *this;
 }
 
-void Fence::wait(UINT64 fenceValue) {
+void Fence::waitOnCpu(UINT64 fenceValue) {
     if (isComplete(fenceValue)) {
         return;
     }
     throwIfFailed(fence->SetEventOnCompletion(fenceValue, event.getHandle()));
     event.wait();
+}
+
+void Fence::waitOnGpu(ID3D12CommandQueuePtr commandQueue, UINT64 fenceValue) {
+    commandQueue->Wait(fence.Get(), fenceValue);
 }
 
 uint64_t Fence::signal(ID3D12CommandQueuePtr commandQueue) {

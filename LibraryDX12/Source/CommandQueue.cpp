@@ -60,9 +60,5 @@ void CommandQueue::performResourcesDeletion() {
 
 void CommandQueue::flush() {
     const uint64_t newFenceValue = fence.signal(commandQueue);
-    fence.wait(newFenceValue);
-}
-
-void CommandQueue::wait() {
-    fence.wait(fence.getFenceValue());
+    fence.waitOnCpu(newFenceValue);
 }

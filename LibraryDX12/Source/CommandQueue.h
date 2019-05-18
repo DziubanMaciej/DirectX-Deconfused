@@ -23,7 +23,6 @@ public:
     void performResourcesDeletion();
 
     void flush();
-    void wait();
 
 private:
     static ID3D12CommandQueuePtr createCommandQueue(ID3D12DevicePtr &device, D3D12_COMMAND_LIST_TYPE type);

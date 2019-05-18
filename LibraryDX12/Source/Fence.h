@@ -11,7 +11,8 @@ public:
     Fence(Fence &&other);
     Fence &operator=(Fence &&other);
 
-    void wait(UINT64 fenceValue);
+    void waitOnCpu(UINT64 fenceValue);
+    void waitOnGpu(ID3D12CommandQueuePtr commandQueue, UINT64 fenceValue);
     uint64_t signal(ID3D12CommandQueuePtr commandQueue);
 
     bool isComplete(UINT64 fenceValue) const;
