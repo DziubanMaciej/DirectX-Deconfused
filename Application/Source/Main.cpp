@@ -33,16 +33,26 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int s
     MyCallbackHandler handler{*window};
     application->setCallbackHandler(&handler);
 
-    auto my_mesh = DXD::Mesh::create(*application);
-    if (my_mesh->loadFromObj("Resources/meshes/teapot.obj") != 0)
+    auto teapotMesh = DXD::Mesh::create(*application);
+    if (teapotMesh->loadFromObj("Resources/meshes/teapot.obj") != 0)
         return -1;
 
-    auto my_object = DXD::Object::create();
-    my_object->setMesh(*my_mesh);
-    my_object->setPosition(0, 6, 9);
+    auto object1 = DXD::Object::create();
+    object1->setMesh(*teapotMesh);
+    object1->setPosition(0, 6, 9);
+
+    auto object2 = DXD::Object::create();
+    object2->setMesh(*teapotMesh);
+    object2->setPosition(0, 0, 9);
+
+    auto object3 = DXD::Object::create();
+    object3->setMesh(*teapotMesh);
+    object3->setPosition(0, -6, 9);
 
     auto scene = DXD::Scene::create();
-    scene->addObject(*my_object);
+    scene->addObject(*object1);
+    scene->addObject(*object2);
+    scene->addObject(*object3);
     scene->setBackgroundColor(0.7f, 0.4f, 0.2f);
     window->setScene(*scene);
 
