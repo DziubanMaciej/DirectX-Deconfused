@@ -5,15 +5,6 @@ Fence::Fence(ID3D12DevicePtr device) {
     throwIfFailed(device->CreateFence(0u, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
 }
 
-Fence::Fence(Fence &&other) {
-    *this = std::move(other);
-}
-
-Fence &Fence::operator=(Fence &&other) {
-    this->fence = std::move(other.fence);
-    return *this;
-}
-
 void Fence::waitOnCpu(UINT64 fenceValue) {
     if (isComplete(fenceValue)) {
         return;

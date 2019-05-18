@@ -8,8 +8,8 @@
 class Fence : DXD::NonCopyable {
 public:
     explicit Fence(ID3D12DevicePtr device);
-    Fence(Fence &&other);
-    Fence &operator=(Fence &&other);
+    Fence(Fence &&other) = default;
+    Fence &operator=(Fence &&other) = default;
 
     void waitOnCpu(UINT64 fenceValue);
     void waitOnGpu(ID3D12CommandQueuePtr commandQueue, UINT64 fenceValue);
