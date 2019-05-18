@@ -22,8 +22,8 @@ public:
     uint64_t executeCommandListsAndSignal(std::vector<CommandList *> &commandLists);
     void performResourcesDeletion();
 
-    void flush(Event &fenceEvent);
-    void wait(Event &fenceEvent);
+    void flush();
+    void wait();
 
 private:
     static ID3D12CommandQueuePtr createCommandQueue(ID3D12DevicePtr &device, D3D12_COMMAND_LIST_TYPE type);

@@ -12,6 +12,7 @@ public:
     Event(Event &&other) noexcept;
     Event &operator=(Event &&other) noexcept;
 
+    void wait();
     void wait(DWORD milliseconds);
     void wait(std::chrono::milliseconds duration);
 

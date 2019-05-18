@@ -100,7 +100,6 @@ DXD::CallbackHandler *ApplicationImpl::getCallbackHandler() const {
 }
 
 void ApplicationImpl::flushAllQueues() {
-    Event event; // TODO create event in one place?
-    copyCommandQueue.flush(event);
-    directCommandQueue.flush(event);
+    copyCommandQueue.flush();
+    directCommandQueue.flush();
 }

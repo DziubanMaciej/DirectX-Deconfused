@@ -13,8 +13,7 @@ CommandQueue::CommandQueue(ID3D12DevicePtr device, D3D12_COMMAND_LIST_TYPE type)
 }
 
 CommandQueue::~CommandQueue() {
-    Event event;
-    flush(event);
+    flush();
 }
 
 ID3D12CommandQueuePtr CommandQueue::createCommandQueue(ID3D12DevicePtr &device, D3D12_COMMAND_LIST_TYPE type) {
@@ -59,11 +58,11 @@ void CommandQueue::performResourcesDeletion() {
 
 // ------------------------------------------------------------------------------ Wait and signal
 
-void CommandQueue::flush(Event &fenceEvent) {
+void CommandQueue::flush() {
     const uint64_t newFenceValue = fence.signal(commandQueue);
-    fence.wait(newFenceValue, fenceEvent);
+    fence.wait(newFenceValue);
 }
 
-void CommandQueue::wait(Event &fenceEvent) {
-    fence.wait(fence.getFenceValue(), fenceEvent);
+void CommandQueue::wait() {
+    fence.wait(fence.getFenceValue());
 }

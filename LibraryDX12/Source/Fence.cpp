@@ -1,5 +1,4 @@
 #include "Fence.h"
-#include "Source/Event.h"
 #include "Utility/ThrowIfFailed.h"
 
 Fence::Fence(ID3D12DevicePtr device) {
@@ -16,16 +15,11 @@ Fence &Fence::operator=(Fence &&other) {
 }
 
 void Fence::wait(UINT64 fenceValue) {
-    Event event;
-    wait(fenceValue, event);
-}
-
-void Fence::wait(UINT64 fenceValue, Event &fenceEvent) {
     if (isComplete(fenceValue)) {
         return;
     }
-    throwIfFailed(fence->SetEventOnCompletion(fenceValue, fenceEvent.getHandle()));
-    fenceEvent.wait(INFINITE);
+    throwIfFailed(fence->SetEventOnCompletion(fenceValue, event.getHandle()));
+    event.wait();
 }
 
 uint64_t Fence::signal(ID3D12CommandQueuePtr commandQueue) {

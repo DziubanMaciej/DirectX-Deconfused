@@ -23,6 +23,10 @@ Event &Event::operator=(Event &&other) noexcept {
     return *this;
 }
 
+void Event::wait() {
+    wait(INFINITE);
+}
+
 void Event::wait(DWORD milliseconds) {
     const auto result = ::WaitForSingleObject(this->handle, milliseconds);
     assert(result == 0);
