@@ -176,6 +176,7 @@ void WindowImpl::handleResize() {
     if (swapChain.getWidth() != newWidth || swapChain.getHeight() != newHeight) {
         // Finish all work
         application.flushAllQueues();
+        application.flushAllResources();
         swapChain.resize(newWidth, newHeight);
     }
 

@@ -15,6 +15,7 @@ public:
     DXD::CallbackHandler *getCallbackHandler() const;
 
     void flushAllQueues();
+    void flushAllResources();
 
     auto getFactory() { return factory; }
     auto getAdapter() { return adapter; }

@@ -103,3 +103,8 @@ void ApplicationImpl::flushAllQueues() {
     copyCommandQueue.flush();
     directCommandQueue.flush();
 }
+
+void ApplicationImpl::flushAllResources() {
+    copyCommandQueue.performResourcesDeletion();
+    directCommandQueue.performResourcesDeletion();
+}
