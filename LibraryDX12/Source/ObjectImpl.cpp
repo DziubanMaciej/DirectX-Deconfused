@@ -7,14 +7,54 @@ std::unique_ptr<Object> Object::create() {
 }
 } // namespace DXD
 
-ObjectImpl::ObjectImpl() {
-}
-
-ObjectImpl::~ObjectImpl() {
+const XMMATRIX &ObjectImpl::getModelMatrix() {
+    if (modelMatrixDirty) {
+        modelMatrixDirty = false;
+        modelMatrix = XMMatrixTransformation(
+            XMVECTOR{0, 0, 0}, XMQuaternionIdentity(), XMVECTOR{1, 1, 1}, // scaling
+            this->rotationOrigin, this->rotationQuaternion,               // rotation
+            this->position                                                // translation
+        );
+    }
+    return modelMatrix;
 }
 
 void ObjectImpl::setPosition(FLOAT x, FLOAT y, FLOAT z) {
-    position.x = x;
-    position.y = y;
-    position.z = z;
+    setPosition(XMFLOAT3{x, y, z});
+}
+
+void ObjectImpl::setPosition(XMFLOAT3 pos) {
+    modelMatrixDirty = true;
+    this->position = XMLoadFloat3(&pos);
+}
+
+XMFLOAT3 ObjectImpl::getPosition() const {
+    return XMStoreFloat3(this->position);
+}
+
+void ObjectImpl::setRotation(XMFLOAT3 axis, float angle) {
+    modelMatrixDirty = true;
+    this->rotationQuaternion = XMQuaternionRotationAxis(XMLoadFloat3(&axis), angle);
+}
+
+void ObjectImpl::setRotation(float roll, float yaw, float pitch) {
+    modelMatrixDirty = true;
+    this->rotationQuaternion = XMQuaternionRotationRollPitchYaw(pitch, yaw, roll);
+}
+
+XMFLOAT3 ObjectImpl::getRotationQuaternion() const {
+    return XMStoreFloat3(this->rotationQuaternion);
+}
+
+void ObjectImpl::setRotationOrigin(FLOAT x, FLOAT y, FLOAT z) {
+    setRotationOrigin(XMFLOAT3{x, y, z});
+}
+
+void ObjectImpl::setRotationOrigin(XMFLOAT3 pos) {
+    modelMatrixDirty = true;
+    this->rotationOrigin = XMLoadFloat3(&pos);
+}
+
+XMFLOAT3 ObjectImpl::getRotationOrigin() const {
+    return XMStoreFloat3(this->rotationOrigin);
 }

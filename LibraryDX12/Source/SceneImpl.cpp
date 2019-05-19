@@ -76,16 +76,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
         commandList.OMSetRenderTarget(swapChain.getCurrentBackBufferDescriptor(), swapChain.getCurrentBackBuffer(),
                                       swapChain.getDepthStencilBufferDescriptor(), swapChain.getDepthStencilBuffer());
 
-        static float roll = 0, pitch = 0, yaw = 0;
-        roll += 0.05f;
-        pitch += 0.06f;
-        yaw += 0.1f;
-
-        const XMMATRIX modelMatrix = XMMatrixTransformation(
-            XMVECTOR{0, 0, 0}, XMQuaternionIdentity(), XMVECTOR{1, 1, 1},          // scaling
-            XMVECTOR{0, 0, 0}, XMQuaternionRotationRollPitchYaw(roll, pitch, yaw), // rotation
-            XMLoadFloat3(&object->getPosition())                                   // translation
-        );
+        const XMMATRIX modelMatrix = object->getModelMatrix();
         const XMMATRIX mvpMatrix = XMMatrixMultiply(modelMatrix, vpMatrix);
         commandList.setGraphicsRoot32BitConstant(0, mvpMatrix);
 
