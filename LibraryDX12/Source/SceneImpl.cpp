@@ -55,7 +55,8 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     commandList.setGraphicsRootSignature(application.getPipelineStateController().getRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT));
 
     // View projection matrix
-    camera->setAspectRatio(swapChain.getWidth() / swapChain.getHeight());
+    float aspectRatio = swapChain.getWidth() / swapChain.getHeight();
+    camera->setAspectRatio(aspectRatio);
     const XMMATRIX viewMatrix = camera->getViewMatrix();
     const XMMATRIX projectionMatrix = camera->getProjectionMatrix();
     const XMMATRIX vpMatrix = XMMatrixMultiply(viewMatrix, projectionMatrix);
