@@ -10,7 +10,7 @@
 #include <string>
 
 struct MyCallbackHandler : DXD::CallbackHandler {
-    MyCallbackHandler(DXD::Window &window, DXD::Object &object) : window(window), object(object) {}
+    MyCallbackHandler(DXD::Window &window, DXD::Object &object, DXD::Scene &scene) : window(window), object(object), scene(scene) {}
 
     void onResize(int newWidth, int newHeight) override {
         DXD::log("Resized to: %d, %d\n", newWidth, newHeight);
@@ -23,7 +23,21 @@ struct MyCallbackHandler : DXD::CallbackHandler {
         if (vkCode == 'A') {
             static float rotation = 0.f;
             rotation += 0.1f;
-            object.setRotation(rotation, 0, rotation);
+            object.setRotation(rotation, rotation, rotation);
+        }
+        if (vkCode == 'W') {
+            auto camera = scene.getCamera();
+            XMFLOAT4 tmp;
+            XMStoreFloat4(&tmp, camera->getEyePosition());
+            camera->setEyePosition(tmp.x, tmp.y, tmp.z + .5 != 0 ? tmp.z + .5 : tmp.z + 1);
+            scene.setCamera(*camera);
+        }
+        if (vkCode == 'S') {
+            auto camera = scene.getCamera();
+            XMFLOAT4 tmp;
+            XMStoreFloat4(&tmp, camera->getEyePosition());
+            camera->setEyePosition(tmp.x, tmp.y, tmp.z - .5 != 0 ? tmp.z - .5 : tmp.z - 1);
+            scene.setCamera(*camera);
         }
     }
 
@@ -31,6 +45,7 @@ private:
     bool fullscreen = false;
     DXD::Window &window;
     DXD::Object &object;
+    DXD::Scene &scene;
 };
 
 int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int show) {
@@ -69,7 +84,7 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int s
     scene->setCamera(*camera);
     window->setScene(*scene);
 
-    MyCallbackHandler handler{*window, *object2};
+    MyCallbackHandler handler{*window, *object2, *scene};
     application->setCallbackHandler(&handler);
 
     window->show();

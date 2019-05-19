@@ -14,6 +14,7 @@ public:
     virtual void addObject(DXD::Object &object) = 0;
     virtual bool removeObject(DXD::Object &object) = 0;
     virtual void setCamera(DXD::Camera &camera) = 0;
+    virtual DXD::Camera *getCamera() = 0;
 
     virtual ~Scene() = default;
     static std::unique_ptr<Scene> create();

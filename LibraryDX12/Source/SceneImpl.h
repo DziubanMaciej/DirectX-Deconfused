@@ -22,6 +22,7 @@ public:
     void addObject(DXD::Object &object) override;
     bool removeObject(DXD::Object &object) override;
     void setCamera(DXD::Camera &camera) override;
+    virtual DXD::Camera *getCamera() override;
 
     void render(ApplicationImpl &application, SwapChain &swapChain);
 

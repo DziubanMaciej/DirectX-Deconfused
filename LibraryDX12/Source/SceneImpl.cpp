@@ -37,6 +37,10 @@ void SceneImpl::setCamera(DXD::Camera &camera) {
     this->camera = static_cast<CameraImpl *>(&camera);
 }
 
+DXD::Camera *SceneImpl::getCamera() {
+    return camera;
+}
+
 void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     auto &commandQueue = application.getDirectCommandQueue();
     CommandList commandList{commandQueue.getCommandAllocatorManager(), nullptr};
@@ -55,7 +59,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     commandList.setGraphicsRootSignature(application.getPipelineStateController().getRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT));
 
     // View projection matrix
-    float aspectRatio = (float) swapChain.getWidth() / swapChain.getHeight();
+    float aspectRatio = (float)swapChain.getWidth() / swapChain.getHeight();
     camera->setAspectRatio(aspectRatio);
     const XMMATRIX viewMatrix = camera->getViewMatrix();
     const XMMATRIX projectionMatrix = camera->getProjectionMatrix();
