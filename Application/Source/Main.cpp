@@ -10,7 +10,7 @@
 #include <string>
 
 struct MyCallbackHandler : DXD::CallbackHandler {
-    MyCallbackHandler(DXD::Window &window) : window(window) {}
+    MyCallbackHandler(DXD::Window &window, DXD::Object &object) : window(window), object(object) {}
 
     void onResize(int newWidth, int newHeight) override {
         DXD::log("Resized to: %d, %d\n", newWidth, newHeight);
@@ -20,19 +20,22 @@ struct MyCallbackHandler : DXD::CallbackHandler {
             fullscreen = !fullscreen;
             window.setFullscreen(fullscreen);
         }
+        if (vkCode == 'A') {
+            static float rotation = 0.f;
+            rotation += 0.1f;
+            object.setRotation(rotation, 0, rotation);
+        }
     }
 
 private:
     bool fullscreen = false;
     DXD::Window &window;
+    DXD::Object &object;
 };
 
 int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int show) {
     auto application = DXD::Application::create(true);
     auto window = DXD::Window::create(*application, L"myClass", L"myWindow", hInstance, 300, 300);
-
-    MyCallbackHandler handler{*window};
-    application->setCallbackHandler(&handler);
 
     auto teapotMesh = DXD::Mesh::create(*application);
     if (teapotMesh->loadFromObj("Resources/meshes/teapot.obj") != 0)
@@ -65,6 +68,9 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int s
     scene->setBackgroundColor(0.7f, 0.4f, 0.2f);
     scene->setCamera(*camera);
     window->setScene(*scene);
+
+    MyCallbackHandler handler{*window, *object2};
+    application->setCallbackHandler(&handler);
 
     window->show();
     window->messageLoop();
