@@ -1,6 +1,8 @@
 add_sources_and_cmake_file(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/ApplicationImpl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ApplicationImpl.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/CameraImpl.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/CameraImpl.h
     ${CMAKE_CURRENT_SOURCE_DIR}/CommandAllocatorManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/CommandAllocatorManager.h
     ${CMAKE_CURRENT_SOURCE_DIR}/CommandList.cpp
