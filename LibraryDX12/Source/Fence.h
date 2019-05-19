@@ -16,10 +16,11 @@ public:
     uint64_t signal(ID3D12CommandQueuePtr commandQueue);
 
     bool isComplete(UINT64 fenceValue) const;
-    bool getFenceValue() const;
+    uint64_t getLastSignalledFenceValue() const;
+    uint64_t getCompletedFenceValue() const;
 
 private:
     ID3D12FencePtr fence;
     Event event;
-    uint64_t fenceValue = 0ull;
+    uint64_t lastSignalledFence = 0ull;
 };

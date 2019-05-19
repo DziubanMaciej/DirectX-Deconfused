@@ -19,15 +19,19 @@ void Fence::waitOnGpu(ID3D12CommandQueuePtr commandQueue, UINT64 fenceValue) {
 
 uint64_t Fence::signal(ID3D12CommandQueuePtr commandQueue) {
     // Updates fenceValue to value being signaled
-    fenceValue++;
-    throwIfFailed(commandQueue->Signal(fence.Get(), fenceValue));
-    return fenceValue;
+    lastSignalledFence++;
+    throwIfFailed(commandQueue->Signal(fence.Get(), lastSignalledFence));
+    return lastSignalledFence;
 }
 
 bool Fence::isComplete(UINT64 fenceValue) const {
     return fence->GetCompletedValue() >= fenceValue;
 }
 
-bool Fence::getFenceValue() const {
-    return fenceValue;
+uint64_t Fence::getLastSignalledFenceValue() const {
+    return lastSignalledFence;
+}
+
+uint64_t Fence::getCompletedFenceValue() const {
+    return fence->GetCompletedValue();
 }
