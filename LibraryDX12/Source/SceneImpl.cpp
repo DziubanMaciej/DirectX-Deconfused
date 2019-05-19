@@ -33,6 +33,10 @@ bool SceneImpl::removeObject(DXD::Object &object) {
     return elementsRemoved == 1;
 }
 
+void SceneImpl::setCamera(DXD::Camera &camera) {
+    this->camera = static_cast<CameraImpl *>(&camera);
+}
+
 void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     auto &commandQueue = application.getDirectCommandQueue();
     CommandList commandList{commandQueue.getCommandAllocatorManager(), nullptr};
@@ -51,11 +55,9 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     commandList.setGraphicsRootSignature(application.getPipelineStateController().getRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT));
 
     // View projection matrix
-    const XMVECTOR eyePosition = XMVectorSet(0, 0, -50, 1);
-    const XMVECTOR focusPoint = XMVectorSet(0, 0, 0, 1);
-    const XMVECTOR upDirection = XMVectorSet(0, 1, 0, 0);
-    const XMMATRIX viewMatrix = XMMatrixLookAtLH(eyePosition, focusPoint, upDirection);
-    const XMMATRIX projectionMatrix = XMMatrixPerspectiveFovLH(XMConvertToRadians(45), 1, 0.1f, 100.0f);
+    camera->setAspectRatio(swapChain.getWidth() / swapChain.getHeight());
+    const XMMATRIX viewMatrix = camera->getViewMatrix();
+    const XMMATRIX projectionMatrix = camera->getProjectionMatrix();
     const XMMATRIX vpMatrix = XMMatrixMultiply(viewMatrix, projectionMatrix);
 
     for (ObjectImpl *object : objects) {

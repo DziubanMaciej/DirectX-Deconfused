@@ -1,9 +1,10 @@
 #include "DXD/Application.h"
 #include "DXD/CallbackHandler.h"
+#include "DXD/Camera.h"
+#include "DXD/Logger.h"
 #include "DXD/Mesh.h"
 #include "DXD/Object.h"
 #include "DXD/Scene.h"
-#include "DXD/Logger.h"
 #include "DXD/Window.h"
 #include <iostream>
 #include <string>
@@ -49,11 +50,20 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int s
     object3->setMesh(*teapotMesh);
     object3->setPosition(0, -6, 9);
 
+    auto camera = DXD::Camera::create();
+    camera->setEyePosition(0, 0, -20);
+    camera->setFocusPoint(0, 0, 0);
+    camera->setUpDirection(0, 1, 0);
+    camera->setFovAngleYDeg(45);
+    camera->setNearZ(0.1f);
+    camera->setFarZ(100.0f);
+
     auto scene = DXD::Scene::create();
     scene->addObject(*object1);
     scene->addObject(*object2);
     scene->addObject(*object3);
     scene->setBackgroundColor(0.7f, 0.4f, 0.2f);
+    scene->setCamera(*camera);
     window->setScene(*scene);
 
     window->show();
