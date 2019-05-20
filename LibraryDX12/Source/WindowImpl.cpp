@@ -2,6 +2,7 @@
 #include "DXD/Logger.h"
 #include "Source/ApplicationImpl.h"
 #include "Source/SceneImpl.h"
+#include "windowsx.h"
 #include <algorithm>
 #include <cassert>
 
@@ -134,6 +135,18 @@ LRESULT WindowImpl::windowProcImpl(HWND windowHandle, UINT message, WPARAM wPara
     case WM_SIZE:
         handleResize();
         break;
+    case WM_MOUSEWHEEL:
+        handleMouseWheel(static_cast<int>(GET_WHEEL_DELTA_WPARAM(wParam)));
+        break;
+    case WM_LBUTTONUP:
+        handleLButtonUp(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        break;
+    case WM_LBUTTONDOWN:
+        handleLButtonDown(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        break;
+    case WM_MOUSEMOVE:
+        handleMouseMove(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+        break;
     default:
         return ::DefWindowProcW(windowHandle, message, wParam, lParam);
     }
@@ -183,6 +196,34 @@ void WindowImpl::handleResize() {
     auto handler = application.getCallbackHandler();
     if (handler != nullptr) {
         handler->onResize(newWidth, newHeight);
+    }
+}
+
+void WindowImpl::handleMouseWheel(int zDelta) {
+    auto handler = application.getCallbackHandler();
+    if (handler != nullptr) {
+        handler->onMouseWheel(zDelta);
+    }
+}
+
+void WindowImpl::handleLButtonUp(unsigned int xPos, unsigned int yPos) {
+    auto handler = application.getCallbackHandler();
+    if (handler != nullptr) {
+        handler->onLButtonUp(xPos, yPos);
+    }
+}
+
+void WindowImpl::handleLButtonDown(unsigned int xPos, unsigned int yPos) {
+    auto handler = application.getCallbackHandler();
+    if (handler != nullptr) {
+        handler->onLButtonDown(xPos, yPos);
+    }
+}
+
+void WindowImpl::handleMouseMove(unsigned int xPos, unsigned int yPos) {
+    auto handler = application.getCallbackHandler();
+    if (handler != nullptr) {
+        handler->onMouseMove(xPos, yPos);
     }
 }
 

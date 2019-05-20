@@ -42,6 +42,11 @@ protected:
     void handleKeyDown(unsigned int vkCode);
     void handleKeyUp(unsigned int vkCode);
     void handleResize();
+    void handleMouseWheel(int zDelta);
+    void handleLButtonUp(unsigned int xPos, unsigned int yPos);
+    void handleLButtonDown(unsigned int xPos, unsigned int yPos);
+    void handleMouseMove(unsigned int xPos, unsigned int yPos);
+
 
     // Window instance accessors (for WNDPROC usage)
     static void setWindowInstanceForHandle(HWND windowHandle, WindowImpl *windowProcImpl);
