@@ -1,6 +1,6 @@
 add_subdirectories()
 
-add_definitions(-DMAKEDLL)
+add_definitions(-DMAKEDLL /MP)
 include_directories(. ${DXD_INCLUDE_DIR})
 collect_sources(SOURCES ${TARGET_NAME})
 source_group (TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES})
