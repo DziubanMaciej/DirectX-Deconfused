@@ -9,31 +9,31 @@ protected:
     ~CameraImpl();
 
 public:
-    void setEyePosition(float x, float y, float z);
-    void setEyePosition(XMVECTOR vec);
-    XMVECTOR getEyePosition() { return eyePosition; }
+    void setEyePosition(float x, float y, float z) override;
+    void setEyePosition(XMVECTOR vec) override;
+    XMVECTOR getEyePosition() const override { return eyePosition; }
 
-    void setFocusPoint(float x, float y, float z);
-    void setFocusPoint(XMVECTOR vec);
-    XMVECTOR getFocusPoint() { return focusPoint; }
+    void setFocusPoint(float x, float y, float z) override;
+    void setFocusPoint(XMVECTOR vec) override;
+    XMVECTOR getFocusPoint() const override { return focusPoint; }
 
-    void setUpDirection(float x, float y, float z);
-    void setUpDirection(XMVECTOR vec);
-    XMVECTOR getUpDirection() { return upDirection; }
+    void setUpDirection(float x, float y, float z) override;
+    void setUpDirection(XMVECTOR vec) override;
+    XMVECTOR getUpDirection() const override { return upDirection; }
 
-    void setFovAngleY(float val);
-    void setFovAngleYDeg(float val);
-    float getFovAngleY() { return fovAngleY; }
-    float getFovAngleYDeg();
+    void setFovAngleY(float val) override;
+    void setFovAngleYDeg(float val) override;
+    float getFovAngleY() const override { return fovAngleY; }
+    float getFovAngleYDeg() const override;
 
     void setAspectRatio(float val);
     float getAspectRatio() { return aspectRatio; }
 
-    void setNearZ(float val);
-    float getNearZ() { return nearZ; }
+    void setNearZ(float val) override;
+    float getNearZ() const override { return nearZ; }
 
-    void setFarZ(float val);
-    float getFarZ() { return farZ; }
+    void setFarZ(float val) override;
+    float getFarZ() const override { return farZ; }
 
     XMMATRIX getViewMatrix();
     XMMATRIX getProjectionMatrix();

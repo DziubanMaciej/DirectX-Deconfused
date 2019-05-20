@@ -5,6 +5,7 @@
 #include <memory>
 
 namespace DXD {
+
 class Object;
 class Camera;
 
@@ -22,4 +23,5 @@ public:
 protected:
     Scene() = default;
 };
+
 } // namespace DXD

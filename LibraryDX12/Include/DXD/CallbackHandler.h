@@ -1,10 +1,9 @@
 #pragma once
 
 #include "DXD/Export.h"
-#include <memory>
-#include <string>
 
 namespace DXD {
+
 class Window;
 
 class EXPORT CallbackHandler {
@@ -19,4 +18,5 @@ public:
     virtual void onLButtonDown(unsigned int xPos, unsigned int yPos) {}
     virtual void onMouseMove(unsigned int xPos, unsigned int yPos) {}
 };
+
 } // namespace DXD

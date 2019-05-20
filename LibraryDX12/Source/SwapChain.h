@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DXD/NonCopyableAndMovable.h"
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
 #include "DXD/ExternalHeadersWrappers/dxgi.h"
 #include <stdint.h>
@@ -7,7 +8,7 @@
 
 class CommandQueue;
 
-class SwapChain {
+class SwapChain : DXD::NonCopyableAndMovable {
     struct BackBufferEntry {
         ID3D12ResourcePtr backBuffer;
         uint64_t lastFence;

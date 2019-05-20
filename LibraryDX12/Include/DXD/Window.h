@@ -7,6 +7,7 @@
 #include <string>
 
 namespace DXD {
+
 class Application;
 class Scene;
 
@@ -32,4 +33,5 @@ public:
 protected:
     Window() = default;
 };
+
 } // namespace DXD

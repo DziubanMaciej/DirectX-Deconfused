@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DXD/Export.h"
+#include "DXD/NonCopyableAndMovable.h"
 #include "DXD/ExternalHeadersWrappers/windows.h"
 #include <debugapi.h>
 #include <mutex>
@@ -10,8 +11,10 @@ namespace DXD {
 
 class EXPORT std::mutex;
 
-class EXPORT LoggerData {
+class EXPORT LoggerData : NonCopyableAndMovable {
 private:
+    LoggerData() = delete;
+
     template <typename... Args>
     friend inline void log(const std::string &format, Args &&... args);
 

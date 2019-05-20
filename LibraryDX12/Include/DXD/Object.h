@@ -1,13 +1,15 @@
 #pragma once
 
 #include "DXD/Export.h"
+#include "DXD/NonCopyableAndMovable.h"
 #include "DXD/ExternalHeadersWrappers/DirectXMath.h"
-#include "DXD/ExternalHeadersWrappers/d3d12.h"
+#include "DXD/ExternalHeadersWrappers/windows.h"
 #include <memory>
 #include <string>
 
 namespace DXD {
-class EXPORT Object {
+
+class EXPORT Object : NonCopyableAndMovable {
 public:
     virtual void setMesh(DXD::Mesh &mesh) = 0;
 
@@ -29,4 +31,5 @@ public:
 protected:
     Object() = default;
 };
+
 } // namespace DXD

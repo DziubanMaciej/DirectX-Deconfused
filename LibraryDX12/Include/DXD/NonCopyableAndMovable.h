@@ -15,7 +15,11 @@ struct EXPORT NonMovable {
     NonMovable &operator=(NonMovable &&) = delete;
 };
 
-struct EXPORT NonCopyableAndMovable : NonCopyable, NonMovable {
+struct EXPORT NonCopyableAndMovable {
     NonCopyableAndMovable() = default;
+    NonCopyableAndMovable(const NonCopyable &) = delete;
+    NonCopyableAndMovable &operator=(const NonCopyable &) = delete;
+    NonCopyableAndMovable(NonMovable &&) = delete;
+    NonCopyableAndMovable &operator=(NonMovable &&) = delete;
 };
 } // namespace DXD

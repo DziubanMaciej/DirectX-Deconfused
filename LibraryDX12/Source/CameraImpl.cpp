@@ -52,7 +52,7 @@ void CameraImpl::setFovAngleYDeg(float val) {
     this->fovAngleY = XMConvertToRadians(val);
 }
 
-float CameraImpl::getFovAngleYDeg() {
+float CameraImpl::getFovAngleYDeg() const {
     return XMConvertToRadians(fovAngleY);
 }
 
@@ -79,9 +79,9 @@ XMMATRIX CameraImpl::getViewMatrix() {
 }
 
 XMMATRIX CameraImpl::getProjectionMatrix() {
-    if(dirtyProj) {
+    if (dirtyProj) {
         dirtyProj = false;
         projectionMatrix = XMMatrixPerspectiveFovLH(fovAngleY, aspectRatio, nearZ, farZ);
     }
-	return projectionMatrix;
+    return projectionMatrix;
 }

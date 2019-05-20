@@ -1,12 +1,15 @@
 #pragma once
 
 #include "DXD/Export.h"
-#include "DXD/Application.h"
+#include "DXD/NonCopyableAndMovable.h"
 #include <memory>
 #include <string>
 
 namespace DXD {
-class EXPORT Mesh {
+
+class Application;
+
+class EXPORT Mesh : NonCopyableAndMovable {
 public:
     virtual int loadFromObj(const std::string filePath) = 0;
 
@@ -16,4 +19,5 @@ public:
 protected:
     Mesh() = default;
 };
+
 } // namespace DXD
