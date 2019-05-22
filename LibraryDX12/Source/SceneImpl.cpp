@@ -72,7 +72,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
         commandList.IASetIndexBuffer(mesh.getIndexBufferView(), mesh.getIndexBuffer());
         commandList.IASetPrimitiveTopologyTriangleList();
 
-        CD3DX12_VIEWPORT viewport(0.0f, 0.0f, 300.f, 300.f);
+        CD3DX12_VIEWPORT viewport(0.0f, 0.0f, (float)swapChain.getWidth(), (float)swapChain.getHeight());
         CD3DX12_RECT scissorRect(0, 0, LONG_MAX, LONG_MAX);
         commandList.RSSetScissorRect(scissorRect);
         commandList.RSSetViewport(viewport);
