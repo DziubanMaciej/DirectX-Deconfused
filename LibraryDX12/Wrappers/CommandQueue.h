@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Source/CommandAllocatorManager.h"
-#include "Source/Event.h"
-#include "Source/Fence.h"
 #include "Source/ResourceUsageTracker.h"
+#include "Wrappers/Event.h"
+#include "Wrappers/Fence.h"
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
 #include <vector>
 

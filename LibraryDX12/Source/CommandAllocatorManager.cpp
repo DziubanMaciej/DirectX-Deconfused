@@ -1,5 +1,5 @@
 #include "CommandAllocatorManager.h"
-#include "Source/Fence.h"
+#include "Wrappers/Fence.h"
 #include "Utility/ThrowIfFailed.h"
 #include <cassert>
 

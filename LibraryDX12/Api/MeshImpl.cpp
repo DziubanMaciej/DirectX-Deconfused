@@ -1,7 +1,7 @@
 #include "MeshImpl.h"
-#include "ApplicationImpl.h"
-#include "CommandList.h"
+#include "Api/ApplicationImpl.h"
 #include "Utility/ThrowIfFailed.h"
+#include "Wrappers/CommandList.h"
 #include <fstream>
 
 namespace DXD {

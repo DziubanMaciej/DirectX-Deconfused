@@ -1,7 +1,7 @@
 #pragma once
 
 #include "DXD/Window.h"
-#include "Source/SwapChain.h"
+#include "Wrappers/SwapChain.h"
 #include "DXD/ExternalHeadersWrappers/windows.h"
 
 class ApplicationImpl;
@@ -46,7 +46,6 @@ protected:
     void handleLButtonUp(unsigned int xPos, unsigned int yPos);
     void handleLButtonDown(unsigned int xPos, unsigned int yPos);
     void handleMouseMove(unsigned int xPos, unsigned int yPos);
-
 
     // Window instance accessors (for WNDPROC usage)
     static void setWindowInstanceForHandle(HWND windowHandle, WindowImpl *windowProcImpl);

@@ -1,8 +1,8 @@
 #pragma once
 
+#include "Api/CameraImpl.h"
+#include "Api/ObjectImpl.h"
 #include "DXD/Scene.h"
-#include "Source/CameraImpl.h"
-#include "Source/ObjectImpl.h"
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
 #include <set>
 

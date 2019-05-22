@@ -1,7 +1,7 @@
 #pragma once
 
 #include "DXD/Application.h"
-#include "Source/CommandQueue.h"
+#include "Wrappers/CommandQueue.h"
 #include "Source/PipelineStateController.h"
 #include "DXD/ExternalHeadersWrappers/dxgi.h"
 

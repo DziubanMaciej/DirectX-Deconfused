@@ -1,7 +1,7 @@
 #pragma once
 
 #include "DXD/NonCopyableAndMovable.h"
-#include "Source/Event.h"
+#include "Wrappers/Event.h"
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
 #include <stdint.h>
 

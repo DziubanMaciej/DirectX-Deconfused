@@ -1,5 +1,5 @@
 #include "Swapchain.h"
-#include "Source/CommandQueue.h"
+#include "Wrappers/CommandQueue.h"
 #include "Utility/ThrowIfFailed.h"
 #include "DXD/ExternalHeadersWrappers/d3dx12.h"
 #include <algorithm>

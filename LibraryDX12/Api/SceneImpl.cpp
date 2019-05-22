@@ -1,9 +1,9 @@
 #include "SceneImpl.h"
-#include "Source/ApplicationImpl.h"
-#include "Source/CommandList.h"
-#include "Source/CommandQueue.h"
-#include "Source/WindowImpl.h"
+#include "Api/ApplicationImpl.h"
+#include "Api/WindowImpl.h"
 #include "Utility/ThrowIfFailed.h"
+#include "Wrappers/CommandList.h"
+#include "Wrappers/CommandQueue.h"
 #include "DXD/ExternalHeadersWrappers/d3dx12.h"
 #include <algorithm>
 #include <cassert>

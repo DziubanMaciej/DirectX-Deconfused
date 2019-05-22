@@ -1,31 +1,8 @@
 add_sources_and_cmake_file(${TARGET_NAME}
-    ${CMAKE_CURRENT_SOURCE_DIR}/ApplicationImpl.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/ApplicationImpl.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/CameraImpl.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/CameraImpl.h
     ${CMAKE_CURRENT_SOURCE_DIR}/CommandAllocatorManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/CommandAllocatorManager.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/CommandList.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/CommandList.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/Event.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Event.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/Fence.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/Fence.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/LoggerImpl.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/CommandQueue.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/CommandQueue.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/MeshImpl.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/MeshImpl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/PipelineStateController.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/PipelineStateController.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/ObjectImpl.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/ObjectImpl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ResourceUsageTracker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ResourceUsageTracker.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/SceneImpl.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/SceneImpl.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/SwapChain.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/SwapChain.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/WindowImpl.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/WindowImpl.h
 )
