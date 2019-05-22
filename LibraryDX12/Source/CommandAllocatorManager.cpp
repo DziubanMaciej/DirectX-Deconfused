@@ -1,6 +1,8 @@
 #include "CommandAllocatorManager.h"
-#include "Wrappers/Fence.h"
+
 #include "Utility/ThrowIfFailed.h"
+#include "Wrappers/Fence.h"
+
 #include <cassert>
 
 CommandAllocatorManager::CommandAllocatorManager(ID3D12DevicePtr device, Fence &fence, D3D12_COMMAND_LIST_TYPE type)

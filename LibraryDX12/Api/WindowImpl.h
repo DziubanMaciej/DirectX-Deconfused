@@ -1,7 +1,9 @@
 #pragma once
 
-#include "DXD/Window.h"
 #include "Wrappers/SwapChain.h"
+
+#include "DXD/Window.h"
+
 #include "DXD/ExternalHeadersWrappers/windows.h"
 
 class ApplicationImpl;

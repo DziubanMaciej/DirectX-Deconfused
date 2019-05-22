@@ -1,4 +1,5 @@
 #include "ObjectImpl.h"
+
 #include <fstream>
 
 namespace DXD {

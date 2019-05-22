@@ -1,5 +1,7 @@
 #include "PipelineStateController.h"
+
 #include "Utility/ThrowIfFailed.h"
+
 #include "DXD/ExternalHeadersWrappers/DirectXMath.h"
 #include <cassert>
 

@@ -1,4 +1,5 @@
 #include "ApplicationImpl.h"
+
 #include "Utility/ThrowIfFailed.h"
 
 // ------------------------------------------------------------- Creating

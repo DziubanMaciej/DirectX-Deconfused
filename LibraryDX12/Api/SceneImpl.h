@@ -2,7 +2,9 @@
 
 #include "Api/CameraImpl.h"
 #include "Api/ObjectImpl.h"
+
 #include "DXD/Scene.h"
+
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
 #include <set>
 

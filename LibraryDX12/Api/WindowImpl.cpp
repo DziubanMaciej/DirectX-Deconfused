@@ -1,11 +1,14 @@
 #include "WindowImpl.h"
+
 #include "Api/ApplicationImpl.h"
 #include "Api/SceneImpl.h"
+
 #include "DXD/CallbackHandler.h"
 #include "DXD/Logger.h"
-#include "windowsx.h"
+
 #include <algorithm>
 #include <cassert>
+#include <windowsx.h>
 
 // -------------------------------------------------------------------------------- Creating
 

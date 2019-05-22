@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DXD/NonCopyableAndMovable.h"
+
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
 #include <map>
 #include <set>

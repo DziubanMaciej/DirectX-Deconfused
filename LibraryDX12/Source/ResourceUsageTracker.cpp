@@ -1,4 +1,5 @@
 #include "ResourceUsageTracker.h"
+
 #include <cassert>
 
 void ResourceUsageTracker::registerUsage(const std::set<ID3D12ResourcePtr> &resources, uint64_t fenceValue) {

@@ -48,18 +48,19 @@ DerivePointerAlignment: false
 DisableFormat:   false
 ExperimentalAutoDetectBinPacking: false
 ForEachMacros:   [ foreach, Q_FOREACH, BOOST_FOREACH ]
-IncludeBlocks:   Merge
+
+IncludeBlocks:   Regroup
 IncludeCategories: 
-  - Regex:           '^"DXD/ExternalHeadersWrappers/.*'
-    Priority:        3
-  - Regex:           "^DXD/.*"
-    Priority:        1
-  - Regex:           '^"'
-    Priority:        2
-  - Regex:           '^<.*>$'
-    Priority:        4
-  - Regex:           '.*'
-    Priority:        5
+  - Regex:           '^("DXD/ExternalHeadersWrappers/)|(<.*>$)'      # external libs
+    Priority:        30                                              #
+  - Regex:           '^"DXD/'                                        # library API
+    Priority:        20                                              #
+  - Regex:           '^[^/]+$'                                       # without slash
+    Priority:        0                                               #
+  - Regex:           '.*'                                            # rest of files
+    Priority:        10                                              #
+IncludeIsMainRegex: ^$
+
 IndentCaseLabels: false
 IndentWidth:     4
 IndentWrappedFunctionNames: false

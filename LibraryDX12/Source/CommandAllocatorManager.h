@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DXD/NonCopyableAndMovable.h"
+
 #include "DXD/ExternalHeadersWrappers/d3dx12.h"
 #include <deque>
 
@@ -10,8 +11,8 @@ class Fence;
 ///
 /// CommandAllocator cannot be reused until CommandList allocated by it has finished executing.
 /// This class maintains a queue of CommandAllocatorEntries. An entry is commandAllocator paired with fence
-/// value indicating the command being completed. CommandList can be reused immediately after executeCommandLists() 
-/// call, queue of these objects is also maintained but no fence are tracked. To minimize creations of CommandAllocators and 
+/// value indicating the command being completed. CommandList can be reused immediately after executeCommandLists()
+/// call, queue of these objects is also maintained but no fence are tracked. To minimize creations of CommandAllocators and
 /// CommandLists, registerAllocatorAndList(ID3D12CommandAllocatorPtr, ID3D12GraphicsCommandListPtr, uint64_t) should be called
 /// as soon as the CommandList is scheduled for execution to the CommandQueue.
 ///

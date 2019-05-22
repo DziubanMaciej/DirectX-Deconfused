@@ -1,8 +1,10 @@
 #pragma once
 
-#include "DXD/Application.h"
-#include "Wrappers/CommandQueue.h"
 #include "Source/PipelineStateController.h"
+#include "Wrappers/CommandQueue.h"
+
+#include "DXD/Application.h"
+
 #include "DXD/ExternalHeadersWrappers/dxgi.h"
 
 class ApplicationImpl : public DXD::Application {
