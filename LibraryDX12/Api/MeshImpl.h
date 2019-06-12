@@ -7,21 +7,21 @@
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
 #include <vector>
 
-enum MeshType {
-    NONE,
-    TRIANGLE_STRIP,
-    TRIANGLE_STRIP_WITH_COORDS,
-    TRIANGLE_STRIP_WITH_NORMALS,
-    TRIANGLE_STRIP_WITH_COORDS_NORMALS
-};
-
 class MeshImpl : public DXD::Mesh {
 protected:
+    enum class MeshType {
+        NONE,
+        TRIANGLE_STRIP,
+        TRIANGLE_STRIP_WITH_COORDS,
+        TRIANGLE_STRIP_WITH_NORMALS,
+        TRIANGLE_STRIP_WITH_COORDS_NORMALS
+    };
+
     friend class DXD::Mesh;
     MeshImpl(DXD::Application &application, MeshType meshType,
              std::vector<FLOAT> &&vertices, std::vector<UINT> &&indices,
              std::vector<FLOAT> &&normals, std::vector<FLOAT> &&textureCoordinates);
-    ~MeshImpl();
+    ~MeshImpl() = default;
 
 public:
     const FLOAT *getVertices() const { return vertices.data(); }
@@ -41,15 +41,16 @@ public:
 
 protected:
     ApplicationImpl &application;
-    ID3D12ResourcePtr vertexBuffer;
-    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
-    ID3D12ResourcePtr indexBuffer;
-    D3D12_INDEX_BUFFER_VIEW indexBufferView;
+    MeshType meshType;
     std::vector<FLOAT> vertices;
     std::vector<UINT> indices;
     std::vector<FLOAT> normals;
     std::vector<FLOAT> textureCoordinates;
-    MeshType meshType;
+
+    ID3D12ResourcePtr vertexBuffer;
+    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
+    ID3D12ResourcePtr indexBuffer;
+    D3D12_INDEX_BUFFER_VIEW indexBufferView;
 
 private:
     void uploadToGPU();

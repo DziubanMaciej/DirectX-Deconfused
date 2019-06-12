@@ -45,7 +45,7 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
         }
     }
 
-    return std::unique_ptr<Mesh>{new MeshImpl(application, MeshType::TRIANGLE_STRIP,
+    return std::unique_ptr<Mesh>{new MeshImpl(application, MeshImpl::MeshType::TRIANGLE_STRIP,
                                               std::move(vertices), std::move(indices),
                                               std::move(normals), std::move(textureCoordinates))};
 }
@@ -61,9 +61,6 @@ MeshImpl::MeshImpl(DXD::Application &application, MeshType meshType,
       normals(std::move(normals)),
       textureCoordinates(std::move(textureCoordinates)) {
     uploadToGPU();
-}
-
-MeshImpl::~MeshImpl() {
 }
 
 void MeshImpl::uploadToGPU() {
