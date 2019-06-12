@@ -10,16 +10,16 @@ protected:
 
 public:
     void setEyePosition(float x, float y, float z) override;
-    void setEyePosition(XMVECTOR vec) override;
-    XMVECTOR getEyePosition() const override { return eyePosition; }
+    void setEyePosition(XMFLOAT3 vec) override;
+    XMFLOAT3 getEyePosition() const override;
 
     void setFocusPoint(float x, float y, float z) override;
-    void setFocusPoint(XMVECTOR vec) override;
-    XMVECTOR getFocusPoint() const override { return focusPoint; }
+    void setFocusPoint(XMFLOAT3 vec) override;
+    XMFLOAT3 getFocusPoint() const override;
 
     void setUpDirection(float x, float y, float z) override;
-    void setUpDirection(XMVECTOR vec) override;
-    XMVECTOR getUpDirection() const override { return upDirection; }
+    void setUpDirection(XMFLOAT3 vec) override;
+    XMFLOAT3 getUpDirection() const override;
 
     void setFovAngleY(float val) override;
     void setFovAngleYDeg(float val) override;

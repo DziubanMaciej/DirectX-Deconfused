@@ -17,9 +17,13 @@ void CameraImpl::setEyePosition(float x, float y, float z) {
     this->dirtyView = true;
 }
 
-void CameraImpl::setEyePosition(XMVECTOR vec) {
+void CameraImpl::setEyePosition(XMFLOAT3 vec) {
     this->dirtyView = true;
-    this->eyePosition = vec;
+    this->eyePosition = XMLoadFloat3(&vec);
+}
+
+XMFLOAT3 CameraImpl::getEyePosition() const {
+    return XMStoreFloat3(this->eyePosition);
 }
 
 void CameraImpl::setFocusPoint(float x, float y, float z) {
@@ -27,9 +31,13 @@ void CameraImpl::setFocusPoint(float x, float y, float z) {
     this->focusPoint = XMVectorSet(x, y, z, 1.f);
 }
 
-void CameraImpl::setFocusPoint(XMVECTOR vec) {
+void CameraImpl::setFocusPoint(XMFLOAT3 vec) {
     this->dirtyView = true;
-    this->focusPoint = vec;
+    this->focusPoint = XMLoadFloat3(&vec);
+}
+
+XMFLOAT3 CameraImpl::getFocusPoint() const {
+    return XMStoreFloat3(this->focusPoint);
 }
 
 void CameraImpl::setUpDirection(float x, float y, float z) {
@@ -37,9 +45,13 @@ void CameraImpl::setUpDirection(float x, float y, float z) {
     this->upDirection = XMVectorSet(x, y, z, 0.f);
 }
 
-void CameraImpl::setUpDirection(XMVECTOR vec) {
+void CameraImpl::setUpDirection(XMFLOAT3 vec) {
     this->dirtyView = true;
-    this->upDirection = vec;
+    this->upDirection = XMLoadFloat3(&vec);
+}
+
+XMFLOAT3 CameraImpl::getUpDirection() const {
+    return XMStoreFloat3(this->upDirection);
 }
 
 void CameraImpl::setFovAngleY(float val) {

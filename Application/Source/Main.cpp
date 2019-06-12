@@ -40,7 +40,7 @@ struct Game : DXD::CallbackHandler {
         camera->setNearZ(0.1f);
         camera->setFarZ(100.0f);
 
-        const XMFLOAT3 eyePos = XMStoreFloat3(camera->getEyePosition());
+        const XMFLOAT3 eyePos = camera->getEyePosition();
         cameraX = eyePos.x;
         cameraY = eyePos.y;
         cameraRadius = eyePos.z;
