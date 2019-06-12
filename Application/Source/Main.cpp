@@ -10,19 +10,57 @@
 
 #include <iostream>
 #include <string>
+#include <vector>
 
-struct MyCallbackHandler : DXD::CallbackHandler {
-    MyCallbackHandler(DXD::Window &window, DXD::Object &object, DXD::Scene &scene) : window(window), object(object), scene(scene) {
-        auto camera = scene.getCamera();
-        XMFLOAT4 tmpEyePos;
-        XMStoreFloat4(&tmpEyePos, camera->getEyePosition());
-        cameraX = tmpEyePos.x;
-        cameraY = tmpEyePos.y;
-        cameraRadius = tmpEyePos.z;
+struct Game : DXD::CallbackHandler {
+    Game(HINSTANCE hInstance) {
+        application = DXD::Application::create(true);
+        window = DXD::Window::create(*application, L"myClass", L"myWindow", hInstance, 300, 300);
+        teapotMesh = DXD::Mesh::create(*application);
+        assert(teapotMesh->loadFromObj("Resources/meshes/teapot.obj") == 0);
+        woodTexture = DXD::Texture::createFromFile(*application, "Resources/wood.jpg");
+
+        objects.push_back(DXD::Object::create());
+        objects.back()->setMesh(*teapotMesh);
+        objects.back()->setPosition(0, 6, 0);
+
+        objects.push_back(DXD::Object::create());
+        objects.back()->setMesh(*teapotMesh);
+        objects.back()->setPosition(0, 0, 0);
+
+        objects.push_back(DXD::Object::create());
+        objects.back()->setMesh(*teapotMesh);
+        objects.back()->setPosition(0, -6, 0);
+
+        camera = DXD::Camera::create();
+        camera->setEyePosition(0, 0, -20);
+        camera->setFocusPoint(0, 0, 0);
+        camera->setUpDirection(0, 1, 0);
+        camera->setFovAngleYDeg(45);
+        camera->setNearZ(0.1f);
+        camera->setFarZ(100.0f);
+
+        const XMFLOAT3 eyePos = XMStoreFloat3(camera->getEyePosition());
+        cameraX = eyePos.x;
+        cameraY = eyePos.y;
+        cameraRadius = eyePos.z;
+
+        scene = DXD::Scene::create();
+        scene->addObject(*objects[0]);
+        scene->addObject(*objects[1]);
+        scene->addObject(*objects[2]);
+        scene->setBackgroundColor(0.7f, 0.4f, 0.2f);
+        scene->setCamera(*camera);
+        window->setScene(*scene);
+
+        application->setCallbackHandler(this);
     }
-    void onResize(int newWidth, int newHeight) override {
-        DXD::log("Resized to: %d, %d\n", newWidth, newHeight);
+
+    void run() {
+        window->show();
+        window->messageLoop();
     }
+
     void onMouseWheel(int zDelta) override {
         float zoomFactor = 2.5f;
         cameraRadius += zDelta > 0 ? zoomFactor : -zoomFactor;
@@ -52,76 +90,41 @@ struct MyCallbackHandler : DXD::CallbackHandler {
     void onKeyDown(unsigned int vkCode) override {
         if (vkCode == 'F') {
             fullscreen = !fullscreen;
-            window.setFullscreen(fullscreen);
+            window->setFullscreen(fullscreen);
         }
         if (vkCode == 'A') {
             static float rotation = 0.f;
             rotation += 0.1f;
-            object.setRotation(rotation, rotation, rotation);
+            objects[1]->setRotation(rotation, rotation, rotation);
         }
     }
 
 private:
     void updateCamera() {
-        auto camera = scene.getCamera();
+        auto camera = scene->getCamera();
         float x = cameraRadius * cosf((cameraX) / 10.f);
         float y = cameraRadius * cosf((cameraY) / 10.f);
         float z = cameraRadius * sinf((cameraX) / 10.f); // to jest zle, ale dobrze wyglada
         camera->setEyePosition(x, y, z);
-        scene.setCamera(*camera);
     }
+
     bool fullscreen = false;
     bool lButtonHold = false;
     unsigned int dxPos, dyPos;
     float cameraRadius;
     int cameraX, cameraY;
-    DXD::Window &window;
-    DXD::Object &object;
-    DXD::Scene &scene;
+
+    std::unique_ptr<DXD::Application> application;
+    std::unique_ptr<DXD::Window> window;
+    std::unique_ptr<DXD::Mesh> teapotMesh;
+    std::vector<std::unique_ptr<DXD::Object>> objects;
+    std::unique_ptr<DXD::Texture> woodTexture;
+    std::unique_ptr<DXD::Scene> scene;
+    std::unique_ptr<DXD::Camera> camera;
 };
 
 int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int show) {
-    auto application = DXD::Application::create(true);
-    auto window = DXD::Window::create(*application, L"myClass", L"myWindow", hInstance, 300, 300);
-
-    auto teapotMesh = DXD::Mesh::create(*application);
-    if (teapotMesh->loadFromObj("Resources/meshes/teapot.obj") != 0)
-        return -1;
-
-    auto texture = DXD::Texture::createFromFile(*application, "Resources/wood.jpg");
-
-    auto object1 = DXD::Object::create();
-    object1->setMesh(*teapotMesh);
-    object1->setPosition(0, 6, 0);
-
-    auto object2 = DXD::Object::create();
-    object2->setMesh(*teapotMesh);
-    object2->setPosition(0, 0, 0);
-
-    auto object3 = DXD::Object::create();
-    object3->setMesh(*teapotMesh);
-    object3->setPosition(0, -6, 0);
-
-    auto camera = DXD::Camera::create();
-    camera->setEyePosition(0, 0, -20);
-    camera->setFocusPoint(0, 0, 0);
-    camera->setUpDirection(0, 1, 0);
-    camera->setFovAngleYDeg(45);
-    camera->setNearZ(0.1f);
-    camera->setFarZ(100.0f);
-
-    auto scene = DXD::Scene::create();
-    scene->addObject(*object1);
-    scene->addObject(*object2);
-    scene->addObject(*object3);
-    scene->setBackgroundColor(0.7f, 0.4f, 0.2f);
-    scene->setCamera(*camera);
-    window->setScene(*scene);
-
-    MyCallbackHandler handler{*window, *object2, *scene};
-    application->setCallbackHandler(&handler);
-
-    window->show();
-    window->messageLoop();
+    Game game{hInstance};
+    game.run();
     return 0;
 }
