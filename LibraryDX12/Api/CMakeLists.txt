@@ -10,6 +10,8 @@ add_sources_and_cmake_file(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/ObjectImpl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/SceneImpl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/SceneImpl.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TextureImpl.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/TextureImpl.h
     ${CMAKE_CURRENT_SOURCE_DIR}/WindowImpl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/WindowImpl.h
 )

@@ -5,7 +5,9 @@
 #include "DXD/Mesh.h"
 #include "DXD/Object.h"
 #include "DXD/Scene.h"
+#include "DXD/Texture.h"
 #include "DXD/Window.h"
+
 #include <iostream>
 #include <string>
 
@@ -85,6 +87,8 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int s
     auto teapotMesh = DXD::Mesh::create(*application);
     if (teapotMesh->loadFromObj("Resources/meshes/teapot.obj") != 0)
         return -1;
+
+    auto texture = DXD::Texture::createFromFile(*application, "Resources/wood.jpg");
 
     auto object1 = DXD::Object::create();
     object1->setMesh(*teapotMesh);
