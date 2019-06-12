@@ -1,4 +1,4 @@
-#include "DXD/Application.h"
+﻿#include "DXD/Application.h"
 #include "DXD/CallbackHandler.h"
 #include "DXD/Camera.h"
 #include "DXD/Logger.h"
@@ -33,27 +33,21 @@ struct Game : DXD::CallbackHandler {
         objects.back()->setMesh(*teapotMesh);
         objects.back()->setPosition(0, -6, 0);
 
-        camera = DXD::Camera::create();
-        camera->setEyePosition(0, 0, -20);
-        camera->setFocusPoint(0, 0, 0);
-        camera->setUpDirection(0, 1, 0);
-        camera->setFovAngleYDeg(45);
-        camera->setNearZ(0.1f);
-        camera->setFarZ(100.0f);
-
-        const XMFLOAT3 eyePos = camera->getEyePosition();
-        cameraX = eyePos.x;
-        cameraY = eyePos.y;
-        cameraRadius = eyePos.z;
-
         scene = DXD::Scene::create();
         scene->addObject(*objects[0]);
         scene->addObject(*objects[1]);
         scene->addObject(*objects[2]);
         scene->setBackgroundColor(0.7f, 0.4f, 0.2f);
-        scene->setCamera(*camera);
-        window->setScene(*scene);
 
+        camera = DXD::Camera::create();
+        camera->setUpDirection(0, 1, 0);
+        camera->setFovAngleYDeg(45);
+        camera->setNearZ(0.1f);
+        camera->setFarZ(100.0f);
+        scene->setCamera(*camera);
+        updateCamera();
+
+        window->setScene(*scene);
         application->setCallbackHandler(this);
     }
 
@@ -62,58 +56,105 @@ struct Game : DXD::CallbackHandler {
         window->messageLoop();
     }
 
-    void onMouseWheel(int zDelta) override {
-        float zoomFactor = 2.5f;
-        cameraRadius += zDelta > 0 ? zoomFactor : -zoomFactor;
-        if (cameraRadius == 0.f)
-            cameraRadius += .1f;
-        updateCamera();
-    }
-    void onLButtonDown(unsigned int xPos, unsigned int yPos) override {
-        dxPos = xPos;
-        dyPos = yPos;
-        lButtonHold = true;
-        DXD::log("LButtonDown\n");
-    }
-    void onLButtonUp(unsigned int xPos, unsigned int yPos) override {
-        lButtonHold = false;
-        DXD::log("LButtonUp\n");
-    }
     void onMouseMove(unsigned int xPos, unsigned int yPos) override {
-        if (lButtonHold) {
-            cameraX += dxPos - xPos;
-            cameraY += dyPos - yPos;
+        if (lookingAroundEnabled) {
+            XMFLOAT3 oldFocusDirection{0, 0, 1};
+
+            // Update angles
+            angleY += cameraRotationSpeed * (static_cast<int>(yPos) - static_cast<int>(lastMouseY));
+            angleX -= cameraRotationSpeed * (static_cast<int>(xPos) - static_cast<int>(lastMouseX));
+
+            // Rotate vertically
+            const auto cosineY = cos(angleY);
+            const auto sineY = sin(angleY);
+            focusDirection.x = oldFocusDirection.x;
+            focusDirection.y = oldFocusDirection.y * cosineY - oldFocusDirection.z * sineY;
+            focusDirection.z = oldFocusDirection.y * sineY + oldFocusDirection.z * cosineY;
+
+            // Rotate horizontally
+            const auto cosineX = cos(angleX);
+            const auto sineX = sin(angleX);
+            oldFocusDirection = focusDirection;
+            focusDirection.x = oldFocusDirection.x * cosineX - oldFocusDirection.z * sineX;
+            focusDirection.y = oldFocusDirection.y;
+            focusDirection.z = oldFocusDirection.x * sineX + oldFocusDirection.z * cosineX;
+
             updateCamera();
-            dxPos = xPos;
-            dyPos = yPos;
+
+            DXD::log("AngleX = %f\n", angleX);
         }
+
+        lastMouseX = xPos;
+        lastMouseY = yPos;
     }
+
     void onKeyDown(unsigned int vkCode) override {
-        if (vkCode == 'F') {
+        switch (vkCode) {
+        case 'F':
             fullscreen = !fullscreen;
             window->setFullscreen(fullscreen);
-        }
-        if (vkCode == 'A') {
+            break;
+        case 'W':
+            cameraPosition.x += focusDirection.x * movementSpeed;
+            cameraPosition.y += focusDirection.y * movementSpeed;
+            cameraPosition.z += focusDirection.z * movementSpeed;
+            updateCamera();
+            break;
+        case 'S':
+            cameraPosition.x -= focusDirection.x * movementSpeed;
+            cameraPosition.y -= focusDirection.y * movementSpeed;
+            cameraPosition.z -= focusDirection.z * movementSpeed;
+            updateCamera();
+            break;
+        case 'A':
+            cameraPosition.x -= movementSpeed;
+            updateCamera();
+            break;
+        case 'D':
+            cameraPosition.x += movementSpeed;
+            updateCamera();
+            break;
+        case 'Q':
+            cameraPosition.y += movementSpeed;
+            updateCamera();
+            break;
+        case 'E':
+            cameraPosition.y -= movementSpeed;
+            updateCamera();
+            break;
+        case 'L':
+            lookingAroundEnabled = !lookingAroundEnabled;
+            break;
+        case VK_SPACE:
             static float rotation = 0.f;
             rotation += 0.1f;
             objects[1]->setRotation(rotation, rotation, rotation);
+            break;
         }
     }
 
 private:
     void updateCamera() {
         auto camera = scene->getCamera();
-        float x = cameraRadius * cosf((cameraX) / 10.f);
-        float y = cameraRadius * cosf((cameraY) / 10.f);
-        float z = cameraRadius * sinf((cameraX) / 10.f); // to jest zle, ale dobrze wyglada
-        camera->setEyePosition(x, y, z);
+        camera->setEyePosition(cameraPosition);
+
+        XMFLOAT3 focusPoint{cameraPosition};
+        focusPoint.x += focusDirection.x;
+        focusPoint.y += focusDirection.y;
+        focusPoint.z += focusDirection.z;
+        camera->setFocusPoint(focusPoint);
     }
 
+    constexpr static float movementSpeed = 0.7f;
+    constexpr static float cameraRotationSpeed = 0.007f;
+
+    unsigned int lastMouseX, lastMouseY;
+    bool lookingAroundEnabled = false;
     bool fullscreen = false;
-    bool lButtonHold = false;
-    unsigned int dxPos, dyPos;
-    float cameraRadius;
-    int cameraX, cameraY;
+    float angleX = 0.f;
+    float angleY = 0.f;
+    XMFLOAT3 cameraPosition{0, 0, -20};
+    XMFLOAT3 focusDirection{0, 0, 1};
 
     std::unique_ptr<DXD::Application> application;
     std::unique_ptr<DXD::Window> window;
