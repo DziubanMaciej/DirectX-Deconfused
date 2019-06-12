@@ -18,12 +18,12 @@ enum MeshType {
 class MeshImpl : public DXD::Mesh {
 protected:
     friend class DXD::Mesh;
-    MeshImpl(DXD::Application &application);
+    MeshImpl(DXD::Application &application, MeshType meshType,
+             std::vector<FLOAT> &&vertices, std::vector<UINT> &&indices,
+             std::vector<FLOAT> &&normals, std::vector<FLOAT> &&textureCoordinates);
     ~MeshImpl();
 
 public:
-    int loadFromObj(const std::string filePath);
-
     const FLOAT *getVertices() const { return vertices.data(); }
     const UINT *getIndices() const { return indices.data(); }
     const FLOAT *getNormals() const { return normals.data(); }

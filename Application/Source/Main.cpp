@@ -16,9 +16,10 @@ struct Game : DXD::CallbackHandler {
     Game(HINSTANCE hInstance) {
         application = DXD::Application::create(true);
         window = DXD::Window::create(*application, L"myClass", L"myWindow", hInstance, 300, 300);
-        teapotMesh = DXD::Mesh::create(*application);
-        assert(teapotMesh->loadFromObj("Resources/meshes/teapot.obj") == 0);
+        teapotMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/teapot.obj");
+        assert(teapotMesh);
         woodTexture = DXD::Texture::createFromFile(*application, "Resources/wood.jpg");
+        assert(woodTexture);
 
         objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*teapotMesh);

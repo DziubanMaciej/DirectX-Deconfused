@@ -7,30 +7,16 @@
 #include <fstream>
 
 namespace DXD {
-std::unique_ptr<Mesh> Mesh::create(Application &application) {
-    return std::unique_ptr<Mesh>{new MeshImpl(application)};
-}
-} // namespace DXD
-
-MeshImpl::MeshImpl(DXD::Application &application)
-    : application(*static_cast<ApplicationImpl *>(&application)) {
-    meshType = MeshType::NONE;
-}
-
-MeshImpl::~MeshImpl() {
-}
-
-/**
-	Loads verices and indices from .obj file. Temporary solution.
-*/
-int MeshImpl::loadFromObj(const std::string filePath) {
-
-    std::fstream inputFile;
-    inputFile.open(filePath, std::ios::in);
-
+std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const std::string &filePath) {
+    std::fstream inputFile{filePath, std::ios::in};
     if (!inputFile.good()) {
-        return -1;
+        return nullptr;
     }
+
+    std::vector<FLOAT> vertices;
+    std::vector<UINT> indices;
+    std::vector<FLOAT> normals;
+    std::vector<FLOAT> textureCoordinates;
 
     char lineType;
     FLOAT x, y, z;
@@ -59,13 +45,25 @@ int MeshImpl::loadFromObj(const std::string filePath) {
         }
     }
 
-    inputFile.close();
+    return std::unique_ptr<Mesh>{new MeshImpl(application, MeshType::TRIANGLE_STRIP,
+                                              std::move(vertices), std::move(indices),
+                                              std::move(normals), std::move(textureCoordinates))};
+}
+} // namespace DXD
 
-    meshType = MeshType::TRIANGLE_STRIP;
-
+MeshImpl::MeshImpl(DXD::Application &application, MeshType meshType,
+                   std::vector<FLOAT> &&vertices, std::vector<UINT> &&indices,
+                   std::vector<FLOAT> &&normals, std::vector<FLOAT> &&textureCoordinates)
+    : application(*static_cast<ApplicationImpl *>(&application)),
+      meshType(meshType),
+      vertices(std::move(vertices)),
+      indices(std::move(indices)),
+      normals(std::move(normals)),
+      textureCoordinates(std::move(textureCoordinates)) {
     uploadToGPU();
+}
 
-    return 0;
+MeshImpl::~MeshImpl() {
 }
 
 void MeshImpl::uploadToGPU() {

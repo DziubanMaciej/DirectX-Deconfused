@@ -11,10 +11,8 @@ class Application;
 
 class EXPORT Mesh : NonCopyableAndMovable {
 public:
-    virtual int loadFromObj(const std::string filePath) = 0;
-
     virtual ~Mesh() = default;
-    static std::unique_ptr<Mesh> create(DXD::Application &application);
+    static std::unique_ptr<Mesh> createFromObj(DXD::Application &application, const std::string &filePath);
 
 protected:
     Mesh() = default;
