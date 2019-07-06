@@ -12,7 +12,7 @@ class ApplicationImpl;
 class SwapChain;
 class WindowImpl;
 class ObjectImpl;
-class Camera;
+class CameraImpl;
 
 class SceneImpl : public DXD::Scene {
 protected:
