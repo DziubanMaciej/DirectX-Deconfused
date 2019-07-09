@@ -15,29 +15,41 @@
 struct Game : DXD::CallbackHandler {
     Game(HINSTANCE hInstance) {
         application = DXD::Application::create(true);
-        window = DXD::Window::create(*application, L"myClass", L"myWindow", hInstance, 300, 300);
+        window = DXD::Window::create(*application, L"myClass", L"myWindow", hInstance, 1240, 720);
         teapotMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/teapot.obj");
         assert(teapotMesh);
+        cubeMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/cube.obj");
+        assert(cubeMesh);
         woodTexture = DXD::Texture::createFromFile(*application, "Resources/wood.jpg");
         assert(woodTexture);
 
         objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*teapotMesh);
-        objects.back()->setPosition(0, 6, 0);
+        objects.back()->setPosition(8, -1, 0);
 
         objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*teapotMesh);
-        objects.back()->setPosition(0, 0, 0);
+        objects.back()->setPosition(0, -1.5, 0);
 
         objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*teapotMesh);
-        objects.back()->setPosition(0, -6, 0);
+        objects.back()->setPosition(-8, -1, 0);
+
+		objects.push_back(DXD::Object::create());
+        objects.back()->setMesh(*cubeMesh);
+        objects.back()->setPosition(-8, -1, -8);
+
+		objects.push_back(DXD::Object::create());
+        objects.back()->setMesh(*cubeMesh);
+        objects.back()->setPosition(8, -1, -8);
 
         scene = DXD::Scene::create();
         scene->addObject(*objects[0]);
         scene->addObject(*objects[1]);
         scene->addObject(*objects[2]);
-        scene->setBackgroundColor(0.7f, 0.4f, 0.2f);
+        scene->addObject(*objects[3]);
+        scene->addObject(*objects[4]);
+        scene->setBackgroundColor(0.1f, 0.1f, 0.3f);
 
         camera = DXD::Camera::create();
         camera->setUpDirection(0, 1, 0);
@@ -159,6 +171,7 @@ private:
     std::unique_ptr<DXD::Application> application;
     std::unique_ptr<DXD::Window> window;
     std::unique_ptr<DXD::Mesh> teapotMesh;
+    std::unique_ptr<DXD::Mesh> cubeMesh;
     std::vector<std::unique_ptr<DXD::Object>> objects;
     std::unique_ptr<DXD::Texture> woodTexture;
     std::unique_ptr<DXD::Scene> scene;
