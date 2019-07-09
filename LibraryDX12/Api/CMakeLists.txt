@@ -3,6 +3,8 @@ add_sources_and_cmake_file(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/ApplicationImpl.h
     ${CMAKE_CURRENT_SOURCE_DIR}/CameraImpl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/CameraImpl.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/LightImpl.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/LightImpl.h
     ${CMAKE_CURRENT_SOURCE_DIR}/LoggerImpl.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/MeshImpl.h
     ${CMAKE_CURRENT_SOURCE_DIR}/MeshImpl.cpp
