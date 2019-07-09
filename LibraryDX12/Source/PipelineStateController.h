@@ -10,6 +10,7 @@ class PipelineStateController : DXD::NonCopyableAndMovable {
 public:
     enum class Identifier {
         PIPELINE_STATE_DEFAULT = 0,
+        PIPELINE_STATE_TEXTURE = 1,
         COUNT // this should be the last entry
     };
 
@@ -22,10 +23,13 @@ public:
 private:
     void compile(Identifier identifier);
     void compilePipelineStateDefault(ID3D12RootSignaturePtr &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    void compilePipelineStateTexture(ID3D12RootSignaturePtr &rootSignature, ID3D12PipelineStatePtr &pipelineState);
 
     static D3D12_GRAPHICS_PIPELINE_STATE_DESC getBaseGraphicsPipelineSateDesc();
     static D3D12_FEATURE_DATA_ROOT_SIGNATURE getRootSignatureFeatureData(ID3D12DevicePtr device);
-    static ID3D12RootSignaturePtr createRootSignature(ID3D12DevicePtr device, CD3DX12_ROOT_PARAMETER1 *rootParameters, UINT rootParametersCount);
+    static ID3D12RootSignaturePtr createRootSignature(ID3D12DevicePtr device,
+                                                      const CD3DX12_ROOT_PARAMETER1 *rootParameters, UINT rootParametersCount,
+                                                      const D3D12_STATIC_SAMPLER_DESC *samplers, UINT samplersCount);
     static ID3DBlobPtr loadBlob(const std::wstring &path);
     static ID3DBlobPtr loadAndCompileShader(const std::wstring &name, const std::string &target);
 

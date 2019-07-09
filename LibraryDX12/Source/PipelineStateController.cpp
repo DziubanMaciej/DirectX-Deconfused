@@ -50,6 +50,9 @@ void PipelineStateController::compile(Identifier identifier) {
     case Identifier::PIPELINE_STATE_DEFAULT:
         compilePipelineStateDefault(rootSignature, pipelineState);
         break;
+    case Identifier::PIPELINE_STATE_TEXTURE:
+        compilePipelineStateTexture(rootSignature, pipelineState);
+        break;
     default:
         assert(false);
     }
@@ -62,7 +65,32 @@ void PipelineStateController::compilePipelineStateDefault(ID3D12RootSignaturePtr
     // Root signature - crossthread data
     CD3DX12_ROOT_PARAMETER1 rootParameters[1] = {};
     rootParameters[0].InitAsConstants(sizeof(SimpleConstantBuffer) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
-    rootSignature = PipelineStateController::createRootSignature(device, rootParameters, _countof(rootParameters));
+    rootSignature = PipelineStateController::createRootSignature(device, rootParameters, _countof(rootParameters), nullptr, 0u);
+
+    // Input layout - per vertex data
+    const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+    };
+
+    // Shaders
+    ID3DBlobPtr vertexShaderBlob = loadAndCompileShader(L"vertex.hlsl", vertexShaderTarget);
+    ID3DBlobPtr pixelShaderBlob = loadAndCompileShader(L"pixel.hlsl", pixelShaderTarget);
+
+    // Compilation
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = getBaseGraphicsPipelineSateDesc();
+    desc.pRootSignature = rootSignature.Get();
+    desc.VS = D3D12_SHADER_BYTECODE{vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize()};
+    desc.PS = D3D12_SHADER_BYTECODE{pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize()};
+    desc.InputLayout = D3D12_INPUT_LAYOUT_DESC{inputLayout, _countof(inputLayout)};
+    throwIfFailed(device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipelineState)));
+}
+
+void PipelineStateController::compilePipelineStateTexture(ID3D12RootSignaturePtr &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
+    // Root signature - crossthread data
+    CD3DX12_ROOT_PARAMETER1 rootParameters[1] = {};
+    rootParameters[0].InitAsConstants(sizeof(DirectX::XMMATRIX) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+    CD3DX12_STATIC_SAMPLER_DESC linearClampSampler(0, D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR, D3D12_TEXTURE_ADDRESS_MODE_CLAMP, D3D12_TEXTURE_ADDRESS_MODE_CLAMP, D3D12_TEXTURE_ADDRESS_MODE_CLAMP);
+    rootSignature = PipelineStateController::createRootSignature(device, rootParameters, _countof(rootParameters), nullptr, 0u);
 
     // Input layout - per vertex data
     const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
@@ -91,7 +119,9 @@ D3D12_FEATURE_DATA_ROOT_SIGNATURE PipelineStateController::getRootSignatureFeatu
     return featureData;
 }
 
-ID3D12RootSignaturePtr PipelineStateController::createRootSignature(ID3D12DevicePtr device, CD3DX12_ROOT_PARAMETER1 *rootParameters, UINT rootParametersCount) {
+ID3D12RootSignaturePtr PipelineStateController::createRootSignature(ID3D12DevicePtr device,
+                                                                    const CD3DX12_ROOT_PARAMETER1 *rootParameters, UINT rootParametersCount,
+                                                                    const D3D12_STATIC_SAMPLER_DESC *samplers, UINT samplersCount) {
     const D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = getRootSignatureFeatureData(device);
     const D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
         D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
@@ -101,12 +131,12 @@ ID3D12RootSignaturePtr PipelineStateController::createRootSignature(ID3D12Device
         D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
     const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDescription = {
         rootParametersCount, rootParameters,
-        0, nullptr,
+        samplersCount, samplers,
         rootSignatureFlags};
 
     ID3DBlobPtr rootSignatureBlob = {};
     ID3DBlobPtr errorBlob = {};
-    throwIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDescription, featureData.HighestVersion, &rootSignatureBlob, &errorBlob));
+    throwIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDescription, featureData.HighestVersion, &rootSignatureBlob, &errorBlob), errorBlob.Get());
 
     ID3D12RootSignaturePtr rootSignature = {};
     throwIfFailed(device->CreateRootSignature(0, rootSignatureBlob->GetBufferPointer(), rootSignatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature)));
@@ -123,7 +153,7 @@ ID3DBlobPtr PipelineStateController::loadAndCompileShader(const std::wstring &na
     ID3DBlob *compiledShader = nullptr;
     ID3DBlob *errorBlob = nullptr;
 
-    const auto path = std::wstring{ SHADERS_PATH } +name;
+    const auto path = std::wstring{SHADERS_PATH} + name;
     const auto result = D3DCompileFromFile(path.c_str(), nullptr, nullptr, "main", target.c_str(), 0, 0, &compiledShader, &errorBlob);
     throwIfFailed(result, errorBlob);
     return ID3DBlobPtr{compiledShader};

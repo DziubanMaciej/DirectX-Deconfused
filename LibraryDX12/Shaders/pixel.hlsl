@@ -1,3 +1,5 @@
+Texture2D DiffuseTexture : register(t0);
+
 struct PixelShaderInput {
     float4 Color : COLOR;
     float4 Position : SV_Position;
