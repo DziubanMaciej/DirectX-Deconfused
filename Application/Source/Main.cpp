@@ -1,6 +1,7 @@
 ﻿#include "DXD/Application.h"
 #include "DXD/CallbackHandler.h"
 #include "DXD/Camera.h"
+#include "DXD/Light.h"
 #include "DXD/Logger.h"
 #include "DXD/Mesh.h"
 #include "DXD/Object.h"
@@ -35,13 +36,21 @@ struct Game : DXD::CallbackHandler {
         objects.back()->setMesh(*teapotMesh);
         objects.back()->setPosition(-8, -1, 0);
 
-		objects.push_back(DXD::Object::create());
+        objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*cubeMesh);
         objects.back()->setPosition(-8, -1, -8);
 
-		objects.push_back(DXD::Object::create());
+        objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*cubeMesh);
         objects.back()->setPosition(8, -1, -8);
+
+        sunLight = DXD::Light::create();
+        sunLight->setColor(1.0f, 1.0f, 0.0f);
+        sunLight->setPosition(-10, 10, 0);
+
+        moonLight = DXD::Light::create();
+        moonLight->setColor(1.0f, 1.0f, 1.0f);
+        moonLight->setPosition(10, 10, 0);
 
         scene = DXD::Scene::create();
         scene->addObject(*objects[0]);
@@ -50,6 +59,8 @@ struct Game : DXD::CallbackHandler {
         scene->addObject(*objects[3]);
         scene->addObject(*objects[4]);
         scene->setBackgroundColor(0.1f, 0.1f, 0.3f);
+        scene->addLight(*sunLight);
+        scene->addLight(*moonLight);
 
         camera = DXD::Camera::create();
         camera->setUpDirection(0, 1, 0);
@@ -172,6 +183,8 @@ private:
     std::unique_ptr<DXD::Window> window;
     std::unique_ptr<DXD::Mesh> teapotMesh;
     std::unique_ptr<DXD::Mesh> cubeMesh;
+    std::unique_ptr<DXD::Light> sunLight;
+    std::unique_ptr<DXD::Light> moonLight;
     std::vector<std::unique_ptr<DXD::Object>> objects;
     std::unique_ptr<DXD::Texture> woodTexture;
     std::unique_ptr<DXD::Scene> scene;

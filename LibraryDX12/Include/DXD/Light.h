@@ -5,7 +5,6 @@
 #include "DXD/ExternalHeadersWrappers/DirectXMath.h"
 #include "DXD/ExternalHeadersWrappers/windows.h"
 #include <memory>
-#include <string>
 
 namespace DXD {
 

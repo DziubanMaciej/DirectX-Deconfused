@@ -25,6 +25,16 @@ void SceneImpl::setBackgroundColor(float r, float g, float b) {
     backgroundColor[2] = b;
 }
 
+void SceneImpl::addLight(DXD::Light &light) {
+    lights.insert(static_cast<LightImpl *>(&light));
+}
+
+bool SceneImpl::removeLight(DXD::Light &light) {
+    const auto elementsRemoved = lights.erase(static_cast<LightImpl *>(&light));
+    assert(elementsRemoved < 2u);
+    return elementsRemoved == 1;
+}
+
 void SceneImpl::addObject(DXD::Object &object) {
     objects.insert(static_cast<ObjectImpl *>(&object));
 }

@@ -1,16 +1,16 @@
 #pragma once
 
 #include "Api/CameraImpl.h"
+#include "Api/LightImpl.h"
 #include "Api/ObjectImpl.h"
-
 #include "DXD/Scene.h"
-
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
 #include <set>
 
 class ApplicationImpl;
 class SwapChain;
 class WindowImpl;
+class LightImpl;
 class ObjectImpl;
 class CameraImpl;
 
@@ -21,6 +21,8 @@ protected:
 
 public:
     void setBackgroundColor(float r, float g, float b) override;
+    void addLight(DXD::Light &light) override;
+    bool removeLight(DXD::Light &light) override;
     void addObject(DXD::Object &object) override;
     bool removeObject(DXD::Object &object) override;
     void setCamera(DXD::Camera &camera) override;
@@ -30,6 +32,7 @@ public:
 
 protected:
     FLOAT backgroundColor[3];
+    std::set<LightImpl *> lights;
     std::set<ObjectImpl *> objects; // TODO might not be the best data structure for that
     CameraImpl *camera;
 };
