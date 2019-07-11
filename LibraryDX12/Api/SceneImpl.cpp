@@ -63,13 +63,21 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     // Transition to RENDER_TARGET
     commandList.transitionBarrierSingle(backBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-    // Render (clear color)
-    commandList.clearRenderTargetView(swapChain.getCurrentBackBufferDescriptor(), backgroundColor);
-    commandList.clearDepthStencilView(swapChain.getDepthStencilBufferDescriptor(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
-
     // Pipeline state
     commandList.setPipelineState(application.getPipelineStateController().getPipelineState(PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT));
     commandList.setGraphicsRootSignature(application.getPipelineStateController().getRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT));
+
+	CD3DX12_VIEWPORT viewport(0.0f, 0.0f, (float)swapChain.getWidth(), (float)swapChain.getHeight());
+    CD3DX12_RECT scissorRect(0, 0, LONG_MAX, LONG_MAX);
+    commandList.RSSetScissorRect(scissorRect);
+    commandList.RSSetViewport(viewport);
+
+    commandList.OMSetRenderTarget(swapChain.getCurrentBackBufferDescriptor(), swapChain.getCurrentBackBuffer(),
+                                  swapChain.getDepthStencilBufferDescriptor(), swapChain.getDepthStencilBuffer());
+
+	// Render (clear color)
+    commandList.clearRenderTargetView(swapChain.getCurrentBackBufferDescriptor(), backgroundColor);
+    commandList.clearDepthStencilView(swapChain.getDepthStencilBufferDescriptor(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
     // View projection matrix
     float aspectRatio = (float)swapChain.getWidth() / swapChain.getHeight();
@@ -84,14 +92,6 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
         commandList.IASetVertexBuffer(mesh.getVertexBufferView(), mesh.getVertexBuffer());
         commandList.IASetIndexBuffer(mesh.getIndexBufferView(), mesh.getIndexBuffer());
         commandList.IASetPrimitiveTopologyTriangleList();
-
-        CD3DX12_VIEWPORT viewport(0.0f, 0.0f, (float)swapChain.getWidth(), (float)swapChain.getHeight());
-        CD3DX12_RECT scissorRect(0, 0, LONG_MAX, LONG_MAX);
-        commandList.RSSetScissorRect(scissorRect);
-        commandList.RSSetViewport(viewport);
-
-        commandList.OMSetRenderTarget(swapChain.getCurrentBackBufferDescriptor(), swapChain.getCurrentBackBuffer(),
-                                      swapChain.getDepthStencilBufferDescriptor(), swapChain.getDepthStencilBuffer());
 
         const XMMATRIX modelMatrix = object->getModelMatrix();
         const XMMATRIX mvpMatrix = XMMatrixMultiply(modelMatrix, vpMatrix);
