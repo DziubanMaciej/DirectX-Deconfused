@@ -24,7 +24,7 @@ VertexShaderOutput main(VertexShaderInput IN) {
 
     if (ModelViewProjectionCB.lightsSize >= 1) {
         float3 lightColor = ModelViewProjectionCB.lightColor * 0.01;
-        float lightPower = (distance(IN.Position.xyz, ModelViewProjectionCB.lightPosition) * distance(IN.Position.xyz, ModelViewProjectionCB.lightPosition)) / 5;
+        float lightPower = 2000 / (distance(IN.Position.xyz, ModelViewProjectionCB.lightPosition) * distance(IN.Position.xyz, ModelViewProjectionCB.lightPosition));
         OUT.Color.xyz += lightColor.xyz * lightPower;
     }
 

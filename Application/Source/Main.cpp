@@ -46,7 +46,7 @@ struct Game : DXD::CallbackHandler {
 
         sunLight = DXD::Light::create();
         sunLight->setColor(1.0f, 1.0f, 0.0f);
-        sunLight->setPosition(-10, 10, 0);
+        sunLight->setPosition(-10, 8, 0);
 
         moonLight = DXD::Light::create();
         moonLight->setColor(1.0f, 1.0f, 1.0f);
@@ -60,7 +60,7 @@ struct Game : DXD::CallbackHandler {
         scene->addObject(*objects[4]);
         scene->setBackgroundColor(0.1f, 0.1f, 0.3f);
         scene->addLight(*sunLight);
-        scene->addLight(*moonLight);
+        //scene->addLight(*moonLight);
 
         camera = DXD::Camera::create();
         camera->setUpDirection(0, 1, 0);
@@ -151,6 +151,13 @@ struct Game : DXD::CallbackHandler {
         case VK_SPACE:
             static float rotation = 0.f;
             rotation += 0.1f;
+            XMFLOAT3 sunPos = sunLight->getPosition();
+            sunPos.x += 0.1f;
+            if (sunPos.x >= 10) {
+                sunPos.x = -10;
+            }
+            sunLight->setPosition(sunPos);
+
             objects[1]->setRotation(rotation, rotation, rotation);
             break;
         }
