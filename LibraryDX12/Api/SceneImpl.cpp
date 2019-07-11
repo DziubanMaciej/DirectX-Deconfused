@@ -2,6 +2,7 @@
 
 #include "Api/ApplicationImpl.h"
 #include "Api/WindowImpl.h"
+#include "Source/ConstantBuffers.h"
 #include "Utility/ThrowIfFailed.h"
 #include "Wrappers/CommandList.h"
 #include "Wrappers/CommandQueue.h"
@@ -94,7 +95,19 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
 
         const XMMATRIX modelMatrix = object->getModelMatrix();
         const XMMATRIX mvpMatrix = XMMatrixMultiply(modelMatrix, vpMatrix);
-        commandList.setGraphicsRoot32BitConstant(0, mvpMatrix);
+
+        SimpleConstantBuffer cb;
+        cb.mvpMatrix = mvpMatrix;
+        cb.lightsSize = 0;
+
+        for (LightImpl *light : lights) {
+            cb.lightColor = light->getColor();
+            cb.lightPosition = light->getPosition();
+            cb.lightsSize++;
+            break;
+        }
+
+        commandList.setGraphicsRoot32BitConstant(0, cb);
 
         commandList.drawIndexed(static_cast<UINT>(mesh.getIndicesCount()));
     }

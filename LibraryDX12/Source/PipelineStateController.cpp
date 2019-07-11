@@ -1,5 +1,6 @@
 #include "PipelineStateController.h"
 
+#include "Source/ConstantBuffers.h"
 #include "Utility/ThrowIfFailed.h"
 
 #include "DXD/ExternalHeadersWrappers/DirectXMath.h"
@@ -59,7 +60,7 @@ void PipelineStateController::compile(Identifier identifier) {
 void PipelineStateController::compilePipelineStateDefault(ID3D12RootSignaturePtr &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
     CD3DX12_ROOT_PARAMETER1 rootParameters[1] = {};
-    rootParameters[0].InitAsConstants(sizeof(DirectX::XMMATRIX) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
+    rootParameters[0].InitAsConstants(sizeof(SimpleConstantBuffer) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
     rootSignature = PipelineStateController::createRootSignature(device, rootParameters, _countof(rootParameters));
 
     // Input layout - per vertex data

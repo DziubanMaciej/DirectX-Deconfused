@@ -1,6 +1,7 @@
 add_sources_and_cmake_file(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/CommandAllocatorManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/CommandAllocatorManager.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ConstantBuffers.h
     ${CMAKE_CURRENT_SOURCE_DIR}/PipelineStateController.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/PipelineStateController.h
     ${CMAKE_CURRENT_SOURCE_DIR}/ResourceUsageTracker.cpp
