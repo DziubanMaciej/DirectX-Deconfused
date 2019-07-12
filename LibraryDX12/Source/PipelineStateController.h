@@ -27,7 +27,7 @@ private:
     static D3D12_FEATURE_DATA_ROOT_SIGNATURE getRootSignatureFeatureData(ID3D12DevicePtr device);
     static ID3D12RootSignaturePtr createRootSignature(ID3D12DevicePtr device, CD3DX12_ROOT_PARAMETER1 *rootParameters, UINT rootParametersCount);
     static ID3DBlobPtr loadBlob(const std::wstring &path);
-    static ID3DBlobPtr loadAndCompileShader(const std::wstring &path, const std::string &target);
+    static ID3DBlobPtr loadAndCompileShader(const std::wstring &name, const std::string &target);
 
     ID3D12DevicePtr device;
     ID3D12PipelineStatePtr pipelineStates[static_cast<int>(Identifier::COUNT)] = {};

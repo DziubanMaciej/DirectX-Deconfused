@@ -1,4 +1,5 @@
 cmake_minimum_required (VERSION 2.6)
+cmake_policy(SET CMP0012 NEW)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 project("DXD")
 include(CMakeMacros.cmake)

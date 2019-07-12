@@ -70,8 +70,8 @@ void PipelineStateController::compilePipelineStateDefault(ID3D12RootSignaturePtr
     };
 
     // Shaders
-    ID3DBlobPtr vertexShaderBlob = loadAndCompileShader(L"Resources/Shaders/vertex.hlsl", vertexShaderTarget);
-    ID3DBlobPtr pixelShaderBlob = loadAndCompileShader(L"Resources/Shaders/pixel.hlsl", pixelShaderTarget);
+    ID3DBlobPtr vertexShaderBlob = loadAndCompileShader(L"vertex.hlsl", vertexShaderTarget);
+    ID3DBlobPtr pixelShaderBlob = loadAndCompileShader(L"pixel.hlsl", pixelShaderTarget);
 
     // Compilation
     D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = getBaseGraphicsPipelineSateDesc();
@@ -119,9 +119,11 @@ ID3DBlobPtr PipelineStateController::loadBlob(const std::wstring &path) {
     return blob;
 }
 
-ID3DBlobPtr PipelineStateController::loadAndCompileShader(const std::wstring &path, const std::string &target) {
+ID3DBlobPtr PipelineStateController::loadAndCompileShader(const std::wstring &name, const std::string &target) {
     ID3DBlob *compiledShader = nullptr;
     ID3DBlob *errorBlob = nullptr;
+
+    const auto path = std::wstring{ SHADERS_PATH } +name;
     const auto result = D3DCompileFromFile(path.c_str(), nullptr, nullptr, "main", target.c_str(), 0, 0, &compiledShader, &errorBlob);
     throwIfFailed(result, errorBlob);
     return ID3DBlobPtr{compiledShader};
