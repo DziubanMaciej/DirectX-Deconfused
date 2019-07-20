@@ -5,6 +5,7 @@
 #include "DXD/ExternalHeadersWrappers/d3dcompiler.h"
 #include "DXD/ExternalHeadersWrappers/d3dx12.h"
 #include <string>
+#include <vector>
 
 class PipelineStateController : DXD::NonCopyableAndMovable {
 public:
@@ -26,10 +27,6 @@ private:
     void compilePipelineStateTexture(ID3D12RootSignaturePtr &rootSignature, ID3D12PipelineStatePtr &pipelineState);
 
     static D3D12_GRAPHICS_PIPELINE_STATE_DESC getBaseGraphicsPipelineSateDesc();
-    static D3D12_FEATURE_DATA_ROOT_SIGNATURE getRootSignatureFeatureData(ID3D12DevicePtr device);
-    static ID3D12RootSignaturePtr createRootSignature(ID3D12DevicePtr device,
-                                                      const CD3DX12_ROOT_PARAMETER1 *rootParameters, UINT rootParametersCount,
-                                                      const D3D12_STATIC_SAMPLER_DESC *samplers, UINT samplersCount);
     static ID3DBlobPtr loadBlob(const std::wstring &path);
     static ID3DBlobPtr loadAndCompileShader(const std::wstring &name, const std::string &target);
 
@@ -39,4 +36,32 @@ private:
 
     constexpr static char pixelShaderTarget[] = "ps_5_1";
     constexpr static char vertexShaderTarget[] = "vs_5_1";
+};
+
+class RootSignature : DXD::NonCopyableAndMovable {
+public:
+    template <typename ConstantType>
+    RootSignature &append32bitConstant(D3D12_SHADER_VISIBILITY visibility) {
+        static_assert(sizeof(ConstantType) % 4 == 0, "Not a dword aligned type");
+        constexpr static auto dwordCount = sizeof(ConstantType) / 4;
+        rootParameters.emplace_back();
+        rootParameters.back().InitAsConstants(dwordCount, nextShaderRegisterB++, 0, visibility);
+        return *this;
+    }
+
+    RootSignature &appendStaticSampler(const D3D12_STATIC_SAMPLER_DESC &samplerDescription) {
+        samplerDescriptions.push_back(samplerDescription);
+        return *this;
+    }
+
+    ID3D12RootSignaturePtr compile(ID3D12DevicePtr device);
+
+    // TODO cbv, srv, uav, descriptor table interfaces
+
+private:
+    static D3D_ROOT_SIGNATURE_VERSION getHighestRootSignatureVersion(ID3D12DevicePtr device);
+
+    std::vector<CD3DX12_ROOT_PARAMETER1> rootParameters = {};
+    std::vector<D3D12_STATIC_SAMPLER_DESC> samplerDescriptions = {};
+    int nextShaderRegisterB = 0;
 };

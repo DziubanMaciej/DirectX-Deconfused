@@ -63,9 +63,9 @@ void PipelineStateController::compile(Identifier identifier) {
 
 void PipelineStateController::compilePipelineStateDefault(ID3D12RootSignaturePtr &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
-    CD3DX12_ROOT_PARAMETER1 rootParameters[1] = {};
-    rootParameters[0].InitAsConstants(sizeof(SimpleConstantBuffer) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
-    rootSignature = PipelineStateController::createRootSignature(device, rootParameters, _countof(rootParameters), nullptr, 0u);
+    rootSignature = RootSignature{}
+                        .append32bitConstant<SimpleConstantBuffer>(D3D12_SHADER_VISIBILITY_VERTEX)
+                        .compile(device);
 
     // Input layout - per vertex data
     const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
@@ -87,10 +87,11 @@ void PipelineStateController::compilePipelineStateDefault(ID3D12RootSignaturePtr
 
 void PipelineStateController::compilePipelineStateTexture(ID3D12RootSignaturePtr &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
-    CD3DX12_ROOT_PARAMETER1 rootParameters[1] = {};
-    rootParameters[0].InitAsConstants(sizeof(DirectX::XMMATRIX) / 4, 0, 0, D3D12_SHADER_VISIBILITY_VERTEX);
     CD3DX12_STATIC_SAMPLER_DESC linearClampSampler(0, D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR, D3D12_TEXTURE_ADDRESS_MODE_CLAMP, D3D12_TEXTURE_ADDRESS_MODE_CLAMP, D3D12_TEXTURE_ADDRESS_MODE_CLAMP);
-    rootSignature = PipelineStateController::createRootSignature(device, rootParameters, _countof(rootParameters), nullptr, 0u);
+    rootSignature = RootSignature{}
+                        .append32bitConstant<SimpleConstantBuffer>(D3D12_SHADER_VISIBILITY_VERTEX)
+                        .appendStaticSampler(linearClampSampler)
+                        .compile(device);
 
     // Input layout - per vertex data
     const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
@@ -110,19 +111,17 @@ void PipelineStateController::compilePipelineStateTexture(ID3D12RootSignaturePtr
     throwIfFailed(device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipelineState)));
 }
 
-D3D12_FEATURE_DATA_ROOT_SIGNATURE PipelineStateController::getRootSignatureFeatureData(ID3D12DevicePtr device) {
+D3D_ROOT_SIGNATURE_VERSION RootSignature::getHighestRootSignatureVersion(ID3D12DevicePtr device) {
     D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
     featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
     if (device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData))) {
         featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
     }
-    return featureData;
+    return featureData.HighestVersion;
 }
 
-ID3D12RootSignaturePtr PipelineStateController::createRootSignature(ID3D12DevicePtr device,
-                                                                    const CD3DX12_ROOT_PARAMETER1 *rootParameters, UINT rootParametersCount,
-                                                                    const D3D12_STATIC_SAMPLER_DESC *samplers, UINT samplersCount) {
-    const D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = getRootSignatureFeatureData(device);
+ID3D12RootSignaturePtr RootSignature::compile(ID3D12DevicePtr device) {
+    const D3D_ROOT_SIGNATURE_VERSION highestVersion = getHighestRootSignatureVersion(device);
     const D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
         D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
         D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
@@ -130,13 +129,13 @@ ID3D12RootSignaturePtr PipelineStateController::createRootSignature(ID3D12Device
         D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
         D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
     const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDescription = {
-        rootParametersCount, rootParameters,
-        samplersCount, samplers,
+        static_cast<UINT>(rootParameters.size()), rootParameters.data(),
+        static_cast<UINT>(samplerDescriptions.size()), samplerDescriptions.data(),
         rootSignatureFlags};
 
     ID3DBlobPtr rootSignatureBlob = {};
     ID3DBlobPtr errorBlob = {};
-    throwIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDescription, featureData.HighestVersion, &rootSignatureBlob, &errorBlob), errorBlob.Get());
+    throwIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDescription, highestVersion, &rootSignatureBlob, &errorBlob), errorBlob.Get());
 
     ID3D12RootSignaturePtr rootSignature = {};
     throwIfFailed(device->CreateRootSignature(0, rootSignatureBlob->GetBufferPointer(), rootSignatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature)));
