@@ -89,8 +89,8 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = *object->getMesh();
 
-        commandList.IASetVertexBuffer(mesh.getVertexBufferView(), mesh.getVertexBuffer());
-        commandList.IASetIndexBuffer(mesh.getIndexBufferView(), mesh.getIndexBuffer());
+        commandList.IASetVertexBuffer(mesh.getVertexBufferView(), mesh.getVertexBuffer().getResource());
+        commandList.IASetIndexBuffer(mesh.getIndexBufferView(), mesh.getIndexBuffer().getResource());
         commandList.IASetPrimitiveTopologyTriangleList();
 
         const XMMATRIX modelMatrix = object->getModelMatrix();

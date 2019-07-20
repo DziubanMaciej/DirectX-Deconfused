@@ -5,6 +5,8 @@
 #include "DXD/Mesh.h"
 
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
+
+#include "Wrappers/Resource.h"
 #include <vector>
 
 class MeshImpl : public DXD::Mesh {
@@ -34,8 +36,8 @@ public:
     size_t getNormalsCount() const { return normals.size(); }
     size_t getTextureCoordinatesCount() const { return textureCoordinates.size(); }
 
-    ID3D12ResourcePtr getVertexBuffer() const { return vertexBuffer; }
-    ID3D12ResourcePtr getIndexBuffer() const { return indexBuffer; }
+    Resource& getVertexBuffer() { return vertexBuffer; }
+    Resource& getIndexBuffer() { return indexBuffer; }
     const D3D12_VERTEX_BUFFER_VIEW &getVertexBufferView() const { return vertexBufferView; }
     const D3D12_INDEX_BUFFER_VIEW &getIndexBufferView() const { return indexBufferView; }
 
@@ -47,9 +49,9 @@ protected:
     std::vector<FLOAT> normals;
     std::vector<FLOAT> textureCoordinates;
 
-    ID3D12ResourcePtr vertexBuffer;
+    Resource vertexBuffer;
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
-    ID3D12ResourcePtr indexBuffer;
+    Resource indexBuffer;
     D3D12_INDEX_BUFFER_VIEW indexBufferView;
 
 private:
