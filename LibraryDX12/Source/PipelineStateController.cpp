@@ -112,12 +112,6 @@ void PipelineStateController::compilePipelineStateTexture(ID3D12RootSignaturePtr
     throwIfFailed(device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipelineState)));
 }
 
-ID3DBlobPtr PipelineStateController::loadBlob(const std::wstring &path) {
-    ID3DBlobPtr blob = {};
-    throwIfFailed(D3DReadFileToBlob(path.c_str(), &blob));
-    return blob;
-}
-
 ID3DBlobPtr PipelineStateController::loadAndCompileShader(const std::wstring &name, const std::string &target) {
     ID3DBlob *compiledShader = nullptr;
     ID3DBlob *errorBlob = nullptr;

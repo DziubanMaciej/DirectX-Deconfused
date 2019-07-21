@@ -29,7 +29,6 @@ private:
     void compilePipelineStateTexture(ID3D12RootSignaturePtr &rootSignature, ID3D12PipelineStatePtr &pipelineState);
 
     static D3D12_GRAPHICS_PIPELINE_STATE_DESC getBaseGraphicsPipelineSateDesc();
-    static ID3DBlobPtr loadBlob(const std::wstring &path);
     static ID3DBlobPtr loadAndCompileShader(const std::wstring &name, const std::string &target);
 
     ID3D12DevicePtr device;
