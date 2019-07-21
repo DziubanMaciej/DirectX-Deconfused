@@ -97,7 +97,6 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
         const XMMATRIX mvpMatrix = XMMatrixMultiply(modelMatrix, vpMatrix);
 
         SimpleConstantBuffer cb;
-        cb.mvpMatrix = mvpMatrix;
         cb.lightsSize = 0;
 
         for (LightImpl *light : lights) {
@@ -107,7 +106,8 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
             break;
         }
 
-        commandList.setGraphicsRoot32BitConstant(0, cb);
+        commandList.setGraphicsRoot32BitConstant(0, mvpMatrix);
+        commandList.setGraphicsRoot32BitConstant(1, cb);
 
         commandList.drawIndexed(static_cast<UINT>(mesh.getIndicesCount()));
     }

@@ -1,11 +1,15 @@
 struct ModelViewProjection {
-    matrix MVP;
+    matrix mvp;
+};
+
+struct SimpleConstantBuffer {
     int lightsSize;
     float3 lightPosition;
     float3 lightColor;
 };
 
-ConstantBuffer<ModelViewProjection> ModelViewProjectionCB : register(b0);
+ConstantBuffer<ModelViewProjection> mvp : register(b0);
+ConstantBuffer<SimpleConstantBuffer> simpleConstantBuffer : register(b1);
 
 struct VertexShaderInput {
     float3 Position : POSITION;
@@ -19,12 +23,12 @@ struct VertexShaderOutput {
 VertexShaderOutput main(VertexShaderInput IN) {
     VertexShaderOutput OUT;
 
-    OUT.Position = mul(ModelViewProjectionCB.MVP, float4(IN.Position, 1.0f));
+    OUT.Position = mul(mvp.mvp, float4(IN.Position, 1.0f));
     OUT.Color = float4(0.f, 0.f, 0.f, 1);
 
-    if (ModelViewProjectionCB.lightsSize >= 1) {
-        float3 lightColor = ModelViewProjectionCB.lightColor * 0.01;
-        float lightPower = 2000 / (distance(IN.Position.xyz, ModelViewProjectionCB.lightPosition) * distance(IN.Position.xyz, ModelViewProjectionCB.lightPosition));
+    if (simpleConstantBuffer.lightsSize >= 1) {
+        float3 lightColor = simpleConstantBuffer.lightColor * 0.01;
+        float lightPower = 2000 / (distance(IN.Position.xyz, simpleConstantBuffer.lightPosition) * distance(IN.Position.xyz, simpleConstantBuffer.lightPosition));
         OUT.Color.xyz += lightColor.xyz * lightPower;
     }
 
