@@ -51,6 +51,7 @@ public:
     ID3D12RootSignaturePtr compile(ID3D12DevicePtr device);
 
 private:
+    UINT getNextShaderRegisterAndIncrement(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT numDescriptors);
     void resolveDescriptorRanges();
     static D3D_ROOT_SIGNATURE_VERSION getHighestRootSignatureVersion(ID3D12DevicePtr device);
 

@@ -143,27 +143,33 @@ PipelineStateController::RootSignature &PipelineStateController::RootSignature::
     return *this;
 }
 
-PipelineStateController::RootSignature &PipelineStateController::RootSignature::appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT numDescriptors) {
-    UINT *nextShaderRegister = nullptr;
+UINT PipelineStateController::RootSignature::getNextShaderRegisterAndIncrement(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT numDescriptors) {
+    UINT result{};
     switch (rangeType) {
     case D3D12_DESCRIPTOR_RANGE_TYPE_SRV:
-        nextShaderRegister = &nextShaderRegisterT;
+        result = nextShaderRegisterT;
+        nextShaderRegisterT += numDescriptors;
         break;
     case D3D12_DESCRIPTOR_RANGE_TYPE_UAV:
-        nextShaderRegister = &nextShaderRegisterU;
+        result = nextShaderRegisterU;
+        nextShaderRegisterU += numDescriptors;
         break;
     case D3D12_DESCRIPTOR_RANGE_TYPE_CBV:
-        nextShaderRegister = &nextShaderRegisterB;
+        result = nextShaderRegisterB;
+        nextShaderRegisterB += numDescriptors;
         break;
     case D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER:
-        nextShaderRegister = &nextShaderRegisterS;
+        result = nextShaderRegisterS;
+        nextShaderRegisterS += numDescriptors;
         break;
     default:
         unreachableCode();
     }
-    const UINT baseShaderRegister = *nextShaderRegister;
-    (*nextShaderRegister) += numDescriptors;
+    return result;
+}
 
+PipelineStateController::RootSignature &PipelineStateController::RootSignature::appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT numDescriptors) {
+    const auto baseShaderRegister = getNextShaderRegisterAndIncrement(rangeType, numDescriptors);
     D3D12_DESCRIPTOR_RANGE1 range{rangeType, numDescriptors, baseShaderRegister, 0, D3D12_DESCRIPTOR_RANGE_FLAG_NONE, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND};
     descriptorRanges.push_back(std::move(range));
     return *this;
