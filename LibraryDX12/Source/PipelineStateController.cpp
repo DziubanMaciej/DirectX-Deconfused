@@ -191,8 +191,7 @@ ID3D12RootSignaturePtr PipelineStateController::RootSignature::compile(ID3D12Dev
         D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
         D3D12_ROOT_SIGNATURE_FLAG_DENY_HULL_SHADER_ROOT_ACCESS |
         D3D12_ROOT_SIGNATURE_FLAG_DENY_DOMAIN_SHADER_ROOT_ACCESS |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS |
-        D3D12_ROOT_SIGNATURE_FLAG_DENY_PIXEL_SHADER_ROOT_ACCESS;
+        D3D12_ROOT_SIGNATURE_FLAG_DENY_GEOMETRY_SHADER_ROOT_ACCESS;
     const CD3DX12_VERSIONED_ROOT_SIGNATURE_DESC rootSignatureDescription = {
         static_cast<UINT>(rootParameters.size()), rootParameters.data(),
         static_cast<UINT>(samplerDescriptions.size()), samplerDescriptions.data(),

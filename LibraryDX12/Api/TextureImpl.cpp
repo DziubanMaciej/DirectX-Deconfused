@@ -59,8 +59,6 @@ D3D12_RESOURCE_DESC TextureImpl::createTextureDescription(D3D12_RESOURCE_DIMENSI
     default:
         assert(false);
     }
-
-    description.Flags |= D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
     return description;
 }
 
@@ -81,7 +79,7 @@ ID3D12ResourcePtr TextureImpl::createAndUploadResource(ApplicationImpl &applicat
     throwIfFailed(application.getDevice()->CreateCommittedResource(
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
-        &textureDescription,
+        &CD3DX12_RESOURCE_DESC::Buffer(GetRequiredIntermediateSize(texture.Get(), 0, 1)),
         D3D12_RESOURCE_STATE_GENERIC_READ,
         nullptr,
         IID_PPV_ARGS(&intermediateResource)));
