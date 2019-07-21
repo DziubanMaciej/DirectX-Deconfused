@@ -4,6 +4,7 @@
 
 #include "DXD/ExternalHeadersWrappers/d3dcompiler.h"
 #include "DXD/ExternalHeadersWrappers/d3dx12.h"
+#include <cassert>
 #include <string>
 #include <vector>
 
@@ -54,14 +55,23 @@ public:
         return *this;
     }
 
+    RootSignature &appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT numDescriptors);
+
     ID3D12RootSignaturePtr compile(ID3D12DevicePtr device);
 
     // TODO cbv, srv, uav, descriptor table interfaces
 
 private:
+    void resolveDescriptorRanges();
     static D3D_ROOT_SIGNATURE_VERSION getHighestRootSignatureVersion(ID3D12DevicePtr device);
 
-    std::vector<CD3DX12_ROOT_PARAMETER1> rootParameters = {};
-    std::vector<D3D12_STATIC_SAMPLER_DESC> samplerDescriptions = {};
-    int nextShaderRegisterB = 0;
+    std::vector<D3D12_DESCRIPTOR_RANGE1> descriptorRanges; // immediate data, has to be resolved to descriptor tables
+
+    std::vector<CD3DX12_ROOT_PARAMETER1> rootParameters = {};        // goes directly to D3D12_VERSIONED_ROOT_SIGNATURE_DESC
+    std::vector<D3D12_STATIC_SAMPLER_DESC> samplerDescriptions = {}; // goes directly to D3D12_VERSIONED_ROOT_SIGNATURE_DESC
+
+    UINT nextShaderRegisterT = 0; // SRV
+    UINT nextShaderRegisterU = 0; // UAV
+    UINT nextShaderRegisterB = 0; // CBV, including 32bit constants
+    UINT nextShaderRegisterS = 0; // Sampler
 };

@@ -91,6 +91,7 @@ void PipelineStateController::compilePipelineStateTexture(ID3D12RootSignaturePtr
     rootSignature = RootSignature{}
                         .append32bitConstant<SimpleConstantBuffer>(D3D12_SHADER_VISIBILITY_VERTEX)
                         .appendStaticSampler(linearClampSampler)
+                        .appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1)
                         .compile(device);
 
     // Input layout - per vertex data
@@ -111,6 +112,14 @@ void PipelineStateController::compilePipelineStateTexture(ID3D12RootSignaturePtr
     throwIfFailed(device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipelineState)));
 }
 
+void RootSignature::resolveDescriptorRanges() {
+    // TODO We create one descriptor table with D3D12_SHADER_VISIBILITY_ALL, while they could be more specialized
+    if (descriptorRanges.size() > 0) {
+        rootParameters.emplace_back();
+        rootParameters.back().InitAsDescriptorTable(static_cast<UINT>(descriptorRanges.size()), descriptorRanges.data());
+    }
+}
+
 D3D_ROOT_SIGNATURE_VERSION RootSignature::getHighestRootSignatureVersion(ID3D12DevicePtr device) {
     D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
     featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
@@ -120,7 +129,34 @@ D3D_ROOT_SIGNATURE_VERSION RootSignature::getHighestRootSignatureVersion(ID3D12D
     return featureData.HighestVersion;
 }
 
+RootSignature &RootSignature::appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT numDescriptors) {
+    UINT *nextShaderRegister = nullptr;
+    switch (rangeType) {
+    case D3D12_DESCRIPTOR_RANGE_TYPE_SRV:
+        nextShaderRegister = &nextShaderRegisterT;
+        break;
+    case D3D12_DESCRIPTOR_RANGE_TYPE_UAV:
+        nextShaderRegister = &nextShaderRegisterU;
+        break;
+    case D3D12_DESCRIPTOR_RANGE_TYPE_CBV:
+        nextShaderRegister = &nextShaderRegisterB;
+        break;
+    case D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER:
+        nextShaderRegister = &nextShaderRegisterS;
+        break;
+    default:
+        assert(!"Unreachable code");
+    }
+    const UINT baseShaderRegister = *nextShaderRegister;
+    (*nextShaderRegister) += numDescriptors;
+
+    D3D12_DESCRIPTOR_RANGE1 range{rangeType, numDescriptors, baseShaderRegister, 0, D3D12_DESCRIPTOR_RANGE_FLAG_NONE, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND};
+    descriptorRanges.push_back(std::move(range));
+    return *this;
+}
+
 ID3D12RootSignaturePtr RootSignature::compile(ID3D12DevicePtr device) {
+    resolveDescriptorRanges();
     const D3D_ROOT_SIGNATURE_VERSION highestVersion = getHighestRootSignatureVersion(device);
     const D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
         D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT |
