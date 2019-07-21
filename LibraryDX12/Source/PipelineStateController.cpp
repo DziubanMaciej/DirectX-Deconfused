@@ -112,6 +112,24 @@ void PipelineStateController::compilePipelineStateTexture(ID3D12RootSignaturePtr
     throwIfFailed(device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipelineState)));
 }
 
+ID3DBlobPtr PipelineStateController::loadBlob(const std::wstring &path) {
+    ID3DBlobPtr blob = {};
+    throwIfFailed(D3DReadFileToBlob(path.c_str(), &blob));
+    return blob;
+}
+
+ID3DBlobPtr PipelineStateController::loadAndCompileShader(const std::wstring &name, const std::string &target) {
+    ID3DBlob *compiledShader = nullptr;
+    ID3DBlob *errorBlob = nullptr;
+
+    const auto path = std::wstring{SHADERS_PATH} + name;
+    const auto result = D3DCompileFromFile(path.c_str(), nullptr, nullptr, "main", target.c_str(), 0, 0, &compiledShader, &errorBlob);
+    throwIfFailed(result, errorBlob);
+    return ID3DBlobPtr{compiledShader};
+}
+
+// ----------------------------------------------------------------------------------------------- RootSignature helper
+
 void PipelineStateController::RootSignature::resolveDescriptorRanges() {
     // TODO We create one descriptor table with D3D12_SHADER_VISIBILITY_ALL, while they could be more specialized
     if (descriptorRanges.size() > 0) {
@@ -120,13 +138,9 @@ void PipelineStateController::RootSignature::resolveDescriptorRanges() {
     }
 }
 
-D3D_ROOT_SIGNATURE_VERSION PipelineStateController::RootSignature::getHighestRootSignatureVersion(ID3D12DevicePtr device) {
-    D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
-    featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
-    if (device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData))) {
-        featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
-    }
-    return featureData.HighestVersion;
+PipelineStateController::RootSignature &PipelineStateController::RootSignature::appendStaticSampler(const D3D12_STATIC_SAMPLER_DESC &samplerDescription) {
+    samplerDescriptions.push_back(samplerDescription);
+    return *this;
 }
 
 PipelineStateController::RootSignature &PipelineStateController::RootSignature::appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT numDescriptors) {
@@ -155,6 +169,15 @@ PipelineStateController::RootSignature &PipelineStateController::RootSignature::
     return *this;
 }
 
+D3D_ROOT_SIGNATURE_VERSION PipelineStateController::RootSignature::getHighestRootSignatureVersion(ID3D12DevicePtr device) {
+    D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
+    featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
+    if (device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData))) {
+        featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_0;
+    }
+    return featureData.HighestVersion;
+}
+
 ID3D12RootSignaturePtr PipelineStateController::RootSignature::compile(ID3D12DevicePtr device) {
     resolveDescriptorRanges();
     const D3D_ROOT_SIGNATURE_VERSION highestVersion = getHighestRootSignatureVersion(device);
@@ -176,20 +199,4 @@ ID3D12RootSignaturePtr PipelineStateController::RootSignature::compile(ID3D12Dev
     ID3D12RootSignaturePtr rootSignature = {};
     throwIfFailed(device->CreateRootSignature(0, rootSignatureBlob->GetBufferPointer(), rootSignatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature)));
     return rootSignature;
-}
-
-ID3DBlobPtr PipelineStateController::loadBlob(const std::wstring &path) {
-    ID3DBlobPtr blob = {};
-    throwIfFailed(D3DReadFileToBlob(path.c_str(), &blob));
-    return blob;
-}
-
-ID3DBlobPtr PipelineStateController::loadAndCompileShader(const std::wstring &name, const std::string &target) {
-    ID3DBlob *compiledShader = nullptr;
-    ID3DBlob *errorBlob = nullptr;
-
-    const auto path = std::wstring{SHADERS_PATH} + name;
-    const auto result = D3DCompileFromFile(path.c_str(), nullptr, nullptr, "main", target.c_str(), 0, 0, &compiledShader, &errorBlob);
-    throwIfFailed(result, errorBlob);
-    return ID3DBlobPtr{compiledShader};
 }
