@@ -12,7 +12,7 @@ public:
     explicit Resource(ID3D12DevicePtr device, D3D12_HEAP_TYPE heapType, D3D12_HEAP_FLAGS heapFlags, const int bufferSize, D3D12_RESOURCE_STATES initialResourceState, const D3D12_CLEAR_VALUE *pOptimizedClearValue);
     Resource(Resource &&other) = default;
     Resource &operator=(Resource &&other) = default;
-    auto getResource() { return resource; };
+    auto& getResource() { return resource; };
     void setResource(ID3D12ResourcePtr resource) { this->resource = resource; };
 
 private:
