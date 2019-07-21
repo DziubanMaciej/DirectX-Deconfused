@@ -10,6 +10,7 @@
 
 class PipelineStateController : DXD::NonCopyableAndMovable {
 public:
+    class RootSignature;
     enum class Identifier {
         PIPELINE_STATE_DEFAULT = 0,
         PIPELINE_STATE_TEXTURE = 1,
@@ -39,7 +40,7 @@ private:
     constexpr static char vertexShaderTarget[] = "vs_5_1";
 };
 
-class RootSignature : DXD::NonCopyableAndMovable {
+class PipelineStateController::RootSignature : DXD::NonCopyableAndMovable {
 public:
     template <typename ConstantType>
     RootSignature &append32bitConstant(D3D12_SHADER_VISIBILITY visibility) {

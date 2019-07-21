@@ -112,7 +112,7 @@ void PipelineStateController::compilePipelineStateTexture(ID3D12RootSignaturePtr
     throwIfFailed(device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipelineState)));
 }
 
-void RootSignature::resolveDescriptorRanges() {
+void PipelineStateController::RootSignature::resolveDescriptorRanges() {
     // TODO We create one descriptor table with D3D12_SHADER_VISIBILITY_ALL, while they could be more specialized
     if (descriptorRanges.size() > 0) {
         rootParameters.emplace_back();
@@ -120,7 +120,7 @@ void RootSignature::resolveDescriptorRanges() {
     }
 }
 
-D3D_ROOT_SIGNATURE_VERSION RootSignature::getHighestRootSignatureVersion(ID3D12DevicePtr device) {
+D3D_ROOT_SIGNATURE_VERSION PipelineStateController::RootSignature::getHighestRootSignatureVersion(ID3D12DevicePtr device) {
     D3D12_FEATURE_DATA_ROOT_SIGNATURE featureData = {};
     featureData.HighestVersion = D3D_ROOT_SIGNATURE_VERSION_1_1;
     if (device->CheckFeatureSupport(D3D12_FEATURE_ROOT_SIGNATURE, &featureData, sizeof(featureData))) {
@@ -129,7 +129,7 @@ D3D_ROOT_SIGNATURE_VERSION RootSignature::getHighestRootSignatureVersion(ID3D12D
     return featureData.HighestVersion;
 }
 
-RootSignature &RootSignature::appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT numDescriptors) {
+PipelineStateController::RootSignature &PipelineStateController::RootSignature::appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT numDescriptors) {
     UINT *nextShaderRegister = nullptr;
     switch (rangeType) {
     case D3D12_DESCRIPTOR_RANGE_TYPE_SRV:
@@ -155,7 +155,7 @@ RootSignature &RootSignature::appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE 
     return *this;
 }
 
-ID3D12RootSignaturePtr RootSignature::compile(ID3D12DevicePtr device) {
+ID3D12RootSignaturePtr PipelineStateController::RootSignature::compile(ID3D12DevicePtr device) {
     resolveDescriptorRanges();
     const D3D_ROOT_SIGNATURE_VERSION highestVersion = getHighestRootSignatureVersion(device);
     const D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
