@@ -1,6 +1,8 @@
 #include "Swapchain.h"
-#include "Wrappers/CommandQueue.h"
+
 #include "Utility/ThrowIfFailed.h"
+#include "Wrappers/CommandQueue.h"
+
 #include "DXD/ExternalHeadersWrappers/d3dx12.h"
 #include <algorithm>
 
@@ -15,6 +17,9 @@ SwapChain::SwapChain(HWND windowHandle, ID3D12DevicePtr device, IDXGIFactoryPtr 
       width(width),
       height(height),
       currentBackBufferIndex(swapChain->GetCurrentBackBufferIndex()) {
+    for (auto &entry : backBufferEntries) {
+        entry.backBuffer = std::make_unique<Resource>(nullptr);
+    }
     updateRenderTargetViews();
     updateDepthStencilBuffer(width, height);
 }
@@ -86,7 +91,7 @@ void SwapChain::updateRenderTargetViews() {
         throwIfFailed(swapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer)));
 
         device->CreateRenderTargetView(backBuffer.Get(), nullptr, rtvHandle);
-        backBufferEntries[i].backBuffer = backBuffer;
+        backBufferEntries[i].backBuffer->setResource(backBuffer);
 
         rtvHandle.ptr += rtvDescriptorSize;
     }
@@ -116,7 +121,7 @@ void SwapChain::resize(int desiredWidth, int desiredHeight) {
 
 void SwapChain::resetRenderTargetViews() {
     for (auto &backBufferEntry : backBufferEntries) {
-        backBufferEntry.backBuffer.Reset();
+        backBufferEntry.backBuffer->getResource().Reset();
         backBufferEntry.lastFence = currentBackBufferIndex;
     }
 }
@@ -137,13 +142,12 @@ void SwapChain::updateDepthStencilBuffer(uint32_t desiredWidth, uint32_t desired
     optimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
     optimizedClearValue.DepthStencil = {1.0f, 0};
 
-    throwIfFailed(device->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES{D3D12_HEAP_TYPE_DEFAULT},
-        D3D12_HEAP_FLAG_NONE, // TODO D3D12_HEAP_FLAG_DENY_NON_RT_DS_TEXTURES good?
-        &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, width, height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
-        D3D12_RESOURCE_STATE_DEPTH_WRITE,
-        &optimizedClearValue,
-        IID_PPV_ARGS(&depthStencilBuffer)));
+    depthStencilBuffer = std::make_unique<Resource>(device,
+                                                    &CD3DX12_HEAP_PROPERTIES{D3D12_HEAP_TYPE_DEFAULT},
+                                                    D3D12_HEAP_FLAG_NONE, // TODO D3D12_HEAP_FLAG_DENY_NON_RT_DS_TEXTURES good?
+                                                    &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, width, height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+                                                    D3D12_RESOURCE_STATE_DEPTH_WRITE,
+                                                    &optimizedClearValue);
 
     D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
     dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
@@ -151,7 +155,7 @@ void SwapChain::updateDepthStencilBuffer(uint32_t desiredWidth, uint32_t desired
     dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
     dsvDesc.Texture2D = D3D12_TEX2D_DSV{0};
     device->CreateDepthStencilView(
-        depthStencilBuffer.Get(),
+        depthStencilBuffer->getResource().Get(),
         &dsvDesc,
         depthStencilDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 }
@@ -160,16 +164,8 @@ uint64_t SwapChain::getFenceValueForCurrentBackBuffer() const {
     return backBufferEntries[this->currentBackBufferIndex].lastFence;
 }
 
-ID3D12ResourcePtr &SwapChain::getCurrentBackBuffer() {
-    return backBufferEntries[this->currentBackBufferIndex].backBuffer;
-}
-
 D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::getDepthStencilBufferDescriptor() const {
     return depthStencilDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
-}
-
-ID3D12ResourcePtr &SwapChain::getDepthStencilBuffer() {
-    return depthStencilBuffer;
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::getCurrentBackBufferDescriptor() const {

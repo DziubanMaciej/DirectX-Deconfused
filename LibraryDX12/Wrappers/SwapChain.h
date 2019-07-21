@@ -1,8 +1,11 @@
 #pragma once
 
 #include "DXD/NonCopyableAndMovable.h"
+
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
 #include "DXD/ExternalHeadersWrappers/dxgi.h"
+#include <Wrappers/Resource.h>
+#include <memory>
 #include <stdint.h>
 #include <vector>
 
@@ -10,7 +13,7 @@ class CommandQueue;
 
 class SwapChain : DXD::NonCopyableAndMovable {
     struct BackBufferEntry {
-        ID3D12ResourcePtr backBuffer;
+        std::unique_ptr<Resource> backBuffer;
         uint64_t lastFence;
     };
 
@@ -24,9 +27,9 @@ public:
 
     uint64_t getFenceValueForCurrentBackBuffer() const;
     D3D12_CPU_DESCRIPTOR_HANDLE getCurrentBackBufferDescriptor() const;
-    ID3D12ResourcePtr &getCurrentBackBuffer();
+    auto &getCurrentBackBuffer() { return backBufferEntries[this->currentBackBufferIndex].backBuffer; };
     D3D12_CPU_DESCRIPTOR_HANDLE getDepthStencilBufferDescriptor() const;
-    ID3D12ResourcePtr &getDepthStencilBuffer();
+    auto &getDepthStencilBuffer() { return depthStencilBuffer; };
 
 private:
     static bool checkTearingSupport(IDXGIFactoryPtr &factory);
@@ -46,7 +49,7 @@ private:
     ID3D12DescriptorHeapPtr rtvDescriptorHeap;
     ID3D12DescriptorHeapPtr depthStencilDescriptorHeap;
     std::vector<BackBufferEntry> backBufferEntries;
-    ID3D12ResourcePtr depthStencilBuffer;
+    std::unique_ptr<Resource> depthStencilBuffer;
 
     uint32_t width;
     uint32_t height;

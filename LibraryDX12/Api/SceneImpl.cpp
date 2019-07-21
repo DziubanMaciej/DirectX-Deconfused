@@ -61,7 +61,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     commandQueue.performResourcesDeletion();
 
     // Transition to RENDER_TARGET
-    commandList.transitionBarrierSingle(backBuffer, D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    commandList.transitionBarrierSingle(backBuffer->getResource(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     // Pipeline state
     commandList.setPipelineState(application.getPipelineStateController().getPipelineState(PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE));
@@ -72,8 +72,8 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     commandList.RSSetScissorRect(scissorRect);
     commandList.RSSetViewport(viewport);
 
-    commandList.OMSetRenderTarget(swapChain.getCurrentBackBufferDescriptor(), swapChain.getCurrentBackBuffer(),
-                                  swapChain.getDepthStencilBufferDescriptor(), swapChain.getDepthStencilBuffer());
+    commandList.OMSetRenderTarget(swapChain.getCurrentBackBufferDescriptor(), swapChain.getCurrentBackBuffer()->getResource(),
+                                  swapChain.getDepthStencilBufferDescriptor(), swapChain.getDepthStencilBuffer()->getResource());
 
 	// Render (clear color)
     commandList.clearRenderTargetView(swapChain.getCurrentBackBufferDescriptor(), backgroundColor);
@@ -113,7 +113,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     }
 
     // Transition to PRESENT
-    commandList.transitionBarrierSingle(backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+    commandList.transitionBarrierSingle(backBuffer->getResource(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
 
     // Close command list
     commandList.close();
