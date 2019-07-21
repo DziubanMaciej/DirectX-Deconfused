@@ -138,6 +138,24 @@ void PipelineStateController::RootSignature::resolveDescriptorRanges() {
     }
 }
 
+PipelineStateController::RootSignature &PipelineStateController::RootSignature::appendShaderResourceView(D3D12_ROOT_DESCRIPTOR_FLAGS flags, D3D12_SHADER_VISIBILITY visibility) {
+    rootParameters.emplace_back();
+    rootParameters.back().InitAsShaderResourceView(nextShaderRegisterT++, 0, flags, visibility);
+    return *this;
+}
+
+PipelineStateController::RootSignature &PipelineStateController::RootSignature::appendConstantBufferView(D3D12_ROOT_DESCRIPTOR_FLAGS flags, D3D12_SHADER_VISIBILITY visibility) {
+    rootParameters.emplace_back();
+    rootParameters.back().InitAsConstantBufferView(nextShaderRegisterB++, 0, flags, visibility);
+    return *this;
+}
+
+PipelineStateController::RootSignature &PipelineStateController::RootSignature::appendUnorderedAccessView(D3D12_ROOT_DESCRIPTOR_FLAGS flags, D3D12_SHADER_VISIBILITY visibility) {
+    rootParameters.emplace_back();
+    rootParameters.back().InitAsUnorderedAccessView(nextShaderRegisterU++, 0, flags, visibility);
+    return *this;
+}
+
 PipelineStateController::RootSignature &PipelineStateController::RootSignature::appendStaticSampler(const D3D12_STATIC_SAMPLER_DESC &samplerDescription) {
     samplerDescriptions.push_back(samplerDescription);
     return *this;

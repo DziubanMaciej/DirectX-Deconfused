@@ -44,9 +44,11 @@ class PipelineStateController::RootSignature : DXD::NonCopyableAndMovable {
 public:
     template <typename ConstantType>
     RootSignature &append32bitConstant(D3D12_SHADER_VISIBILITY visibility);
+    RootSignature &appendShaderResourceView(D3D12_ROOT_DESCRIPTOR_FLAGS flags, D3D12_SHADER_VISIBILITY visibility);
+    RootSignature &appendConstantBufferView(D3D12_ROOT_DESCRIPTOR_FLAGS flags, D3D12_SHADER_VISIBILITY visibility);
+    RootSignature &appendUnorderedAccessView(D3D12_ROOT_DESCRIPTOR_FLAGS flags, D3D12_SHADER_VISIBILITY visibility);
     RootSignature &appendStaticSampler(const D3D12_STATIC_SAMPLER_DESC &samplerDescription);
     RootSignature &appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT numDescriptors);
-    // TODO appendInlineCbv, appendInlineUav, appendInlineSrv
 
     ID3D12RootSignaturePtr compile(ID3D12DevicePtr device);
 
