@@ -64,7 +64,7 @@ void PipelineStateController::compile(Identifier identifier) {
 void PipelineStateController::compilePipelineStateDefault(ID3D12RootSignaturePtr &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
     rootSignature = RootSignature{}
-                        .append32bitConstant<SimpleConstantBuffer>(D3D12_SHADER_VISIBILITY_VERTEX)
+                        .append32bitConstant<SimpleConstantBuffer>(D3D12_SHADER_VISIBILITY_VERTEX) //register(b0)
                         .compile(device);
 
     // Input layout - per vertex data
@@ -89,9 +89,9 @@ void PipelineStateController::compilePipelineStateTexture(ID3D12RootSignaturePtr
     // Root signature - crossthread data
     CD3DX12_STATIC_SAMPLER_DESC linearClampSampler(0, D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR, D3D12_TEXTURE_ADDRESS_MODE_CLAMP, D3D12_TEXTURE_ADDRESS_MODE_CLAMP, D3D12_TEXTURE_ADDRESS_MODE_CLAMP);
     rootSignature = RootSignature{}
-                        .append32bitConstant<SimpleConstantBuffer>(D3D12_SHADER_VISIBILITY_VERTEX)
-                        .appendStaticSampler(linearClampSampler)
-                        .appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1)
+                        .append32bitConstant<SimpleConstantBuffer>(D3D12_SHADER_VISIBILITY_VERTEX) // register(b0)
+                        .appendStaticSampler(linearClampSampler)                                   // register(s0)
+                        .appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1)                 // register(t0)
                         .compile(device);
 
     // Input layout - per vertex data
