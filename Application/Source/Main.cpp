@@ -130,11 +130,13 @@ struct Game : DXD::CallbackHandler {
             updateCamera();
             break;
         case 'A':
-            cameraPosition.x -= movementSpeed;
+            cameraPosition.x += -focusDirection.z * movementSpeed;
+            cameraPosition.z += focusDirection.x * movementSpeed;
             updateCamera();
             break;
         case 'D':
-            cameraPosition.x += movementSpeed;
+            cameraPosition.x -= -focusDirection.z * movementSpeed;
+            cameraPosition.z -= focusDirection.x * movementSpeed;
             updateCamera();
             break;
         case 'Q':
