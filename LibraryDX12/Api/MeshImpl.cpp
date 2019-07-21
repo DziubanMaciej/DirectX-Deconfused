@@ -59,9 +59,7 @@ MeshImpl::MeshImpl(DXD::Application &application, MeshType meshType,
       vertices(std::move(vertices)),
       indices(std::move(indices)),
       normals(std::move(normals)),
-      textureCoordinates(std::move(textureCoordinates)),
-      vertexBuffer(this->application.getDevice()),
-      indexBuffer(this->application.getDevice()) {
+      textureCoordinates(std::move(textureCoordinates)) {
     uploadToGPU();
 }
 
@@ -71,13 +69,10 @@ void MeshImpl::uploadToGPU() {
     auto &commandQueue = application.getDirectCommandQueue();
     CommandList commandList{commandQueue.getCommandAllocatorManager(), nullptr};
 
-    Resource vertexBufferUploadHeap(device);
-    Resource indexBufferUploadHeap(device);
-
     {
         const UINT verticesSize = static_cast<UINT>(vertices.size()) * sizeof(FLOAT);
-        vertexBuffer.create(D3D12_HEAP_TYPE_DEFAULT, D3D12_HEAP_FLAG_NONE, verticesSize, D3D12_RESOURCE_STATE_COPY_DEST, nullptr);
-        vertexBufferUploadHeap.create(D3D12_HEAP_TYPE_UPLOAD, D3D12_HEAP_FLAG_NONE, verticesSize, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr);
+        vertexBuffer = std::make_unique<Resource>(device, D3D12_HEAP_TYPE_DEFAULT, D3D12_HEAP_FLAG_NONE, verticesSize, D3D12_RESOURCE_STATE_COPY_DEST, nullptr);
+        Resource vertexBufferUploadHeap(device, D3D12_HEAP_TYPE_UPLOAD, D3D12_HEAP_FLAG_NONE, verticesSize, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr);
 
         // Copy the triangle data to the vertex buffer.
         D3D12_SUBRESOURCE_DATA vertexData = {};
@@ -85,20 +80,20 @@ void MeshImpl::uploadToGPU() {
         vertexData.RowPitch = verticesSize;
         vertexData.SlicePitch = verticesSize;
 
-        UpdateSubresources<1>(commandList.getCommandList().Get(), vertexBuffer.getResource().Get(), vertexBufferUploadHeap.getResource().Get(), 0, 0, 1, &vertexData);
-        commandList.transitionBarrierSingle(vertexBuffer.getResource().Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+        UpdateSubresources<1>(commandList.getCommandList().Get(), vertexBuffer->getResource().Get(), vertexBufferUploadHeap.getResource().Get(), 0, 0, 1, &vertexData);
+        commandList.transitionBarrierSingle(vertexBuffer->getResource().Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
         commandList.addUsedResource(vertexBufferUploadHeap.getResource());
 
         // Initialize the vertex buffer view.
-        vertexBufferView.BufferLocation = vertexBuffer.getResource()->GetGPUVirtualAddress();
+        vertexBufferView.BufferLocation = vertexBuffer->getResource()->GetGPUVirtualAddress();
         vertexBufferView.StrideInBytes = 3 * sizeof(FLOAT); // TODO
         vertexBufferView.SizeInBytes = verticesSize;
     }
 
     {
         const UINT indicesSize = static_cast<UINT>(indices.size()) * sizeof(UINT);
-        indexBuffer.create(D3D12_HEAP_TYPE_DEFAULT, D3D12_HEAP_FLAG_NONE, indicesSize, D3D12_RESOURCE_STATE_COPY_DEST, nullptr);
-        indexBufferUploadHeap.create(D3D12_HEAP_TYPE_UPLOAD, D3D12_HEAP_FLAG_NONE, indicesSize, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr);
+        indexBuffer = std::make_unique<Resource>(device, D3D12_HEAP_TYPE_DEFAULT, D3D12_HEAP_FLAG_NONE, indicesSize, D3D12_RESOURCE_STATE_COPY_DEST, nullptr);
+        Resource indexBufferUploadHeap(device, D3D12_HEAP_TYPE_UPLOAD, D3D12_HEAP_FLAG_NONE, indicesSize, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr);
 
         // Copy the triangle data to the index buffer.
         D3D12_SUBRESOURCE_DATA indexData = {};
@@ -106,12 +101,12 @@ void MeshImpl::uploadToGPU() {
         indexData.RowPitch = indicesSize;
         indexData.SlicePitch = indicesSize;
 
-        UpdateSubresources<1>(commandList.getCommandList().Get(), indexBuffer.getResource().Get(), indexBufferUploadHeap.getResource().Get(), 0, 0, 1, &indexData);
-        commandList.transitionBarrierSingle(indexBuffer.getResource().Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+        UpdateSubresources<1>(commandList.getCommandList().Get(), indexBuffer->getResource().Get(), indexBufferUploadHeap.getResource().Get(), 0, 0, 1, &indexData);
+        commandList.transitionBarrierSingle(indexBuffer->getResource().Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
         commandList.addUsedResource(indexBufferUploadHeap.getResource());
 
         // Initialize the index buffer view.
-        indexBufferView.BufferLocation = indexBuffer.getResource()->GetGPUVirtualAddress();
+        indexBufferView.BufferLocation = indexBuffer->getResource()->GetGPUVirtualAddress();
         indexBufferView.Format = DXGI_FORMAT_R32_UINT;
         indexBufferView.SizeInBytes = indicesSize;
     }

@@ -36,8 +36,8 @@ public:
     size_t getNormalsCount() const { return normals.size(); }
     size_t getTextureCoordinatesCount() const { return textureCoordinates.size(); }
 
-    Resource& getVertexBuffer() { return vertexBuffer; }
-    Resource& getIndexBuffer() { return indexBuffer; }
+    auto& getVertexBuffer() { return vertexBuffer; }
+    auto& getIndexBuffer() { return indexBuffer; }
     const D3D12_VERTEX_BUFFER_VIEW &getVertexBufferView() const { return vertexBufferView; }
     const D3D12_INDEX_BUFFER_VIEW &getIndexBufferView() const { return indexBufferView; }
 
@@ -49,9 +49,9 @@ protected:
     std::vector<FLOAT> normals;
     std::vector<FLOAT> textureCoordinates;
 
-    Resource vertexBuffer;
+    std::unique_ptr<Resource> vertexBuffer;
     D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
-    Resource indexBuffer;
+    std::unique_ptr<Resource> indexBuffer;
     D3D12_INDEX_BUFFER_VIEW indexBufferView;
 
 private:
