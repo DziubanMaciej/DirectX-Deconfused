@@ -54,7 +54,7 @@ void PipelineStateController::compile(Identifier identifier) {
         compilePipelineStateTexture(rootSignature, pipelineState);
         break;
     default:
-        assert(false);
+        unreachableCode();
     }
 
     pipelineStates[static_cast<int>(identifier)] = std::move(pipelineState);
@@ -159,7 +159,7 @@ PipelineStateController::RootSignature &PipelineStateController::RootSignature::
         nextShaderRegister = &nextShaderRegisterS;
         break;
     default:
-        assert(!"Unreachable code");
+        unreachableCode();
     }
     const UINT baseShaderRegister = *nextShaderRegister;
     (*nextShaderRegister) += numDescriptors;
