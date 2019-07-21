@@ -27,14 +27,14 @@ std::unique_ptr<Texture> Texture::createFromFile(Application &application, const
     const D3D12_RESOURCE_DIMENSION dimension = TextureImpl::calculateTextureDimension(image.width, image.height);
     const DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UINT;
     const D3D12_RESOURCE_DESC description = TextureImpl::createTextureDescription(dimension, format, image.width, image.height);
-
-    ID3D12ResourcePtr resource = TextureImpl::createAndUploadResource(*static_cast<ApplicationImpl *>(&application), image.data, description);
-    return std::unique_ptr<Texture>(new TextureImpl(resource, filePath, dimension));
+    return std::unique_ptr<Texture>(new TextureImpl(*static_cast<ApplicationImpl *>(&application), description, filePath, image.data));
 }
 } // namespace DXD
 
-TextureImpl::TextureImpl(ID3D12ResourcePtr resource, const std::string &fileName, D3D12_RESOURCE_DIMENSION dimension)
-    : resource(resource), fileName(fileName), dimension(dimension) {
+TextureImpl::TextureImpl(ApplicationImpl &application, const D3D12_RESOURCE_DESC &description, const std::string &fileName, unsigned char *imageData)
+    : Resource(application.getDevice(), &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE, &description, D3D12_RESOURCE_STATE_COPY_DEST, nullptr),
+      fileName(fileName), description(description) {
+    upload(application, imageData, description);
 }
 
 D3D12_RESOURCE_DIMENSION TextureImpl::calculateTextureDimension(int width, int height) {
@@ -62,24 +62,15 @@ D3D12_RESOURCE_DESC TextureImpl::createTextureDescription(D3D12_RESOURCE_DIMENSI
     return description;
 }
 
-ID3D12ResourcePtr TextureImpl::createAndUploadResource(ApplicationImpl &application, unsigned char *imageData, const D3D12_RESOURCE_DESC &textureDescription) {
+void TextureImpl::upload(ApplicationImpl &application, unsigned char *imageData, const D3D12_RESOURCE_DESC &textureDescription) {
     CommandQueue &commandQueue = application.getDirectCommandQueue();
     CommandList commandList{commandQueue.getCommandAllocatorManager(), nullptr};
 
-    ID3D12ResourcePtr texture{};
-    throwIfFailed(application.getDevice()->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-        D3D12_HEAP_FLAG_NONE,
-        &textureDescription,
-        D3D12_RESOURCE_STATE_COPY_DEST,
-        nullptr,
-        IID_PPV_ARGS(&texture)));
-
     ID3D12ResourcePtr intermediateResource{};
     throwIfFailed(application.getDevice()->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
         D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer(GetRequiredIntermediateSize(texture.Get(), 0, 1)),
+        &CD3DX12_RESOURCE_DESC::Buffer(GetRequiredIntermediateSize(resource.Get(), 0, 1)),
         D3D12_RESOURCE_STATE_GENERIC_READ,
         nullptr,
         IID_PPV_ARGS(&intermediateResource)));
@@ -89,13 +80,11 @@ ID3D12ResourcePtr TextureImpl::createAndUploadResource(ApplicationImpl &applicat
     vertexData.RowPitch = textureDescription.Width; // TODO: row pitch is in bytes, width is in texels
     vertexData.SlicePitch = textureDescription.Height;
 
-    UpdateSubresources<1>(commandList.getCommandList().Get(), texture.Get(), intermediateResource.Get(), 0, 0, 1, &vertexData);
-    commandList.transitionBarrierSingle(texture.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+    UpdateSubresources<1>(commandList.getCommandList().Get(), resource.Get(), intermediateResource.Get(), 0, 0, 1, &vertexData);
+    commandList.transitionBarrierSingle(resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE| D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.addUsedResource(intermediateResource);
 
     std::vector<CommandList *> commandLists{&commandList};
     commandList.close();
     commandQueue.executeCommandListsAndSignal(commandLists);
-
-    return texture;
 }

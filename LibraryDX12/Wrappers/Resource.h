@@ -16,5 +16,7 @@ public:
 private:
     void create(const D3D12_HEAP_PROPERTIES *pHeapProperties, D3D12_HEAP_FLAGS heapFlags, const D3D12_RESOURCE_DESC *pDesc, D3D12_RESOURCE_STATES initialResourceState, const D3D12_CLEAR_VALUE *pOptimizedClearValue);
     ID3D12DevicePtr device;
+
+protected:
 	ID3D12ResourcePtr resource;
 };
