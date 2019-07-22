@@ -16,6 +16,7 @@ public:
     Resource(Resource &&other) = default;
     Resource &operator=(Resource &&other) = default;
     auto &getResource() { return resource; };
+    const auto &getResource() const { return resource; }
     void setResource(ID3D12ResourcePtr resource) { this->resource = resource; };
 
 private:

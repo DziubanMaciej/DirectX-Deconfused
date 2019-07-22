@@ -1,5 +1,7 @@
 #include "CommandList.h"
+
 #include "Source/CommandAllocatorManager.h"
+#include "Source/VertexOrIndexBuffer.h"
 #include "Utility/ThrowIfFailed.h"
 
 CommandList::CommandList(CommandAllocatorManager &commandAllocatorManager, ID3D12PipelineState *initialPipelineState)
@@ -33,24 +35,31 @@ void CommandList::setGraphicsRootSignature(ID3D12RootSignaturePtr rootSignature)
     commandList->SetGraphicsRootSignature(rootSignature.Get());
 }
 
-void CommandList::IASetVertexBuffers(UINT startSlot, UINT numBuffers, const D3D12_VERTEX_BUFFER_VIEW *views, const ID3D12ResourcePtr *buffers) {
-    commandList->IASetVertexBuffers(startSlot, numBuffers, views);
-    addUsedResources(buffers, numBuffers);
+void CommandList::IASetVertexBuffers(UINT startSlot, UINT numBuffers, const VertexBuffer *vertexBuffers) {
+    auto views = std::make_unique<D3D12_VERTEX_BUFFER_VIEW[]>(numBuffers);
+    auto resources = std::make_unique<ID3D12ResourcePtr[]>(numBuffers);
+    for (auto i = 0u; i < numBuffers; i++) {
+        views[i] = vertexBuffers[i].getView();
+        resources[i] = vertexBuffers[i].getResource();
+    }
+
+    commandList->IASetVertexBuffers(startSlot, numBuffers, views.get());
+    addUsedResources(resources.get(), numBuffers);
 }
 
-void CommandList::IASetVertexBuffer(UINT slot, const D3D12_VERTEX_BUFFER_VIEW &view, const ID3D12ResourcePtr &buffer) {
-    commandList->IASetVertexBuffers(slot, 1, &view);
-    addUsedResource(buffer);
+void CommandList::IASetVertexBuffer(UINT slot, const VertexBuffer &vertexBuffer) {
+    commandList->IASetVertexBuffers(slot, 1, &vertexBuffer.getView());
+    addUsedResource(vertexBuffer.getResource());
 }
 
-void CommandList::IASetVertexBuffer(const D3D12_VERTEX_BUFFER_VIEW &view, const ID3D12ResourcePtr &buffer) {
-    commandList->IASetVertexBuffers(0, 1, &view);
-    addUsedResource(buffer);
+void CommandList::IASetVertexBuffer(const VertexBuffer &vertexBuffer) {
+    commandList->IASetVertexBuffers(0, 1, &vertexBuffer.getView());
+    addUsedResource(vertexBuffer.getResource());
 }
 
-void CommandList::IASetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW &view, const ID3D12ResourcePtr &buffer) {
-    commandList->IASetIndexBuffer(&view);
-    addUsedResource(buffer);
+void CommandList::IASetIndexBuffer(const IndexBuffer &indexBuffer) {
+    commandList->IASetIndexBuffer(&indexBuffer.getView());
+    addUsedResource(indexBuffer.getResource());
 }
 
 void CommandList::IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY primitiveTopology) {

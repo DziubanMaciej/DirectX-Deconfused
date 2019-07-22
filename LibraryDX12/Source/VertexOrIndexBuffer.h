@@ -23,7 +23,7 @@ public:
         view.SizeInBytes = verticesCount * vertexSize;
         view.StrideInBytes = vertexSize;
     }
-    auto getView() const { return view; }
+    const auto &getView() const { return view; }
 
 private:
     D3D12_VERTEX_BUFFER_VIEW view = {};
@@ -38,7 +38,7 @@ public:
         view.SizeInBytes = indicesCount * sizeof(UINT);
         view.Format = DXGI_FORMAT_R32_UINT;
     }
-    auto getView() const { return view; }
+    const auto &getView() const { return view; }
 
 private:
     D3D12_INDEX_BUFFER_VIEW view = {};

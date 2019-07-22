@@ -1,11 +1,14 @@
 #pragma once
 
 #include "DXD/NonCopyableAndMovable.h"
+
 #include "DXD/ExternalHeadersWrappers/d3dx12.h"
 #include <cstdint>
 #include <set>
 #include <vector>
 
+class VertexBuffer;
+class IndexBuffer;
 class CommandAllocatorManager;
 
 /// Class encapsulating DX12 command list
@@ -24,10 +27,10 @@ public:
     void setPipelineState(ID3D12PipelineStatePtr pipelineState);
     void setGraphicsRootSignature(ID3D12RootSignaturePtr rootSignature);
 
-    void IASetVertexBuffers(UINT startSlot, UINT numBuffers, const D3D12_VERTEX_BUFFER_VIEW *views, const ID3D12ResourcePtr *buffers);
-    void IASetVertexBuffer(UINT slot, const D3D12_VERTEX_BUFFER_VIEW &view, const ID3D12ResourcePtr &buffer);
-    void IASetVertexBuffer(const D3D12_VERTEX_BUFFER_VIEW &view, const ID3D12ResourcePtr &buffer);
-    void IASetIndexBuffer(const D3D12_INDEX_BUFFER_VIEW &view, const ID3D12ResourcePtr &buffer);
+    void IASetVertexBuffers(UINT startSlot, UINT numBuffers, const VertexBuffer *vertexBuffers);
+    void IASetVertexBuffer(UINT slot, const VertexBuffer &vertexBuffer);
+    void IASetVertexBuffer(const VertexBuffer &vertexBuffer);
+    void IASetIndexBuffer(const IndexBuffer &indexBuffer);
     void IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY primitiveTopology);
     void IASetPrimitiveTopologyTriangleList();
 
