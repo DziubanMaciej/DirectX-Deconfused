@@ -25,17 +25,18 @@ void Resource::create(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeap
         IID_PPV_ARGS(&resource)));
 }
 
-void Resource::recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data, UINT bufferSize, D3D12_RESOURCE_STATES resourceStateToTransition) {
+void Resource::recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data, D3D12_RESOURCE_STATES resourceStateToTransition) {
     // TODO make assertion that this->resource is in D3D12_RESOURCE_STATE_COPY_DEST state
 
     // Create buffer on upload heap
-    Resource intermediateResource(device, D3D12_HEAP_TYPE_UPLOAD, D3D12_HEAP_FLAG_NONE, bufferSize, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr);
+    Resource intermediateResource(device, D3D12_HEAP_TYPE_UPLOAD, D3D12_HEAP_FLAG_NONE, GetRequiredIntermediateSize(resource.Get(), 0, 1), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr);
 
     // Transfer data through the upload heap to destination resource
+    const auto resourceDescription = resource->GetDesc();
     D3D12_SUBRESOURCE_DATA subresourceData = {};
     subresourceData.pData = data;
-    subresourceData.RowPitch = bufferSize;
-    subresourceData.SlicePitch = bufferSize;
+    subresourceData.RowPitch = resourceDescription.Width;
+    subresourceData.SlicePitch = resourceDescription.Height;
     UpdateSubresources<1>(commandList.getCommandList().Get(), this->resource.Get(), intermediateResource.getResource().Get(), 0, 0, 1, &subresourceData);
 
     // Transition destination resource and make intermediateResource tracked so it's not deleted while being processed on the GPU

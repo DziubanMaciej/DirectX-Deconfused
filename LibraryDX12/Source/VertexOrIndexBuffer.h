@@ -11,7 +11,7 @@ class VertexOrIndexBuffer : public Resource {
 public:
     VertexOrIndexBuffer(ID3D12DevicePtr device, CommandList &commandList, const void *data, UINT numElements, UINT elementSize)
         : Resource(device, D3D12_HEAP_TYPE_DEFAULT, D3D12_HEAP_FLAG_NONE, numElements * elementSize, D3D12_RESOURCE_STATE_COPY_DEST, nullptr) {
-        recordGpuUploadCommands(device, commandList, data, numElements * elementSize, getDestinationResourceState());
+        recordGpuUploadCommands(device, commandList, data, getDestinationResourceState());
         populateView(numElements, elementSize);
     }
 
