@@ -34,7 +34,7 @@ std::unique_ptr<Texture> Texture::createFromFile(Application &application, const
 TextureImpl::TextureImpl(ApplicationImpl &application, const D3D12_RESOURCE_DESC &description, const std::string &fileName, unsigned char *imageData)
     : Resource(application.getDevice(), &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE, &description, D3D12_RESOURCE_STATE_COPY_DEST, nullptr),
       fileName(fileName), description(description) {
-    upload(application, imageData, description);
+    uploadToGPU(application, imageData, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 }
 
 D3D12_RESOURCE_DIMENSION TextureImpl::calculateTextureDimension(int width, int height) {
@@ -60,31 +60,4 @@ D3D12_RESOURCE_DESC TextureImpl::createTextureDescription(D3D12_RESOURCE_DIMENSI
         assert(false);
     }
     return description;
-}
-
-void TextureImpl::upload(ApplicationImpl &application, unsigned char *imageData, const D3D12_RESOURCE_DESC &textureDescription) {
-    CommandQueue &commandQueue = application.getDirectCommandQueue();
-    CommandList commandList{commandQueue.getCommandAllocatorManager(), nullptr};
-
-    ID3D12ResourcePtr intermediateResource{};
-    throwIfFailed(application.getDevice()->CreateCommittedResource(
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-        D3D12_HEAP_FLAG_NONE,
-        &CD3DX12_RESOURCE_DESC::Buffer(GetRequiredIntermediateSize(resource.Get(), 0, 1)),
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(&intermediateResource)));
-
-    D3D12_SUBRESOURCE_DATA vertexData = {};
-    vertexData.pData = imageData;
-    vertexData.RowPitch = textureDescription.Width; // TODO: row pitch is in bytes, width is in texels
-    vertexData.SlicePitch = textureDescription.Height;
-
-    UpdateSubresources<1>(commandList.getCommandList().Get(), resource.Get(), intermediateResource.Get(), 0, 0, 1, &vertexData);
-    commandList.transitionBarrierSingle(resource.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE| D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    commandList.addUsedResource(intermediateResource);
-
-    std::vector<CommandList *> commandLists{&commandList};
-    commandList.close();
-    commandQueue.executeCommandListsAndSignal(commandLists);
 }

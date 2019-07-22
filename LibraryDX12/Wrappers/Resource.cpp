@@ -25,6 +25,20 @@ void Resource::create(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeap
         IID_PPV_ARGS(&resource)));
 }
 
+
+void Resource::uploadToGPU(ApplicationImpl &application, const void *data, D3D12_RESOURCE_STATES resourceStateToTransition) {
+    CommandQueue &commandQueue = application.getDirectCommandQueue();
+
+    // Record command list for GPU upload
+    CommandList commandList{ commandQueue.getCommandAllocatorManager(), nullptr };
+    recordGpuUploadCommands(application.getDevice(), commandList, data, resourceStateToTransition);
+    commandList.close();
+
+    // Execute on GPU
+    std::vector<CommandList *> commandLists{ &commandList };
+    commandQueue.executeCommandListsAndSignal(commandLists);
+}
+
 void Resource::recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data, D3D12_RESOURCE_STATES resourceStateToTransition) {
     // TODO make assertion that this->resource is in D3D12_RESOURCE_STATE_COPY_DEST state
 
