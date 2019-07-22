@@ -1,6 +1,8 @@
 #include "Resource.h"
 
+#include "Api/ApplicationImpl.h"
 #include "Utility/ThrowIfFailed.h"
+#include "Wrappers/CommandList.h"
 
 Resource::Resource(ID3D12ResourcePtr resource) : resource(resource) {
 }
@@ -21,4 +23,22 @@ void Resource::create(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeap
         initialResourceState,
         pOptimizedClearValue,
         IID_PPV_ARGS(&resource)));
+}
+
+void Resource::recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data, UINT bufferSize, D3D12_RESOURCE_STATES resourceStateToTransition) {
+    // TODO make assertion that this->resource is in D3D12_RESOURCE_STATE_COPY_DEST state
+
+    // Create buffer on upload heap
+    Resource intermediateResource(device, D3D12_HEAP_TYPE_UPLOAD, D3D12_HEAP_FLAG_NONE, bufferSize, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr);
+
+    // Transfer data through the upload heap to destination resource
+    D3D12_SUBRESOURCE_DATA subresourceData = {};
+    subresourceData.pData = data;
+    subresourceData.RowPitch = bufferSize;
+    subresourceData.SlicePitch = bufferSize;
+    UpdateSubresources<1>(commandList.getCommandList().Get(), this->resource.Get(), intermediateResource.getResource().Get(), 0, 0, 1, &subresourceData);
+
+    // Transition destination resource and make intermediateResource tracked so it's not deleted while being processed on the GPU
+    commandList.transitionBarrierSingle(this->resource, D3D12_RESOURCE_STATE_COPY_DEST, resourceStateToTransition);
+    commandList.addUsedResource(intermediateResource.getResource());
 }
