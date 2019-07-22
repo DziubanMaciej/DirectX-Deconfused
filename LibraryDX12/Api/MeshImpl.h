@@ -1,12 +1,12 @@
 #pragma once
 
 #include "Api/ApplicationImpl.h"
+#include "Source/VertexOrIndexBuffer.h"
+#include "Wrappers/Resource.h"
 
 #include "DXD/Mesh.h"
 
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
-
-#include "Wrappers/Resource.h"
 #include <vector>
 
 class MeshImpl : public DXD::Mesh {
@@ -38,21 +38,21 @@ public:
 
     auto& getVertexBuffer() { return vertexBuffer; }
     auto& getIndexBuffer() { return indexBuffer; }
-    const D3D12_VERTEX_BUFFER_VIEW &getVertexBufferView() const { return vertexBufferView; }
-    const D3D12_INDEX_BUFFER_VIEW &getIndexBufferView() const { return indexBufferView; }
 
 protected:
+    // Context and metadata
     ApplicationImpl &application;
     MeshType meshType;
+
+    // CPU resources
     std::vector<FLOAT> vertices;
     std::vector<UINT> indices;
     std::vector<FLOAT> normals;
     std::vector<FLOAT> textureCoordinates;
 
-    std::unique_ptr<Resource> vertexBuffer;
-    D3D12_VERTEX_BUFFER_VIEW vertexBufferView;
-    std::unique_ptr<Resource> indexBuffer;
-    D3D12_INDEX_BUFFER_VIEW indexBufferView;
+    // GPU resources
+    std::unique_ptr<VertexBuffer> vertexBuffer;
+    std::unique_ptr<IndexBuffer> indexBuffer;
 
 private:
     void uploadToGPU();
