@@ -86,6 +86,18 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     const XMMATRIX projectionMatrix = camera->getProjectionMatrix();
     const XMMATRIX vpMatrix = XMMatrixMultiply(viewMatrix, projectionMatrix);
 
+	SimpleConstantBuffer cb;
+    cb.lightsSize = 0;
+
+    for (LightImpl *light : lights) {
+        cb.lightColor = light->getColor();
+        cb.lightPosition = light->getPosition();
+        cb.lightsSize++;
+        break;
+    }
+
+    commandList.setGraphicsRoot32BitConstant(1, cb);
+
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = *object->getMesh();
 
@@ -96,18 +108,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
         const XMMATRIX modelMatrix = object->getModelMatrix();
         const XMMATRIX mvpMatrix = XMMatrixMultiply(modelMatrix, vpMatrix);
 
-        SimpleConstantBuffer cb;
-        cb.lightsSize = 0;
-
-        for (LightImpl *light : lights) {
-            cb.lightColor = light->getColor();
-            cb.lightPosition = light->getPosition();
-            cb.lightsSize++;
-            break;
-        }
-
         commandList.setGraphicsRoot32BitConstant(0, mvpMatrix);
-        commandList.setGraphicsRoot32BitConstant(1, cb);
 
         commandList.drawIndexed(static_cast<UINT>(mesh.getIndicesCount()));
     }

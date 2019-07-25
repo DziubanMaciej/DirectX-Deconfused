@@ -21,6 +21,8 @@ struct Game : DXD::CallbackHandler {
         assert(teapotMesh);
         cubeMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/cube.obj");
         assert(cubeMesh);
+        flatMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/flat.obj");
+        assert(flatMesh);
         woodTexture = DXD::Texture::createFromFile(*application, "Resources/wood.jpg");
         assert(woodTexture);
 
@@ -44,6 +46,10 @@ struct Game : DXD::CallbackHandler {
         objects.back()->setMesh(*cubeMesh);
         objects.back()->setPosition(8, -1, -8);
 
+        objects.push_back(DXD::Object::create());
+        objects.back()->setMesh(*flatMesh);
+        objects.back()->setPosition(0, -3, 0);
+
         sunLight = DXD::Light::create();
         sunLight->setColor(1.0f, 1.0f, 0.0f);
         sunLight->setPosition(-10, 8, 0);
@@ -58,6 +64,7 @@ struct Game : DXD::CallbackHandler {
         scene->addObject(*objects[2]);
         scene->addObject(*objects[3]);
         scene->addObject(*objects[4]);
+        scene->addObject(*objects[5]);
         scene->setBackgroundColor(0.1f, 0.1f, 0.3f);
         scene->addLight(*sunLight);
         //scene->addLight(*moonLight);
@@ -192,6 +199,7 @@ private:
     std::unique_ptr<DXD::Window> window;
     std::unique_ptr<DXD::Mesh> teapotMesh;
     std::unique_ptr<DXD::Mesh> cubeMesh;
+    std::unique_ptr<DXD::Mesh> flatMesh;
     std::unique_ptr<DXD::Light> sunLight;
     std::unique_ptr<DXD::Light> moonLight;
     std::vector<std::unique_ptr<DXD::Object>> objects;
