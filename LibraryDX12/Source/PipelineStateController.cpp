@@ -64,7 +64,7 @@ void PipelineStateController::compile(Identifier identifier) {
 void PipelineStateController::compilePipelineStateDefault(ID3D12RootSignaturePtr &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
     rootSignature = RootSignature{}
-                        .append32bitConstant<XMMATRIX>(D3D12_SHADER_VISIBILITY_VERTEX)             // register(b0)
+                        .append32bitConstant<XMMATRIX>(D3D12_SHADER_VISIBILITY_VERTEX)            // register(b0)
                         .append32bitConstant<SimpleConstantBuffer>(D3D12_SHADER_VISIBILITY_PIXEL) // register(b1)
                         .compile(device);
 
@@ -90,10 +90,10 @@ void PipelineStateController::compilePipelineStateTexture(ID3D12RootSignaturePtr
     // Root signature - crossthread data
     CD3DX12_STATIC_SAMPLER_DESC linearClampSampler(0, D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR, D3D12_TEXTURE_ADDRESS_MODE_CLAMP, D3D12_TEXTURE_ADDRESS_MODE_CLAMP, D3D12_TEXTURE_ADDRESS_MODE_CLAMP);
     rootSignature = RootSignature{}
-                        .append32bitConstant<XMMATRIX>(D3D12_SHADER_VISIBILITY_VERTEX)             // register(b0)
+                        .append32bitConstant<XMMATRIX>(D3D12_SHADER_VISIBILITY_VERTEX)            // register(b0)
                         .append32bitConstant<SimpleConstantBuffer>(D3D12_SHADER_VISIBILITY_PIXEL) // register(b1)
-                        .appendStaticSampler(linearClampSampler)                                   // register(s0)
-                        //.appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1)                 // register(t0)
+                        .appendStaticSampler(linearClampSampler)                                  // register(s0)
+                        //.appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, D3D12_SHADER_VISIBILITY_PIXEL)
                         .compile(device);
 
     // Input layout - per vertex data
@@ -127,10 +127,14 @@ ID3DBlobPtr PipelineStateController::loadAndCompileShader(const std::wstring &na
 // ----------------------------------------------------------------------------------------------- RootSignature helper
 
 void PipelineStateController::RootSignature::resolveDescriptorRanges() {
-    // TODO We create one descriptor table with D3D12_SHADER_VISIBILITY_ALL, while they could be more specialized
-    if (descriptorRanges.size() > 0) {
+    for (auto it = descriptorRanges.begin(); it != descriptorRanges.end(); it++) {
+        const D3D12_SHADER_VISIBILITY visibility = it->first;
+        const std::vector<D3D12_DESCRIPTOR_RANGE1> &rangesForGivenVisibility = it->second;
+
+        assert(descriptorRanges.size() > 0);
+
         rootParameters.emplace_back();
-        rootParameters.back().InitAsDescriptorTable(static_cast<UINT>(descriptorRanges.size()), descriptorRanges.data());
+        rootParameters.back().InitAsDescriptorTable(static_cast<UINT>(rangesForGivenVisibility.size()), rangesForGivenVisibility.data(), visibility);
     }
 }
 
@@ -175,17 +179,17 @@ UINT PipelineStateController::RootSignature::getNextShaderRegisterAndIncrement(D
     case D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER:
         result = nextShaderRegisterS;
         nextShaderRegisterS += numDescriptors;
-        break;
+        unreachableCode(); // TODO Sampler descriptors cannot be in one table with SRVs,UAVs and CBVs. resolveDescriptorRanges() divide them
     default:
         unreachableCode();
     }
     return result;
 }
 
-PipelineStateController::RootSignature &PipelineStateController::RootSignature::appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT numDescriptors) {
+PipelineStateController::RootSignature &PipelineStateController::RootSignature::appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT numDescriptors, D3D12_SHADER_VISIBILITY visibility) {
     const auto baseShaderRegister = getNextShaderRegisterAndIncrement(rangeType, numDescriptors);
     D3D12_DESCRIPTOR_RANGE1 range{rangeType, numDescriptors, baseShaderRegister, 0, D3D12_DESCRIPTOR_RANGE_FLAG_NONE, D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND};
-    descriptorRanges.push_back(std::move(range));
+    this->descriptorRanges[visibility].push_back(std::move(range));
     return *this;
 }
 

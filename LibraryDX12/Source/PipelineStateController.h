@@ -5,6 +5,7 @@
 #include "DXD/ExternalHeadersWrappers/d3dcompiler.h"
 #include "DXD/ExternalHeadersWrappers/d3dx12.h"
 #include <cassert>
+#include <map>
 #include <string>
 #include <vector>
 
@@ -47,7 +48,7 @@ public:
     RootSignature &appendConstantBufferView(D3D12_ROOT_DESCRIPTOR_FLAGS flags, D3D12_SHADER_VISIBILITY visibility);
     RootSignature &appendUnorderedAccessView(D3D12_ROOT_DESCRIPTOR_FLAGS flags, D3D12_SHADER_VISIBILITY visibility);
     RootSignature &appendStaticSampler(const D3D12_STATIC_SAMPLER_DESC &samplerDescription);
-    RootSignature &appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT numDescriptors);
+    RootSignature &appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT numDescriptors, D3D12_SHADER_VISIBILITY visibility);
 
     ID3D12RootSignaturePtr compile(ID3D12DevicePtr device);
 
@@ -56,7 +57,7 @@ private:
     void resolveDescriptorRanges();
     static D3D_ROOT_SIGNATURE_VERSION getHighestRootSignatureVersion(ID3D12DevicePtr device);
 
-    std::vector<D3D12_DESCRIPTOR_RANGE1> descriptorRanges; // intermediate data, has to be resolved to descriptor tables
+    std::map<D3D12_SHADER_VISIBILITY, std::vector<D3D12_DESCRIPTOR_RANGE1>> descriptorRanges; // intermediate data, has to be resolved to descriptor tables
 
     std::vector<CD3DX12_ROOT_PARAMETER1> rootParameters = {};        // goes directly to D3D12_VERSIONED_ROOT_SIGNATURE_DESC
     std::vector<D3D12_STATIC_SAMPLER_DESC> samplerDescriptions = {}; // goes directly to D3D12_VERSIONED_ROOT_SIGNATURE_DESC
