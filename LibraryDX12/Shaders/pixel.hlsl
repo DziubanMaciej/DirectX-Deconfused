@@ -7,11 +7,10 @@ cbuffer SimpleConstantBuffer : register(b1) {
     float4 lightColor[8];
 };
 
-
 Texture2D DiffuseTexture : register(t0);
 
 struct PixelShaderInput {
-    float4 Color : COLOR;
+    float4 WorldPosition : COLOR;
     float4 Position : SV_Position;
 };
 
@@ -20,7 +19,7 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
 	for (int i = 0; i < lightsSize; i++) {
         float3 tempLightColor = lightColor[i].xyz * 0.01;
-        float tempLightPower = 2000 / (distance(IN.Color.xyz, lightPosition[i]) * distance(IN.Color.xyz, lightPosition[i].xyz));
+        float tempLightPower = 2000 / (distance(IN.WorldPosition.xyz, lightPosition[i]) * distance(IN.WorldPosition.xyz, lightPosition[i].xyz));
         OUT_Color.xyz = OUT_Color.xyz + tempLightColor.xyz * tempLightPower;
 	}
 
