@@ -4,6 +4,7 @@
 
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
 #include "DXD/ExternalHeadersWrappers/dxgi.h"
+#include "Source/ConstantBuffers.h"
 #include <Wrappers/Resource.h>
 #include <memory>
 #include <stdint.h>
@@ -31,14 +32,20 @@ public:
     D3D12_CPU_DESCRIPTOR_HANDLE getDepthStencilBufferDescriptor() const;
     auto &getDepthStencilBuffer() { return depthStencilBuffer; };
 
+	SimpleConstantBuffer *getSimpleConstantBufferData();
+    UINT8 *getSimpleCbvDataBegin() const { return simpleCbvDataBegin; }
+    ID3D12DescriptorHeapPtr getCbvDescriptorHeap() { return cbvDescriptorHeap; }
+
 private:
     static bool checkTearingSupport(IDXGIFactoryPtr &factory);
     static IDXGISwapChainPtr createSwapChain(HWND hwnd, IDXGIFactoryPtr &factory, CommandQueue &commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount);
     static ID3D12DescriptorHeapPtr createRtvDescriptorHeap(ID3D12DevicePtr device, uint32_t bufferCount);
     static ID3D12DescriptorHeapPtr createDsvDescriptorHeap(ID3D12DevicePtr device);
+    static ID3D12DescriptorHeapPtr createCbvDescriptorHeap(ID3D12DevicePtr device);
 
     void resetRenderTargetViews();
     void updateRenderTargetViews();
+    void createSimpleConstantBuffer();
     void updateDepthStencilBuffer(uint32_t desiredWidth, uint32_t desiredHeight);
 
     void resizeRenderTargets(uint32_t desiredWidth, uint32_t desiredHeight);
@@ -48,8 +55,13 @@ private:
 
     ID3D12DescriptorHeapPtr rtvDescriptorHeap;
     ID3D12DescriptorHeapPtr depthStencilDescriptorHeap;
+    ID3D12DescriptorHeapPtr cbvDescriptorHeap;
     std::vector<BackBufferEntry> backBufferEntries;
     std::unique_ptr<Resource> depthStencilBuffer;
+
+    ID3D12ResourcePtr simpleConstantBuffer;
+    SimpleConstantBuffer simpleConstantBufferData;
+    UINT8 *simpleCbvDataBegin;
 
     uint32_t width;
     uint32_t height;

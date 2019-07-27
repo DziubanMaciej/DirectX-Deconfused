@@ -2,7 +2,6 @@
 
 #include "Api/ApplicationImpl.h"
 #include "Api/WindowImpl.h"
-#include "Source/ConstantBuffers.h"
 #include "Utility/ThrowIfFailed.h"
 #include "Wrappers/CommandList.h"
 #include "Wrappers/CommandQueue.h"
@@ -67,7 +66,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     commandList.setPipelineState(application.getPipelineStateController().getPipelineState(PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE));
     commandList.setGraphicsRootSignature(application.getPipelineStateController().getRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE));
 
-	CD3DX12_VIEWPORT viewport(0.0f, 0.0f, (float)swapChain.getWidth(), (float)swapChain.getHeight());
+    CD3DX12_VIEWPORT viewport(0.0f, 0.0f, (float)swapChain.getWidth(), (float)swapChain.getHeight());
     CD3DX12_RECT scissorRect(0, 0, LONG_MAX, LONG_MAX);
     commandList.RSSetScissorRect(scissorRect);
     commandList.RSSetViewport(viewport);
@@ -75,7 +74,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     commandList.OMSetRenderTarget(swapChain.getCurrentBackBufferDescriptor(), swapChain.getCurrentBackBuffer()->getResource(),
                                   swapChain.getDepthStencilBufferDescriptor(), swapChain.getDepthStencilBuffer()->getResource());
 
-	// Render (clear color)
+    // Render (clear color)
     commandList.clearRenderTargetView(swapChain.getCurrentBackBufferDescriptor(), backgroundColor);
     commandList.clearDepthStencilView(swapChain.getDepthStencilBufferDescriptor(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
@@ -86,17 +85,23 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     const XMMATRIX projectionMatrix = camera->getProjectionMatrix();
     const XMMATRIX vpMatrix = XMMatrixMultiply(viewMatrix, projectionMatrix);
 
-	SimpleConstantBuffer cb;
-    cb.lightsSize = 0;
-
+    //SimpleConstantBuffer
+    SimpleConstantBuffer *smplCbv = swapChain.getSimpleConstantBufferData();
+    smplCbv->lightsSize = 0;
     for (LightImpl *light : lights) {
-        cb.lightColor = light->getColor();
-        cb.lightPosition = light->getPosition();
-        cb.lightsSize++;
-        break;
+        smplCbv->lightColor[smplCbv->lightsSize] = XMFLOAT4(light->getColor().x, light->getColor().y, light->getColor().z, 0);
+        smplCbv->lightPosition[smplCbv->lightsSize] = XMFLOAT4(light->getPosition().x, light->getPosition().y, light->getPosition().z, 0);
+        smplCbv->lightsSize++;
+        if (smplCbv->lightsSize >= 8) {
+            break;
+        }
     }
 
-    commandList.setGraphicsRoot32BitConstant(1, cb);
+    memcpy(swapChain.getSimpleCbvDataBegin(), swapChain.getSimpleConstantBufferData(), sizeof(*swapChain.getSimpleConstantBufferData()));
+
+    ID3D12DescriptorHeap *ppHeaps[] = {swapChain.getCbvDescriptorHeap().Get()};
+    commandList.getCommandList()->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+    commandList.getCommandList()->SetGraphicsRootDescriptorTable(1, swapChain.getCbvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = *object->getMesh();
@@ -105,10 +110,11 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
         commandList.IASetIndexBuffer(*mesh.getIndexBuffer());
         commandList.IASetPrimitiveTopologyTriangleList();
 
-        const XMMATRIX modelMatrix = object->getModelMatrix();
-        const XMMATRIX mvpMatrix = XMMatrixMultiply(modelMatrix, vpMatrix);
+        ModelMvp mmvp;
+        mmvp.modelMatrix = object->getModelMatrix();
+        mmvp.modelViewProjectionMatrix = XMMatrixMultiply(mmvp.modelMatrix, vpMatrix);
 
-        commandList.setGraphicsRoot32BitConstant(0, mvpMatrix);
+        commandList.setGraphicsRoot32BitConstant(0, mmvp);
 
         commandList.drawIndexed(static_cast<UINT>(mesh.getIndicesCount()));
     }

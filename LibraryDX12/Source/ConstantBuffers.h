@@ -1,7 +1,15 @@
 #include "DXD/ExternalHeadersWrappers/DirectXMath.h"
 
-struct SimpleConstantBuffer {
+struct ModelMvp {
+    XMMATRIX modelMatrix;
+    XMMATRIX modelViewProjectionMatrix;
+};
+
+struct SimpleConstantBuffer { //must be 128bit padded
     int lightsSize;
-    XMFLOAT3 lightPosition;
-    XMFLOAT3 lightColor;
+    int pad;
+    int padd;
+    int paddd;
+    XMFLOAT4 lightPosition[8];
+    XMFLOAT4 lightColor[8];
 };

@@ -12,6 +12,7 @@ SwapChain::SwapChain(HWND windowHandle, ID3D12DevicePtr device, IDXGIFactoryPtr 
       device(device),
       rtvDescriptorHeap(createRtvDescriptorHeap(device, bufferCount)),
       depthStencilDescriptorHeap(createDsvDescriptorHeap(device)),
+      cbvDescriptorHeap(createCbvDescriptorHeap(device)),
       backBufferEntries(bufferCount),
       depthStencilBuffer(nullptr),
       width(width),
@@ -22,6 +23,7 @@ SwapChain::SwapChain(HWND windowHandle, ID3D12DevicePtr device, IDXGIFactoryPtr 
     }
     updateRenderTargetViews();
     updateDepthStencilBuffer(width, height);
+    createSimpleConstantBuffer();
 }
 
 bool SwapChain::checkTearingSupport(IDXGIFactoryPtr &factory) {
@@ -79,6 +81,17 @@ ID3D12DescriptorHeapPtr SwapChain::createDsvDescriptorHeap(ID3D12DevicePtr devic
 
     ID3D12DescriptorHeapPtr descriptorHeap;
     throwIfFailed(device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&descriptorHeap)));
+    return descriptorHeap;
+}
+
+ID3D12DescriptorHeapPtr SwapChain::createCbvDescriptorHeap(ID3D12DevicePtr device) {
+    D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
+    cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    cbvHeapDesc.NumDescriptors = 1;
+    cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+
+    ID3D12DescriptorHeapPtr descriptorHeap;
+    throwIfFailed(device->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&descriptorHeap)));
     return descriptorHeap;
 }
 
@@ -160,12 +173,38 @@ void SwapChain::updateDepthStencilBuffer(uint32_t desiredWidth, uint32_t desired
         depthStencilDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
 }
 
+void SwapChain::createSimpleConstantBuffer() {
+    throwIfFailed(device->CreateCommittedResource(
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
+        D3D12_HEAP_FLAG_NONE,
+        &CD3DX12_RESOURCE_DESC::Buffer(1024 * 64),
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&simpleConstantBuffer)));
+
+    // Describe and create a constant buffer view.
+    D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+    cbvDesc.BufferLocation = simpleConstantBuffer->GetGPUVirtualAddress();
+    cbvDesc.SizeInBytes = (sizeof(SimpleConstantBuffer) + 255) & ~255; // CB size is required to be 256-byte aligned.
+    device->CreateConstantBufferView(&cbvDesc, cbvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+
+    // Map and initialize the constant buffer. We don't unmap this until the
+    // app closes. Keeping things mapped for the lifetime of the resource is okay.
+    CD3DX12_RANGE readRange(0, 0); // We do not intend to read from this resource on the CPU.
+    throwIfFailed(simpleConstantBuffer->Map(0, &readRange, reinterpret_cast<void **>(&simpleCbvDataBegin)));
+    memcpy(simpleCbvDataBegin, &simpleConstantBufferData, sizeof(simpleConstantBufferData));
+}
+
 uint64_t SwapChain::getFenceValueForCurrentBackBuffer() const {
     return backBufferEntries[this->currentBackBufferIndex].lastFence;
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::getDepthStencilBufferDescriptor() const {
     return depthStencilDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+}
+
+SimpleConstantBuffer* SwapChain::getSimpleConstantBufferData() {
+    return &simpleConstantBufferData;
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::getCurrentBackBufferDescriptor() const {

@@ -1,10 +1,12 @@
-struct SimpleConstantBuffer {
+cbuffer SimpleConstantBuffer : register(b1) {
     int lightsSize;
-    float3 lightPosition;
-    float3 lightColor;
+    int pad;
+    int padd;
+    int paddd;
+    float4 lightPosition[8];
+    float4 lightColor[8];
 };
 
-ConstantBuffer<SimpleConstantBuffer> simpleConstantBuffer : register(b1);
 
 Texture2D DiffuseTexture : register(t0);
 
@@ -16,12 +18,11 @@ struct PixelShaderInput {
 float4 main(PixelShaderInput IN) : SV_Target {
     float4 OUT_Color = float4(0, 0, 0, 1);
 
-	if (simpleConstantBuffer.lightsSize >= 1) {
-        float3 lightColor = simpleConstantBuffer.lightColor * 0.01;
-        float lightPower = 2000 / (distance(IN.Color.xyz, simpleConstantBuffer.lightPosition) * distance(IN.Color.xyz, simpleConstantBuffer.lightPosition));
-        OUT_Color.xyz += lightColor.xyz * lightPower;
-    }
-    //OUT_Color.xyz = simpleConstantBuffer.lightColor;
+	for (int i = 0; i < lightsSize; i++) {
+        float3 tempLightColor = lightColor[i].xyz * 0.01;
+        float tempLightPower = 2000 / (distance(IN.Color.xyz, lightPosition[i]) * distance(IN.Color.xyz, lightPosition[i].xyz));
+        OUT_Color.xyz = OUT_Color.xyz + tempLightColor.xyz * tempLightPower;
+	}
 
     return OUT_Color;
 }

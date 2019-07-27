@@ -55,8 +55,16 @@ struct Game : DXD::CallbackHandler {
         sunLight->setPosition(-10, 8, 0);
 
         moonLight = DXD::Light::create();
-        moonLight->setColor(1.0f, 1.0f, 1.0f);
-        moonLight->setPosition(10, 10, 0);
+        moonLight->setColor(0.0f, 1.0f, 1.0f);
+        moonLight->setPosition(9, 8, 2);
+
+        redLight = DXD::Light::create();
+        redLight->setColor(1.0f, 0.0f, 0.0f);
+        redLight->setPosition(-9, 8, -8);
+
+        blueLight = DXD::Light::create();
+        blueLight->setColor(0.0f, 0.0f, 1.0f);
+        blueLight->setPosition(9, 8, -8);
 
         scene = DXD::Scene::create();
         scene->addObject(*objects[0]);
@@ -67,7 +75,9 @@ struct Game : DXD::CallbackHandler {
         scene->addObject(*objects[5]);
         scene->setBackgroundColor(0.1f, 0.1f, 0.3f);
         scene->addLight(*sunLight);
-        //scene->addLight(*moonLight);
+        scene->addLight(*moonLight);
+        scene->addLight(*redLight);
+        scene->addLight(*blueLight);
 
         camera = DXD::Camera::create();
         camera->setUpDirection(0, 1, 0);
@@ -202,6 +212,8 @@ private:
     std::unique_ptr<DXD::Mesh> flatMesh;
     std::unique_ptr<DXD::Light> sunLight;
     std::unique_ptr<DXD::Light> moonLight;
+    std::unique_ptr<DXD::Light> redLight;
+    std::unique_ptr<DXD::Light> blueLight;
     std::vector<std::unique_ptr<DXD::Object>> objects;
     std::unique_ptr<DXD::Texture> woodTexture;
     std::unique_ptr<DXD::Scene> scene;
