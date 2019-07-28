@@ -36,7 +36,7 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
             vertices.push_back(x);
             vertices.push_back(y);
             vertices.push_back(z);
-        } else if (lineType == "f") { //faces, TODO texture coord and normals
+        } else if (lineType == "f") { //faces
             inputFile >> f1;
             inputFile >> f2;
             inputFile >> f3;
@@ -50,53 +50,77 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
             normals.push_back(x);
             normals.push_back(y);
             normals.push_back(z);
+        } else if (lineType == "vt") { //texture vector
+            inputFile >> x;
+            inputFile >> y;
+            inputFile >> z;
+            textureCoordinates.push_back(x);
+            textureCoordinates.push_back(y);
+            textureCoordinates.push_back(z);
         }
     }
 
-    if (normals.size() > 0) { //mesh with normal vectors -> Draw()
-        for (std::string face : faces) {
-            UINT vertexIdx;
-            UINT normalIdx;
-            UINT textCoordIdx;
-            size_t pos = 0;
-            for (int i = 0; i < 3; i++) {
-                pos = face.find("/");
-                std::string t = face.substr(0, pos);
-                switch (i) {
-                case 0:
-                    vertexIdx = std::stoi(t);
-                    break;
-                case 1:
-                    if (t.length() > 0) {
-                        textCoordIdx = std::stoi(t);
-                    }
-                    break;
-                case 2:
-                    if (t.length() > 0) {
-                        normalIdx = std::stoi(t);
-                    }
-                    break;
+    for (std::string face : faces) {
+        UINT vertexIdx;
+        UINT normalIdx;
+        UINT textCoordIdx;
+        size_t pos = 0;
+        for (int i = 0; i < 3; i++) {
+            pos = face.find("/");
+            std::string t = face.substr(0, pos);
+            switch (i) {
+            case 0:
+                vertexIdx = std::stoi(t);
+                break;
+            case 1:
+                if (t.length() > 0) {
+                    textCoordIdx = std::stoi(t);
                 }
-                face.erase(0, pos + 1);
+                break;
+            case 2:
+                if (t.length() > 0) {
+                    normalIdx = std::stoi(t);
+                }
+                break;
             }
-            indices.push_back(vertexIdx - 1);
-            outputVertices.push_back(vertices[3 * (vertexIdx - 1)]);
-            outputVertices.push_back(vertices[3 * (vertexIdx - 1) + 1]);
-            outputVertices.push_back(vertices[3 * (vertexIdx - 1) + 2]);
+            face.erase(0, pos + 1);
+        }
+        indices.push_back(vertexIdx - 1);
+        outputVertices.push_back(vertices[3 * (vertexIdx - 1)]);
+        outputVertices.push_back(vertices[3 * (vertexIdx - 1) + 1]);
+        outputVertices.push_back(vertices[3 * (vertexIdx - 1) + 2]);
+        if (normals.size() > 0) {
             outputVertices.push_back(normals[3 * (normalIdx - 1)]);
             outputVertices.push_back(normals[3 * (normalIdx - 1) + 1]);
             outputVertices.push_back(normals[3 * (normalIdx - 1) + 2]);
         }
-        return std::unique_ptr<Mesh>{new MeshImpl(application, MeshImpl::MeshType::TRIANGLE_STRIP_WITH_NORMALS,
-                                                  std::move(outputVertices), 6 * sizeof(FLOAT), std::move(indices),
-                                                  std::move(normals), std::move(textureCoordinates))};
-    } else { //mesh without normals -> DrawIndexed()
-        for (std::string face : faces) {
-            indices.push_back(std::stoi(face) - 1);
+        if (textureCoordinates.size() > 0) {
+            outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1)]);
+            outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 1]);
+            outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 2]);
         }
-        return std::unique_ptr<Mesh>{new MeshImpl(application, MeshImpl::MeshType::TRIANGLE_STRIP,
-                                                  std::move(vertices), 3 * sizeof(FLOAT), std::move(indices),
-                                                  std::move(normals), std::move(textureCoordinates))};
+    }
+
+    if (normals.size() > 0) {
+        if (textureCoordinates.size() > 0) {
+            return std::unique_ptr<Mesh>{new MeshImpl(application, MeshImpl::MeshType::TRIANGLE_STRIP_WITH_COORDS_NORMALS,
+                                                      std::move(outputVertices), 9 * sizeof(FLOAT), std::move(indices),
+                                                      std::move(normals), std::move(textureCoordinates))};
+        } else {
+            return std::unique_ptr<Mesh>{new MeshImpl(application, MeshImpl::MeshType::TRIANGLE_STRIP_WITH_NORMALS,
+                                                      std::move(outputVertices), 6 * sizeof(FLOAT), std::move(indices),
+                                                      std::move(normals), std::move(textureCoordinates))};
+        }
+    } else {
+        if (textureCoordinates.size() > 0) {
+            return std::unique_ptr<Mesh>{new MeshImpl(application, MeshImpl::MeshType::TRIANGLE_STRIP_WITH_COORDS,
+                                                      std::move(outputVertices), 6 * sizeof(FLOAT), std::move(indices),
+                                                      std::move(normals), std::move(textureCoordinates))};
+        } else {
+            return std::unique_ptr<Mesh>{new MeshImpl(application, MeshImpl::MeshType::TRIANGLE_STRIP,
+                                                      std::move(vertices), 3 * sizeof(FLOAT), std::move(indices),
+                                                      std::move(normals), std::move(textureCoordinates))};
+        }
     }
 
     return nullptr;
