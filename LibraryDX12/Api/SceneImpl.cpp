@@ -62,7 +62,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     // Transition to RENDER_TARGET
     commandList.transitionBarrierSingle(backBuffer->getResource(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-    // Pipeline state
+    // Draw TEXTURE
     commandList.setPipelineState(application.getPipelineStateController().getPipelineState(PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE));
     commandList.setGraphicsRootSignature(application.getPipelineStateController().getRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE));
 
@@ -121,12 +121,10 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
         }
     }
 
-
-	//Draw NORMALS
-	commandList.setPipelineState(application.getPipelineStateController().getPipelineState(PipelineStateController::Identifier::PIPELINE_STATE_NORMAL));
+    //Draw NORMAL
+    commandList.setPipelineState(application.getPipelineStateController().getPipelineState(PipelineStateController::Identifier::PIPELINE_STATE_NORMAL));
     commandList.setGraphicsRootSignature(application.getPipelineStateController().getRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_NORMAL));
 
-    //commandList.getCommandList()->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
     commandList.getCommandList()->SetGraphicsRootDescriptorTable(1, swapChain.getCbvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 
     for (ObjectImpl *object : objects) {
@@ -141,8 +139,8 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
 
             commandList.setGraphicsRoot32BitConstant(0, mmvp);
 
-            commandList.drawInstanced(static_cast<UINT>(mesh.getVerticesCount()/6), 1, 0, 0); // 6 - size of position+normal
-		}
+            commandList.drawInstanced(static_cast<UINT>(mesh.getVerticesCount() / 6), 1, 0, 0); // 6 - size of position+normal
+        }
     }
 
     // Transition to PRESENT
