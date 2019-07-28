@@ -63,8 +63,8 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     commandList.transitionBarrierSingle(backBuffer->getResource(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     // Draw TEXTURE
-    commandList.setPipelineState(application.getPipelineStateController().getPipelineState(PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE));
-    commandList.setGraphicsRootSignature(application.getPipelineStateController().getRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE));
+    commandList.setPipelineState(application.getPipelineStateController().getPipelineState(PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT));
+    commandList.setGraphicsRootSignature(application.getPipelineStateController().getRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT));
 
     CD3DX12_VIEWPORT viewport(0.0f, 0.0f, (float)swapChain.getWidth(), (float)swapChain.getHeight());
     CD3DX12_RECT scissorRect(0, 0, LONG_MAX, LONG_MAX);
