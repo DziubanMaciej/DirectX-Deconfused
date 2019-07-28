@@ -53,6 +53,9 @@ void PipelineStateController::compile(Identifier identifier) {
     case Identifier::PIPELINE_STATE_TEXTURE:
         compilePipelineStateTexture(rootSignature, pipelineState);
         break;
+    case Identifier::PIPELINE_STATE_NORMAL:
+        compilePipelineStateNormal(rootSignature, pipelineState);
+        break;
     default:
         unreachableCode();
     }
@@ -77,6 +80,33 @@ void PipelineStateController::compilePipelineStateDefault(ID3D12RootSignaturePtr
     // Shaders
     ID3DBlobPtr vertexShaderBlob = loadAndCompileShader(L"vertex.hlsl", vertexShaderTarget);
     ID3DBlobPtr pixelShaderBlob = loadAndCompileShader(L"pixel.hlsl", pixelShaderTarget);
+
+    // Compilation
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = getBaseGraphicsPipelineSateDesc();
+    desc.pRootSignature = rootSignature.Get();
+    desc.VS = D3D12_SHADER_BYTECODE{vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize()};
+    desc.PS = D3D12_SHADER_BYTECODE{pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize()};
+    desc.InputLayout = D3D12_INPUT_LAYOUT_DESC{inputLayout, _countof(inputLayout)};
+    throwIfFailed(device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipelineState)));
+}
+
+void PipelineStateController::compilePipelineStateNormal(ID3D12RootSignaturePtr &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
+    // Root signature - crossthread data
+
+    rootSignature = RootSignature{}
+                        .append32bitConstant<ModelMvp>(D3D12_SHADER_VISIBILITY_VERTEX)                            // register(b0)
+                        .appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, D3D12_SHADER_VISIBILITY_PIXEL) // register(b1)
+                        .compile(device);
+
+    // Input layout - per vertex data
+    const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+    };
+
+    // Shaders
+    ID3DBlobPtr vertexShaderBlob = loadAndCompileShader(L"vertex_normal.hlsl", vertexShaderTarget);
+    ID3DBlobPtr pixelShaderBlob = loadAndCompileShader(L"pixel_normal.hlsl", pixelShaderTarget);
 
     // Compilation
     D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = getBaseGraphicsPipelineSateDesc();

@@ -109,6 +109,10 @@ void CommandList::drawIndexed(UINT indexCount, UINT startIndexLocation, INT base
     commandList->DrawIndexedInstanced(indexCount, 1, startIndexLocation, baseVertexLocation, startInstanceLocation);
 }
 
+void CommandList::drawInstanced(UINT vertexCountPerInstance, UINT instanceCount, INT baseVertexLocation, UINT startInstanceLocation) {
+    commandList->DrawInstanced(vertexCountPerInstance, instanceCount, baseVertexLocation, startInstanceLocation);
+}
+
 void CommandList::close() {
     throwIfFailed(commandList->Close());
 }

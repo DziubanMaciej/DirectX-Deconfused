@@ -10,7 +10,7 @@
 #include <vector>
 
 class MeshImpl : public DXD::Mesh {
-protected:
+public:
     enum class MeshType {
         NONE,
         TRIANGLE_STRIP,
@@ -19,9 +19,10 @@ protected:
         TRIANGLE_STRIP_WITH_COORDS_NORMALS
     };
 
+protected:
     friend class DXD::Mesh;
     MeshImpl(DXD::Application &application, MeshType meshType,
-             std::vector<FLOAT> &&vertices, std::vector<UINT> &&indices,
+             std::vector<FLOAT> &&vertices, UINT vertexSize, std::vector<UINT> &&indices,
              std::vector<FLOAT> &&normals, std::vector<FLOAT> &&textureCoordinates);
     ~MeshImpl() = default;
 
@@ -36,13 +37,16 @@ public:
     size_t getNormalsCount() const { return normals.size(); }
     size_t getTextureCoordinatesCount() const { return textureCoordinates.size(); }
 
-    auto& getVertexBuffer() { return vertexBuffer; }
-    auto& getIndexBuffer() { return indexBuffer; }
+    MeshType getMeshType() const { return meshType; }
+
+    auto &getVertexBuffer() { return vertexBuffer; }
+    auto &getIndexBuffer() { return indexBuffer; }
 
 protected:
     // Context and metadata
     ApplicationImpl &application;
     MeshType meshType;
+    UINT vertexSize;
 
     // CPU resources
     std::vector<FLOAT> vertices;

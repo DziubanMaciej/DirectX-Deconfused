@@ -15,6 +15,7 @@ public:
     enum class Identifier {
         PIPELINE_STATE_DEFAULT = 0,
         PIPELINE_STATE_TEXTURE = 1,
+        PIPELINE_STATE_NORMAL = 2,
         COUNT // this should be the last entry
     };
 
@@ -27,6 +28,7 @@ public:
 private:
     void compile(Identifier identifier);
     void compilePipelineStateDefault(ID3D12RootSignaturePtr &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    void compilePipelineStateNormal(ID3D12RootSignaturePtr &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateTexture(ID3D12RootSignaturePtr &rootSignature, ID3D12PipelineStatePtr &pipelineState);
 
     static D3D12_GRAPHICS_PIPELINE_STATE_DESC getBaseGraphicsPipelineSateDesc();

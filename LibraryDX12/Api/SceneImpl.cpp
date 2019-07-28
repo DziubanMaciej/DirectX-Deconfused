@@ -106,17 +106,43 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = *object->getMesh();
 
-        commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
-        commandList.IASetIndexBuffer(*mesh.getIndexBuffer());
-        commandList.IASetPrimitiveTopologyTriangleList();
+        if (mesh.getMeshType() == MeshImpl::MeshType::TRIANGLE_STRIP) {
+            commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
+            commandList.IASetIndexBuffer(*mesh.getIndexBuffer());
+            commandList.IASetPrimitiveTopologyTriangleList();
 
-        ModelMvp mmvp;
-        mmvp.modelMatrix = object->getModelMatrix();
-        mmvp.modelViewProjectionMatrix = XMMatrixMultiply(mmvp.modelMatrix, vpMatrix);
+            ModelMvp mmvp;
+            mmvp.modelMatrix = object->getModelMatrix();
+            mmvp.modelViewProjectionMatrix = XMMatrixMultiply(mmvp.modelMatrix, vpMatrix);
 
-        commandList.setGraphicsRoot32BitConstant(0, mmvp);
+            commandList.setGraphicsRoot32BitConstant(0, mmvp);
 
-        commandList.drawIndexed(static_cast<UINT>(mesh.getIndicesCount()));
+            commandList.drawIndexed(static_cast<UINT>(mesh.getIndicesCount()));
+        }
+    }
+
+
+	//Draw NORMALS
+	commandList.setPipelineState(application.getPipelineStateController().getPipelineState(PipelineStateController::Identifier::PIPELINE_STATE_NORMAL));
+    commandList.setGraphicsRootSignature(application.getPipelineStateController().getRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_NORMAL));
+
+    //commandList.getCommandList()->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
+    commandList.getCommandList()->SetGraphicsRootDescriptorTable(1, swapChain.getCbvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+
+    for (ObjectImpl *object : objects) {
+        MeshImpl &mesh = *object->getMesh();
+        if (mesh.getMeshType() == MeshImpl::MeshType::TRIANGLE_STRIP_WITH_NORMALS) {
+            commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
+            commandList.IASetPrimitiveTopologyTriangleList();
+
+            ModelMvp mmvp;
+            mmvp.modelMatrix = object->getModelMatrix();
+            mmvp.modelViewProjectionMatrix = XMMatrixMultiply(mmvp.modelMatrix, vpMatrix);
+
+            commandList.setGraphicsRoot32BitConstant(0, mmvp);
+
+            commandList.drawInstanced(static_cast<UINT>(mesh.getVerticesCount()/6), 1, 0, 0); // 6 - size of position+normal
+		}
     }
 
     // Transition to PRESENT
