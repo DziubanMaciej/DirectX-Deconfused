@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Descriptor/DescriptorManager.h"
 #include "Source/PipelineStateController.h"
 #include "Wrappers/CommandQueue.h"
 
@@ -23,6 +24,7 @@ public:
     auto getAdapter() { return adapter; }
     auto getDevice() { return device; }
     auto &getPipelineStateController() { return pipelineStateController; }
+    auto &getDescriptorController() { return descriptorManager; }
     auto &getDirectCommandQueue() { return directCommandQueue; }
     auto &getCopyCommandQueue() { return copyCommandQueue; }
 
@@ -38,6 +40,7 @@ protected:
     IDXGIAdapterPtr adapter;
     ID3D12DevicePtr device;
     PipelineStateController pipelineStateController;
+    DescriptorManager descriptorManager;
     CommandQueue copyCommandQueue;
     CommandQueue directCommandQueue;
 };

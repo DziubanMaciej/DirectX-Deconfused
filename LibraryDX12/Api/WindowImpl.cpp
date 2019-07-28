@@ -39,7 +39,7 @@ std::unique_ptr<Window> Window::create(Application &application, const std::wstr
 WindowImpl::WindowImpl(DXD::Application &application, const std::wstring &windowClassName, const std::wstring &windowTitle, HINSTANCE hInstance, Bounds bounds)
     : application(*static_cast<ApplicationImpl *>(&application)), windowClassName(windowClassName), hInstance(hInstance),
       windowHandle(registerClassAndCreateWindow(windowTitle, bounds)),
-      swapChain(windowHandle, this->application.getDevice(), this->application.getFactory(), this->application.getDirectCommandQueue(), bounds.width, bounds.height, swapChainBufferCount) {
+      swapChain(windowHandle, this->application.getDevice(), this->application.getDescriptorController(), this->application.getFactory(), this->application.getDirectCommandQueue(), bounds.width, bounds.height, swapChainBufferCount) {
 }
 
 HWND WindowImpl::registerClassAndCreateWindow(const std::wstring &windowTitle, Bounds bounds) {

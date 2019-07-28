@@ -1,16 +1,19 @@
 #pragma once
 
+#include "Descriptor/CpuDescriptorAllocation.h"
+#include "Source/ConstantBuffers.h"
+
 #include "DXD/NonCopyableAndMovable.h"
 
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
 #include "DXD/ExternalHeadersWrappers/dxgi.h"
-#include "Source/ConstantBuffers.h"
 #include <Wrappers/Resource.h>
 #include <memory>
 #include <stdint.h>
 #include <vector>
 
 class CommandQueue;
+class DescriptorManager;
 
 class SwapChain : DXD::NonCopyableAndMovable {
     struct BackBufferEntry {
@@ -19,7 +22,8 @@ class SwapChain : DXD::NonCopyableAndMovable {
     };
 
 public:
-    SwapChain(HWND windowHandle, ID3D12DevicePtr device, IDXGIFactoryPtr factory, CommandQueue &commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount);
+    SwapChain(HWND windowHandle, ID3D12DevicePtr device, DescriptorManager &descriptorManager, IDXGIFactoryPtr factory,
+              CommandQueue &commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount);
     void present(uint64_t fenceValue);
     void resize(int desiredWidth, int desiredHeight);
 
@@ -32,15 +36,13 @@ public:
     D3D12_CPU_DESCRIPTOR_HANDLE getDepthStencilBufferDescriptor() const;
     auto &getDepthStencilBuffer() { return depthStencilBuffer; };
 
-	SimpleConstantBuffer *getSimpleConstantBufferData();
+    SimpleConstantBuffer *getSimpleConstantBufferData();
     UINT8 *getSimpleCbvDataBegin() const { return simpleCbvDataBegin; }
     ID3D12DescriptorHeapPtr getCbvDescriptorHeap() { return cbvDescriptorHeap; }
 
 private:
     static bool checkTearingSupport(IDXGIFactoryPtr &factory);
     static IDXGISwapChainPtr createSwapChain(HWND hwnd, IDXGIFactoryPtr &factory, CommandQueue &commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount);
-    static ID3D12DescriptorHeapPtr createRtvDescriptorHeap(ID3D12DevicePtr device, uint32_t bufferCount);
-    static ID3D12DescriptorHeapPtr createDsvDescriptorHeap(ID3D12DevicePtr device);
     static ID3D12DescriptorHeapPtr createCbvDescriptorHeap(ID3D12DevicePtr device);
 
     void resetRenderTargetViews();
@@ -50,19 +52,26 @@ private:
 
     void resizeRenderTargets(uint32_t desiredWidth, uint32_t desiredHeight);
 
+    // Base objects
     IDXGISwapChainPtr swapChain;
     ID3D12DevicePtr device;
 
-    ID3D12DescriptorHeapPtr rtvDescriptorHeap;
-    ID3D12DescriptorHeapPtr depthStencilDescriptorHeap;
+    // Descriptors data
+    DescriptorManager &descriptorManager;
+    CpuDescriptorAllocation rtvDescriptors;
+    CpuDescriptorAllocation dsvDescriptor;
     ID3D12DescriptorHeapPtr cbvDescriptorHeap;
+
+    // Buffers
     std::vector<BackBufferEntry> backBufferEntries;
     std::unique_ptr<Resource> depthStencilBuffer;
 
+    // TODO temporary cbv implementation
     std::unique_ptr<Resource> simpleConstantBuffer;
     SimpleConstantBuffer simpleConstantBufferData;
     UINT8 *simpleCbvDataBegin;
 
+    // Numerical data
     uint32_t width;
     uint32_t height;
     size_t currentBackBufferIndex;
