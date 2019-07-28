@@ -59,7 +59,7 @@ private:
     std::vector<BackBufferEntry> backBufferEntries;
     std::unique_ptr<Resource> depthStencilBuffer;
 
-    ID3D12ResourcePtr simpleConstantBuffer;
+    std::unique_ptr<Resource> simpleConstantBuffer;
     SimpleConstantBuffer simpleConstantBufferData;
     UINT8 *simpleCbvDataBegin;
 
