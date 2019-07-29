@@ -1,0 +1,10 @@
+add_sources_and_cmake_file(${TARGET_NAME}
+    ${CMAKE_CURRENT_SOURCE_DIR}/ConstantBuffers.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Resource.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/Resource.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ResourceUsageTracker.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ResourceUsageTracker.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TextureImpl.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/TextureImpl.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/VertexOrIndexBuffer.h
+)

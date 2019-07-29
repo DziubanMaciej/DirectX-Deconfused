@@ -1,0 +1,8 @@
+add_sources_and_cmake_file(${TARGET_NAME}
+    ${CMAKE_CURRENT_SOURCE_DIR}/CommandAllocatorManager.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/CommandAllocatorManager.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/CommandList.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/CommandList.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/CommandQueue.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/CommandQueue.h
+)
