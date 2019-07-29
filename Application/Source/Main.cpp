@@ -221,7 +221,7 @@ struct Game : DXD::CallbackHandler {
 			redLight->setPower(sin(rotation)+1);
 
             objects[8]->setRotation(XMFLOAT3(0, 1, 0), rotation - 45);
-            objects[8]->setPosition(7 * sin(rotation) * 0.6, objects[8]->getPosition().y, 7 * cos(rotation) * 0.6);
+            objects[8]->setPosition(7 * sinf(rotation) * 0.6f, objects[8]->getPosition().y, 7 * cosf(rotation) * 0.6f);
 
             objects[7]->setPosition(sunPos);
             objects[1]->setRotation(rotation, rotation, rotation);
