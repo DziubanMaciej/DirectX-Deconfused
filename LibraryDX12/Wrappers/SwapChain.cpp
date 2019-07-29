@@ -1,17 +1,19 @@
 #include "Swapchain.h"
 
+#include "Descriptor/DescriptorManager.h"
 #include "Utility/ThrowIfFailed.h"
 #include "Wrappers/CommandQueue.h"
 
 #include "DXD/ExternalHeadersWrappers/d3dx12.h"
 #include <algorithm>
 
-SwapChain::SwapChain(HWND windowHandle, ID3D12DevicePtr device, IDXGIFactoryPtr factory,
+SwapChain::SwapChain(HWND windowHandle, ID3D12DevicePtr device, DescriptorManager &descriptorManager, IDXGIFactoryPtr factory,
                      CommandQueue &commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount)
     : swapChain(createSwapChain(windowHandle, factory, commandQueue, width, height, bufferCount)),
       device(device),
-      rtvDescriptorHeap(createRtvDescriptorHeap(device, bufferCount)),
-      depthStencilDescriptorHeap(createDsvDescriptorHeap(device)),
+      descriptorManager(descriptorManager),
+      rtvDescriptors(descriptorManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, bufferCount)),
+      dsvDescriptor(descriptorManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1)),
       cbvDescriptorHeap(createCbvDescriptorHeap(device)),
       backBufferEntries(bufferCount),
       depthStencilBuffer(nullptr),
@@ -63,28 +65,6 @@ IDXGISwapChainPtr SwapChain::createSwapChain(HWND hwnd, IDXGIFactoryPtr &factory
     return resultSwapChain;
 }
 
-ID3D12DescriptorHeapPtr SwapChain::createRtvDescriptorHeap(ID3D12DevicePtr device, uint32_t numDescriptors) {
-    D3D12_DESCRIPTOR_HEAP_DESC desc = {};
-    desc.NumDescriptors = numDescriptors;
-    desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-
-    ID3D12DescriptorHeapPtr descriptorHeap;
-    throwIfFailed(device->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&descriptorHeap)));
-    return descriptorHeap;
-}
-
-ID3D12DescriptorHeapPtr SwapChain::createDsvDescriptorHeap(ID3D12DevicePtr device) {
-    D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc = {};
-    dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-    dsvHeapDesc.NumDescriptors = 1;
-    dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-    dsvHeapDesc.NodeMask = 1;
-
-    ID3D12DescriptorHeapPtr descriptorHeap;
-    throwIfFailed(device->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&descriptorHeap)));
-    return descriptorHeap;
-}
-
 ID3D12DescriptorHeapPtr SwapChain::createCbvDescriptorHeap(ID3D12DevicePtr device) {
     D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
     cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
@@ -99,7 +79,7 @@ ID3D12DescriptorHeapPtr SwapChain::createCbvDescriptorHeap(ID3D12DevicePtr devic
 void SwapChain::updateRenderTargetViews() {
     const auto rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
-    auto rtvHandle = rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+    auto rtvHandle = rtvDescriptors.getCpuHandle();
     for (auto i = 0u; i < backBufferEntries.size(); i++) {
         ID3D12ResourcePtr backBuffer;
         throwIfFailed(swapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer)));
@@ -171,12 +151,12 @@ void SwapChain::updateDepthStencilBuffer(uint32_t desiredWidth, uint32_t desired
     device->CreateDepthStencilView(
         depthStencilBuffer->getResource().Get(),
         &dsvDesc,
-        depthStencilDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+        dsvDescriptor.getCpuHandle());
 }
 
 void SwapChain::createSimpleConstantBuffer() {
 
-	simpleConstantBuffer = std::make_unique<Resource>(device,
+    simpleConstantBuffer = std::make_unique<Resource>(device,
                                                       &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
                                                       D3D12_HEAP_FLAG_NONE,
                                                       &CD3DX12_RESOURCE_DESC::Buffer(1024 * 64),
@@ -201,17 +181,13 @@ uint64_t SwapChain::getFenceValueForCurrentBackBuffer() const {
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::getDepthStencilBufferDescriptor() const {
-    return depthStencilDescriptorHeap->GetCPUDescriptorHandleForHeapStart();
+    return dsvDescriptor.getCpuHandle();
 }
 
-SimpleConstantBuffer* SwapChain::getSimpleConstantBufferData() {
+SimpleConstantBuffer *SwapChain::getSimpleConstantBufferData() {
     return &simpleConstantBufferData;
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::getCurrentBackBufferDescriptor() const {
-    const auto rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-    return CD3DX12_CPU_DESCRIPTOR_HANDLE{
-        rtvDescriptorHeap->GetCPUDescriptorHandleForHeapStart(),
-        static_cast<INT>(this->currentBackBufferIndex),
-        rtvDescriptorSize};
+    return rtvDescriptors.getCpuHandle(currentBackBufferIndex);
 }
