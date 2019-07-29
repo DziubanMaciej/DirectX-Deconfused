@@ -214,14 +214,14 @@ struct Game : DXD::CallbackHandler {
             static float rotation = 0.f;
             rotation += 0.1f;
             XMFLOAT3 sunPos = sunLight->getPosition();
-            sunPos.x = 14 * sin(rotation);
-            sunPos.z = 14 * cos(rotation);
+            sunPos.x = 7 * sin(-rotation/4);
+            sunPos.z = 7 * cos(-rotation/4);
             sunLight->setPosition(sunPos);
 
 			redLight->setPower(sin(rotation)+1);
 
             objects[8]->setRotation(XMFLOAT3(0, 1, 0), rotation - 45);
-            objects[8]->setPosition(sunPos.x * 0.3, objects[8]->getPosition().y, sunPos.z * 0.3);
+            objects[8]->setPosition(7 * sin(rotation) * 0.6, objects[8]->getPosition().y, 7 * cos(rotation) * 0.6);
 
             objects[7]->setPosition(sunPos);
             objects[1]->setRotation(rotation, rotation, rotation);
