@@ -218,6 +218,8 @@ struct Game : DXD::CallbackHandler {
             sunPos.z = 14 * cos(rotation);
             sunLight->setPosition(sunPos);
 
+			redLight->setPower(sin(rotation)+1);
+
             objects[8]->setRotation(XMFLOAT3(0, 1, 0), rotation - 45);
             objects[8]->setPosition(sunPos.x * 0.3, objects[8]->getPosition().y, sunPos.z * 0.3);
 

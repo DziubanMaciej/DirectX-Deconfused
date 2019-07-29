@@ -18,7 +18,7 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
     for (int i = 0; i < lightsSize; i++) {
         float3 tempLightColor = lightColor[i].xyz * 0.01;
-        float tempLightPower = 2000 / (distance(IN.WorldPosition.xyz, lightPosition[i]) * distance(IN.WorldPosition.xyz, lightPosition[i].xyz));
+        float tempLightPower = (2000 / (distance(IN.WorldPosition.xyz, lightPosition[i]) * distance(IN.WorldPosition.xyz, lightPosition[i].xyz))) * lightColor[1].w;
         OUT_Color.xyz = OUT_Color.xyz + tempLightColor.xyz * tempLightPower;
     }
 

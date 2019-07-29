@@ -2,6 +2,7 @@
 
 #include "DXD/Export.h"
 #include "DXD/NonCopyableAndMovable.h"
+
 #include "DXD/ExternalHeadersWrappers/DirectXMath.h"
 #include "DXD/ExternalHeadersWrappers/windows.h"
 #include <memory>
@@ -18,8 +19,11 @@ public:
     virtual void setColor(XMFLOAT3 rgb) = 0;
     virtual XMFLOAT3 getColor() const = 0;
 
+    virtual void setPower(float power) = 0;
+    virtual float getPower() const = 0;
+
     virtual ~Light() = default;
-    static std::unique_ptr<Light> create();
+	static std::unique_ptr<Light> create();
 
 protected:
     Light() = default;

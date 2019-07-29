@@ -15,7 +15,13 @@ public:
     void setColor(XMFLOAT3 rgb) override;
     XMFLOAT3 getColor() const override;
 
+    void setPower(float pos) override;
+    float getPower() const override;
+
+	LightImpl();
+
 protected:
-    XMVECTOR position;
-    XMVECTOR color;
+    XMFLOAT3 position;
+    float power;
+    XMFLOAT3 color;
 };

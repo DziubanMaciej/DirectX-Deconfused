@@ -102,7 +102,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     smplCbv->lightsSize = 0;
     smplCbv->ambientLight = XMFLOAT3(ambientLight[0], ambientLight[1], ambientLight[2]);
     for (LightImpl *light : lights) {
-        smplCbv->lightColor[smplCbv->lightsSize] = XMFLOAT4(light->getColor().x, light->getColor().y, light->getColor().z, 0);
+        smplCbv->lightColor[smplCbv->lightsSize] = XMFLOAT4(light->getColor().x, light->getColor().y, light->getColor().z, light->getPower());
         smplCbv->lightPosition[smplCbv->lightsSize] = XMFLOAT4(light->getPosition().x, light->getPosition().y, light->getPosition().z, 0);
         smplCbv->lightsSize++;
         if (smplCbv->lightsSize >= 8) {
