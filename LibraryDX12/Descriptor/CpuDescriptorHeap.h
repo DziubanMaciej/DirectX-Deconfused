@@ -21,16 +21,16 @@ class CpuDescriptorAllocation;
 /// taken by CpuDescriptorAllocation to the free list. If space is adjacent to already existing, block are merged.
 class CpuDescriptorHeap : DXD::NonCopyableAndMovable {
 public:
-    CpuDescriptorHeap(ID3D12DevicePtr device, D3D12_DESCRIPTOR_HEAP_TYPE type, int descriptorsCount);
+    CpuDescriptorHeap(ID3D12DevicePtr device, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount);
 
     /// Finds free space using free list, marks the space as not free and returns allocation object
     /// \param descriptorsCount quantity of descriptors to allocate. Free list is searched for contiguous block
     /// \return valid allocation object or nullptr
-    std::unique_ptr<CpuDescriptorAllocation> allocate(int descriptorsCount);
+    std::unique_ptr<CpuDescriptorAllocation> allocate(UINT descriptorsCount);
 
 private:
-    using FreeListOffset = int;
-    using FreeListSize = int;
+    using FreeListOffset = UINT;
+    using FreeListSize = UINT;
     using FreeList = std::map<FreeListOffset, FreeListSize>;
 
     /// Should only be called by CpuDescriptorAllocation. Descriptor block is merged with existing ones if possible
@@ -38,7 +38,7 @@ private:
     void deallocate(const CpuDescriptorAllocation &allocation);
     friend CpuDescriptorAllocation; // for deallocate()
 
-    static ID3D12DescriptorHeapPtr createDescriptorHeap(ID3D12DevicePtr device, D3D12_DESCRIPTOR_HEAP_TYPE type, int descriptorsCount);
+    static ID3D12DescriptorHeapPtr createDescriptorHeap(ID3D12DevicePtr device, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount);
     FreeList::iterator findFreeRangeAfter(FreeListOffset offset);
     FreeList::iterator findPreviousRange(FreeList::iterator elementAfter);
     bool areFreeRangesAdjacent(FreeList::iterator left, FreeList::iterator right);
@@ -50,5 +50,5 @@ private:
     const ID3D12DescriptorHeapPtr heap;
     const D3D12_CPU_DESCRIPTOR_HANDLE heapStartHandle;
     FreeList freeList;
-    int totalFreeSpace;
+    UINT totalFreeSpace;
 };

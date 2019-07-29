@@ -9,7 +9,7 @@ CpuDescriptorAllocation::CpuDescriptorAllocation(CpuDescriptorHeap &heap, CpuDes
     : heap(&heap),
       offsetInHeap(offsetInHeap),
       handlesCount(handlesCount),
-      cpuHandle(CD3DX12_CPU_DESCRIPTOR_HANDLE{heapBaseHandle, handlesCount, descriptorIncrementSize}),
+      cpuHandle(CD3DX12_CPU_DESCRIPTOR_HANDLE{heapBaseHandle, static_cast<INT>(handlesCount), descriptorIncrementSize}),
       descriptorIncrementSize(descriptorIncrementSize) {
 }
 
@@ -33,4 +33,14 @@ CpuDescriptorAllocation::~CpuDescriptorAllocation() {
         heap->deallocate(*this);
         heap = nullptr;
     }
+}
+
+CD3DX12_CPU_DESCRIPTOR_HANDLE CpuDescriptorAllocation::getCpuHandle() const {
+    assert(heap != nullptr);
+    return CD3DX12_CPU_DESCRIPTOR_HANDLE{cpuHandle};
+}
+
+CD3DX12_CPU_DESCRIPTOR_HANDLE CpuDescriptorAllocation::getCpuHandle(UINT offset) const {
+    assert(heap != nullptr);
+    return CD3DX12_CPU_DESCRIPTOR_HANDLE{cpuHandle, static_cast<INT>(offset), descriptorIncrementSize};
 }

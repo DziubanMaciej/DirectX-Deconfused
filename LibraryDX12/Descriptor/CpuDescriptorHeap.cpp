@@ -3,7 +3,7 @@
 #include "Descriptor/CpuDescriptorAllocation.h"
 #include "Utility/ThrowIfFailed.h"
 
-CpuDescriptorHeap::CpuDescriptorHeap(ID3D12DevicePtr device, D3D12_DESCRIPTOR_HEAP_TYPE type, int descriptorsCount)
+CpuDescriptorHeap::CpuDescriptorHeap(ID3D12DevicePtr device, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount)
     : type(type),
       descriptorIncrementSize(device->GetDescriptorHandleIncrementSize(type)),
       heap(createDescriptorHeap(device, type, descriptorsCount)),
@@ -12,7 +12,7 @@ CpuDescriptorHeap::CpuDescriptorHeap(ID3D12DevicePtr device, D3D12_DESCRIPTOR_HE
     freeList.emplace(0, descriptorsCount);
 }
 
-std::unique_ptr<CpuDescriptorAllocation> CpuDescriptorHeap::allocate(int descriptorsCount) {
+std::unique_ptr<CpuDescriptorAllocation> CpuDescriptorHeap::allocate(UINT descriptorsCount) {
     if (descriptorsCount > totalFreeSpace) {
         return false;
     }
@@ -70,7 +70,7 @@ void CpuDescriptorHeap::deallocate(const CpuDescriptorAllocation &allocation) {
     totalFreeSpace += size;
 }
 
-ID3D12DescriptorHeapPtr CpuDescriptorHeap::createDescriptorHeap(ID3D12DevicePtr device, D3D12_DESCRIPTOR_HEAP_TYPE type, int descriptorsCount) {
+ID3D12DescriptorHeapPtr CpuDescriptorHeap::createDescriptorHeap(ID3D12DevicePtr device, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount) {
     D3D12_DESCRIPTOR_HEAP_DESC heapDescription = {};
     heapDescription.Type = type;
     heapDescription.NumDescriptors = descriptorsCount;

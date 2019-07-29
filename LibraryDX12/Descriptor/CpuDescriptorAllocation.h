@@ -18,10 +18,10 @@ public:
     CpuDescriptorAllocation &operator=(CpuDescriptorAllocation &&other);
     ~CpuDescriptorAllocation();
 
-    auto getOffsetInHeap() const { return offsetInHeap; }
+    auto getOffsetInHeap() const { return offsetInHeap; };
     auto getHandlesCount() const { return handlesCount; }
-    auto getCpuHandle() const { return cpuHandle; }
-    auto getCpuHandle(int offset) const { return CD3DX12_CPU_DESCRIPTOR_HANDLE{cpuHandle, offset, descriptorIncrementSize}; }
+    CD3DX12_CPU_DESCRIPTOR_HANDLE getCpuHandle() const;
+    CD3DX12_CPU_DESCRIPTOR_HANDLE getCpuHandle(UINT offset) const;
 
 private:
     CpuDescriptorHeap *heap;
