@@ -65,9 +65,10 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
         UINT normalIdx;
         UINT textCoordIdx;
         size_t pos = 0;
+        std::string f = face;
         for (int i = 0; i < 3; i++) {
-            pos = face.find("/");
-            std::string t = face.substr(0, pos);
+            pos = f.find("/");
+            std::string t = f.substr(0, pos);
             switch (i) {
             case 0:
                 vertexIdx = std::stoi(t);
@@ -83,7 +84,7 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
                 }
                 break;
             }
-            face.erase(0, pos + 1);
+            f.erase(0, pos + 1);
         }
         indices.push_back(vertexIdx - 1);
         outputVertices.push_back(vertices[3 * (vertexIdx - 1)]);

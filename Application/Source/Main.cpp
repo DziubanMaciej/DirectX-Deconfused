@@ -23,6 +23,8 @@ struct Game : DXD::CallbackHandler {
         assert(cubeMesh);
         cubeNormalMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/cube_normals.obj");
         assert(cubeNormalMesh);
+        smallCubeMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/small_cube.obj");
+        assert(smallCubeMesh);
         flatMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/flat_normals.obj");
         assert(flatMesh);
         extraFlatMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/extra_flat_normals.obj");
@@ -59,8 +61,8 @@ struct Game : DXD::CallbackHandler {
         objects.back()->setPosition(0, -5, 0);
 
         objects.push_back(DXD::Object::create());
-        objects.back()->setMesh(*cubeNormalMesh);
-        objects.back()->setPosition(0, -1, 6);
+        objects.back()->setMesh(*smallCubeMesh);
+        objects.back()->setPosition(0, 4, 0);
 
         sunLight = DXD::Light::create();
         sunLight->setColor(1.0f, 1.0f, 0.0f);
@@ -70,13 +72,25 @@ struct Game : DXD::CallbackHandler {
         moonLight->setColor(0.0f, 1.0f, 1.0f);
         moonLight->setPosition(7, 4, 6);
 
+		objects.push_back(DXD::Object::create());
+        objects.back()->setMesh(*smallCubeMesh);
+        objects.back()->setPosition(7, 4, 6);
+
         redLight = DXD::Light::create();
         redLight->setColor(1.0f, 0.0f, 0.0f);
-        redLight->setPosition(-9, 2, -8);
+        redLight->setPosition(-6, 2, -8);
+
+        objects.push_back(DXD::Object::create());
+        objects.back()->setMesh(*smallCubeMesh);
+        objects.back()->setPosition(-6, 2, -8);
 
         blueLight = DXD::Light::create();
         blueLight->setColor(0.0f, 0.0f, 1.0f);
-        blueLight->setPosition(9, 2, -8);
+        blueLight->setPosition(12, 2, -12);
+
+        objects.push_back(DXD::Object::create());
+        objects.back()->setMesh(*smallCubeMesh);
+        objects.back()->setPosition(12, 2, -12);
 
         scene = DXD::Scene::create();
         scene->addObject(*objects[0]);
@@ -87,6 +101,9 @@ struct Game : DXD::CallbackHandler {
         scene->addObject(*objects[5]);
         scene->addObject(*objects[6]);
         scene->addObject(*objects[7]);
+        scene->addObject(*objects[8]);
+        scene->addObject(*objects[9]);
+        scene->addObject(*objects[10]);
         scene->setBackgroundColor(0.3f, 0.8f, 1.0f);
         scene->setAmbientLight(0.2f, 0.2f, 0.2f);
         scene->addLight(*sunLight);
@@ -189,7 +206,7 @@ struct Game : DXD::CallbackHandler {
             sunPos.x = 10 * sin(rotation);
             sunLight->setPosition(sunPos);
 
-            objects[7]->setPosition(XMFLOAT3(-sin(rotation / 2) * 6, -1, 6));
+            objects[7]->setPosition(sunPos);
 			objects[1]->setRotation(rotation, rotation, rotation);
             break;
         }
@@ -222,6 +239,7 @@ private:
     std::unique_ptr<DXD::Window> window;
     std::unique_ptr<DXD::Mesh> teapotMesh;
     std::unique_ptr<DXD::Mesh> cubeMesh;
+    std::unique_ptr<DXD::Mesh> smallCubeMesh;
     std::unique_ptr<DXD::Mesh> cubeNormalMesh;
     std::unique_ptr<DXD::Mesh> flatMesh;
     std::unique_ptr<DXD::Mesh> extraFlatMesh;
