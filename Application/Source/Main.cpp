@@ -29,8 +29,8 @@ struct Game : DXD::CallbackHandler {
         assert(flatMesh);
         extraFlatMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/extra_flat_normals.obj");
         assert(extraFlatMesh);
-        bmwMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/bmw.obj");
-        assert(bmwMesh);
+        porsheMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/porshe.obj");
+        assert(porsheMesh);
         woodTexture = DXD::Texture::createFromFile(*application, "Resources/wood.jpg");
         assert(woodTexture);
 
@@ -70,9 +70,9 @@ struct Game : DXD::CallbackHandler {
         objects.back()->setPosition(0, 4, 0);
 
         objects.push_back(DXD::Object::create());
-        objects.back()->setMesh(*bmwMesh);
+        objects.back()->setMesh(*porsheMesh);
         objects.back()->setPosition(0, -1, -4);
-        objects.back()->setScale(0.03f, 0.03f, 0.03f);
+        //objects.back()->setScale(0.03f, 0.03f, 0.03f);
 
         sunLight = DXD::Light::create();
         sunLight->setColor(1.0f, 1.0f, 0.0f);
@@ -218,6 +218,9 @@ struct Game : DXD::CallbackHandler {
             sunPos.z = 14 * cos(rotation);
             sunLight->setPosition(sunPos);
 
+            objects[8]->setRotation(XMFLOAT3(0, 1, 0), rotation - 45);
+            objects[8]->setPosition(sunPos.x * 0.3, objects[8]->getPosition().y, sunPos.z * 0.3);
+
             objects[7]->setPosition(sunPos);
             objects[1]->setRotation(rotation, rotation, rotation);
             break;
@@ -255,7 +258,7 @@ private:
     std::unique_ptr<DXD::Mesh> cubeNormalMesh;
     std::unique_ptr<DXD::Mesh> flatMesh;
     std::unique_ptr<DXD::Mesh> extraFlatMesh;
-    std::unique_ptr<DXD::Mesh> bmwMesh;
+    std::unique_ptr<DXD::Mesh> porsheMesh;
     std::unique_ptr<DXD::Light> sunLight;
     std::unique_ptr<DXD::Light> moonLight;
     std::unique_ptr<DXD::Light> redLight;
