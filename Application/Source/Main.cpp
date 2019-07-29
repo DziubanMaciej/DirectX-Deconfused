@@ -58,7 +58,7 @@ struct Game : DXD::CallbackHandler {
         objects.back()->setMesh(*extraFlatMesh);
         objects.back()->setPosition(0, -5, 0);
 
-		objects.push_back(DXD::Object::create());
+        objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*cubeNormalMesh);
         objects.back()->setPosition(0, -1, 6);
 
@@ -87,7 +87,8 @@ struct Game : DXD::CallbackHandler {
         scene->addObject(*objects[5]);
         scene->addObject(*objects[6]);
         scene->addObject(*objects[7]);
-        scene->setBackgroundColor(0.1f, 0.1f, 0.3f);
+        scene->setBackgroundColor(0.3f, 0.8f, 1.0f);
+        scene->setAmbientLight(0.2f, 0.2f, 0.2f);
         scene->addLight(*sunLight);
         scene->addLight(*moonLight);
         scene->addLight(*redLight);
@@ -95,7 +96,7 @@ struct Game : DXD::CallbackHandler {
 
         camera = DXD::Camera::create();
         camera->setUpDirection(0, 1, 0);
-        camera->setFovAngleYDeg(45);
+        camera->setFovAngleYDeg(60);
         camera->setNearZ(0.1f);
         camera->setFarZ(100.0f);
         scene->setCamera(*camera);
@@ -185,13 +186,11 @@ struct Game : DXD::CallbackHandler {
             static float rotation = 0.f;
             rotation += 0.1f;
             XMFLOAT3 sunPos = sunLight->getPosition();
-            sunPos.x += 0.1f;
-            if (sunPos.x >= 20) {
-                sunPos.x = -20;
-            }
+            sunPos.x = 10 * sin(rotation);
             sunLight->setPosition(sunPos);
 
-            objects[1]->setRotation(rotation, rotation, rotation);
+            objects[7]->setPosition(XMFLOAT3(-sin(rotation / 2) * 6, -1, 6));
+			objects[1]->setRotation(rotation, rotation, rotation);
             break;
         }
     }
@@ -216,8 +215,8 @@ private:
     bool fullscreen = false;
     float angleX = 0.f;
     float angleY = 0.f;
-    XMFLOAT3 cameraPosition{0, 0, -20};
-    XMFLOAT3 focusDirection{0, 0, 1};
+    XMFLOAT3 cameraPosition{0, 4, -20};
+    XMFLOAT3 focusDirection{0, -0.2f, 1};
 
     std::unique_ptr<DXD::Application> application;
     std::unique_ptr<DXD::Window> window;

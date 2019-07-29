@@ -1,8 +1,6 @@
 cbuffer SimpleConstantBuffer : register(b1) {
     int lightsSize;
-    int pad;
-    int padd;
-    int paddd;
+    float3 ambientLight;
     float4 lightPosition[8];
     float4 lightColor[8];
 };
@@ -17,6 +15,7 @@ struct PixelShaderInput {
 
 float4 main(PixelShaderInput IN) : SV_Target {
     float4 OUT_Color = float4(0, 0, 0, 1);
+    OUT_Color.xyz = OUT_Color.xyz + ambientLight.xyz;
 
     for (int i = 0; i < lightsSize; i++) {
         float3 tempLightColor = lightColor[i].xyz;

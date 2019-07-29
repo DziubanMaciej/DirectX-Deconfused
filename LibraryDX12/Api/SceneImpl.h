@@ -21,6 +21,7 @@ protected:
 
 public:
     void setBackgroundColor(float r, float g, float b) override;
+    void setAmbientLight(float r, float g, float b) override;
     void addLight(DXD::Light &light) override;
     bool removeLight(DXD::Light &light) override;
     void addObject(DXD::Object &object) override;
@@ -32,6 +33,7 @@ public:
 
 protected:
     FLOAT backgroundColor[3];
+    FLOAT ambientLight[3];
     std::set<LightImpl *> lights;
     std::set<ObjectImpl *> objects; // TODO might not be the best data structure for that
     CameraImpl *camera;

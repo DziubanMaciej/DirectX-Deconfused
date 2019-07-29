@@ -13,6 +13,7 @@ class Camera;
 class EXPORT Scene : NonCopyableAndMovable {
 public:
     virtual void setBackgroundColor(float r, float g, float b) = 0;
+    virtual void setAmbientLight(float r, float g, float b) = 0;
     virtual void addLight(DXD::Light &light) = 0;
     virtual bool removeLight(DXD::Light &light) = 0;
     virtual void addObject(DXD::Object &object) = 0;

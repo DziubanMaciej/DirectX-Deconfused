@@ -17,12 +17,24 @@ std::unique_ptr<Scene> Scene::create() {
 } // namespace DXD
 
 SceneImpl::SceneImpl() {
+    backgroundColor[0] = 0;
+    backgroundColor[1] = 0;
+    backgroundColor[2] = 0;
+    ambientLight[0] = 0;
+    ambientLight[1] = 0;
+    ambientLight[2] = 0;
 }
 
 void SceneImpl::setBackgroundColor(float r, float g, float b) {
     backgroundColor[0] = r;
     backgroundColor[1] = g;
     backgroundColor[2] = b;
+}
+
+void SceneImpl::setAmbientLight(float r, float g, float b) {
+    ambientLight[0] = r;
+    ambientLight[1] = g;
+    ambientLight[2] = b;
 }
 
 void SceneImpl::addLight(DXD::Light &light) {
@@ -88,6 +100,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     //SimpleConstantBuffer
     SimpleConstantBuffer *smplCbv = swapChain.getSimpleConstantBufferData();
     smplCbv->lightsSize = 0;
+    smplCbv->ambientLight = XMFLOAT3(ambientLight[0], ambientLight[1], ambientLight[2]);
     for (LightImpl *light : lights) {
         smplCbv->lightColor[smplCbv->lightsSize] = XMFLOAT4(light->getColor().x, light->getColor().y, light->getColor().z, 0);
         smplCbv->lightPosition[smplCbv->lightsSize] = XMFLOAT4(light->getPosition().x, light->getPosition().y, light->getPosition().z, 0);
