@@ -5,8 +5,9 @@
 #include "Wrappers/CommandList.h"
 
 #include <fstream>
-#include <string>
 #include <sstream>
+#include <string>
+#include <algorithm>
 
 namespace DXD {
 std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const std::string &filePath) {
@@ -25,7 +26,7 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
     std::string lineType;
     FLOAT x, y, z;
     UINT i1, i2, i3;
-    std::string f1, f2, f3;
+    std::string f1, f2, f3, f4;
 
     std::string line;
 
@@ -33,7 +34,7 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
 
         std::istringstream strs(line);
 
-		strs >> lineType;
+        strs >> lineType;
 
         if (lineType == "#") { //comment
             continue;
@@ -51,6 +52,24 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
             faces.push_back(f1);
             faces.push_back(f2);
             faces.push_back(f3);
+
+            try {
+                int slashCount = std::count(line.begin(), line.end(), '/');
+                if (slashCount > 6 && strs.good() && !strs.eof()) {
+
+                    strs >> f4;
+                    if (!f4.empty()) {
+                        faces.push_back(f1);
+                        faces.push_back(f3);
+                        faces.push_back(f4);
+                    } else {
+                        int t = 0;
+                    }
+                } else {
+                    int r = 0;
+				}
+            } catch (...) {
+            }
         } else if (lineType == "vn") { //normal vector
             strs >> x;
             strs >> y;
