@@ -29,6 +29,8 @@ struct Game : DXD::CallbackHandler {
         assert(flatMesh);
         extraFlatMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/extra_flat_normals.obj");
         assert(extraFlatMesh);
+        bmwMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/bmw.obj");
+        assert(bmwMesh);
         woodTexture = DXD::Texture::createFromFile(*application, "Resources/wood.jpg");
         assert(woodTexture);
 
@@ -64,6 +66,10 @@ struct Game : DXD::CallbackHandler {
         objects.back()->setMesh(*smallCubeMesh);
         objects.back()->setPosition(0, 4, 0);
 
+		objects.push_back(DXD::Object::create());
+        objects.back()->setMesh(*bmwMesh);
+        objects.back()->setPosition(0, 10, 0);
+
         sunLight = DXD::Light::create();
         sunLight->setColor(1.0f, 1.0f, 0.0f);
         sunLight->setPosition(0, 4, 0);
@@ -72,7 +78,7 @@ struct Game : DXD::CallbackHandler {
         moonLight->setColor(0.0f, 1.0f, 1.0f);
         moonLight->setPosition(7, 4, 6);
 
-		objects.push_back(DXD::Object::create());
+        objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*smallCubeMesh);
         objects.back()->setPosition(7, 4, 6);
 
@@ -104,6 +110,7 @@ struct Game : DXD::CallbackHandler {
         scene->addObject(*objects[8]);
         scene->addObject(*objects[9]);
         scene->addObject(*objects[10]);
+        scene->addObject(*objects[11]);
         scene->setBackgroundColor(0.3f, 0.8f, 1.0f);
         scene->setAmbientLight(0.2f, 0.2f, 0.2f);
         scene->addLight(*sunLight);
@@ -203,11 +210,12 @@ struct Game : DXD::CallbackHandler {
             static float rotation = 0.f;
             rotation += 0.1f;
             XMFLOAT3 sunPos = sunLight->getPosition();
-            sunPos.x = 10 * sin(rotation);
+            sunPos.x = 14 * sin(rotation);
+            sunPos.z = 14 * cos(rotation);
             sunLight->setPosition(sunPos);
 
             objects[7]->setPosition(sunPos);
-			objects[1]->setRotation(rotation, rotation, rotation);
+            objects[1]->setRotation(rotation, rotation, rotation);
             break;
         }
     }
@@ -243,6 +251,7 @@ private:
     std::unique_ptr<DXD::Mesh> cubeNormalMesh;
     std::unique_ptr<DXD::Mesh> flatMesh;
     std::unique_ptr<DXD::Mesh> extraFlatMesh;
+    std::unique_ptr<DXD::Mesh> bmwMesh;
     std::unique_ptr<DXD::Light> sunLight;
     std::unique_ptr<DXD::Light> moonLight;
     std::unique_ptr<DXD::Light> redLight;

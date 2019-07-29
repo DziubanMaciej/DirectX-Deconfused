@@ -6,6 +6,7 @@
 
 #include <fstream>
 #include <string>
+#include <sstream>
 
 namespace DXD {
 std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const std::string &filePath) {
@@ -26,34 +27,41 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
     UINT i1, i2, i3;
     std::string f1, f2, f3;
 
-    while (inputFile >> lineType) { //TODO change reading method in order to parse vertices with 4 values, parse faces with normals etc.
-        if (lineType == "#") {      //comment
+    std::string line;
+
+    while (getline(inputFile, line).good()) { //TODO change reading method in order to parse vertices with 4 values, parse faces with normals etc.
+
+        std::istringstream strs(line);
+
+		strs >> lineType;
+
+        if (lineType == "#") { //comment
             continue;
         } else if (lineType == "v") { //vertices
-            inputFile >> x;
-            inputFile >> y;
-            inputFile >> z;
+            strs >> x;
+            strs >> y;
+            strs >> z;
             vertices.push_back(x);
             vertices.push_back(y);
             vertices.push_back(z);
         } else if (lineType == "f") { //faces
-            inputFile >> f1;
-            inputFile >> f2;
-            inputFile >> f3;
+            strs >> f1;
+            strs >> f2;
+            strs >> f3;
             faces.push_back(f1);
             faces.push_back(f2);
             faces.push_back(f3);
         } else if (lineType == "vn") { //normal vector
-            inputFile >> x;
-            inputFile >> y;
-            inputFile >> z;
+            strs >> x;
+            strs >> y;
+            strs >> z;
             normals.push_back(x);
             normals.push_back(y);
             normals.push_back(z);
         } else if (lineType == "vt") { //texture vector
-            inputFile >> x;
-            inputFile >> y;
-            inputFile >> z;
+            strs >> x;
+            strs >> y;
+            strs >> z;
             textureCoordinates.push_back(x);
             textureCoordinates.push_back(y);
             textureCoordinates.push_back(z);
@@ -96,16 +104,16 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
             outputVertices.push_back(normals[3 * (normalIdx - 1) + 2]);
         }
         if (textureCoordinates.size() > 0) {
-            outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1)]);
-            outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 1]);
-            outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 2]);
+            //outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1)]);
+            //outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 1]);
+            //outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 2]);
         }
     }
 
     if (normals.size() > 0) {
         if (textureCoordinates.size() > 0) {
-            return std::unique_ptr<Mesh>{new MeshImpl(application, MeshImpl::MeshType::TRIANGLE_STRIP_WITH_COORDS_NORMALS,
-                                                      std::move(outputVertices), 9 * sizeof(FLOAT), std::move(indices),
+            return std::unique_ptr<Mesh>{new MeshImpl(application, MeshImpl::MeshType::TRIANGLE_STRIP_WITH_NORMALS, //Texture coords not supported yet
+                                                      std::move(outputVertices), 6 * sizeof(FLOAT), std::move(indices),
                                                       std::move(normals), std::move(textureCoordinates))};
         } else {
             return std::unique_ptr<Mesh>{new MeshImpl(application, MeshImpl::MeshType::TRIANGLE_STRIP_WITH_NORMALS,
