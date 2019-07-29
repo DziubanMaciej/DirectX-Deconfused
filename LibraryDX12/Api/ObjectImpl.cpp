@@ -12,9 +12,9 @@ const XMMATRIX &ObjectImpl::getModelMatrix() {
     if (modelMatrixDirty) {
         modelMatrixDirty = false;
         modelMatrix = XMMatrixTransformation(
-            XMVECTOR{0, 0, 0}, XMQuaternionIdentity(), XMVECTOR{1, 1, 1}, // scaling
-            this->rotationOrigin, this->rotationQuaternion,               // rotation
-            this->position                                                // translation
+            XMVECTOR{0, 0, 0}, XMQuaternionIdentity(), this->scale, // scaling
+            this->rotationOrigin, this->rotationQuaternion,         // rotation
+            this->position                                          // translation
         );
     }
     return modelMatrix;
@@ -58,4 +58,17 @@ void ObjectImpl::setRotationOrigin(XMFLOAT3 pos) {
 
 XMFLOAT3 ObjectImpl::getRotationOrigin() const {
     return XMStoreFloat3(this->rotationOrigin);
+}
+
+void ObjectImpl::setScale(FLOAT x, FLOAT y, FLOAT z) {
+    setScale(XMFLOAT3{x, y, z});
+}
+
+void ObjectImpl::setScale(XMFLOAT3 scale) {
+    modelMatrixDirty = true;
+    this->scale = XMLoadFloat3(&scale);
+}
+
+XMFLOAT3 ObjectImpl::getScale() const {
+    return XMStoreFloat3(this->scale);
 }

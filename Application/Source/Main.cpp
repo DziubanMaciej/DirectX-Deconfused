@@ -17,7 +17,7 @@ struct Game : DXD::CallbackHandler {
     Game(HINSTANCE hInstance) {
         application = DXD::Application::create(true);
         window = DXD::Window::create(*application, L"myClass", L"myWindow", hInstance, 1240, 720);
-        teapotMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/teapot.obj");
+        teapotMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/teapot_normals.obj");
         assert(teapotMesh);
         cubeMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/cube.obj");
         assert(cubeMesh);
@@ -37,14 +37,17 @@ struct Game : DXD::CallbackHandler {
         objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*teapotMesh);
         objects.back()->setPosition(8, -1, 0);
+        objects.back()->setScale(0.1f, 0.1f, 0.1f);
 
         objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*teapotMesh);
         objects.back()->setPosition(0, 1, 0);
+        objects.back()->setScale(0.1f, 0.1f, 0.1f);
 
         objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*teapotMesh);
         objects.back()->setPosition(-8, -1, 0);
+        objects.back()->setScale(0.1f, 0.1f, 0.1f);
 
         objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*cubeNormalMesh);
@@ -66,9 +69,10 @@ struct Game : DXD::CallbackHandler {
         objects.back()->setMesh(*smallCubeMesh);
         objects.back()->setPosition(0, 4, 0);
 
-		objects.push_back(DXD::Object::create());
+        objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*bmwMesh);
-        objects.back()->setPosition(0, 10, 0);
+        objects.back()->setPosition(0, -1, -4);
+        objects.back()->setScale(0.03f, 0.03f, 0.03f);
 
         sunLight = DXD::Light::create();
         sunLight->setColor(1.0f, 1.0f, 0.0f);

@@ -26,6 +26,10 @@ public:
     virtual void setRotationOrigin(XMFLOAT3 pos) = 0;
     virtual XMFLOAT3 getRotationOrigin() const = 0;
 
+    virtual void setScale(FLOAT x, FLOAT y, FLOAT z) = 0;
+    virtual void setScale(XMFLOAT3 scale) = 0;
+    virtual XMFLOAT3 getScale() const = 0;
+
     virtual ~Object() = default;
     static std::unique_ptr<Object> create();
 
