@@ -38,6 +38,7 @@ struct Game : DXD::CallbackHandler {
         objects.back()->setMesh(*teapotMesh);
         objects.back()->setPosition(8, -1, 0);
         objects.back()->setScale(0.1f, 0.1f, 0.1f);
+        objects.back()->setColor(0.0f, 1.0f, 0.0f);
 
         objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*teapotMesh);
@@ -48,6 +49,7 @@ struct Game : DXD::CallbackHandler {
         objects.back()->setMesh(*teapotMesh);
         objects.back()->setPosition(-8, -1, 0);
         objects.back()->setScale(0.1f, 0.1f, 0.1f);
+        objects.back()->setColor(0.0f, 0.0f, 1.0f);
 
         objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*cubeNormalMesh);
@@ -72,11 +74,12 @@ struct Game : DXD::CallbackHandler {
         objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*porsheMesh);
         objects.back()->setPosition(0, -1, -4);
+        objects.back()->setColor(1, 0, 0);
         //objects.back()->setScale(0.03f, 0.03f, 0.03f);
 
         sunLight = DXD::Light::create();
-        sunLight->setColor(1.0f, 1.0f, 0.0f);
-        sunLight->setPosition(0, 4, 0);
+        sunLight->setColor(1.0f, 1.0f, 1.0f);
+        sunLight->setPosition(0, 5, 0);
 
         moonLight = DXD::Light::create();
         moonLight->setColor(0.0f, 1.0f, 1.0f);
@@ -88,7 +91,7 @@ struct Game : DXD::CallbackHandler {
 
         redLight = DXD::Light::create();
         redLight->setColor(1.0f, 0.0f, 0.0f);
-        redLight->setPosition(-6, 2, -8);
+        redLight->setPosition(-12, 2, -12);
 
         objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*smallCubeMesh);
@@ -116,7 +119,7 @@ struct Game : DXD::CallbackHandler {
         scene->addObject(*objects[10]);
         scene->addObject(*objects[11]);
         scene->setBackgroundColor(0.3f, 0.8f, 1.0f);
-        scene->setAmbientLight(0.2f, 0.2f, 0.2f);
+        scene->setAmbientLight(0.1f, 0.1f, 0.1f);
         scene->addLight(*sunLight);
         scene->addLight(*moonLight);
         scene->addLight(*redLight);
@@ -214,11 +217,11 @@ struct Game : DXD::CallbackHandler {
             static float rotation = 0.f;
             rotation += 0.1f;
             XMFLOAT3 sunPos = sunLight->getPosition();
-            sunPos.x = 7 * sin(-rotation/4);
-            sunPos.z = 7 * cos(-rotation/4);
+            sunPos.x = 7 * sin(-rotation / 4);
+            sunPos.z = 7 * cos(-rotation / 4);
             sunLight->setPosition(sunPos);
 
-			redLight->setPower(sin(rotation)+1);
+            redLight->setPower((sin(rotation) + 1) / 2);
 
             objects[8]->setRotation(XMFLOAT3(0, 1, 0), rotation - 45);
             objects[8]->setPosition(7 * sinf(rotation) * 0.6f, objects[8]->getPosition().y, 7 * cosf(rotation) * 0.6f);

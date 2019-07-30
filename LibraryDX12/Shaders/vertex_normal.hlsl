@@ -22,7 +22,6 @@ VertexShaderOutput main(VertexShaderInput IN) {
     OUT.Position = mul(mmvp.mvpMatrix, float4(IN.Position, 1.0f));
     OUT.WorldPosition = mul(mmvp.modelMatrix, float4(IN.Position, 1.0f));
     OUT.Normal = mul(mmvp.modelMatrix, float4(IN.Normal, 0.0f));
-    //OUT.Normal = float4(IN.Normal, 0.0f);
 
     return OUT;
 }

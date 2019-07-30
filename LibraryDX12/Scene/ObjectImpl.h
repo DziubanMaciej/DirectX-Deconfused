@@ -30,6 +30,9 @@ public:
     void setScale(XMFLOAT3 scale) override;
     XMFLOAT3 getScale() const override;
 
+    void setColor(FLOAT r, FLOAT g, FLOAT b) override;
+    XMFLOAT3 getColor() const override;
+
 protected:
     MeshImpl *mesh;
 
@@ -37,6 +40,8 @@ protected:
     XMVECTOR position = {0, 0, 0};
     XMVECTOR rotationQuaternion = XMQuaternionIdentity();
     XMVECTOR rotationOrigin = {0, 0, 0};
+
+	XMFLOAT3 color = {0, 0, 0};
 
     XMMATRIX modelMatrix;
     bool modelMatrixDirty = true;

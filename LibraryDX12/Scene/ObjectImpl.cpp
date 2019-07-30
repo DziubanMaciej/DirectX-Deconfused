@@ -72,3 +72,11 @@ void ObjectImpl::setScale(XMFLOAT3 scale) {
 XMFLOAT3 ObjectImpl::getScale() const {
     return XMStoreFloat3(this->scale);
 }
+
+void ObjectImpl::setColor(FLOAT r, FLOAT g, FLOAT b) {
+    this->color = XMFLOAT3(r, g, b);
+}
+
+XMFLOAT3 ObjectImpl::getColor() const {
+    return color;
+}

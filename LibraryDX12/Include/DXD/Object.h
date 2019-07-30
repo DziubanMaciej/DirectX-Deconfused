@@ -30,6 +30,9 @@ public:
     virtual void setScale(XMFLOAT3 scale) = 0;
     virtual XMFLOAT3 getScale() const = 0;
 
+    virtual void setColor(FLOAT r, FLOAT g, FLOAT b) = 0;
+    virtual XMFLOAT3 getColor() const = 0;
+
     virtual ~Object() = default;
     static std::unique_ptr<Object> create();
 

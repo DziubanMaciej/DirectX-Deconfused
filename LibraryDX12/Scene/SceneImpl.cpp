@@ -114,7 +114,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
 
     ID3D12DescriptorHeap *ppHeaps[] = {swapChain.getCbvDescriptorHeap().Get()};
     commandList.getCommandList()->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
-    commandList.getCommandList()->SetGraphicsRootDescriptorTable(1, swapChain.getCbvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+    commandList.getCommandList()->SetGraphicsRootDescriptorTable(2, swapChain.getCbvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = *object->getMesh();
@@ -130,6 +130,12 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
 
             commandList.setGraphicsRoot32BitConstant(0, mmvp);
 
+            ObjectProperties op;
+            op.objectColor = object->getColor();
+            op.objectSpecularity = 1;
+
+			commandList.setGraphicsRoot32BitConstant(1, op);
+
             commandList.drawIndexed(static_cast<UINT>(mesh.getIndicesCount()));
         }
     }
@@ -138,7 +144,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     commandList.setPipelineState(application.getPipelineStateController().getPipelineState(PipelineStateController::Identifier::PIPELINE_STATE_NORMAL));
     commandList.setGraphicsRootSignature(application.getPipelineStateController().getRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_NORMAL));
 
-    commandList.getCommandList()->SetGraphicsRootDescriptorTable(1, swapChain.getCbvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+    commandList.getCommandList()->SetGraphicsRootDescriptorTable(2, swapChain.getCbvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = *object->getMesh();
@@ -151,6 +157,12 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
             mmvp.modelViewProjectionMatrix = XMMatrixMultiply(mmvp.modelMatrix, vpMatrix);
 
             commandList.setGraphicsRoot32BitConstant(0, mmvp);
+
+			ObjectProperties op;
+            op.objectColor = object->getColor();
+            op.objectSpecularity = 1;
+
+            commandList.setGraphicsRoot32BitConstant(1, op);
 
             commandList.drawInstanced(static_cast<UINT>(mesh.getVerticesCount() / 6), 1, 0, 0); // 6 - size of position+normal
         }
