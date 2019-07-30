@@ -30,8 +30,10 @@ struct Game : DXD::CallbackHandler {
         assert(flatMesh);
         extraFlatMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/extra_flat_normals.obj");
         assert(extraFlatMesh);
-        carMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/aventador.obj");
+        carMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/porshe.obj");
         assert(carMesh);
+        actorMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/dennis.obj");
+        assert(actorMesh);
         DXD::log("Done!\n");
         woodTexture = DXD::Texture::createFromFile(*application, "Resources/wood.jpg");
         assert(woodTexture);
@@ -77,7 +79,7 @@ struct Game : DXD::CallbackHandler {
 
         objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*carMesh);
-        objects.back()->setPosition(0, -2, -4);
+        objects.back()->setPosition(0, -1, -4); // y -2 for aventador
         objects.back()->setColor(0, 0, 0);
         objects.back()->setSpecularity(3);
         objects.back()->setScale(0.9f, 0.9f, 0.9f);
@@ -110,6 +112,11 @@ struct Game : DXD::CallbackHandler {
         objects.back()->setMesh(*smallCubeMesh);
         objects.back()->setPosition(12, 2, -12);
 
+		objects.push_back(DXD::Object::create());
+        objects.back()->setMesh(*actorMesh);
+        objects.back()->setPosition(-2, -2, -8);
+        objects.back()->setScale(0.01f, 0.01f, 0.01f);
+
         scene = DXD::Scene::create();
         scene->addObject(*objects[0]);
         scene->addObject(*objects[1]);
@@ -123,6 +130,7 @@ struct Game : DXD::CallbackHandler {
         scene->addObject(*objects[9]);
         scene->addObject(*objects[10]);
         scene->addObject(*objects[11]);
+        scene->addObject(*objects[12]);
         scene->setBackgroundColor(0.3f, 0.8f, 1.0f);
         scene->setAmbientLight(0.1f, 0.1f, 0.1f);
         scene->addLight(*sunLight);
@@ -228,7 +236,7 @@ struct Game : DXD::CallbackHandler {
 
             redLight->setPower((sin(rotation) + 1) / 2);
 
-            objects[8]->setRotation(XMFLOAT3(0, 1, 0), rotation + 180);
+            objects[8]->setRotation(XMFLOAT3(0, 1, 0), rotation - 45); // +180 for aventador
             objects[8]->setPosition(7 * sinf(rotation) * 0.6f, objects[8]->getPosition().y, 7 * cosf(rotation) * 0.6f);
 
             objects[7]->setPosition(sunPos);
@@ -269,6 +277,7 @@ private:
     std::unique_ptr<DXD::Mesh> flatMesh;
     std::unique_ptr<DXD::Mesh> extraFlatMesh;
     std::unique_ptr<DXD::Mesh> carMesh;
+    std::unique_ptr<DXD::Mesh> actorMesh;
     std::unique_ptr<DXD::Light> sunLight;
     std::unique_ptr<DXD::Light> moonLight;
     std::unique_ptr<DXD::Light> redLight;
