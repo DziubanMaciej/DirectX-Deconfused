@@ -17,6 +17,7 @@ struct Game : DXD::CallbackHandler {
     Game(HINSTANCE hInstance) {
         application = DXD::Application::create(true);
         window = DXD::Window::create(*application, L"myClass", L"myWindow", hInstance, 1240, 720);
+        DXD::log("Loading meshes...\n");
         teapotMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/teapot_normals.obj");
         assert(teapotMesh);
         cubeMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/cube.obj");
@@ -29,8 +30,9 @@ struct Game : DXD::CallbackHandler {
         assert(flatMesh);
         extraFlatMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/extra_flat_normals.obj");
         assert(extraFlatMesh);
-        porsheMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/porshe.obj");
-        assert(porsheMesh);
+        carMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/aventador.obj");
+        assert(carMesh);
+        DXD::log("Done!\n");
         woodTexture = DXD::Texture::createFromFile(*application, "Resources/wood.jpg");
         assert(woodTexture);
 
@@ -74,11 +76,11 @@ struct Game : DXD::CallbackHandler {
         objects.back()->setPosition(0, 4, 0);
 
         objects.push_back(DXD::Object::create());
-        objects.back()->setMesh(*porsheMesh);
-        objects.back()->setPosition(0, -1, -4);
-        objects.back()->setColor(1, 0, 0);
+        objects.back()->setMesh(*carMesh);
+        objects.back()->setPosition(0, -2, -4);
+        objects.back()->setColor(0, 0, 0);
         objects.back()->setSpecularity(3);
-        //objects.back()->setScale(0.03f, 0.03f, 0.03f);
+        objects.back()->setScale(0.9f, 0.9f, 0.9f);
 
         sunLight = DXD::Light::create();
         sunLight->setColor(1.0f, 1.0f, 1.0f);
@@ -226,7 +228,7 @@ struct Game : DXD::CallbackHandler {
 
             redLight->setPower((sin(rotation) + 1) / 2);
 
-            objects[8]->setRotation(XMFLOAT3(0, 1, 0), rotation - 45);
+            objects[8]->setRotation(XMFLOAT3(0, 1, 0), rotation + 180);
             objects[8]->setPosition(7 * sinf(rotation) * 0.6f, objects[8]->getPosition().y, 7 * cosf(rotation) * 0.6f);
 
             objects[7]->setPosition(sunPos);
@@ -266,7 +268,7 @@ private:
     std::unique_ptr<DXD::Mesh> cubeNormalMesh;
     std::unique_ptr<DXD::Mesh> flatMesh;
     std::unique_ptr<DXD::Mesh> extraFlatMesh;
-    std::unique_ptr<DXD::Mesh> porsheMesh;
+    std::unique_ptr<DXD::Mesh> carMesh;
     std::unique_ptr<DXD::Light> sunLight;
     std::unique_ptr<DXD::Light> moonLight;
     std::unique_ptr<DXD::Light> redLight;
