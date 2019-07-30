@@ -27,11 +27,21 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
     for (int i = 0; i < lightsSize; i++) {
         float3 tempLightColor = lightColor[i].xyz;
+
+		//Diffuse
         float tempLightPower = (20 / (distance(IN.WorldPosition.xyz, lightPosition[i].xyz) * distance(IN.WorldPosition.xyz, lightPosition[i].xyz))) * lightColor[i].w;
+
+		//Normal
         float3 lightPositionNorm = normalize(lightPosition[i].xyz - IN.WorldPosition.xyz);
         float3 normalNorm = normalize(IN.Normal.xyz);
         float normalPower = max(dot(normalNorm, lightPositionNorm), 0);
-        OUT_Color.xyz = OUT_Color.xyz + (tempLightColor.xyz + op.objectColor.xyz) * tempLightPower * normalPower;
+
+		//Specular
+		float3 viewDir = normalize(cameraPosition.xyz - IN.WorldPosition.xyz);
+        float3 reflectDir = reflect(-lightPositionNorm, normalNorm);
+		float specularPower = pow(max(dot(viewDir, reflectDir), 0.0), 32) * op.objectSpecularity;
+
+        OUT_Color.xyz = OUT_Color.xyz + (tempLightColor.xyz + op.objectColor.xyz) * (tempLightPower) * (normalPower + specularPower);
     }
 
     return OUT_Color;

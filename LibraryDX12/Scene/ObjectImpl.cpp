@@ -80,3 +80,11 @@ void ObjectImpl::setColor(FLOAT r, FLOAT g, FLOAT b) {
 XMFLOAT3 ObjectImpl::getColor() const {
     return color;
 }
+
+void ObjectImpl::setSpecularity(float s) {
+    this->specularity = s;
+}
+
+float ObjectImpl::getSpecularity() const {
+    return specularity;
+}

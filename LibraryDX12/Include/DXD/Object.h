@@ -33,6 +33,9 @@ public:
     virtual void setColor(FLOAT r, FLOAT g, FLOAT b) = 0;
     virtual XMFLOAT3 getColor() const = 0;
 
+	virtual void setSpecularity(float s) = 0;
+    virtual float getSpecularity() const = 0;
+
     virtual ~Object() = default;
     static std::unique_ptr<Object> create();
 

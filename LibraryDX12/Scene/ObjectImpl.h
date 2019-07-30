@@ -33,6 +33,9 @@ public:
     void setColor(FLOAT r, FLOAT g, FLOAT b) override;
     XMFLOAT3 getColor() const override;
 
+	void setSpecularity(float s) override;
+    float getSpecularity() const override;
+
 protected:
     MeshImpl *mesh;
 
@@ -42,6 +45,7 @@ protected:
     XMVECTOR rotationOrigin = {0, 0, 0};
 
 	XMFLOAT3 color = {0, 0, 0};
+	float specularity = 1.0f;
 
     XMMATRIX modelMatrix;
     bool modelMatrixDirty = true;

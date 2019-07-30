@@ -62,10 +62,12 @@ struct Game : DXD::CallbackHandler {
         objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*flatMesh);
         objects.back()->setPosition(0, -3, 0);
+        objects.back()->setSpecularity(0.5f);
 
         objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*extraFlatMesh);
         objects.back()->setPosition(0, -5, 0);
+        objects.back()->setSpecularity(0);
 
         objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*smallCubeMesh);
@@ -75,6 +77,7 @@ struct Game : DXD::CallbackHandler {
         objects.back()->setMesh(*porsheMesh);
         objects.back()->setPosition(0, -1, -4);
         objects.back()->setColor(1, 0, 0);
+        objects.back()->setSpecularity(3);
         //objects.back()->setScale(0.03f, 0.03f, 0.03f);
 
         sunLight = DXD::Light::create();

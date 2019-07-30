@@ -99,6 +99,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
 
     //SimpleConstantBuffer
     SimpleConstantBuffer *smplCbv = swapChain.getSimpleConstantBufferData();
+    smplCbv->cameraPosition = XMFLOAT4(camera->getEyePosition().x, camera->getEyePosition().y, camera->getEyePosition().z, 1);
     smplCbv->lightsSize = 0;
     smplCbv->ambientLight = XMFLOAT3(ambientLight[0], ambientLight[1], ambientLight[2]);
     for (LightImpl *light : lights) {
@@ -132,7 +133,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
 
             ObjectProperties op;
             op.objectColor = object->getColor();
-            op.objectSpecularity = 1;
+            op.objectSpecularity = object->getSpecularity(); //Not supported in objects without normals
 
 			commandList.setGraphicsRoot32BitConstant(1, op);
 
@@ -160,7 +161,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
 
 			ObjectProperties op;
             op.objectColor = object->getColor();
-            op.objectSpecularity = 1;
+            op.objectSpecularity = object->getSpecularity();
 
             commandList.setGraphicsRoot32BitConstant(1, op);
 
