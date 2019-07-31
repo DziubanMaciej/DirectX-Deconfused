@@ -125,7 +125,7 @@ struct Game : DXD::CallbackHandler {
         objects.back()->setMesh(*dxdMesh);
         objects.back()->setPosition(0, 2, -5);
         objects.back()->setScale(20.f, 20.f, 20.f);
-        objects.back()->setRotation({ 0, 1, 0 }, static_cast<float>(M_PI));
+        objects.back()->setRotation({0, 1, 0}, static_cast<float>(M_PI));
 
         scene = DXD::Scene::create();
         scene->addObject(*objects[0]);
@@ -237,23 +237,20 @@ struct Game : DXD::CallbackHandler {
         case 'L':
             lookingAroundEnabled = !lookingAroundEnabled;
             break;
+        case 'T':
+            toggleSceneMovement ^= 1;
         case VK_SPACE:
-            static float rotation = 0.f;
-            rotation += 0.1f;
-            XMFLOAT3 sunPos = sunLight->getPosition();
-            sunPos.x = 7 * sin(-rotation / 4);
-            sunPos.z = 7 * cos(-rotation / 4);
-            sunLight->setPosition(sunPos);
-
-            redLight->setPower((sin(rotation) + 1) / 2);
-
-            objects[8]->setRotation(XMFLOAT3(0, 1, 0), rotation - 45); // +180 for aventador
-            objects[8]->setPosition(7 * sinf(rotation) * 0.6f, objects[8]->getPosition().y, 7 * cosf(rotation) * 0.6f);
-
-            objects[7]->setPosition(sunPos);
-            objects[1]->setRotation(rotation, rotation, rotation);
-            break;
+            if (toggleSceneMovement)
+                break;
+            sceneMoveTick();
+            return;
         }
+    }
+
+    void onUpdate() override {
+        if (!toggleSceneMovement)
+            return;
+        sceneMoveTick();
     }
 
 private:
@@ -267,13 +264,29 @@ private:
         focusPoint.z += focusDirection.z;
         camera->setFocusPoint(focusPoint);
     }
+    void sceneMoveTick() {
+        static float rotation = 0.f;
+        rotation += 0.1f;
+        XMFLOAT3 sunPos = sunLight->getPosition();
+        sunPos.x = 7 * sin(-rotation / 4);
+        sunPos.z = 7 * cos(-rotation / 4);
+        sunLight->setPosition(sunPos);
 
+        redLight->setPower((sin(rotation) + 1) / 2);
+
+        objects[8]->setRotation(XMFLOAT3(0, 1, 0), rotation - 45); // +180 for aventador
+        objects[8]->setPosition(7 * sinf(rotation) * 0.6f, objects[8]->getPosition().y, 7 * cosf(rotation) * 0.6f);
+
+        objects[7]->setPosition(sunPos);
+        objects[1]->setRotation(rotation, rotation, rotation);
+    }
     constexpr static float movementSpeed = 0.7f;
     constexpr static float cameraRotationSpeed = 0.007f;
 
     unsigned int lastMouseX, lastMouseY;
     bool lookingAroundEnabled = false;
     bool fullscreen = false;
+    bool toggleSceneMovement = false;
     float angleX = 0.f;
     float angleY = 0.f;
     XMFLOAT3 cameraPosition{0, 4, -20};
