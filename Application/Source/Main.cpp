@@ -34,6 +34,8 @@ struct Game : DXD::CallbackHandler {
         assert(carMesh);
         actorMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/dennis.obj");
         assert(actorMesh);
+        dxdMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/dxd_comicsans.obj");
+        assert(dxdMesh);
         DXD::log("Done!\n");
         woodTexture = DXD::Texture::createFromFile(*application, "Resources/wood.jpg");
         assert(woodTexture);
@@ -112,10 +114,16 @@ struct Game : DXD::CallbackHandler {
         objects.back()->setMesh(*smallCubeMesh);
         objects.back()->setPosition(12, 2, -12);
 
-		objects.push_back(DXD::Object::create());
+        objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*actorMesh);
         objects.back()->setPosition(-2, -2, -8);
         objects.back()->setScale(0.01f, 0.01f, 0.01f);
+
+        objects.push_back(DXD::Object::create());
+        objects.back()->setMesh(*dxdMesh);
+        objects.back()->setPosition(0, 2, -5);
+        objects.back()->setScale(20.f, 20.f, 20.f);
+        objects.back()->setRotation({ 0, 1, 0 }, 3.14);
 
         scene = DXD::Scene::create();
         scene->addObject(*objects[0]);
@@ -131,6 +139,7 @@ struct Game : DXD::CallbackHandler {
         scene->addObject(*objects[10]);
         scene->addObject(*objects[11]);
         scene->addObject(*objects[12]);
+        scene->addObject(*objects[13]);
         scene->setBackgroundColor(0.3f, 0.8f, 1.0f);
         scene->setAmbientLight(0.1f, 0.1f, 0.1f);
         scene->addLight(*sunLight);
@@ -278,6 +287,7 @@ private:
     std::unique_ptr<DXD::Mesh> extraFlatMesh;
     std::unique_ptr<DXD::Mesh> carMesh;
     std::unique_ptr<DXD::Mesh> actorMesh;
+    std::unique_ptr<DXD::Mesh> dxdMesh;
     std::unique_ptr<DXD::Light> sunLight;
     std::unique_ptr<DXD::Light> moonLight;
     std::unique_ptr<DXD::Light> redLight;
