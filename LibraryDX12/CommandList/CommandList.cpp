@@ -184,6 +184,6 @@ void CommandList::addUsedResources(const ID3D12ResourcePtr *resources, UINT reso
 }
 
 void CommandList::commitDescriptors() {
-    // gpuDescriptorHeapControllerCbvSrvUav.commit();
-    // gpuDescriptorHeapControllerSampler.commit();
+    gpuDescriptorHeapControllerCbvSrvUav.commit();
+    gpuDescriptorHeapControllerSampler.commit();
 }

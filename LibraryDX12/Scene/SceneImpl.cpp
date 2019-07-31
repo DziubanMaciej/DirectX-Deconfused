@@ -111,10 +111,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     }
 
     memcpy(swapChain.getSimpleCbvDataBegin(), swapChain.getSimpleConstantBufferData(), sizeof(*swapChain.getSimpleConstantBufferData()));
-
-    ID3D12DescriptorHeap *ppHeaps[] = {swapChain.getCbvDescriptorHeap().Get()};
-    commandList.getCommandList()->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
-    commandList.getCommandList()->SetGraphicsRootDescriptorTable(2, swapChain.getCbvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+    commandList.setCbvSrvUavDescriptorTable(2, 0, swapChain.getCbvDescriptor());
 
     // Draw DEFAULT
     for (ObjectImpl *object : objects) {
@@ -142,8 +139,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     }
 
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_NORMAL);
-
-    commandList.getCommandList()->SetGraphicsRootDescriptorTable(2, swapChain.getCbvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
+    commandList.setCbvSrvUavDescriptorTable(2, 0, swapChain.getCbvDescriptor());
 
     //Draw NORMAL
     for (ObjectImpl *object : objects) {
