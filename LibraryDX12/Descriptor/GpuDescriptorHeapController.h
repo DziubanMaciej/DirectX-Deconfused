@@ -5,6 +5,7 @@
 #include "DXD/ExternalHeadersWrappers/d3dx12.h"
 #include <map>
 #include <vector>
+#include <set>
 
 class CommandList;
 class RootSignature;
@@ -68,6 +69,7 @@ private:
 
     // Data created while parsing root signature
     std::map<RootParameterIndex, DescriptorTableInfo> descriptorTableInfos = {};
+    std::set<RootParameterIndex> stagedDescriptorTables;
 
     // Data created while staging
     std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> stagingDescriptors = {};
