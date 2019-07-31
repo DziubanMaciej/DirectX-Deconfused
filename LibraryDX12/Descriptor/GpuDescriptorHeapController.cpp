@@ -13,6 +13,8 @@ GpuDescriptorHeapController::GpuDescriptorHeapController(CommandList &commandLis
       descriptorIncrementSize(commandList.getDevice()->GetDescriptorHandleIncrementSize(heapType)) {}
 
 void GpuDescriptorHeapController::setRootSignature(const RootSignature &rootSignature) {
+    assert(stagedDescriptorTables.size() == 0); // There shouldn't be any uncommitted tables
+
     this->descriptorTableInfos.clear();
     UINT currentOffsetInStagingDescriptors = 0u;
 
@@ -37,7 +39,6 @@ void GpuDescriptorHeapController::setRootSignature(const RootSignature &rootSign
 
     this->stagingDescriptors.clear();
     this->stagingDescriptors.resize(currentOffsetInStagingDescriptors);
-    this->stagedDescriptorTables.clear();
 }
 
 void GpuDescriptorHeapController::stage(RootParameterIndex indexOfTable, UINT offsetInTable, D3D12_CPU_DESCRIPTOR_HANDLE firstDescriptor, UINT descriptorCount) {
@@ -69,7 +70,7 @@ void GpuDescriptorHeapController::commit() {
     if (descriptorHeap == nullptr) {
         D3D12_DESCRIPTOR_HEAP_DESC heapDescription = {};
         heapDescription.Type = heapType;
-        heapDescription.NumDescriptors = static_cast<UINT>(this->stagingDescriptors.size()); // TODO align up?
+        heapDescription.NumDescriptors = 1024; // TODO
         heapDescription.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         heapDescription.NodeMask = 1;
         throwIfFailed(device->CreateDescriptorHeap(&heapDescription, IID_PPV_ARGS(&this->descriptorHeap)));
@@ -99,6 +100,8 @@ void GpuDescriptorHeapController::commit() {
         currentCpuHandle.Offset(descriptorTableInfo.descriptorCount, descriptorIncrementSize);
         currentGpuHandle.Offset(descriptorTableInfo.descriptorCount, descriptorIncrementSize);
     }
+
+    this->stagedDescriptorTables.clear();
 }
 
 bool GpuDescriptorHeapController::isRootParameterCompatibleTable(const D3D12_ROOT_PARAMETER1 &parameter) const {
