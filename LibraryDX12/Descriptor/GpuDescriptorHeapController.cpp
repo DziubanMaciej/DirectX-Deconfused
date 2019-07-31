@@ -13,6 +13,7 @@ GpuDescriptorHeapController::GpuDescriptorHeapController(CommandList &commandLis
       descriptorIncrementSize(commandList.getDevice()->GetDescriptorHandleIncrementSize(heapType)) {}
 
 void GpuDescriptorHeapController::setRootSignature(const RootSignature &rootSignature) {
+    this->descriptorTableInfos.clear();
     UINT currentOffsetInStagingDescriptors = 0u;
 
     const auto rootParameters = rootSignature.getRootParameters();
