@@ -36,6 +36,7 @@ void GpuDescriptorHeapController::setRootSignature(const RootSignature &rootSign
 
     this->stagingDescriptors.clear();
     this->stagingDescriptors.resize(currentOffsetInStagingDescriptors);
+    this->stagedDescriptorTables.clear();
 }
 
 void GpuDescriptorHeapController::stage(RootParameterIndex indexOfTable, UINT offsetInTable, D3D12_CPU_DESCRIPTOR_HANDLE firstDescriptor, UINT descriptorCount) {
@@ -49,9 +50,16 @@ void GpuDescriptorHeapController::stage(RootParameterIndex indexOfTable, UINT of
         this->stagingDescriptors[offset] = currentDescriptor;
         currentDescriptor.Offset(descriptorIncrementSize);
     }
+
+    stagedDescriptorTables.insert(indexOfTable);
 }
 
 void GpuDescriptorHeapController::commit() {
+    // Do nothing if we haven't staged anything new since last commit
+    if (stagedDescriptorTables.size() == 0) {
+        return;
+    }
+
     auto device = commandList.getDevice();
 
     // TODO check if we have enough available handles
@@ -70,23 +78,25 @@ void GpuDescriptorHeapController::commit() {
     }
 
     // Process each descriptor table
-    for (auto it = descriptorTableInfos.begin(); it != descriptorTableInfos.end(); it++) {
+    for (auto it = stagedDescriptorTables.begin(); it != stagedDescriptorTables.end(); it++) {
+        const auto rootParameterIndex = *it;
+        const auto descriptorTableInfo = descriptorTableInfos.at(rootParameterIndex);
+
         // Copy whole table to gpu visible heap
         const UINT destinationRangesCount = 1u;
-        const UINT destinationRangeSize = it->second.descriptorCount;
-        const UINT sourceRangesCount = it->second.descriptorCount;
-        const D3D12_CPU_DESCRIPTOR_HANDLE *sourceRangeStarts = &this->stagingDescriptors[it->second.offsetInStagingDescriptors];
+        const UINT destinationRangeSize = descriptorTableInfo.descriptorCount;
+        const UINT sourceRangesCount = descriptorTableInfo.descriptorCount;
+        const D3D12_CPU_DESCRIPTOR_HANDLE *sourceRangeStarts = &this->stagingDescriptors[descriptorTableInfo.offsetInStagingDescriptors];
         const UINT *sourceRangeSizes = nullptr; // It means all ranges are of length 1
         device->CopyDescriptors(destinationRangesCount, &currentCpuHandle, &destinationRangesCount,
                                 sourceRangesCount, sourceRangeStarts, sourceRangeSizes, this->heapType);
 
         // Bind the table to command list
-        const auto rootParameterIndex = it->first;
         commandList.getCommandList()->SetGraphicsRootDescriptorTable(rootParameterIndex, currentGpuHandle);
 
         // Increment GPU visible heap handles
-        currentCpuHandle.Offset(it->second.descriptorCount, descriptorIncrementSize);
-        currentGpuHandle.Offset(it->second.descriptorCount, descriptorIncrementSize);
+        currentCpuHandle.Offset(descriptorTableInfo.descriptorCount, descriptorIncrementSize);
+        currentGpuHandle.Offset(descriptorTableInfo.descriptorCount, descriptorIncrementSize);
     }
 }
 
