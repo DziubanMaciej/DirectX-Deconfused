@@ -34,9 +34,9 @@ ID3D12PipelineStatePtr PipelineStateController::getPipelineState(Identifier iden
     return pipelineStates[static_cast<int>(identifier)];
 }
 
-ID3D12RootSignaturePtr PipelineStateController::getRootSignature(Identifier identifier) {
+RootSignature &PipelineStateController::getRootSignature(Identifier identifier) {
     compile(identifier);
-    return rootSignatures[static_cast<int>(identifier)].getRootSignature();
+    return rootSignatures[static_cast<int>(identifier)];
 }
 
 void PipelineStateController::compile(Identifier identifier) {

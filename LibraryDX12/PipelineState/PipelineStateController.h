@@ -21,7 +21,7 @@ public:
 
     void compileAll();
     ID3D12PipelineStatePtr getPipelineState(Identifier identifier);
-    ID3D12RootSignaturePtr getRootSignature(Identifier identifier);
+    RootSignature &getRootSignature(Identifier identifier);
 
 private:
     void compile(Identifier identifier);

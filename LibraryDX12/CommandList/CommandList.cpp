@@ -35,6 +35,11 @@ void CommandList::setGraphicsRootSignature(ID3D12RootSignaturePtr rootSignature)
     commandList->SetGraphicsRootSignature(rootSignature.Get());
 }
 
+void CommandList::setPipelineStateAndGraphicsRootSignature(PipelineStateController &pipelineStateController, PipelineStateController::Identifier identifier) {
+    setPipelineState(pipelineStateController.getPipelineState(identifier));
+    setGraphicsRootSignature(pipelineStateController.getRootSignature(identifier).getRootSignature());
+}
+
 void CommandList::IASetVertexBuffers(UINT startSlot, UINT numBuffers, const VertexBuffer *vertexBuffers) {
     auto views = std::make_unique<D3D12_VERTEX_BUFFER_VIEW[]>(numBuffers);
     auto resources = std::make_unique<ID3D12ResourcePtr[]>(numBuffers);

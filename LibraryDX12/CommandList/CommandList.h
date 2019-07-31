@@ -1,5 +1,7 @@
 #pragma once
 
+#include "PipelineState/PipelineStateController.h"
+
 #include "DXD/NonCopyableAndMovable.h"
 
 #include "DXD/ExternalHeadersWrappers/d3dx12.h"
@@ -24,8 +26,9 @@ public:
     void clearRenderTargetView(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT colorRGBA[4]);
     void clearDepthStencilView(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags, FLOAT depth, UINT8 stencil);
 
-    void setPipelineState(ID3D12PipelineStatePtr pipelineState);
     void setGraphicsRootSignature(ID3D12RootSignaturePtr rootSignature);
+    void setPipelineState(ID3D12PipelineStatePtr pipelineState);
+    void setPipelineStateAndGraphicsRootSignature(PipelineStateController &pipelineStateController, PipelineStateController::Identifier identifier);
 
     void IASetVertexBuffers(UINT startSlot, UINT numBuffers, const VertexBuffer *vertexBuffers);
     void IASetVertexBuffer(UINT slot, const VertexBuffer &vertexBuffer);

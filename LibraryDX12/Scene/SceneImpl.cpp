@@ -75,8 +75,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     commandList.transitionBarrierSingle(backBuffer->getResource(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     // Draw TEXTURE
-    commandList.setPipelineState(application.getPipelineStateController().getPipelineState(PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT));
-    commandList.setGraphicsRootSignature(application.getPipelineStateController().getRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT));
+    commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT);
 
     CD3DX12_VIEWPORT viewport(0.0f, 0.0f, (float)swapChain.getWidth(), (float)swapChain.getHeight());
     CD3DX12_RECT scissorRect(0, 0, LONG_MAX, LONG_MAX);
@@ -135,15 +134,14 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
             op.objectColor = object->getColor();
             op.objectSpecularity = object->getSpecularity(); //Not supported in objects without normals
 
-			commandList.setGraphicsRoot32BitConstant(1, op);
+            commandList.setGraphicsRoot32BitConstant(1, op);
 
             commandList.drawIndexed(static_cast<UINT>(mesh.getIndicesCount()));
         }
     }
 
     //Draw NORMAL
-    commandList.setPipelineState(application.getPipelineStateController().getPipelineState(PipelineStateController::Identifier::PIPELINE_STATE_NORMAL));
-    commandList.setGraphicsRootSignature(application.getPipelineStateController().getRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_NORMAL));
+    commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_NORMAL);
 
     commandList.getCommandList()->SetGraphicsRootDescriptorTable(2, swapChain.getCbvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 
@@ -159,7 +157,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
 
             commandList.setGraphicsRoot32BitConstant(0, mmvp);
 
-			ObjectProperties op;
+            ObjectProperties op;
             op.objectColor = object->getColor();
             op.objectSpecularity = object->getSpecularity();
 
