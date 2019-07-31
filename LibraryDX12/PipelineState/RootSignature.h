@@ -19,6 +19,7 @@ public:
     RootSignature &compile(ID3D12DevicePtr device);
 
     auto getRootSignature() { return rootSignature; }
+    const auto &getRootParameters() const { return rootParameters; }
 
 private:
     UINT getNextShaderRegisterAndIncrement(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT numDescriptors);

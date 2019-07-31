@@ -5,4 +5,6 @@ add_sources_and_cmake_file(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/CpuDescriptorAllocation.h
     ${CMAKE_CURRENT_SOURCE_DIR}/DescriptorManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/DescriptorManager.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/GpuDescriptorHeapController.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/GpuDescriptorHeapController.h
 )
