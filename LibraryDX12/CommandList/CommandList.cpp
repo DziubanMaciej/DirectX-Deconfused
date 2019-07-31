@@ -42,7 +42,11 @@ void CommandList::setGraphicsRootSignature(ID3D12RootSignaturePtr rootSignature)
 
 void CommandList::setPipelineStateAndGraphicsRootSignature(PipelineStateController &pipelineStateController, PipelineStateController::Identifier identifier) {
     setPipelineState(pipelineStateController.getPipelineState(identifier));
-    setGraphicsRootSignature(pipelineStateController.getRootSignature(identifier).getRootSignature());
+
+    auto rootSignature = pipelineStateController.getRootSignature(identifier);
+    setGraphicsRootSignature(rootSignature.getRootSignature());
+    gpuDescriptorHeapControllerCbvSrvUav.setRootSignature(rootSignature);
+    gpuDescriptorHeapControllerSampler.setRootSignature(rootSignature);
 }
 
 void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, ID3D12DescriptorHeapPtr descriptorHeap) {
