@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CommandList/CommandAllocatorManager.h"
 #include "PipelineState/PipelineStateController.h"
 
 #include "DXD/NonCopyableAndMovable.h"
@@ -11,7 +12,6 @@
 
 class VertexBuffer;
 class IndexBuffer;
-class CommandAllocatorManager;
 
 /// Class encapsulating DX12 command list
 class CommandList : DXD::NonCopyableAndMovable {
@@ -29,6 +29,9 @@ public:
     void setGraphicsRootSignature(ID3D12RootSignaturePtr rootSignature);
     void setPipelineState(ID3D12PipelineStatePtr pipelineState);
     void setPipelineStateAndGraphicsRootSignature(PipelineStateController &pipelineStateController, PipelineStateController::Identifier identifier);
+
+    void setDescriptorHeaps(ID3D12DescriptorHeapPtr samplerDescriptorHeap, ID3D12DescriptorHeapPtr srvUavCbvDescriptorHeap);
+    void setDescriptorHeap(ID3D12DescriptorHeapPtr descriptorHeap);
 
     void IASetVertexBuffers(UINT startSlot, UINT numBuffers, const VertexBuffer *vertexBuffers);
     void IASetVertexBuffer(UINT slot, const VertexBuffer &vertexBuffer);
@@ -63,6 +66,7 @@ public:
 
     auto getCommandList() { return commandList; }
     auto &getUsedResources() { return usedResources; }
+    auto getDevice() const { return commandAllocatorManager.getDevice(); }
 
 private:
     CommandAllocatorManager &commandAllocatorManager;

@@ -40,6 +40,17 @@ void CommandList::setPipelineStateAndGraphicsRootSignature(PipelineStateControll
     setGraphicsRootSignature(pipelineStateController.getRootSignature(identifier).getRootSignature());
 }
 
+void CommandList::setDescriptorHeaps(ID3D12DescriptorHeapPtr samplerDescriptorHeap, ID3D12DescriptorHeapPtr srvUavCbvDescriptorHeap) {
+    ID3D12DescriptorHeap *heaps[] = {
+        samplerDescriptorHeap.Get(),
+        srvUavCbvDescriptorHeap.Get()};
+    commandList->SetDescriptorHeaps(2, heaps);
+}
+
+void CommandList::setDescriptorHeap(ID3D12DescriptorHeapPtr descriptorHeap) {
+    commandList->SetDescriptorHeaps(1, &descriptorHeap);
+}
+
 void CommandList::IASetVertexBuffers(UINT startSlot, UINT numBuffers, const VertexBuffer *vertexBuffers) {
     auto views = std::make_unique<D3D12_VERTEX_BUFFER_VIEW[]>(numBuffers);
     auto resources = std::make_unique<ID3D12ResourcePtr[]>(numBuffers);
