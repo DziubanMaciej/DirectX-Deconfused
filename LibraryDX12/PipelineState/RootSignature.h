@@ -16,22 +16,28 @@ public:
     RootSignature &appendStaticSampler(const D3D12_STATIC_SAMPLER_DESC &samplerDescription);
     RootSignature &appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT numDescriptors, D3D12_SHADER_VISIBILITY visibility);
 
-    ID3D12RootSignaturePtr compile(ID3D12DevicePtr device);
+    RootSignature &compile(ID3D12DevicePtr device);
+
+    auto getRootSignature() { return rootSignature; }
 
 private:
     UINT getNextShaderRegisterAndIncrement(D3D12_DESCRIPTOR_RANGE_TYPE rangeType, UINT numDescriptors);
     void resolveDescriptorRanges();
     static D3D_ROOT_SIGNATURE_VERSION getHighestRootSignatureVersion(ID3D12DevicePtr device);
 
+    // Cached root parameters
     std::map<D3D12_SHADER_VISIBILITY, std::vector<D3D12_DESCRIPTOR_RANGE1>> descriptorRanges; // intermediate data, has to be resolved to descriptor tables
+    std::vector<CD3DX12_ROOT_PARAMETER1> rootParameters = {};                                 // goes directly to D3D12_VERSIONED_ROOT_SIGNATURE_DESC
+    std::vector<D3D12_STATIC_SAMPLER_DESC> samplerDescriptions = {};                          // goes directly to D3D12_VERSIONED_ROOT_SIGNATURE_DESC
 
-    std::vector<CD3DX12_ROOT_PARAMETER1> rootParameters = {};        // goes directly to D3D12_VERSIONED_ROOT_SIGNATURE_DESC
-    std::vector<D3D12_STATIC_SAMPLER_DESC> samplerDescriptions = {}; // goes directly to D3D12_VERSIONED_ROOT_SIGNATURE_DESC
-
+    // Indices of registers
     UINT nextShaderRegisterT = 0; // SRV
     UINT nextShaderRegisterU = 0; // UAV
     UINT nextShaderRegisterB = 0; // CBV, including 32bit constants
     UINT nextShaderRegisterS = 0; // Sampler
+
+    // Result
+    ID3D12RootSignaturePtr rootSignature;
 };
 
 template <typename ConstantType>

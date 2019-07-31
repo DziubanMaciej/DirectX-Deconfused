@@ -1,5 +1,7 @@
 #pragma once
 
+#include "PipelineState/RootSignature.h"
+
 #include "DXD/NonCopyableAndMovable.h"
 
 #include "DXD/ExternalHeadersWrappers/d3dcompiler.h"
@@ -23,16 +25,16 @@ public:
 
 private:
     void compile(Identifier identifier);
-    void compilePipelineStateDefault(ID3D12RootSignaturePtr &rootSignature, ID3D12PipelineStatePtr &pipelineState);
-    void compilePipelineStateNormal(ID3D12RootSignaturePtr &rootSignature, ID3D12PipelineStatePtr &pipelineState);
-    void compilePipelineStateTexture(ID3D12RootSignaturePtr &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    void compilePipelineStateDefault(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    void compilePipelineStateNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    void compilePipelineStateTexture(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
 
     static D3D12_GRAPHICS_PIPELINE_STATE_DESC getBaseGraphicsPipelineSateDesc();
     static ID3DBlobPtr loadAndCompileShader(const std::wstring &name, const std::string &target);
 
     ID3D12DevicePtr device;
     ID3D12PipelineStatePtr pipelineStates[static_cast<int>(Identifier::COUNT)] = {};
-    ID3D12RootSignaturePtr rootSignatures[static_cast<int>(Identifier::COUNT)] = {};
+    RootSignature rootSignatures[static_cast<int>(Identifier::COUNT)] = {};
 
     constexpr static char pixelShaderTarget[] = "ps_5_1";
     constexpr static char vertexShaderTarget[] = "vs_5_1";

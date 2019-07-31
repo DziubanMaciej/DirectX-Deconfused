@@ -36,16 +36,17 @@ ID3D12PipelineStatePtr PipelineStateController::getPipelineState(Identifier iden
 
 ID3D12RootSignaturePtr PipelineStateController::getRootSignature(Identifier identifier) {
     compile(identifier);
-    return rootSignatures[static_cast<int>(identifier)];
+    return rootSignatures[static_cast<int>(identifier)].getRootSignature();
 }
 
 void PipelineStateController::compile(Identifier identifier) {
-    if (pipelineStates[static_cast<int>(identifier)] != nullptr) {
+    const auto index = static_cast<int>(identifier);
+    if (pipelineStates[index] != nullptr) {
         return;
     }
 
-    ID3D12RootSignaturePtr rootSignature = {};
-    ID3D12PipelineStatePtr pipelineState = {};
+    RootSignature &rootSignature = this->rootSignatures[index];
+    ID3D12PipelineStatePtr &pipelineState = this->pipelineStates[index];
 
     switch (identifier) {
     case Identifier::PIPELINE_STATE_DEFAULT:
@@ -60,19 +61,15 @@ void PipelineStateController::compile(Identifier identifier) {
     default:
         unreachableCode();
     }
-
-    pipelineStates[static_cast<int>(identifier)] = std::move(pipelineState);
-    rootSignatures[static_cast<int>(identifier)] = std::move(rootSignature);
 }
 
-void PipelineStateController::compilePipelineStateDefault(ID3D12RootSignaturePtr &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
+void PipelineStateController::compilePipelineStateDefault(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
-
-    rootSignature = RootSignature{}
-                        .append32bitConstant<ModelMvp>(D3D12_SHADER_VISIBILITY_VERTEX)                            // register(b0)
-                        .appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, D3D12_SHADER_VISIBILITY_PIXEL) // register(b1)
-                        .append32bitConstant<ObjectProperties>(D3D12_SHADER_VISIBILITY_PIXEL)                     // register(b2)
-                        .compile(device);
+    rootSignature
+        .append32bitConstant<ModelMvp>(D3D12_SHADER_VISIBILITY_VERTEX)                            // register(b0)
+        .appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, D3D12_SHADER_VISIBILITY_PIXEL) // register(b1)
+        .append32bitConstant<ObjectProperties>(D3D12_SHADER_VISIBILITY_PIXEL)                     // register(b2)
+        .compile(device);
 
     // Input layout - per vertex data
     const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
@@ -85,21 +82,20 @@ void PipelineStateController::compilePipelineStateDefault(ID3D12RootSignaturePtr
 
     // Compilation
     D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = getBaseGraphicsPipelineSateDesc();
-    desc.pRootSignature = rootSignature.Get();
+    desc.pRootSignature = rootSignature.getRootSignature().Get();
     desc.VS = D3D12_SHADER_BYTECODE{vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize()};
     desc.PS = D3D12_SHADER_BYTECODE{pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize()};
     desc.InputLayout = D3D12_INPUT_LAYOUT_DESC{inputLayout, _countof(inputLayout)};
     throwIfFailed(device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipelineState)));
 }
 
-void PipelineStateController::compilePipelineStateNormal(ID3D12RootSignaturePtr &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
+void PipelineStateController::compilePipelineStateNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
-
-    rootSignature = RootSignature{}
-                        .append32bitConstant<ModelMvp>(D3D12_SHADER_VISIBILITY_VERTEX)                            // register(b0)
-                        .appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, D3D12_SHADER_VISIBILITY_PIXEL) // register(b1)
-                        .append32bitConstant<ObjectProperties>(D3D12_SHADER_VISIBILITY_PIXEL)                     // register(b2)
-                        .compile(device);
+    rootSignature
+        .append32bitConstant<ModelMvp>(D3D12_SHADER_VISIBILITY_VERTEX)                            // register(b0)
+        .appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, D3D12_SHADER_VISIBILITY_PIXEL) // register(b1)
+        .append32bitConstant<ObjectProperties>(D3D12_SHADER_VISIBILITY_PIXEL)                     // register(b2)
+        .compile(device);
 
     // Input layout - per vertex data
     const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
@@ -113,24 +109,23 @@ void PipelineStateController::compilePipelineStateNormal(ID3D12RootSignaturePtr 
 
     // Compilation
     D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = getBaseGraphicsPipelineSateDesc();
-    desc.pRootSignature = rootSignature.Get();
+    desc.pRootSignature = rootSignature.getRootSignature().Get();
     desc.VS = D3D12_SHADER_BYTECODE{vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize()};
     desc.PS = D3D12_SHADER_BYTECODE{pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize()};
     desc.InputLayout = D3D12_INPUT_LAYOUT_DESC{inputLayout, _countof(inputLayout)};
     throwIfFailed(device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipelineState)));
 }
 
-void PipelineStateController::compilePipelineStateTexture(ID3D12RootSignaturePtr &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
+void PipelineStateController::compilePipelineStateTexture(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
-
     CD3DX12_STATIC_SAMPLER_DESC linearClampSampler(0, D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR, D3D12_TEXTURE_ADDRESS_MODE_CLAMP, D3D12_TEXTURE_ADDRESS_MODE_CLAMP, D3D12_TEXTURE_ADDRESS_MODE_CLAMP);
-    rootSignature = RootSignature{}
-                        .append32bitConstant<ModelMvp>(D3D12_SHADER_VISIBILITY_VERTEX)                            // register(b0)
-                        .appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, D3D12_SHADER_VISIBILITY_PIXEL) // register(b1)
-                        .append32bitConstant<ObjectProperties>(D3D12_SHADER_VISIBILITY_PIXEL)                     // register(b2)
-                        .appendStaticSampler(linearClampSampler)                                                  // register(s0)
-                        //.appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, D3D12_SHADER_VISIBILITY_PIXEL)
-                        .compile(device);
+    rootSignature
+        .append32bitConstant<ModelMvp>(D3D12_SHADER_VISIBILITY_VERTEX)                            // register(b0)
+        .appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, D3D12_SHADER_VISIBILITY_PIXEL) // register(b1)
+        .append32bitConstant<ObjectProperties>(D3D12_SHADER_VISIBILITY_PIXEL)                     // register(b2)
+        .appendStaticSampler(linearClampSampler)                                                  // register(s0)
+        //.appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, D3D12_SHADER_VISIBILITY_PIXEL)
+        .compile(device);
 
     // Input layout - per vertex data
     const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
@@ -143,7 +138,7 @@ void PipelineStateController::compilePipelineStateTexture(ID3D12RootSignaturePtr
 
     // Compilation
     D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = getBaseGraphicsPipelineSateDesc();
-    desc.pRootSignature = rootSignature.Get();
+    desc.pRootSignature = rootSignature.getRootSignature().Get();
     desc.VS = D3D12_SHADER_BYTECODE{vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize()};
     desc.PS = D3D12_SHADER_BYTECODE{pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize()};
     desc.InputLayout = D3D12_INPUT_LAYOUT_DESC{inputLayout, _countof(inputLayout)};

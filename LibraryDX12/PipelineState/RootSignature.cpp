@@ -80,7 +80,7 @@ D3D_ROOT_SIGNATURE_VERSION RootSignature::getHighestRootSignatureVersion(ID3D12D
     return featureData.HighestVersion;
 }
 
-ID3D12RootSignaturePtr RootSignature::compile(ID3D12DevicePtr device) {
+RootSignature &RootSignature::compile(ID3D12DevicePtr device) {
     resolveDescriptorRanges();
     const D3D_ROOT_SIGNATURE_VERSION highestVersion = getHighestRootSignatureVersion(device);
     const D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
@@ -98,6 +98,6 @@ ID3D12RootSignaturePtr RootSignature::compile(ID3D12DevicePtr device) {
     throwIfFailed(D3DX12SerializeVersionedRootSignature(&rootSignatureDescription, highestVersion, &rootSignatureBlob, &errorBlob), errorBlob.Get());
 
     ID3D12RootSignaturePtr rootSignature = {};
-    throwIfFailed(device->CreateRootSignature(0, rootSignatureBlob->GetBufferPointer(), rootSignatureBlob->GetBufferSize(), IID_PPV_ARGS(&rootSignature)));
-    return rootSignature;
+    throwIfFailed(device->CreateRootSignature(0, rootSignatureBlob->GetBufferPointer(), rootSignatureBlob->GetBufferSize(), IID_PPV_ARGS(&this->rootSignature)));
+    return *this;
 }
