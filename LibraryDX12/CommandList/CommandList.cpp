@@ -77,11 +77,11 @@ void CommandList::setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UI
     gpuDescriptorHeapControllerCbvSrvUav.stage(rootParameterIndexOfTable, offsetInTable, firstDescriptor, descriptorCount);
 }
 
-void CommandList::setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, CpuDescriptorAllocation &cpuDescriptorAllocation) {
+void CommandList::setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const CpuDescriptorAllocation &cpuDescriptorAllocation) {
     setCbvSrvUavDescriptorTable(rootParameterIndexOfTable, offsetInTable, cpuDescriptorAllocation.getCpuHandle(), cpuDescriptorAllocation.getHandlesCount());
 }
 
-void CommandList::setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, CpuDescriptorAllocation &cpuDescriptorAllocation, UINT descriptorCount) {
+void CommandList::setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const CpuDescriptorAllocation &cpuDescriptorAllocation, UINT descriptorCount) {
     assert(descriptorCount <= cpuDescriptorAllocation.getHandlesCount());
     setCbvSrvUavDescriptorTable(rootParameterIndexOfTable, offsetInTable, cpuDescriptorAllocation.getCpuHandle(), descriptorCount);
 }
@@ -184,6 +184,6 @@ void CommandList::addUsedResources(const ID3D12ResourcePtr *resources, UINT reso
 }
 
 void CommandList::commitDescriptors() {
-    //gpuDescriptorHeapControllerCbvSrvUav.commit();
-    // gpuDescriptorHeapControllerSampler.commit();
+    gpuDescriptorHeapControllerCbvSrvUav.commit();
+    gpuDescriptorHeapControllerSampler.commit();
 }

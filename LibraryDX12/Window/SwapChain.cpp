@@ -14,7 +14,7 @@ SwapChain::SwapChain(HWND windowHandle, ID3D12DevicePtr device, DescriptorManage
       descriptorManager(descriptorManager),
       rtvDescriptors(descriptorManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, bufferCount)),
       dsvDescriptor(descriptorManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1)),
-      cbvDescriptorHeap(createCbvDescriptorHeap(device)),
+      cbvDescriptor(descriptorManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1)),
       backBufferEntries(bufferCount),
       depthStencilBuffer(nullptr),
       simpleConstantBuffer(nullptr),
@@ -63,17 +63,6 @@ IDXGISwapChainPtr SwapChain::createSwapChain(HWND hwnd, IDXGIFactoryPtr &factory
     IDXGISwapChainPtr resultSwapChain;
     throwIfFailed(swapChain1.As(&resultSwapChain));
     return resultSwapChain;
-}
-
-ID3D12DescriptorHeapPtr SwapChain::createCbvDescriptorHeap(ID3D12DevicePtr device) {
-    D3D12_DESCRIPTOR_HEAP_DESC cbvHeapDesc = {};
-    cbvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    cbvHeapDesc.NumDescriptors = 1;
-    cbvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-
-    ID3D12DescriptorHeapPtr descriptorHeap;
-    throwIfFailed(device->CreateDescriptorHeap(&cbvHeapDesc, IID_PPV_ARGS(&descriptorHeap)));
-    return descriptorHeap;
 }
 
 void SwapChain::updateRenderTargetViews() {
@@ -167,7 +156,7 @@ void SwapChain::createSimpleConstantBuffer() {
     D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
     cbvDesc.BufferLocation = simpleConstantBuffer->getResource()->GetGPUVirtualAddress();
     cbvDesc.SizeInBytes = (sizeof(SimpleConstantBuffer) + 255) & ~255; // CB size is required to be 256-byte aligned.
-    device->CreateConstantBufferView(&cbvDesc, cbvDescriptorHeap->GetCPUDescriptorHandleForHeapStart());
+    device->CreateConstantBufferView(&cbvDesc, cbvDescriptor.getCpuHandle());
 
     // Map and initialize the constant buffer. We don't unmap this until the
     // app closes. Keeping things mapped for the lifetime of the resource is okay.
