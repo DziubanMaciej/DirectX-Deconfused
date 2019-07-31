@@ -2,7 +2,7 @@
 
 #include "DXD/NonCopyableAndMovable.h"
 
-#include "DXD/ExternalHeadersWrappers/d3d12.h"
+#include "DXD/ExternalHeadersWrappers/d3dx12.h"
 #include <map>
 #include <vector>
 
@@ -61,11 +61,19 @@ public:
 private:
     bool isRootParameterCompatibleTable(const D3D12_ROOT_PARAMETER1 &parameter) const;
 
+    // Constant data
     CommandList &commandList;
     const D3D12_DESCRIPTOR_HEAP_TYPE heapType;
     const UINT descriptorIncrementSize;
 
-    ID3D12DescriptorHeapPtr descriptorHeap = {};
-    std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> stagingDescriptors;
+    // Data created while parsing root signature
     std::map<RootParameterIndex, DescriptorTableInfo> descriptorTableInfos = {};
+
+    // Data created while staging
+    std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> stagingDescriptors = {};
+
+    // Committing data
+    ID3D12DescriptorHeapPtr descriptorHeap = {};
+    CD3DX12_CPU_DESCRIPTOR_HANDLE currentCpuHandle = {};
+    CD3DX12_GPU_DESCRIPTOR_HANDLE currentGpuHandle = {};
 };

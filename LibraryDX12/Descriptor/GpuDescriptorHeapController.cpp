@@ -5,7 +5,6 @@
 #include "PipelineState/RootSignature.h"
 #include "Utility/ThrowIfFailed.h"
 
-#include "DXD/ExternalHeadersWrappers/d3dx12.h"
 #include <cassert>
 
 GpuDescriptorHeapController::GpuDescriptorHeapController(CommandList &commandList, D3D12_DESCRIPTOR_HEAP_TYPE heapType)
@@ -55,6 +54,8 @@ void GpuDescriptorHeapController::stage(RootParameterIndex indexOfTable, UINT of
 void GpuDescriptorHeapController::commit() {
     auto device = commandList.getDevice();
 
+    // TODO check if we have enough available handles
+
     // Create and set descriptor heap if it's not present
     if (descriptorHeap == nullptr) {
         D3D12_DESCRIPTOR_HEAP_DESC heapDescription = {};
@@ -64,11 +65,11 @@ void GpuDescriptorHeapController::commit() {
         heapDescription.NodeMask = 1;
         throwIfFailed(device->CreateDescriptorHeap(&heapDescription, IID_PPV_ARGS(&this->descriptorHeap)));
         commandList.setDescriptorHeap(this->heapType, this->descriptorHeap);
+        currentCpuHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE{descriptorHeap->GetCPUDescriptorHandleForHeapStart()};
+        currentGpuHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE{descriptorHeap->GetGPUDescriptorHandleForHeapStart()};
     }
 
     // Process each descriptor table
-    CD3DX12_CPU_DESCRIPTOR_HANDLE currentCpuHandle{descriptorHeap->GetCPUDescriptorHandleForHeapStart()};
-    CD3DX12_GPU_DESCRIPTOR_HANDLE currentGpuHandle{descriptorHeap->GetGPUDescriptorHandleForHeapStart()};
     for (auto it = descriptorTableInfos.begin(); it != descriptorTableInfos.end(); it++) {
         // Copy whole table to gpu visible heap
         const UINT destinationRangesCount = 1u;
