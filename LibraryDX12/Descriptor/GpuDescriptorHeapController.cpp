@@ -63,7 +63,7 @@ void GpuDescriptorHeapController::commit() {
         heapDescription.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
         heapDescription.NodeMask = 1;
         throwIfFailed(device->CreateDescriptorHeap(&heapDescription, IID_PPV_ARGS(&this->descriptorHeap)));
-        commandList.setDescriptorHeap(this->descriptorHeap);
+        commandList.setDescriptorHeap(this->heapType, this->descriptorHeap);
     }
 
     // Process each descriptor table

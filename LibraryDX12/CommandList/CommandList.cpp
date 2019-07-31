@@ -45,16 +45,27 @@ void CommandList::setPipelineStateAndGraphicsRootSignature(PipelineStateControll
     setGraphicsRootSignature(pipelineStateController.getRootSignature(identifier).getRootSignature());
 }
 
-void CommandList::setDescriptorHeaps(ID3D12DescriptorHeapPtr samplerDescriptorHeap, ID3D12DescriptorHeapPtr srvUavCbvDescriptorHeap) {
-    ID3D12DescriptorHeap *heaps[] = {
-        samplerDescriptorHeap.Get(),
-        srvUavCbvDescriptorHeap.Get()};
-    commandList->SetDescriptorHeaps(2, heaps);
-}
+void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, ID3D12DescriptorHeapPtr descriptorHeap) {
+    switch (heapType) {
+    case D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV:
+        descriptorHeapCbvSrvUav = descriptorHeap;
+        break;
+    case D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER:
+        descriptorHeapSampler = descriptorHeap;
+        break;
+    default:
+        unreachableCode();
+    }
 
-void CommandList::setDescriptorHeap(ID3D12DescriptorHeapPtr descriptorHeap) {
-    auto heap = descriptorHeap.Get();
-    commandList->SetDescriptorHeaps(1, &heap);
+    ID3D12DescriptorHeap *heaps[2];
+    auto heapIndex = 0u;
+    if (descriptorHeapCbvSrvUav) {
+        heaps[heapIndex++] = descriptorHeapCbvSrvUav.Get();
+    }
+    if (descriptorHeapSampler) {
+        heaps[heapIndex++] = descriptorHeapSampler.Get();
+    }
+    commandList->SetDescriptorHeaps(heapIndex, heaps);
 }
 
 void CommandList::setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, D3D12_CPU_DESCRIPTOR_HANDLE firstDescriptor, UINT descriptorCount) {
