@@ -104,6 +104,24 @@ void GpuDescriptorHeapController::commit() {
     this->stagedDescriptorTables.clear();
 }
 
+void GpuDescriptorHeapController::CREATE(D3D12_CONSTANT_BUFFER_VIEW_DESC & desc) {
+    if (descriptorHeap == nullptr) {
+        D3D12_DESCRIPTOR_HEAP_DESC heapDescription = {};
+        heapDescription.Type = heapType;
+        heapDescription.NumDescriptors = 1024; // TODO
+        heapDescription.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+        heapDescription.NodeMask = 1;
+        throwIfFailed(commandList.getDevice()->CreateDescriptorHeap(&heapDescription, IID_PPV_ARGS(&this->descriptorHeap)));
+        commandList.setDescriptorHeap(this->heapType, this->descriptorHeap);
+        currentCpuHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE{ descriptorHeap->GetCPUDescriptorHandleForHeapStart() };
+        currentGpuHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE{ descriptorHeap->GetGPUDescriptorHandleForHeapStart() };
+    }
+    
+    static INT a = 0;
+    CD3DX12_CPU_DESCRIPTOR_HANDLE aa{ descriptorHeap->GetCPUDescriptorHandleForHeapStart(), a++, this->descriptorIncrementSize };
+    commandList.getDevice()->CreateConstantBufferView(&desc, aa);
+}
+
 bool GpuDescriptorHeapController::isRootParameterCompatibleTable(const D3D12_ROOT_PARAMETER1 &parameter) const {
     if (parameter.ParameterType != D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE) {
         return false;

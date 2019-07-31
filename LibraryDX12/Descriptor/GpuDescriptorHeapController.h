@@ -4,12 +4,11 @@
 
 #include "DXD/ExternalHeadersWrappers/d3dx12.h"
 #include <map>
-#include <vector>
 #include <set>
-
-class CommandList;
+#include <vector>
 class RootSignature;
 struct D3D12_CPU_DESCRIPTOR_HANDLE;
+class CommandList;
 
 /// \brief Manages descriptors in GPU visible descriptor heap
 ///
@@ -58,6 +57,8 @@ public:
     /// CommandList. Call to commit() should be done as late as possible to batch the operations. Just before
     /// draw/dispatch call is ideal.
     void commit();
+
+    void CREATE(D3D12_CONSTANT_BUFFER_VIEW_DESC &desc);
 
 private:
     bool isRootParameterCompatibleTable(const D3D12_ROOT_PARAMETER1 &parameter) const;

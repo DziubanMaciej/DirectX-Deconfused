@@ -36,6 +36,13 @@ public:
     D3D12_CPU_DESCRIPTOR_HANDLE getDepthStencilBufferDescriptor() const;
     auto &getDepthStencilBuffer() { return depthStencilBuffer; };
 
+    auto GET() {
+        D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
+        cbvDesc.BufferLocation = simpleConstantBuffer->getResource()->GetGPUVirtualAddress();
+        cbvDesc.SizeInBytes = (sizeof(SimpleConstantBuffer) + 255) & ~255; // CB size is required to be 256-byte aligned.
+        return cbvDesc;
+    }
+
     SimpleConstantBuffer *getSimpleConstantBufferData();
     UINT8 *getSimpleCbvDataBegin() const { return simpleCbvDataBegin; }
     const CpuDescriptorAllocation &getCbvDescriptor() const { return cbvDescriptor; }

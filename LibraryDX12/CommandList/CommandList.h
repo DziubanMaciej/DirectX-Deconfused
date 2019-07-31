@@ -74,6 +74,11 @@ public:
     auto &getUsedResources() { return usedResources; }
     auto getDevice() const { return commandAllocatorManager.getDevice(); }
 
+    void COMMIT_AND_CREATE(D3D12_CONSTANT_BUFFER_VIEW_DESC &desc) {
+        gpuDescriptorHeapControllerCbvSrvUav.CREATE(desc);
+        commitDescriptors();
+    }
+
 private:
     void commitDescriptors();
 
