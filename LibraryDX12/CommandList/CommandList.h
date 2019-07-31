@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CommandList/CommandAllocatorManager.h"
+#include "Descriptor/GpuDescriptorHeapController.h"
 #include "PipelineState/PipelineStateController.h"
 
 #include "DXD/NonCopyableAndMovable.h"
@@ -12,6 +13,7 @@
 
 class VertexBuffer;
 class IndexBuffer;
+class CpuDescriptorAllocation;
 
 /// Class encapsulating DX12 command list
 class CommandList : DXD::NonCopyableAndMovable {
@@ -32,6 +34,10 @@ public:
 
     void setDescriptorHeaps(ID3D12DescriptorHeapPtr samplerDescriptorHeap, ID3D12DescriptorHeapPtr srvUavCbvDescriptorHeap);
     void setDescriptorHeap(ID3D12DescriptorHeapPtr descriptorHeap);
+
+    void setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, D3D12_CPU_DESCRIPTOR_HANDLE firstDescriptor, UINT descriptorCount);
+    void setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, CpuDescriptorAllocation &cpuDescriptorAllocation);
+    void setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, CpuDescriptorAllocation &cpuDescriptorAllocation, UINT descriptorCount);
 
     void IASetVertexBuffers(UINT startSlot, UINT numBuffers, const VertexBuffer *vertexBuffers);
     void IASetVertexBuffer(UINT slot, const VertexBuffer &vertexBuffer);
@@ -69,9 +75,13 @@ public:
     auto getDevice() const { return commandAllocatorManager.getDevice(); }
 
 private:
+    void commitDescriptors();
+
     CommandAllocatorManager &commandAllocatorManager;
     ID3D12CommandAllocatorPtr commandAllocator;
     ID3D12GraphicsCommandListPtr commandList;
+    GpuDescriptorHeapController gpuDescriptorHeapControllerSampler;
+    GpuDescriptorHeapController gpuDescriptorHeapControllerCbvSrvUav;
     uint64_t fenceValue;
     std::set<ID3D12ResourcePtr> usedResources;
 };

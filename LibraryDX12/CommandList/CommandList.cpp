@@ -1,13 +1,18 @@
 #include "CommandList.h"
 
 #include "CommandList/CommandAllocatorManager.h"
+#include "Descriptor/CpuDescriptorAllocation.h"
 #include "Resource/VertexOrIndexBuffer.h"
 #include "Utility/ThrowIfFailed.h"
+
+#include <cassert>
 
 CommandList::CommandList(CommandAllocatorManager &commandAllocatorManager, ID3D12PipelineState *initialPipelineState)
     : commandAllocatorManager(commandAllocatorManager),
       commandAllocator(commandAllocatorManager.retieveCommandAllocator()),
-      commandList(commandAllocatorManager.retrieveCommandList(commandAllocator, initialPipelineState)) {}
+      commandList(commandAllocatorManager.retrieveCommandList(commandAllocator, initialPipelineState)),
+      gpuDescriptorHeapControllerCbvSrvUav(*this, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV),
+      gpuDescriptorHeapControllerSampler(*this, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER) {}
 
 CommandList::~CommandList() {
     commandAllocatorManager.registerAllocatorAndList(commandAllocator, commandList, fenceValue);
@@ -48,7 +53,21 @@ void CommandList::setDescriptorHeaps(ID3D12DescriptorHeapPtr samplerDescriptorHe
 }
 
 void CommandList::setDescriptorHeap(ID3D12DescriptorHeapPtr descriptorHeap) {
-    commandList->SetDescriptorHeaps(1, &descriptorHeap);
+    auto heap = descriptorHeap.Get();
+    commandList->SetDescriptorHeaps(1, &heap);
+}
+
+void CommandList::setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, D3D12_CPU_DESCRIPTOR_HANDLE firstDescriptor, UINT descriptorCount) {
+    gpuDescriptorHeapControllerCbvSrvUav.stage(rootParameterIndexOfTable, offsetInTable, firstDescriptor, descriptorCount);
+}
+
+void CommandList::setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, CpuDescriptorAllocation &cpuDescriptorAllocation) {
+    setCbvSrvUavDescriptorTable(rootParameterIndexOfTable, offsetInTable, cpuDescriptorAllocation.getCpuHandle(), cpuDescriptorAllocation.getHandlesCount());
+}
+
+void CommandList::setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, CpuDescriptorAllocation &cpuDescriptorAllocation, UINT descriptorCount) {
+    assert(descriptorCount <= cpuDescriptorAllocation.getHandlesCount());
+    setCbvSrvUavDescriptorTable(rootParameterIndexOfTable, offsetInTable, cpuDescriptorAllocation.getCpuHandle(), descriptorCount);
 }
 
 void CommandList::IASetVertexBuffers(UINT startSlot, UINT numBuffers, const VertexBuffer *vertexBuffers) {
@@ -119,14 +138,17 @@ void CommandList::OMSetRenderTarget(const D3D12_CPU_DESCRIPTOR_HANDLE &renderTar
 
 void CommandList::drawIndexedInstanced(UINT indexCountPerInstance, UINT instanceCount, UINT startIndexLocation, INT baseVertexLocation, UINT startInstanceLocation) {
     commandList->DrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
+    commitDescriptors();
 }
 
 void CommandList::drawIndexed(UINT indexCount, UINT startIndexLocation, INT baseVertexLocation, UINT startInstanceLocation) {
     commandList->DrawIndexedInstanced(indexCount, 1, startIndexLocation, baseVertexLocation, startInstanceLocation);
+    commitDescriptors();
 }
 
 void CommandList::drawInstanced(UINT vertexCountPerInstance, UINT instanceCount, INT baseVertexLocation, UINT startInstanceLocation) {
     commandList->DrawInstanced(vertexCountPerInstance, instanceCount, baseVertexLocation, startInstanceLocation);
+    commitDescriptors();
 }
 
 void CommandList::close() {
@@ -139,4 +161,9 @@ void CommandList::addUsedResource(const ID3D12ResourcePtr &resource) {
 
 void CommandList::addUsedResources(const ID3D12ResourcePtr *resources, UINT resourcesCount) {
     usedResources.insert(resources, resources + resourcesCount);
+}
+
+void CommandList::commitDescriptors() {
+    //gpuDescriptorHeapControllerCbvSrvUav.commit();
+    // gpuDescriptorHeapControllerSampler.commit();
 }

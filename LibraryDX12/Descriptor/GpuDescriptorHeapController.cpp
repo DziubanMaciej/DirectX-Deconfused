@@ -52,10 +52,6 @@ void GpuDescriptorHeapController::stage(RootParameterIndex indexOfTable, UINT of
     }
 }
 
-void GpuDescriptorHeapController::stage(RootParameterIndex indexOfTable, UINT offsetInTable, const CpuDescriptorAllocation &allocation) {
-    stage(indexOfTable, offsetInTable, allocation.getCpuHandle(), allocation.getHandlesCount());
-}
-
 void GpuDescriptorHeapController::commit() {
     auto device = commandList.getDevice();
 

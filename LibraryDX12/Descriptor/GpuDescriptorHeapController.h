@@ -8,7 +8,6 @@
 
 class CommandList;
 class RootSignature;
-class CpuDescriptorAllocation;
 struct D3D12_CPU_DESCRIPTOR_HANDLE;
 
 /// \brief Manages descriptors in GPU visible descriptor heap
@@ -52,7 +51,6 @@ public:
     /// \param firstDescriptor handle to the first source descriptor to copy
     /// \param descriptorCount how many descriptors, starting with the firstDescriptor, should be copied
     void stage(RootParameterIndex indexOfTable, UINT offsetInTable, D3D12_CPU_DESCRIPTOR_HANDLE firstDescriptor, UINT descriptorCount);
-    void stage(RootParameterIndex indexOfTable, UINT offsetInTable, const CpuDescriptorAllocation &allocation);
 
     /// This is where the actual copy to gpu visible descriptor heap occurs. Copy is made on CPU, which means
     /// it's immediate, no need to wait for it. Also, calls to setGraphicsRootSignature is performed on the
