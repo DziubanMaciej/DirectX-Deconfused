@@ -32,8 +32,7 @@ public:
     void setPipelineState(ID3D12PipelineStatePtr pipelineState);
     void setPipelineStateAndGraphicsRootSignature(PipelineStateController &pipelineStateController, PipelineStateController::Identifier identifier);
 
-    void setDescriptorHeaps(ID3D12DescriptorHeapPtr samplerDescriptorHeap, ID3D12DescriptorHeapPtr srvUavCbvDescriptorHeap);
-    void setDescriptorHeap(ID3D12DescriptorHeapPtr descriptorHeap);
+    void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, ID3D12DescriptorHeapPtr descriptorHeap);
 
     void setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, D3D12_CPU_DESCRIPTOR_HANDLE firstDescriptor, UINT descriptorCount);
     void setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, CpuDescriptorAllocation &cpuDescriptorAllocation);
@@ -77,13 +76,20 @@ public:
 private:
     void commitDescriptors();
 
+    // Base CommandList data
     CommandAllocatorManager &commandAllocatorManager;
     ID3D12CommandAllocatorPtr commandAllocator;
     ID3D12GraphicsCommandListPtr commandList;
+    uint64_t fenceValue;
+
+    // Descriptor controllers
     GpuDescriptorHeapController gpuDescriptorHeapControllerSampler;
     GpuDescriptorHeapController gpuDescriptorHeapControllerCbvSrvUav;
-    uint64_t fenceValue;
-    std::set<ID3D12ResourcePtr> usedResources;
+
+    // Tracked resources
+    ID3D12DescriptorHeapPtr descriptorHeapCbvSrvUav = {};
+    ID3D12DescriptorHeapPtr descriptorHeapSampler = {};
+    std::set<ID3D12ResourcePtr> usedResources = {};
 };
 
 template <typename ConstantType>
