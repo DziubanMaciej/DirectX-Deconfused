@@ -1,4 +1,5 @@
-﻿#include "DXD/Application.h"
+﻿#define _USE_MATH_DEFINES
+#include "DXD/Application.h"
 #include "DXD/CallbackHandler.h"
 #include "DXD/Camera.h"
 #include "DXD/Light.h"
@@ -9,6 +10,7 @@
 #include "DXD/Texture.h"
 #include "DXD/Window.h"
 
+#include <cmath>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -123,7 +125,7 @@ struct Game : DXD::CallbackHandler {
         objects.back()->setMesh(*dxdMesh);
         objects.back()->setPosition(0, 2, -5);
         objects.back()->setScale(20.f, 20.f, 20.f);
-        objects.back()->setRotation({ 0, 1, 0 }, 3.14);
+        objects.back()->setRotation({ 0, 1, 0 }, static_cast<float>(M_PI));
 
         scene = DXD::Scene::create();
         scene->addObject(*objects[0]);
