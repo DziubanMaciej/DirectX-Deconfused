@@ -70,6 +70,7 @@ void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, ID3D12D
         heaps[heapIndex++] = descriptorHeapSampler.Get();
     }
     commandList->SetDescriptorHeaps(heapIndex, heaps);
+    addUsedResource(descriptorHeap);
 }
 
 void CommandList::setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, D3D12_CPU_DESCRIPTOR_HANDLE firstDescriptor, UINT descriptorCount) {
@@ -168,6 +169,10 @@ void CommandList::drawInstanced(UINT vertexCountPerInstance, UINT instanceCount,
 
 void CommandList::close() {
     throwIfFailed(commandList->Close());
+}
+
+void CommandList::addUsedResource(const ID3D12DescriptorHeapPtr &heap) {
+    usedResources.insert(heap);
 }
 
 void CommandList::addUsedResource(const ID3D12ResourcePtr &resource) {
