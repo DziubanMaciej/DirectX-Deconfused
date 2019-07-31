@@ -2,8 +2,8 @@
 
 #include <cassert>
 
-void ResourceUsageTracker::registerUsage(const std::set<ID3D12ResourcePtr> &resources, uint64_t fenceValue) {
-    for (const ID3D12ResourcePtr &resource : resources) {
+void ResourceUsageTracker::registerUsage(const std::set<ID3D12PageablePtr> &resources, uint64_t fenceValue) {
+    for (const ID3D12PageablePtr &resource : resources) {
 #ifdef _DEBUG
         validateResourceFence(resource.Get(), fenceValue);
 #endif
@@ -21,7 +21,7 @@ void ResourceUsageTracker::performDeletion(uint64_t fenceValue) {
     }
 }
 
-void ResourceUsageTracker::validateResourceFence(ID3D12Resource *resource, uint64_t fenceValue) {
+void ResourceUsageTracker::validateResourceFence(ID3D12Pageable *resource, uint64_t fenceValue) {
     auto iterator = this->resourceUsageMap.find(resource);
     assert(iterator == this->resourceUsageMap.end() || iterator->second < fenceValue);
 }

@@ -65,6 +65,7 @@ public:
 
     void close();
 
+    void addUsedResource(const ID3D12DescriptorHeapPtr &heap);
     void addUsedResource(const ID3D12ResourcePtr &resource);
     void addUsedResources(const ID3D12ResourcePtr *resources, UINT resourcesCount);
     void setFenceValue(uint64_t fenceValue) { this->fenceValue = fenceValue; }
@@ -89,7 +90,7 @@ private:
     // Tracked resources
     ID3D12DescriptorHeapPtr descriptorHeapCbvSrvUav = {};
     ID3D12DescriptorHeapPtr descriptorHeapSampler = {};
-    std::set<ID3D12ResourcePtr> usedResources = {};
+    std::set<ID3D12PageablePtr> usedResources = {};
 };
 
 template <typename ConstantType>
