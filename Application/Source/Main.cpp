@@ -106,7 +106,7 @@ struct Game : DXD::CallbackHandler {
 
         objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*smallCubeMesh);
-        objects.back()->setPosition(-6, 2, -8);
+        objects.back()->setPosition(-12, 2, -12);
 
         blueLight = DXD::Light::create();
         blueLight->setColor(0.0f, 0.0f, 1.0f);
@@ -123,7 +123,7 @@ struct Game : DXD::CallbackHandler {
 
         objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*dxdMesh);
-        objects.back()->setPosition(0, 2, -5);
+        objects.back()->setPosition(0, 2, 15);
         objects.back()->setScale(20.f, 20.f, 20.f);
         objects.back()->setRotation({0, 1, 0}, static_cast<float>(M_PI));
 
@@ -151,9 +151,9 @@ struct Game : DXD::CallbackHandler {
 
         camera = DXD::Camera::create();
         camera->setUpDirection(0, 1, 0);
-        camera->setFovAngleYDeg(60);
+        camera->setFovAngleYDeg(70);
         camera->setNearZ(0.1f);
-        camera->setFarZ(100.0f);
+        camera->setFarZ(140.0f);
         scene->setCamera(*camera);
         updateCamera();
 
@@ -266,7 +266,7 @@ private:
     }
     void sceneMoveTick() {
         static float rotation = 0.f;
-        rotation += 0.1f;
+        rotation += 0.02f;
         XMFLOAT3 sunPos = sunLight->getPosition();
         sunPos.x = 7 * sin(-rotation / 4);
         sunPos.z = 7 * cos(-rotation / 4);

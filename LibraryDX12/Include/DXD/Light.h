@@ -19,6 +19,10 @@ public:
     virtual void setColor(XMFLOAT3 rgb) = 0;
     virtual XMFLOAT3 getColor() const = 0;
 
+	virtual void setDirection(FLOAT x, FLOAT y, FLOAT z) = 0;
+    virtual void setDirection(XMFLOAT3 xyz) = 0;
+    virtual XMFLOAT3 getDirection() const = 0;
+
     virtual void setPower(float power) = 0;
     virtual float getPower() const = 0;
 

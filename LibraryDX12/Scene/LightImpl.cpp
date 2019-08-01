@@ -6,9 +6,10 @@ std::unique_ptr<Light> Light::create() {
 }
 } // namespace DXD
 
-LightImpl::LightImpl(){
+LightImpl::LightImpl() {
     position = XMFLOAT3(0, 0, 0);
     color = XMFLOAT3(0, 0, 0);
+    direction = XMFLOAT3(0, -1, 0);
     power = 1;
 }
 
@@ -30,6 +31,18 @@ void LightImpl::setColor(FLOAT r, FLOAT g, FLOAT b) {
 
 void LightImpl::setColor(XMFLOAT3 rgb) {
     this->color = rgb;
+}
+
+XMFLOAT3 LightImpl::getDirection() const {
+    return direction;
+}
+
+void LightImpl::setDirection(FLOAT x, FLOAT y, FLOAT z) {
+    setDirection(XMFLOAT3{x, y, z});
+}
+
+void LightImpl::setDirection(XMFLOAT3 xyz) {
+    this->direction = xyz;
 }
 
 XMFLOAT3 LightImpl::getColor() const {
