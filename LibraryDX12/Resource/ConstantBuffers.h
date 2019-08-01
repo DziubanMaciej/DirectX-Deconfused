@@ -16,4 +16,5 @@ struct SimpleConstantBuffer { //must be 128bit padded
     XMFLOAT3 ambientLight;
     XMFLOAT4 lightPosition[8];
     XMFLOAT4 lightColor[8];
+    XMFLOAT4 lightDirection[8];
 };

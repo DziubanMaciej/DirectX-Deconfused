@@ -4,6 +4,7 @@ cbuffer SimpleConstantBuffer : register(b1) {
     float3 ambientLight;
     float4 lightPosition[8];
     float4 lightColor[8];
+    float4 lightDirection[8];
 };
 
 struct ObjectProperties {
@@ -28,20 +29,24 @@ float4 main(PixelShaderInput IN) : SV_Target {
     for (int i = 0; i < lightsSize; i++) {
         float3 tempLightColor = lightColor[i].xyz;
 
-		//Diffuse
+        //Diffuse
         float tempLightPower = (20 / (distance(IN.WorldPosition.xyz, lightPosition[i].xyz) * distance(IN.WorldPosition.xyz, lightPosition[i].xyz))) * lightColor[i].w;
 
-		//Normal
+        //Normal
         float3 lightPositionNorm = normalize(lightPosition[i].xyz - IN.WorldPosition.xyz);
         float3 normalNorm = normalize(IN.Normal.xyz);
         float normalPower = max(dot(normalNorm, lightPositionNorm), 0);
 
-		//Specular
-		float3 viewDir = normalize(cameraPosition.xyz - IN.WorldPosition.xyz);
+        //Specular
+        float3 viewDir = normalize(cameraPosition.xyz - IN.WorldPosition.xyz);
         float3 reflectDir = reflect(-lightPositionNorm, normalNorm);
-		float specularPower = pow(max(dot(viewDir, reflectDir), 0.0), 32) * op.objectSpecularity;
+        float specularPower = pow(max(dot(viewDir, reflectDir), 0.0), 32) * op.objectSpecularity;
 
-        OUT_Color.xyz = OUT_Color.xyz + (tempLightColor.xyz + op.objectColor.xyz) * (tempLightPower) * (normalPower + specularPower);
+        //Direction
+        float3 lightDirNorm = normalize(lightDirection[i].xyz);
+        float directionPower = max(dot(-lightPositionNorm.xyz, lightDirNorm.xyz), 0.0);
+
+        OUT_Color.xyz = OUT_Color.xyz + (tempLightColor.xyz + op.objectColor.xyz) * tempLightPower * (normalPower + specularPower) * directionPower;
     }
 
     return OUT_Color;

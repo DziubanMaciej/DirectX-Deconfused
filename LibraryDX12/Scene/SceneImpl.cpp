@@ -74,7 +74,6 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     // Transition to RENDER_TARGET
     commandList.transitionBarrierSingle(backBuffer->getResource(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-    // Draw TEXTURE
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT);
 
     CD3DX12_VIEWPORT viewport(0.0f, 0.0f, (float)swapChain.getWidth(), (float)swapChain.getHeight());
@@ -104,6 +103,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     for (LightImpl *light : lights) {
         smplCbv->lightColor[smplCbv->lightsSize] = XMFLOAT4(light->getColor().x, light->getColor().y, light->getColor().z, light->getPower());
         smplCbv->lightPosition[smplCbv->lightsSize] = XMFLOAT4(light->getPosition().x, light->getPosition().y, light->getPosition().z, 0);
+        smplCbv->lightDirection[smplCbv->lightsSize] = XMFLOAT4(light->getDirection().x, light->getDirection().y, light->getDirection().z, 0);
         smplCbv->lightsSize++;
         if (smplCbv->lightsSize >= 8) {
             break;
@@ -116,6 +116,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     commandList.getCommandList()->SetDescriptorHeaps(_countof(ppHeaps), ppHeaps);
     commandList.getCommandList()->SetGraphicsRootDescriptorTable(2, swapChain.getCbvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 
+    // Draw DEFAULT
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = *object->getMesh();
 
@@ -140,11 +141,11 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
         }
     }
 
-    //Draw NORMAL
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_NORMAL);
 
     commandList.getCommandList()->SetGraphicsRootDescriptorTable(2, swapChain.getCbvDescriptorHeap()->GetGPUDescriptorHandleForHeapStart());
 
+    //Draw NORMAL
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = *object->getMesh();
         if (mesh.getMeshType() == MeshImpl::MeshType::TRIANGLE_STRIP_WITH_NORMALS) {

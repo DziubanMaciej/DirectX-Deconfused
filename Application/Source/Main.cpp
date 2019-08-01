@@ -102,19 +102,15 @@ struct Game : DXD::CallbackHandler {
 
         redLight = DXD::Light::create();
         redLight->setColor(1.0f, 0.0f, 0.0f);
-        redLight->setPosition(-12, 2, -12);
+        redLight->setPosition(0, 1, -8);
 
         objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*smallCubeMesh);
-        objects.back()->setPosition(-12, 2, -12);
+        objects.back()->setPosition(0, 1, -8);
 
         blueLight = DXD::Light::create();
         blueLight->setColor(0.0f, 0.0f, 1.0f);
-        blueLight->setPosition(12, 2, -12);
-
-        objects.push_back(DXD::Object::create());
-        objects.back()->setMesh(*smallCubeMesh);
-        objects.back()->setPosition(12, 2, -12);
+        blueLight->setPosition(0, 1, -8);
 
         objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*actorMesh);
@@ -141,7 +137,6 @@ struct Game : DXD::CallbackHandler {
         scene->addObject(*objects[10]);
         scene->addObject(*objects[11]);
         scene->addObject(*objects[12]);
-        scene->addObject(*objects[13]);
         scene->setBackgroundColor(0.3f, 0.8f, 1.0f);
         scene->setAmbientLight(0.1f, 0.1f, 0.1f);
         scene->addLight(*sunLight);
@@ -272,7 +267,10 @@ private:
         sunPos.z = 7 * cos(-rotation / 4);
         sunLight->setPosition(sunPos);
 
-        redLight->setPower((sin(rotation) + 1) / 2);
+        moonLight->setPower((sin(rotation) + 1) / 2);
+
+        blueLight->setDirection(sin(rotation), 0, cos(rotation));
+        redLight->setDirection(-sin(rotation), 0, -cos(rotation));
 
         objects[8]->setRotation(XMFLOAT3(0, 1, 0), rotation - 45); // +180 for aventador
         objects[8]->setPosition(7 * sinf(rotation) * 0.6f, objects[8]->getPosition().y, 7 * cosf(rotation) * 0.6f);
@@ -286,7 +284,7 @@ private:
     unsigned int lastMouseX, lastMouseY;
     bool lookingAroundEnabled = false;
     bool fullscreen = false;
-    bool toggleSceneMovement = false;
+    bool toggleSceneMovement = true;
     float angleX = 0.f;
     float angleY = 0.f;
     XMFLOAT3 cameraPosition{0, 4, -20};
