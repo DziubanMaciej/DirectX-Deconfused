@@ -72,7 +72,6 @@ void GpuDescriptorHeapController::commit() {
         heapDescription.Type = heapType;
         heapDescription.NumDescriptors = 1024; // TODO
         heapDescription.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-        heapDescription.NodeMask = 1;
         throwIfFailed(device->CreateDescriptorHeap(&heapDescription, IID_PPV_ARGS(&this->descriptorHeap)));
         commandList.setDescriptorHeap(this->heapType, this->descriptorHeap);
         currentCpuHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE{descriptorHeap->GetCPUDescriptorHandleForHeapStart()};

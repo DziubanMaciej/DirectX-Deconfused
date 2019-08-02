@@ -4,8 +4,8 @@
 
 #include "DXD/ExternalHeadersWrappers/d3dx12.h"
 #include <map>
-#include <vector>
 #include <set>
+#include <vector>
 
 class CommandList;
 class RootSignature;
