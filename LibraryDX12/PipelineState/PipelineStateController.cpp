@@ -59,7 +59,7 @@ void PipelineStateController::compile(Identifier identifier) {
         compilePipelineStateNormal(rootSignature, pipelineState);
         break;
     default:
-        unreachableCode();
+        UNREACHABLE_CODE();
     }
 }
 

@@ -57,9 +57,9 @@ UINT RootSignature::getNextShaderRegisterAndIncrement(D3D12_DESCRIPTOR_RANGE_TYP
     case D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER:
         result = nextShaderRegisterS;
         nextShaderRegisterS += numDescriptors;
-        unreachableCode(); // TODO Sampler descriptors cannot be in one table with SRVs,UAVs and CBVs. resolveDescriptorRanges() divide them
+        UNREACHABLE_CODE(); // TODO Sampler descriptors cannot be in one table with SRVs,UAVs and CBVs. resolveDescriptorRanges() divide them
     default:
-        unreachableCode();
+        UNREACHABLE_CODE();
     }
     return result;
 }

@@ -117,6 +117,6 @@ bool GpuDescriptorHeapController::isRootParameterCompatibleTable(const D3D12_ROO
     case D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER:
         return this->heapType == D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     default:
-        unreachableCode();
+        UNREACHABLE_CODE();
     }
 }

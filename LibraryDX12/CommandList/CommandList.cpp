@@ -58,7 +58,7 @@ void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, ID3D12D
         descriptorHeapSampler = descriptorHeap;
         break;
     default:
-        unreachableCode();
+        UNREACHABLE_CODE();
     }
 
     ID3D12DescriptorHeap *heaps[2];

@@ -20,7 +20,4 @@ inline void throwIfFailed(HRESULT hr, ID3DBlob *blob) {
     throwIfFailed(hr);
 }
 
-inline void unreachableCode(const char *message = "Unreachable code") {
-    DXD::log(message);
-    abort();
-}
+#define UNREACHABLE_CODE() abort();
