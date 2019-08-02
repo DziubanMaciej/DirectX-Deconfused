@@ -6,10 +6,14 @@
 #include "DXD/ExternalHeadersWrappers/windows.h"
 #include <exception>
 
+#define DXD_ABORT() throw std::exception();
+
+#define UNREACHABLE_CODE() DXD_ABORT();
+
 inline void throwIfFailed(HRESULT hr) {
     if (FAILED(hr)) {
         const auto lastError = GetLastError();
-        abort();
+        DXD_ABORT();
     }
 }
 
@@ -19,5 +23,3 @@ inline void throwIfFailed(HRESULT hr, ID3DBlob *blob) {
     }
     throwIfFailed(hr);
 }
-
-#define UNREACHABLE_CODE() abort();
