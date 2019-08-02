@@ -7,17 +7,15 @@
 #include "DXD/Mesh.h"
 
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
+#include <utility>
 #include <vector>
 
 class MeshImpl : public DXD::Mesh {
 public:
-    enum class MeshType {
-        NONE,
-        TRIANGLE_STRIP,
-        TRIANGLE_STRIP_WITH_COORDS,
-        TRIANGLE_STRIP_WITH_NORMALS,
-        TRIANGLE_STRIP_WITH_COORDS_NORMALS
-    };
+    using MeshType = unsigned int;
+    constexpr static MeshType TRIANGLE_STRIP = 0x01;
+    constexpr static MeshType TEXTURE_COORDS = 0x02;
+    constexpr static MeshType NORMALS = 0x04;
 
 protected:
     friend class DXD::Mesh;
@@ -59,5 +57,6 @@ protected:
     std::unique_ptr<IndexBuffer> indexBuffer;
 
 private:
+    static std::pair<MeshType, UINT> computeMeshTypeAndVertexSize(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates);
     void uploadToGPU();
 };

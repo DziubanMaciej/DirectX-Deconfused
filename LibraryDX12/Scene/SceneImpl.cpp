@@ -115,7 +115,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = *object->getMesh();
 
-        if (mesh.getMeshType() == MeshImpl::MeshType::TRIANGLE_STRIP) {
+        if (mesh.getMeshType() == (MeshImpl::TRIANGLE_STRIP | MeshImpl::TRIANGLE_STRIP)) {
             commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
             commandList.IASetIndexBuffer(*mesh.getIndexBuffer());
             commandList.IASetPrimitiveTopologyTriangleList();
@@ -141,7 +141,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     commandList.setCbvSrvUavDescriptorTable(2, 0, swapChain.getCbvDescriptor());
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = *object->getMesh();
-        if (mesh.getMeshType() == MeshImpl::MeshType::TRIANGLE_STRIP_WITH_NORMALS) {
+        if (mesh.getMeshType() == (MeshImpl::NORMALS | MeshImpl::TRIANGLE_STRIP)) {
             commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
             commandList.IASetPrimitiveTopologyTriangleList();
 

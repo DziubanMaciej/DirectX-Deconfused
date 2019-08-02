@@ -122,35 +122,19 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
             outputVertices.push_back(normals[3 * (normalIdx - 1) + 2]);
         }
         if (textureCoordinates.size() > 0) {
+            // TODO textures not supported yet
             //outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1)]);
             //outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 1]);
             //outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 2]);
         }
     }
 
-    if (normals.size() > 0) {
-        if (textureCoordinates.size() > 0) {
-            return std::unique_ptr<Mesh>{new MeshImpl(application, MeshImpl::MeshType::TRIANGLE_STRIP_WITH_NORMALS, //Texture coords not supported yet
-                                                      std::move(outputVertices), 6 * sizeof(FLOAT), std::move(indices),
-                                                      std::move(normals), std::move(textureCoordinates))};
-        } else {
-            return std::unique_ptr<Mesh>{new MeshImpl(application, MeshImpl::MeshType::TRIANGLE_STRIP_WITH_NORMALS,
-                                                      std::move(outputVertices), 6 * sizeof(FLOAT), std::move(indices),
-                                                      std::move(normals), std::move(textureCoordinates))};
-        }
-    } else {
-        if (textureCoordinates.size() > 0) {
-            return std::unique_ptr<Mesh>{new MeshImpl(application, MeshImpl::MeshType::TRIANGLE_STRIP_WITH_COORDS,
-                                                      std::move(outputVertices), 6 * sizeof(FLOAT), std::move(indices),
-                                                      std::move(normals), std::move(textureCoordinates))};
-        } else {
-            return std::unique_ptr<Mesh>{new MeshImpl(application, MeshImpl::MeshType::TRIANGLE_STRIP,
-                                                      std::move(vertices), 3 * sizeof(FLOAT), std::move(indices),
-                                                      std::move(normals), std::move(textureCoordinates))};
-        }
-    }
-
-    return nullptr;
+    const auto meshTypeAndVertexSize = MeshImpl::computeMeshTypeAndVertexSize(normals, textureCoordinates);
+    const auto meshType = meshTypeAndVertexSize.first;
+    const auto vertexSize = meshTypeAndVertexSize.second;
+    return std::unique_ptr<Mesh>{new MeshImpl(application, meshType,
+                                              std::move(outputVertices), vertexSize, std::move(indices),
+                                              std::move(normals), std::move(textureCoordinates))};
 }
 } // namespace DXD
 
@@ -165,6 +149,23 @@ MeshImpl::MeshImpl(DXD::Application &application, MeshType meshType,
       normals(std::move(normals)),
       textureCoordinates(std::move(textureCoordinates)) {
     uploadToGPU();
+}
+
+std::pair<MeshImpl::MeshType, UINT> MeshImpl::computeMeshTypeAndVertexSize(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates) {
+    MeshType meshType = TRIANGLE_STRIP;
+    UINT vertexSize = 3;
+    if (normals.size() > 0) {
+        meshType |= NORMALS;
+        vertexSize += 3;
+    }
+    if (textureCoordinates.size() > 0) {
+        // TODO textures not supported yet
+        // meshType |= TEXTURE_COORDS;
+        // vertexSize += 3;
+    }
+
+    vertexSize *= sizeof(FLOAT);
+    return {meshType, vertexSize};
 }
 
 void MeshImpl::uploadToGPU() {
