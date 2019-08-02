@@ -31,7 +31,7 @@ std::unique_ptr<CpuDescriptorAllocation> CpuDescriptorHeap::allocate(UINT descri
                 it->second -= descriptorsCount;
             }
 
-            const auto offsetInHeap = freeRangeOffset + freeRangeSize;
+            const auto offsetInHeap = freeRangeOffset + freeRangeSize - descriptorsCount;
             return std::make_unique<CpuDescriptorAllocation>(*this, offsetInHeap, descriptorsCount, this->heapStartHandle, this->descriptorIncrementSize);
         }
     }

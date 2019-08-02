@@ -38,12 +38,11 @@ public:
 
     SimpleConstantBuffer *getSimpleConstantBufferData();
     UINT8 *getSimpleCbvDataBegin() const { return simpleCbvDataBegin; }
-    ID3D12DescriptorHeapPtr getCbvDescriptorHeap() { return cbvDescriptorHeap; }
+    const CpuDescriptorAllocation &getCbvDescriptor() const { return cbvDescriptor; }
 
 private:
     static bool checkTearingSupport(IDXGIFactoryPtr &factory);
     static IDXGISwapChainPtr createSwapChain(HWND hwnd, IDXGIFactoryPtr &factory, CommandQueue &commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount);
-    static ID3D12DescriptorHeapPtr createCbvDescriptorHeap(ID3D12DevicePtr device);
 
     void resetRenderTargetViews();
     void updateRenderTargetViews();
@@ -60,7 +59,7 @@ private:
     DescriptorManager &descriptorManager;
     CpuDescriptorAllocation rtvDescriptors;
     CpuDescriptorAllocation dsvDescriptor;
-    ID3D12DescriptorHeapPtr cbvDescriptorHeap;
+    CpuDescriptorAllocation cbvDescriptor;
 
     // Buffers
     std::vector<BackBufferEntry> backBufferEntries;

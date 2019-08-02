@@ -1,5 +1,7 @@
 #pragma once
 
+#include "CommandList/CommandAllocatorManager.h"
+#include "Descriptor/GpuDescriptorHeapController.h"
 #include "PipelineState/PipelineStateController.h"
 
 #include "DXD/NonCopyableAndMovable.h"
@@ -11,7 +13,7 @@
 
 class VertexBuffer;
 class IndexBuffer;
-class CommandAllocatorManager;
+class CpuDescriptorAllocation;
 
 /// Class encapsulating DX12 command list
 class CommandList : DXD::NonCopyableAndMovable {
@@ -29,6 +31,12 @@ public:
     void setGraphicsRootSignature(ID3D12RootSignaturePtr rootSignature);
     void setPipelineState(ID3D12PipelineStatePtr pipelineState);
     void setPipelineStateAndGraphicsRootSignature(PipelineStateController &pipelineStateController, PipelineStateController::Identifier identifier);
+
+    void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, ID3D12DescriptorHeapPtr descriptorHeap);
+
+    void setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, D3D12_CPU_DESCRIPTOR_HANDLE firstDescriptor, UINT descriptorCount);
+    void setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const CpuDescriptorAllocation &cpuDescriptorAllocation);
+    void setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const CpuDescriptorAllocation &cpuDescriptorAllocation, UINT descriptorCount);
 
     void IASetVertexBuffers(UINT startSlot, UINT numBuffers, const VertexBuffer *vertexBuffers);
     void IASetVertexBuffer(UINT slot, const VertexBuffer &vertexBuffer);
@@ -57,19 +65,32 @@ public:
 
     void close();
 
+    void addUsedResource(const ID3D12DescriptorHeapPtr &heap);
     void addUsedResource(const ID3D12ResourcePtr &resource);
     void addUsedResources(const ID3D12ResourcePtr *resources, UINT resourcesCount);
     void setFenceValue(uint64_t fenceValue) { this->fenceValue = fenceValue; }
 
     auto getCommandList() { return commandList; }
     auto &getUsedResources() { return usedResources; }
+    auto getDevice() const { return commandAllocatorManager.getDevice(); }
 
 private:
+    void commitDescriptors();
+
+    // Base CommandList data
     CommandAllocatorManager &commandAllocatorManager;
     ID3D12CommandAllocatorPtr commandAllocator;
     ID3D12GraphicsCommandListPtr commandList;
     uint64_t fenceValue;
-    std::set<ID3D12ResourcePtr> usedResources;
+
+    // Descriptor controllers
+    GpuDescriptorHeapController gpuDescriptorHeapControllerSampler;
+    GpuDescriptorHeapController gpuDescriptorHeapControllerCbvSrvUav;
+
+    // Tracked resources
+    ID3D12DescriptorHeapPtr descriptorHeapCbvSrvUav = {};
+    ID3D12DescriptorHeapPtr descriptorHeapSampler = {};
+    std::set<ID3D12PageablePtr> usedResources = {};
 };
 
 template <typename ConstantType>

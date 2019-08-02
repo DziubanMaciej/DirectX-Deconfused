@@ -1,13 +1,18 @@
 #include "CommandList.h"
 
 #include "CommandList/CommandAllocatorManager.h"
+#include "Descriptor/CpuDescriptorAllocation.h"
 #include "Resource/VertexOrIndexBuffer.h"
 #include "Utility/ThrowIfFailed.h"
+
+#include <cassert>
 
 CommandList::CommandList(CommandAllocatorManager &commandAllocatorManager, ID3D12PipelineState *initialPipelineState)
     : commandAllocatorManager(commandAllocatorManager),
       commandAllocator(commandAllocatorManager.retieveCommandAllocator()),
-      commandList(commandAllocatorManager.retrieveCommandList(commandAllocator, initialPipelineState)) {}
+      commandList(commandAllocatorManager.retrieveCommandList(commandAllocator, initialPipelineState)),
+      gpuDescriptorHeapControllerCbvSrvUav(*this, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV),
+      gpuDescriptorHeapControllerSampler(*this, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER) {}
 
 CommandList::~CommandList() {
     commandAllocatorManager.registerAllocatorAndList(commandAllocator, commandList, fenceValue);
@@ -37,7 +42,48 @@ void CommandList::setGraphicsRootSignature(ID3D12RootSignaturePtr rootSignature)
 
 void CommandList::setPipelineStateAndGraphicsRootSignature(PipelineStateController &pipelineStateController, PipelineStateController::Identifier identifier) {
     setPipelineState(pipelineStateController.getPipelineState(identifier));
-    setGraphicsRootSignature(pipelineStateController.getRootSignature(identifier).getRootSignature());
+
+    auto rootSignature = pipelineStateController.getRootSignature(identifier);
+    setGraphicsRootSignature(rootSignature.getRootSignature());
+    gpuDescriptorHeapControllerCbvSrvUav.setRootSignature(rootSignature);
+    gpuDescriptorHeapControllerSampler.setRootSignature(rootSignature);
+}
+
+void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, ID3D12DescriptorHeapPtr descriptorHeap) {
+    switch (heapType) {
+    case D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV:
+        descriptorHeapCbvSrvUav = descriptorHeap;
+        break;
+    case D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER:
+        descriptorHeapSampler = descriptorHeap;
+        break;
+    default:
+        unreachableCode();
+    }
+
+    ID3D12DescriptorHeap *heaps[2];
+    auto heapIndex = 0u;
+    if (descriptorHeapCbvSrvUav) {
+        heaps[heapIndex++] = descriptorHeapCbvSrvUav.Get();
+    }
+    if (descriptorHeapSampler) {
+        heaps[heapIndex++] = descriptorHeapSampler.Get();
+    }
+    commandList->SetDescriptorHeaps(heapIndex, heaps);
+    addUsedResource(descriptorHeap);
+}
+
+void CommandList::setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, D3D12_CPU_DESCRIPTOR_HANDLE firstDescriptor, UINT descriptorCount) {
+    gpuDescriptorHeapControllerCbvSrvUav.stage(rootParameterIndexOfTable, offsetInTable, firstDescriptor, descriptorCount);
+}
+
+void CommandList::setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const CpuDescriptorAllocation &cpuDescriptorAllocation) {
+    setCbvSrvUavDescriptorTable(rootParameterIndexOfTable, offsetInTable, cpuDescriptorAllocation.getCpuHandle(), cpuDescriptorAllocation.getHandlesCount());
+}
+
+void CommandList::setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const CpuDescriptorAllocation &cpuDescriptorAllocation, UINT descriptorCount) {
+    assert(descriptorCount <= cpuDescriptorAllocation.getHandlesCount());
+    setCbvSrvUavDescriptorTable(rootParameterIndexOfTable, offsetInTable, cpuDescriptorAllocation.getCpuHandle(), descriptorCount);
 }
 
 void CommandList::IASetVertexBuffers(UINT startSlot, UINT numBuffers, const VertexBuffer *vertexBuffers) {
@@ -107,19 +153,26 @@ void CommandList::OMSetRenderTarget(const D3D12_CPU_DESCRIPTOR_HANDLE &renderTar
 }
 
 void CommandList::drawIndexedInstanced(UINT indexCountPerInstance, UINT instanceCount, UINT startIndexLocation, INT baseVertexLocation, UINT startInstanceLocation) {
+    commitDescriptors();
     commandList->DrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
 }
 
 void CommandList::drawIndexed(UINT indexCount, UINT startIndexLocation, INT baseVertexLocation, UINT startInstanceLocation) {
+    commitDescriptors();
     commandList->DrawIndexedInstanced(indexCount, 1, startIndexLocation, baseVertexLocation, startInstanceLocation);
 }
 
 void CommandList::drawInstanced(UINT vertexCountPerInstance, UINT instanceCount, INT baseVertexLocation, UINT startInstanceLocation) {
+    commitDescriptors();
     commandList->DrawInstanced(vertexCountPerInstance, instanceCount, baseVertexLocation, startInstanceLocation);
 }
 
 void CommandList::close() {
     throwIfFailed(commandList->Close());
+}
+
+void CommandList::addUsedResource(const ID3D12DescriptorHeapPtr &heap) {
+    usedResources.insert(heap);
 }
 
 void CommandList::addUsedResource(const ID3D12ResourcePtr &resource) {
@@ -128,4 +181,9 @@ void CommandList::addUsedResource(const ID3D12ResourcePtr &resource) {
 
 void CommandList::addUsedResources(const ID3D12ResourcePtr *resources, UINT resourcesCount) {
     usedResources.insert(resources, resources + resourcesCount);
+}
+
+void CommandList::commitDescriptors() {
+    gpuDescriptorHeapControllerCbvSrvUav.commit();
+    gpuDescriptorHeapControllerSampler.commit();
 }

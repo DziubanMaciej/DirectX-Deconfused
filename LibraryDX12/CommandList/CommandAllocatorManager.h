@@ -52,8 +52,8 @@ public:
     /// \param fenceValue Fence Valueindicating completion of commands in the commandList
     void registerAllocatorAndList(ID3D12CommandAllocatorPtr commandAllocator, ID3D12GraphicsCommandListPtr commandList, uint64_t fenceValue);
 
-    auto getDevice() { return device; }
-    auto getType() { return type; }
+    auto getDevice() const { return device; }
+    auto getType() const { return type; }
 
 protected:
     ID3D12CommandAllocatorPtr createCommandAllocator();
