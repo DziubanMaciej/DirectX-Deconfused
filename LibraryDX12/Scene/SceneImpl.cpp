@@ -74,8 +74,6 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     // Transition to RENDER_TARGET
     commandList.transitionBarrierSingle(backBuffer->getResource(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-    commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT);
-
     CD3DX12_VIEWPORT viewport(0.0f, 0.0f, (float)swapChain.getWidth(), (float)swapChain.getHeight());
     CD3DX12_RECT scissorRect(0, 0, LONG_MAX, LONG_MAX);
     commandList.RSSetScissorRect(scissorRect);
@@ -109,11 +107,11 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
             break;
         }
     }
-
     memcpy(swapChain.getSimpleCbvDataBegin(), swapChain.getSimpleConstantBufferData(), sizeof(*swapChain.getSimpleConstantBufferData()));
-    commandList.setCbvSrvUavDescriptorTable(2, 0, swapChain.getCbvDescriptor());
 
     // Draw DEFAULT
+    commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT);
+    commandList.setCbvSrvUavDescriptorTable(2, 0, swapChain.getCbvDescriptor());
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = *object->getMesh();
 
@@ -138,10 +136,9 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
         }
     }
 
+    //Draw NORMAL
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_NORMAL);
     commandList.setCbvSrvUavDescriptorTable(2, 0, swapChain.getCbvDescriptor());
-
-    //Draw NORMAL
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = *object->getMesh();
         if (mesh.getMeshType() == MeshImpl::MeshType::TRIANGLE_STRIP_WITH_NORMALS) {
