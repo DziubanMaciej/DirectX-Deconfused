@@ -21,7 +21,6 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
     std::vector<std::string> faces;        //temp
     std::vector<FLOAT> normals;            //temp
     std::vector<FLOAT> textureCoordinates; //temp
-    std::vector<FLOAT> outputVertices;
 
     std::string lineType;
     FLOAT x, y, z;
@@ -86,6 +85,12 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
         }
     }
 
+    // No need to rearrange vertices if there are no additional elements in them
+    const bool usesIndexBuffer = normals.size() == 0 && textureCoordinates.size() == 0;
+    std::vector<FLOAT> outputVertices;
+    if (usesIndexBuffer) {
+        outputVertices = std::move(vertices);
+    }
     for (std::string face : faces) {
         UINT vertexIdx;
         UINT normalIdx;
@@ -112,20 +117,25 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
             }
             f.erase(0, pos + 1);
         }
-        indices.push_back(vertexIdx - 1);
-        outputVertices.push_back(vertices[3 * (vertexIdx - 1)]);
-        outputVertices.push_back(vertices[3 * (vertexIdx - 1) + 1]);
-        outputVertices.push_back(vertices[3 * (vertexIdx - 1) + 2]);
-        if (normals.size() > 0) {
-            outputVertices.push_back(normals[3 * (normalIdx - 1)]);
-            outputVertices.push_back(normals[3 * (normalIdx - 1) + 1]);
-            outputVertices.push_back(normals[3 * (normalIdx - 1) + 2]);
-        }
-        if (textureCoordinates.size() > 0) {
-            // TODO textures not supported yet
-            //outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1)]);
-            //outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 1]);
-            //outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 2]);
+        if (usesIndexBuffer) {
+            // Vertices go unmodified to the vertex buffer, we use an index buffer to define polygons
+            indices.push_back(vertexIdx - 1);
+        } else {
+            // We have to embed all vertex attributes into one array
+            outputVertices.push_back(vertices[3 * (vertexIdx - 1)]);
+            outputVertices.push_back(vertices[3 * (vertexIdx - 1) + 1]);
+            outputVertices.push_back(vertices[3 * (vertexIdx - 1) + 2]);
+            if (normals.size() > 0) {
+                outputVertices.push_back(normals[3 * (normalIdx - 1)]);
+                outputVertices.push_back(normals[3 * (normalIdx - 1) + 1]);
+                outputVertices.push_back(normals[3 * (normalIdx - 1) + 2]);
+            }
+            if (textureCoordinates.size() > 0) {
+                // TODO textures not supported yet
+                //outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1)]);
+                //outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 1]);
+                //outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 2]);
+            }
         }
     }
 
@@ -178,7 +188,9 @@ void MeshImpl::uploadToGPU() {
     const UINT verticesCount = static_cast<UINT>(vertices.size() / (vertexSize / sizeof(FLOAT)));
     //const UINT vertexSize = 3 * sizeof(FLOAT);
     this->vertexBuffer = std::make_unique<VertexBuffer>(device, commandList, vertices.data(), verticesCount, vertexSize);
-    this->indexBuffer = std::make_unique<IndexBuffer>(device, commandList, indices.data(), static_cast<UINT>(indices.size()));
+    if (indices.size() > 0) {
+        this->indexBuffer = std::make_unique<IndexBuffer>(device, commandList, indices.data(), static_cast<UINT>(indices.size()));
+    }
     commandList.close();
 
     // Execute and register obtained allocator and lists to the manager
