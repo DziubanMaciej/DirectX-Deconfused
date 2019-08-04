@@ -1,4 +1,6 @@
 ﻿#define _USE_MATH_DEFINES
+#include "FpsCounter.h"
+
 #include "DXD/Application.h"
 #include "DXD/CallbackHandler.h"
 #include "DXD/Camera.h"
@@ -243,7 +245,11 @@ struct Game : DXD::CallbackHandler {
     }
 
     void onUpdate(unsigned int deltaTimeMicroseconds) override {
-        DXD::log("Frame time = %d us\n", deltaTimeMicroseconds);
+        fpsCounter.push(deltaTimeMicroseconds);
+        if (fpsCounter.getFrameIndex() % 512) {
+            DXD::log("Frame time=%d us, FPS=%d\n", deltaTimeMicroseconds, fpsCounter.getFps());
+        }
+
         if (!toggleSceneMovement)
             return;
         sceneMoveTick();
@@ -290,6 +296,7 @@ private:
     float angleY = 0.f;
     XMFLOAT3 cameraPosition{0, 4, -20};
     XMFLOAT3 focusDirection{0, -0.2f, 1};
+    FpsCounter<180> fpsCounter;
 
     std::unique_ptr<DXD::Application> application;
     std::unique_ptr<DXD::Window> window;
