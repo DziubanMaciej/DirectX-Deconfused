@@ -60,6 +60,6 @@ void Resource::recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &comm
     UpdateSubresources<1>(commandList.getCommandList().Get(), this->resource.Get(), intermediateResource.getResource().Get(), 0, 0, 1, &subresourceData);
 
     // Transition destination resource and make intermediateResource tracked so it's not deleted while being processed on the GPU
-	transitionBarrierSingle(commandList, resourceStateToTransition);
+    transitionBarrierSingle(commandList, resourceStateToTransition);
     commandList.addUsedResource(intermediateResource.getResource());
 }
