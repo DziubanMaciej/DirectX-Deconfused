@@ -72,7 +72,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     commandQueue.performResourcesDeletion();
 
     // Transition to RENDER_TARGET
-    commandList.transitionBarrierSingle(backBuffer->getResource(), D3D12_RESOURCE_STATE_PRESENT, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    backBuffer->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     CD3DX12_VIEWPORT viewport(0.0f, 0.0f, (float)swapChain.getWidth(), (float)swapChain.getHeight());
     CD3DX12_RECT scissorRect(0, 0, LONG_MAX, LONG_MAX);
@@ -162,7 +162,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     }
 
     // Transition to PRESENT
-    commandList.transitionBarrierSingle(backBuffer->getResource(), D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT);
+    backBuffer->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PRESENT);
 
     // Close command list
     commandList.close();
