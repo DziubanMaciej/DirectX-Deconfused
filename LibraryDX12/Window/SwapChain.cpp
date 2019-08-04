@@ -87,7 +87,7 @@ void SwapChain::present(uint64_t fenceValue) {
     // Present
     //UINT syncInterval = g_VSync ? 1 : 0;
     //UINT presentFlags = g_TearingSupported && !g_VSync ? DXGI_PRESENT_ALLOW_TEARING : 0;
-    throwIfFailed(swapChain->Present(1u, 0)); // TODO
+    throwIfFailed(swapChain->Present(0u, 0)); // TODO
 
     // Move to next back buffer
     currentBackBufferIndex = swapChain->GetCurrentBackBufferIndex();
