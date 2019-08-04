@@ -45,7 +45,6 @@ void Resource::uploadToGPU(ApplicationImpl &application, const void *data, D3D12
 }
 
 void Resource::recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data, D3D12_RESOURCE_STATES resourceStateToTransition) {
-    // TODO make assertion that this->resource is in D3D12_RESOURCE_STATE_COPY_DEST state
     assert(state == D3D12_RESOURCE_STATE_COPY_DEST);
 
     // Create buffer on upload heap
