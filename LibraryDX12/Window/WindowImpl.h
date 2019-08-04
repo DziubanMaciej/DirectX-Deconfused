@@ -5,6 +5,7 @@
 #include "DXD/Window.h"
 
 #include "DXD/ExternalHeadersWrappers/windows.h"
+#include <chrono>
 
 class ApplicationImpl;
 class SceneImpl;
@@ -60,13 +61,16 @@ protected:
         LONG savedStyle = 0;
     };
 
+    using Clock = std::chrono::high_resolution_clock;
+
     ApplicationImpl &application;
     const std::wstring windowClassName;
     const HINSTANCE hInstance;
     const HWND windowHandle;
     SwapChain swapChain;
-    SceneImpl *scene;
-    FullscreenData fullscreenData; // Used to restore position and size after exiting fullscreen mode
+    Clock::time_point lastFrameTime;
+    SceneImpl *scene = nullptr;
+    FullscreenData fullscreenData = {}; // Used to restore position and size after exiting fullscreen mode
 
     static constexpr uint32_t swapChainBufferCount = 3u; // TODO make this configurable from api?
 };

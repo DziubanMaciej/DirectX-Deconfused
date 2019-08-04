@@ -242,7 +242,8 @@ struct Game : DXD::CallbackHandler {
         }
     }
 
-    void onUpdate() override {
+    void onUpdate(unsigned int deltaTimeMicroseconds) override {
+        DXD::log("Frame time = %d us\n", deltaTimeMicroseconds);
         if (!toggleSceneMovement)
             return;
         sceneMoveTick();
