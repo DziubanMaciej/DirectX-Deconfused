@@ -239,7 +239,7 @@ struct Game : DXD::CallbackHandler {
         case VK_SPACE:
             if (toggleSceneMovement)
                 break;
-            sceneMoveTick();
+            sceneMoveTick(10000);
             return;
         }
     }
@@ -252,7 +252,7 @@ struct Game : DXD::CallbackHandler {
 
         if (!toggleSceneMovement)
             return;
-        sceneMoveTick();
+        sceneMoveTick(deltaTimeMicroseconds);
     }
 
 private:
@@ -266,9 +266,9 @@ private:
         focusPoint.z += focusDirection.z;
         camera->setFocusPoint(focusPoint);
     }
-    void sceneMoveTick() {
+    void sceneMoveTick(unsigned int deltaTimeMicroseconds) {
         static float rotation = 0.f;
-        rotation += 0.02f;
+        rotation += 0.000001f * deltaTimeMicroseconds;
         XMFLOAT3 sunPos = sunLight->getPosition();
         sunPos.x = 7 * sin(-rotation / 4);
         sunPos.z = 7 * cos(-rotation / 4);
