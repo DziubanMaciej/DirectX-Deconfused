@@ -10,7 +10,7 @@ CpuDescriptorAllocation DescriptorManager::allocate(D3D12_DESCRIPTOR_HEAP_TYPE t
     std::unique_ptr<CpuDescriptorAllocation> allocation = nullptr;
 
     // Try allocating in existing heaps
-    for (auto heap : heapsForGivenType) {
+    for (auto &heap : heapsForGivenType) {
         allocation = heap.allocate(descriptorsCount);
         if (allocation != nullptr) {
             break;
