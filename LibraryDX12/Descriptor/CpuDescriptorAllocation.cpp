@@ -9,7 +9,7 @@ CpuDescriptorAllocation::CpuDescriptorAllocation(CpuDescriptorHeap &heap, CpuDes
     : heap(&heap),
       offsetInHeap(offsetInHeap),
       handlesCount(handlesCount),
-      cpuHandle(CD3DX12_CPU_DESCRIPTOR_HANDLE{heapBaseHandle, static_cast<INT>(handlesCount), descriptorIncrementSize}),
+      cpuHandle(CD3DX12_CPU_DESCRIPTOR_HANDLE{heapBaseHandle, static_cast<INT>(offsetInHeap), descriptorIncrementSize}),
       descriptorIncrementSize(descriptorIncrementSize) {
 }
 
