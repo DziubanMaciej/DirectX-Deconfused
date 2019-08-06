@@ -1,5 +1,6 @@
 #include "PipelineStateController.h"
 
+#include "PipelineState/PipelineState.h"
 #include "PipelineState/RootSignature.h"
 #include "Resource/ConstantBuffers.h"
 #include "Utility/ThrowIfFailed.h"
@@ -94,17 +95,11 @@ void PipelineStateController::compilePipelineStateDefault(RootSignature &rootSig
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
     };
 
-    // Shaders
-    ID3DBlobPtr vertexShaderBlob = loadAndCompileShader(L"vertex.hlsl", vertexShaderTarget);
-    ID3DBlobPtr pixelShaderBlob = loadAndCompileShader(L"pixel.hlsl", pixelShaderTarget);
-
-    // Compilation
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = getBaseGraphicsPipelineSateDesc();
-    desc.pRootSignature = rootSignature.getRootSignature().Get();
-    desc.VS = D3D12_SHADER_BYTECODE{vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize()};
-    desc.PS = D3D12_SHADER_BYTECODE{pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize()};
-    desc.InputLayout = D3D12_INPUT_LAYOUT_DESC{inputLayout, _countof(inputLayout)};
-    throwIfFailed(device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipelineState)));
+    // Pipeline state object
+    PipelineState{inputLayout, rootSignature}
+        .VS(L"vertex.hlsl")
+        .PS(L"pixel.hlsl")
+        .compile(device, pipelineState);
 }
 
 void PipelineStateController::compilePipelineStateNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
@@ -121,24 +116,16 @@ void PipelineStateController::compilePipelineStateNormal(RootSignature &rootSign
         {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
     };
 
-    // Shaders
-    ID3DBlobPtr vertexShaderBlob = loadAndCompileShader(L"vertex_normal.hlsl", vertexShaderTarget);
-    ID3DBlobPtr pixelShaderBlob = loadAndCompileShader(L"pixel_normal.hlsl", pixelShaderTarget);
-
-    // Compilation
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = getBaseGraphicsPipelineSateDesc();
-    desc.pRootSignature = rootSignature.getRootSignature().Get();
-    desc.VS = D3D12_SHADER_BYTECODE{vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize()};
-    desc.PS = D3D12_SHADER_BYTECODE{pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize()};
-    desc.InputLayout = D3D12_INPUT_LAYOUT_DESC{inputLayout, _countof(inputLayout)};
-    throwIfFailed(device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipelineState)));
+    // Pipeline state object
+    PipelineState{inputLayout, rootSignature}
+        .VS(L"vertex_normal.hlsl")
+        .PS(L"pixel_normal.hlsl")
+        .compile(device, pipelineState);
 }
 
 void PipelineStateController::compilePipelineStateTexture(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
-    //CD3DX12_STATIC_SAMPLER_DESC linearClampSampler(0, D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR, D3D12_TEXTURE_ADDRESS_MODE_CLAMP, D3D12_TEXTURE_ADDRESS_MODE_CLAMP, D3D12_TEXTURE_ADDRESS_MODE_CLAMP);
-
-	D3D12_STATIC_SAMPLER_DESC sampler = {};
+    D3D12_STATIC_SAMPLER_DESC sampler = {};
     sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
     sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
     sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
@@ -147,12 +134,11 @@ void PipelineStateController::compilePipelineStateTexture(RootSignature &rootSig
     sampler.MaxLOD = D3D12_FLOAT32_MAX;
     sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-
     rootSignature
         .append32bitConstant<ModelMvp>(D3D12_SHADER_VISIBILITY_VERTEX)                            // register(b0)
         .appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, D3D12_SHADER_VISIBILITY_PIXEL) // register(b1)
         .append32bitConstant<ObjectProperties>(D3D12_SHADER_VISIBILITY_PIXEL)                     // register(b2)
-        .appendStaticSampler(sampler)                                                  // register(s0)
+        .appendStaticSampler(sampler)                                                             // register(s0)
         //.appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, D3D12_SHADER_VISIBILITY_PIXEL)
         .compile(device);
 
@@ -161,26 +147,28 @@ void PipelineStateController::compilePipelineStateTexture(RootSignature &rootSig
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
     };
 
-    // Shaders
-    ID3DBlobPtr vertexShaderBlob = loadAndCompileShader(L"vertex.hlsl", vertexShaderTarget);
-    ID3DBlobPtr pixelShaderBlob = loadAndCompileShader(L"pixel.hlsl", pixelShaderTarget);
-
-    // Compilation
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = getBaseGraphicsPipelineSateDesc();
-    desc.pRootSignature = rootSignature.getRootSignature().Get();
-    desc.VS = D3D12_SHADER_BYTECODE{vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize()};
-    desc.PS = D3D12_SHADER_BYTECODE{pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize()};
-    desc.InputLayout = D3D12_INPUT_LAYOUT_DESC{inputLayout, _countof(inputLayout)};
-    throwIfFailed(device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipelineState)));
+    // Pipeline state object
+    PipelineState{inputLayout, rootSignature}
+        .VS(L"vertex.hlsl")
+        .PS(L"pixel.hlsl")
+        .compile(device, pipelineState);
 }
 
 void PipelineStateController::compilePipelineStatePostProcess(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
-    CD3DX12_STATIC_SAMPLER_DESC linearClampSampler(0, D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR, D3D12_TEXTURE_ADDRESS_MODE_CLAMP, D3D12_TEXTURE_ADDRESS_MODE_CLAMP, D3D12_TEXTURE_ADDRESS_MODE_CLAMP);
+    D3D12_STATIC_SAMPLER_DESC sampler = {};
+    sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+    sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+    sampler.MaxLOD = D3D12_FLOAT32_MAX;
+    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
     rootSignature
-        .append32bitConstant<PostProcessCB>(D3D12_SHADER_VISIBILITY_PIXEL) // register(b0)
-        .appendStaticSampler(linearClampSampler)                                                  // register(s0)
-        .appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, D3D12_SHADER_VISIBILITY_PIXEL)
+        .append32bitConstant<PostProcessCB>(D3D12_SHADER_VISIBILITY_PIXEL)                        // register(b0)
+        .appendStaticSampler(sampler)                                                             // register(s0)
+        .appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, D3D12_SHADER_VISIBILITY_PIXEL) // register(t0)
         .compile(device);
 
     // Input layout - per vertex data
@@ -188,25 +176,10 @@ void PipelineStateController::compilePipelineStatePostProcess(RootSignature &roo
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
     };
 
-    // Shaders
-    ID3DBlobPtr vertexShaderBlob = loadAndCompileShader(L"vertex_post_process.hlsl", vertexShaderTarget);
-    ID3DBlobPtr pixelShaderBlob = loadAndCompileShader(L"pixel_post_process.hlsl", pixelShaderTarget);
-
-    // Compilation
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC desc = getPostProcessGraphicsPipelineSateDesc();
-    desc.pRootSignature = rootSignature.getRootSignature().Get();
-    desc.VS = D3D12_SHADER_BYTECODE{vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize()};
-    desc.PS = D3D12_SHADER_BYTECODE{pixelShaderBlob->GetBufferPointer(), pixelShaderBlob->GetBufferSize()};
-    desc.InputLayout = D3D12_INPUT_LAYOUT_DESC{inputLayout, _countof(inputLayout)};
-    throwIfFailed(device->CreateGraphicsPipelineState(&desc, IID_PPV_ARGS(&pipelineState)));
-}
-
-ID3DBlobPtr PipelineStateController::loadAndCompileShader(const std::wstring &name, const std::string &target) {
-    ID3DBlob *compiledShader = nullptr;
-    ID3DBlob *errorBlob = nullptr;
-
-    const auto path = std::wstring{SHADERS_PATH} + name;
-    const auto result = D3DCompileFromFile(path.c_str(), nullptr, nullptr, "main", target.c_str(), 0, 0, &compiledShader, &errorBlob);
-    throwIfFailed(result, errorBlob);
-    return ID3DBlobPtr{compiledShader};
+    // Pipeline state object
+    PipelineState{inputLayout, rootSignature}
+        .VS(L"vertex_post_process.hlsl")
+        .PS(L"pixel_post_process.hlsl")
+        .disableDepthStencil()
+        .compile(device, pipelineState);
 }

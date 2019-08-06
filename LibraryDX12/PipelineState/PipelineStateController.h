@@ -33,12 +33,8 @@ private:
 
     static D3D12_GRAPHICS_PIPELINE_STATE_DESC getBaseGraphicsPipelineSateDesc();
     static D3D12_GRAPHICS_PIPELINE_STATE_DESC getPostProcessGraphicsPipelineSateDesc();
-    static ID3DBlobPtr loadAndCompileShader(const std::wstring &name, const std::string &target);
 
     ID3D12DevicePtr device;
     ID3D12PipelineStatePtr pipelineStates[static_cast<int>(Identifier::COUNT)] = {};
     RootSignature rootSignatures[static_cast<int>(Identifier::COUNT)] = {};
-
-    constexpr static char pixelShaderTarget[] = "ps_5_1";
-    constexpr static char vertexShaderTarget[] = "vs_5_1";
 };
