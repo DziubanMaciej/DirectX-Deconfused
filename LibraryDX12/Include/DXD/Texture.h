@@ -13,6 +13,7 @@ class Application;
 class EXPORT Texture : NonCopyableAndMovable {
 public:
     static std::unique_ptr<Texture> createFromFile(Application &application, const std::string &filePath);
+    virtual ~Texture() = default;
 
 protected:
     Texture() = default;

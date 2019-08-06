@@ -15,11 +15,9 @@ SwapChain::SwapChain(HWND windowHandle, ID3D12DevicePtr device, DescriptorManage
       rtvDescriptors(descriptorManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, bufferCount)),
       postProcessRtvDescriptor(descriptorManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1)),
       dsvDescriptor(descriptorManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1)),
-      cbvDescriptor(descriptorManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1)),
       srvDescriptor(descriptorManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1)),
       backBufferEntries(bufferCount),
       depthStencilBuffer(nullptr),
-      simpleConstantBuffer(nullptr),
       width(width),
       height(height),
       currentBackBufferIndex(swapChain->GetCurrentBackBufferIndex()) {
@@ -28,7 +26,6 @@ SwapChain::SwapChain(HWND windowHandle, ID3D12DevicePtr device, DescriptorManage
     }
     updateRenderTargetViews();
     updateDepthStencilBuffer(width, height);
-    createSimpleConstantBuffer();
 }
 
 bool SwapChain::checkTearingSupport(IDXGIFactoryPtr &factory) {
@@ -182,38 +179,12 @@ void SwapChain::updateDepthStencilBuffer(uint32_t desiredWidth, uint32_t desired
         dsvDescriptor.getCpuHandle());
 }
 
-void SwapChain::createSimpleConstantBuffer() {
-
-    simpleConstantBuffer = std::make_unique<Resource>(device,
-                                                      &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD),
-                                                      D3D12_HEAP_FLAG_NONE,
-                                                      &CD3DX12_RESOURCE_DESC::Buffer(1024 * 64),
-                                                      D3D12_RESOURCE_STATE_GENERIC_READ,
-                                                      nullptr);
-
-    // Describe and create a constant buffer view.
-    D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDesc = {};
-    cbvDesc.BufferLocation = simpleConstantBuffer->getResource()->GetGPUVirtualAddress();
-    cbvDesc.SizeInBytes = (sizeof(SimpleConstantBuffer) + 255) & ~255; // CB size is required to be 256-byte aligned.
-    device->CreateConstantBufferView(&cbvDesc, cbvDescriptor.getCpuHandle());
-
-    // Map and initialize the constant buffer. We don't unmap this until the
-    // app closes. Keeping things mapped for the lifetime of the resource is okay.
-    CD3DX12_RANGE readRange(0, 0); // We do not intend to read from this resource on the CPU.
-    throwIfFailed(simpleConstantBuffer->getResource()->Map(0, &readRange, reinterpret_cast<void **>(&simpleCbvDataBegin)));
-    memcpy(simpleCbvDataBegin, &simpleConstantBufferData, sizeof(simpleConstantBufferData));
-}
-
 uint64_t SwapChain::getFenceValueForCurrentBackBuffer() const {
     return backBufferEntries[this->currentBackBufferIndex].lastFence;
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::getDepthStencilBufferDescriptor() const {
     return dsvDescriptor.getCpuHandle();
-}
-
-SimpleConstantBuffer *SwapChain::getSimpleConstantBufferData() {
-    return &simpleConstantBufferData;
 }
 
 D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::getCurrentBackBufferDescriptor() const {

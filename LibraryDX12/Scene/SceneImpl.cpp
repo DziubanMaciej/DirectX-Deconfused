@@ -3,6 +3,7 @@
 #include "Application/ApplicationImpl.h"
 #include "CommandList/CommandList.h"
 #include "CommandList/CommandQueue.h"
+#include "Resource/ConstantBuffers.h"
 #include "Utility/ThrowIfFailed.h"
 #include "Window/WindowImpl.h"
 
@@ -17,15 +18,10 @@ std::unique_ptr<Scene> Scene::create(DXD::Application &application) {
 } // namespace DXD
 
 SceneImpl::SceneImpl(DXD::Application &application)
-    : application(*static_cast<ApplicationImpl *>(&application)) {
-    backgroundColor[0] = 0;
-    backgroundColor[1] = 0;
-    backgroundColor[2] = 0;
-    ambientLight[0] = 0;
-    ambientLight[1] = 0;
-    ambientLight[2] = 0;
+    : application(*static_cast<ApplicationImpl *>(&application)),
+      lightConstantBuffer(this->application.getDevice(), this->application.getDescriptorController(), sizeof(SimpleConstantBuffer)) {
 
-	ID3D12DevicePtr device = this->application.getDevice();
+    ID3D12DevicePtr device = this->application.getDevice();
     auto &commandQueue = this->application.getDirectCommandQueue();
 
     // Record command list for GPU upload
@@ -108,7 +104,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     const XMMATRIX vpMatrix = XMMatrixMultiply(viewMatrix, projectionMatrix);
 
     //SimpleConstantBuffer
-    SimpleConstantBuffer *smplCbv = swapChain.getSimpleConstantBufferData();
+    auto smplCbv = lightConstantBuffer.getData<SimpleConstantBuffer>();
     smplCbv->cameraPosition = XMFLOAT4(camera->getEyePosition().x, camera->getEyePosition().y, camera->getEyePosition().z, 1);
     smplCbv->lightsSize = 0;
     smplCbv->ambientLight = XMFLOAT3(ambientLight[0], ambientLight[1], ambientLight[2]);
@@ -121,11 +117,11 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
             break;
         }
     }
-    memcpy(swapChain.getSimpleCbvDataBegin(), swapChain.getSimpleConstantBufferData(), sizeof(*swapChain.getSimpleConstantBufferData()));
+    lightConstantBuffer.upload();
 
     // Draw DEFAULT
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT);
-    commandList.setCbvSrvUavDescriptorTable(2, 0, swapChain.getCbvDescriptor());
+    commandList.setCbvSrvUavDescriptorTable(2, 0, lightConstantBuffer.getCbvHandle(), 1);
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = *object->getMesh();
 
@@ -152,7 +148,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
 
     //Draw NORMAL
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_NORMAL);
-    commandList.setCbvSrvUavDescriptorTable(2, 0, swapChain.getCbvDescriptor());
+    commandList.setCbvSrvUavDescriptorTable(2, 0, lightConstantBuffer.getCbvHandle(), 1);
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = *object->getMesh();
         if (mesh.getMeshType() == (MeshImpl::NORMALS | MeshImpl::TRIANGLE_STRIP)) {
@@ -191,8 +187,8 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     commandList.IASetPrimitiveTopologyTriangleList();
 
     PostProcessCB ppcb;
-    ppcb.screenWidth = swapChain.getWidth();
-    ppcb.screenHeight = swapChain.getHeight();
+    ppcb.screenWidth = static_cast<float>(swapChain.getWidth());
+    ppcb.screenHeight = static_cast<float>(swapChain.getHeight());
 
     commandList.setGraphicsRoot32BitConstant(0, ppcb);
 

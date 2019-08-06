@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Resource/ConstantBuffer.h"
 #include "Scene/CameraImpl.h"
 #include "Scene/LightImpl.h"
 #include "Scene/ObjectImpl.h"
@@ -34,13 +35,19 @@ public:
     void render(ApplicationImpl &application, SwapChain &swapChain);
 
 protected:
-    FLOAT backgroundColor[3];
-    FLOAT ambientLight[3];
+    // Context
+    ApplicationImpl &application;
+
+    // Buffers
+    ConstantBuffer lightConstantBuffer;
+    std::unique_ptr<VertexBuffer> postProcessVB;
+
+    // Data set by user
+    FLOAT backgroundColor[3] = {};
+    FLOAT ambientLight[3] = {};
     std::set<LightImpl *> lights;
     std::set<ObjectImpl *> objects; // TODO might not be the best data structure for that
     CameraImpl *camera;
-
-    ApplicationImpl &application;
 
     XMFLOAT3 postProcessSquare[6] =
         {
@@ -50,6 +57,4 @@ protected:
             {-1.0f, -1.0f, 0.0f},
             {1.0f, 1.0f, 0.0f},
             {1.0f, -1.0f, 0.0f}};
-    std::unique_ptr<VertexBuffer> postProcessVB;
-
 };

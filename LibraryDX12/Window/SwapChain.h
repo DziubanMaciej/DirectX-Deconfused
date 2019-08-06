@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Descriptor/CpuDescriptorAllocation.h"
-#include "Resource/ConstantBuffers.h"
 #include "Resource/Resource.h"
 
 #include "DXD/NonCopyableAndMovable.h"
@@ -36,14 +35,10 @@ public:
     D3D12_CPU_DESCRIPTOR_HANDLE getDepthStencilBufferDescriptor() const;
     auto &getDepthStencilBuffer() { return depthStencilBuffer; };
 
-    SimpleConstantBuffer *getSimpleConstantBufferData();
-    UINT8 *getSimpleCbvDataBegin() const { return simpleCbvDataBegin; }
-    const CpuDescriptorAllocation &getCbvDescriptor() const { return cbvDescriptor; }
     const CpuDescriptorAllocation &getSrvDescriptor() const { return srvDescriptor; }
     const CpuDescriptorAllocation &getPostProcessRtvDescriptor() const { return postProcessRtvDescriptor; }
 
     auto &getPostProcessRenderTarget() { return postProcessRenderTarget; }
-
 
 private:
     static bool checkTearingSupport(IDXGIFactoryPtr &factory);
@@ -51,7 +46,6 @@ private:
 
     void resetRenderTargetViews();
     void updateRenderTargetViews();
-    void createSimpleConstantBuffer();
     void updateDepthStencilBuffer(uint32_t desiredWidth, uint32_t desiredHeight);
 
     void resizeRenderTargets(uint32_t desiredWidth, uint32_t desiredHeight);
@@ -64,7 +58,6 @@ private:
     DescriptorManager &descriptorManager;
     CpuDescriptorAllocation rtvDescriptors;
     CpuDescriptorAllocation dsvDescriptor;
-    CpuDescriptorAllocation cbvDescriptor;
     CpuDescriptorAllocation srvDescriptor;
     CpuDescriptorAllocation postProcessRtvDescriptor;
 
@@ -74,11 +67,6 @@ private:
 
     // Render Targets
     std::unique_ptr<Resource> postProcessRenderTarget;
-
-    // TODO temporary cbv implementation
-    std::unique_ptr<Resource> simpleConstantBuffer;
-    SimpleConstantBuffer simpleConstantBufferData;
-    UINT8 *simpleCbvDataBegin;
 
     // Numerical data
     uint32_t width;
