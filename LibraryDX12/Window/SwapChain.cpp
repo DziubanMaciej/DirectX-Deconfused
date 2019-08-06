@@ -13,8 +13,10 @@ SwapChain::SwapChain(HWND windowHandle, ID3D12DevicePtr device, DescriptorManage
       device(device),
       descriptorManager(descriptorManager),
       rtvDescriptors(descriptorManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, bufferCount)),
+      postProcessRtvDescriptor(descriptorManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1)),
       dsvDescriptor(descriptorManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1)),
       cbvDescriptor(descriptorManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1)),
+      srvDescriptor(descriptorManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1)),
       backBufferEntries(bufferCount),
       depthStencilBuffer(nullptr),
       simpleConstantBuffer(nullptr),
@@ -44,7 +46,7 @@ IDXGISwapChainPtr SwapChain::createSwapChain(HWND hwnd, IDXGIFactoryPtr &factory
     DXGI_SWAP_CHAIN_DESC1 desc = {};
     desc.Width = width;
     desc.Height = height;
-    desc.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+    desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     desc.Stereo = FALSE;
     desc.SampleDesc.Count = 1;
     desc.SampleDesc.Quality = 0;
@@ -78,6 +80,43 @@ void SwapChain::updateRenderTargetViews() {
 
         rtvHandle.ptr += rtvDescriptorSize;
     }
+
+    //Craete post process render target
+    auto postProcessRtvHandle = postProcessRtvDescriptor.getCpuHandle();
+    const auto srvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+
+    D3D12_RESOURCE_DESC renderTargetDesc;
+    renderTargetDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    renderTargetDesc.Alignment = 0;
+    renderTargetDesc.Width = width;
+    renderTargetDesc.Height = height;
+    renderTargetDesc.DepthOrArraySize = 1;
+    renderTargetDesc.MipLevels = 0;
+    renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    DXGI_SAMPLE_DESC sampleDesc;
+    sampleDesc.Count = 1;
+    sampleDesc.Quality = 0;
+    renderTargetDesc.SampleDesc = sampleDesc;
+    renderTargetDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    renderTargetDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+    D3D12_CLEAR_VALUE clearValue = {};
+    clearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+
+    postProcessRenderTarget = std::make_unique<Resource>(
+        device,
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &renderTargetDesc,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        &clearValue);
+
+    device->CreateRenderTargetView(postProcessRenderTarget->getResource().Get(), nullptr, postProcessRtvHandle);
+    postProcessRtvHandle.Offset(1, rtvDescriptorSize);
+
+    auto srvHandle = srvDescriptor.getCpuHandle();
+    device->CreateShaderResourceView(postProcessRenderTarget->getResource().Get(), nullptr, srvHandle);
+    //srvHandle.Offset(1, srvDescriptorSize);
 }
 
 void SwapChain::present(uint64_t fenceValue) {

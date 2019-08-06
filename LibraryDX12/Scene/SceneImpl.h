@@ -19,7 +19,7 @@ class CameraImpl;
 class SceneImpl : public DXD::Scene {
 protected:
     friend class DXD::Scene;
-    SceneImpl();
+    SceneImpl(DXD::Application &application);
 
 public:
     void setBackgroundColor(float r, float g, float b) override;
@@ -39,4 +39,17 @@ protected:
     std::set<LightImpl *> lights;
     std::set<ObjectImpl *> objects; // TODO might not be the best data structure for that
     CameraImpl *camera;
+
+    ApplicationImpl &application;
+
+    XMFLOAT3 postProcessSquare[6] =
+        {
+            {-1.0f, -1.0f, 0.0f},
+            {-1.0f, 1.0f, 0.0f},
+            {1.0f, 1.0f, 0.0f},
+            {-1.0f, -1.0f, 0.0f},
+            {1.0f, 1.0f, 0.0f},
+            {1.0f, -1.0f, 0.0f}};
+    std::unique_ptr<VertexBuffer> postProcessVB;
+
 };

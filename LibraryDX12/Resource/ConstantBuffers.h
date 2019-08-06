@@ -5,6 +5,11 @@ struct ModelMvp {
     XMMATRIX modelViewProjectionMatrix;
 };
 
+struct PostProcessCB {
+    float screenWidth;
+    float screenHeight;
+};
+
 struct ObjectProperties {
     XMFLOAT3 objectColor;
     float objectSpecularity;

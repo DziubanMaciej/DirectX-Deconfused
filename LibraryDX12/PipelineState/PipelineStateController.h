@@ -14,6 +14,7 @@ public:
         PIPELINE_STATE_DEFAULT = 0,
         PIPELINE_STATE_TEXTURE = 1,
         PIPELINE_STATE_NORMAL = 2,
+        PIPELINE_STATE_POST_PROCESS = 3,
         COUNT // this should be the last entry
     };
 
@@ -28,8 +29,10 @@ private:
     void compilePipelineStateDefault(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateTexture(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    void compilePipelineStatePostProcess(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
 
     static D3D12_GRAPHICS_PIPELINE_STATE_DESC getBaseGraphicsPipelineSateDesc();
+    static D3D12_GRAPHICS_PIPELINE_STATE_DESC getPostProcessGraphicsPipelineSateDesc();
     static ID3DBlobPtr loadAndCompileShader(const std::wstring &name, const std::string &target);
 
     ID3D12DevicePtr device;

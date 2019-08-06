@@ -39,6 +39,11 @@ public:
     SimpleConstantBuffer *getSimpleConstantBufferData();
     UINT8 *getSimpleCbvDataBegin() const { return simpleCbvDataBegin; }
     const CpuDescriptorAllocation &getCbvDescriptor() const { return cbvDescriptor; }
+    const CpuDescriptorAllocation &getSrvDescriptor() const { return srvDescriptor; }
+    const CpuDescriptorAllocation &getPostProcessRtvDescriptor() const { return postProcessRtvDescriptor; }
+
+    auto &getPostProcessRenderTarget() { return postProcessRenderTarget; }
+
 
 private:
     static bool checkTearingSupport(IDXGIFactoryPtr &factory);
@@ -60,10 +65,15 @@ private:
     CpuDescriptorAllocation rtvDescriptors;
     CpuDescriptorAllocation dsvDescriptor;
     CpuDescriptorAllocation cbvDescriptor;
+    CpuDescriptorAllocation srvDescriptor;
+    CpuDescriptorAllocation postProcessRtvDescriptor;
 
     // Buffers
     std::vector<BackBufferEntry> backBufferEntries;
     std::unique_ptr<Resource> depthStencilBuffer;
+
+    // Render Targets
+    std::unique_ptr<Resource> postProcessRenderTarget;
 
     // TODO temporary cbv implementation
     std::unique_ptr<Resource> simpleConstantBuffer;

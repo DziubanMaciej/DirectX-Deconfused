@@ -36,8 +36,8 @@ struct Game : DXD::CallbackHandler {
         assert(extraFlatMesh);
         carMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/porshe.obj");
         assert(carMesh);
-        actorMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/dennis.obj");
-        assert(actorMesh);
+        //actorMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/dennis.obj");
+        //assert(actorMesh);
         dxdMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/dxd_comicsans.obj");
         assert(dxdMesh);
         DXD::log("Done!\n");
@@ -114,10 +114,10 @@ struct Game : DXD::CallbackHandler {
         blueLight->setColor(0.0f, 0.0f, 1.0f);
         blueLight->setPosition(0, 1, -8);
 
-        objects.push_back(DXD::Object::create());
-        objects.back()->setMesh(*actorMesh);
-        objects.back()->setPosition(-2, -2, -8);
-        objects.back()->setScale(0.01f, 0.01f, 0.01f);
+        //objects.push_back(DXD::Object::create());
+        //objects.back()->setMesh(*actorMesh);
+        //objects.back()->setPosition(-2, -2, -8);
+        //objects.back()->setScale(0.01f, 0.01f, 0.01f);
 
         objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*dxdMesh);
@@ -125,7 +125,7 @@ struct Game : DXD::CallbackHandler {
         objects.back()->setScale(20.f, 20.f, 20.f);
         objects.back()->setRotation({0, 1, 0}, static_cast<float>(M_PI));
 
-        scene = DXD::Scene::create();
+        scene = DXD::Scene::create(*application);
         scene->addObject(*objects[0]);
         scene->addObject(*objects[1]);
         scene->addObject(*objects[2]);
@@ -138,7 +138,6 @@ struct Game : DXD::CallbackHandler {
         scene->addObject(*objects[9]);
         scene->addObject(*objects[10]);
         scene->addObject(*objects[11]);
-        scene->addObject(*objects[12]);
         scene->setBackgroundColor(0.3f, 0.8f, 1.0f);
         scene->setAmbientLight(0.1f, 0.1f, 0.1f);
         scene->addLight(*sunLight);

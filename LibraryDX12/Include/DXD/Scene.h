@@ -22,7 +22,7 @@ public:
     virtual DXD::Camera *getCamera() = 0;
 
     virtual ~Scene() = default;
-    static std::unique_ptr<Scene> create();
+    static std::unique_ptr<Scene> create(DXD::Application &application);
 
 protected:
     Scene() = default;

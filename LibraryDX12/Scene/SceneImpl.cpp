@@ -11,18 +11,32 @@
 #include <cassert>
 
 namespace DXD {
-std::unique_ptr<Scene> Scene::create() {
-    return std::unique_ptr<Scene>{new SceneImpl()};
+std::unique_ptr<Scene> Scene::create(DXD::Application &application) {
+    return std::unique_ptr<Scene>{new SceneImpl(application)};
 }
 } // namespace DXD
 
-SceneImpl::SceneImpl() {
+SceneImpl::SceneImpl(DXD::Application &application)
+    : application(*static_cast<ApplicationImpl *>(&application)) {
     backgroundColor[0] = 0;
     backgroundColor[1] = 0;
     backgroundColor[2] = 0;
     ambientLight[0] = 0;
     ambientLight[1] = 0;
     ambientLight[2] = 0;
+
+	ID3D12DevicePtr device = this->application.getDevice();
+    auto &commandQueue = this->application.getDirectCommandQueue();
+
+    // Record command list for GPU upload
+    CommandList commandList{commandQueue.getCommandAllocatorManager(), nullptr};
+    postProcessVB = std::make_unique<VertexBuffer>(device, commandList, postProcessSquare, 6, 12);
+
+    commandList.close();
+
+    // Execute and register obtained allocator and lists to the manager
+    std::vector<CommandList *> commandLists{&commandList};
+    const uint64_t fenceValue = commandQueue.executeCommandListsAndSignal(commandLists);
 }
 
 void SceneImpl::setBackgroundColor(float r, float g, float b) {
@@ -72,18 +86,18 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     commandQueue.performResourcesDeletion();
 
     // Transition to RENDER_TARGET
-    backBuffer->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    swapChain.getPostProcessRenderTarget()->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     CD3DX12_VIEWPORT viewport(0.0f, 0.0f, (float)swapChain.getWidth(), (float)swapChain.getHeight());
     CD3DX12_RECT scissorRect(0, 0, LONG_MAX, LONG_MAX);
     commandList.RSSetScissorRect(scissorRect);
     commandList.RSSetViewport(viewport);
 
-    commandList.OMSetRenderTarget(swapChain.getCurrentBackBufferDescriptor(), swapChain.getCurrentBackBuffer()->getResource(),
+    commandList.OMSetRenderTarget(swapChain.getPostProcessRtvDescriptor().getCpuHandle(), swapChain.getPostProcessRenderTarget()->getResource(), // set temp
                                   swapChain.getDepthStencilBufferDescriptor(), swapChain.getDepthStencilBuffer()->getResource());
 
     // Render (clear color)
-    commandList.clearRenderTargetView(swapChain.getCurrentBackBufferDescriptor(), backgroundColor);
+    commandList.clearRenderTargetView(swapChain.getPostProcessRtvDescriptor().getCpuHandle(), backgroundColor);
     commandList.clearDepthStencilView(swapChain.getDepthStencilBufferDescriptor(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
     // View projection matrix
@@ -160,6 +174,29 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
             commandList.drawInstanced(static_cast<UINT>(mesh.getVerticesCount() / 6), 1, 0, 0); // 6 - size of position+normal
         }
     }
+
+    //POST PROCESS
+    commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS);
+
+    swapChain.getPostProcessRenderTarget()->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+    backBuffer->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    commandList.getCommandList()->OMSetRenderTargets(1, &swapChain.getCurrentBackBufferDescriptor(), FALSE, nullptr);
+
+    commandList.setCbvSrvUavDescriptorTable(1, 0, swapChain.getSrvDescriptor());
+
+    commandList.clearRenderTargetView(swapChain.getCurrentBackBufferDescriptor(), backgroundColor);
+
+    commandList.IASetVertexBuffer(*postProcessVB);
+    commandList.IASetPrimitiveTopologyTriangleList();
+
+    PostProcessCB ppcb;
+    ppcb.screenWidth = swapChain.getWidth();
+    ppcb.screenHeight = swapChain.getHeight();
+
+    commandList.setGraphicsRoot32BitConstant(0, ppcb);
+
+    commandList.drawInstanced(6, 1, 0, 0);
 
     // Transition to PRESENT
     backBuffer->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PRESENT);
