@@ -48,7 +48,7 @@ void GpuDescriptorHeapController::stage(RootParameterIndex indexOfTable, UINT of
 
     CD3DX12_CPU_DESCRIPTOR_HANDLE currentDescriptor{firstDescriptor};
     for (auto descriptorIndex = 0u; descriptorIndex < descriptorCount; descriptorIndex++) {
-        const auto offset = descriptorTableInfo.offsetInStagingDescriptors + descriptorIndex;
+        const auto offset = descriptorTableInfo.offsetInStagingDescriptors + offsetInTable + descriptorIndex;
         this->stagingDescriptors[offset] = currentDescriptor;
         currentDescriptor.Offset(descriptorIncrementSize);
     }
@@ -89,7 +89,7 @@ void GpuDescriptorHeapController::commit() {
         const UINT sourceRangesCount = descriptorTableInfo.descriptorCount;
         const D3D12_CPU_DESCRIPTOR_HANDLE *sourceRangeStarts = &this->stagingDescriptors[descriptorTableInfo.offsetInStagingDescriptors];
         const UINT *sourceRangeSizes = nullptr; // It means all ranges are of length 1
-        device->CopyDescriptors(destinationRangesCount, &currentCpuHandle, &destinationRangesCount,
+        device->CopyDescriptors(destinationRangesCount, &currentCpuHandle, &destinationRangeSize,
                                 sourceRangesCount, sourceRangeStarts, sourceRangeSizes, this->heapType);
 
         // Bind the table to command list
