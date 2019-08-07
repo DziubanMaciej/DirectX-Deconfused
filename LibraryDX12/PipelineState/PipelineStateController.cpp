@@ -1,12 +1,16 @@
 #include "PipelineStateController.h"
 
+#include "PipelineState/DescriptorTable.h"
 #include "PipelineState/PipelineState.h"
 #include "PipelineState/RootSignature.h"
+#include "PipelineState/ShaderRegister.h"
 #include "Resource/ConstantBuffers.h"
 #include "Utility/ThrowIfFailed.h"
 
 #include "DXD/ExternalHeadersWrappers/DirectXMath.h"
 #include <cassert>
+
+using namespace ShaderRegisterHelpers;
 
 D3D12_GRAPHICS_PIPELINE_STATE_DESC PipelineStateController::getBaseGraphicsPipelineSateDesc() {
     D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateDesc = {};
@@ -84,10 +88,12 @@ void PipelineStateController::compile(Identifier identifier) {
 
 void PipelineStateController::compilePipelineStateDefault(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
+    DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
+    table.appendCbvRange(b(1), 1);
     rootSignature
-        .append32bitConstant<ModelMvp>(D3D12_SHADER_VISIBILITY_VERTEX)                            // register(b0)
-        .appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, D3D12_SHADER_VISIBILITY_PIXEL) // register(b1)
-        .append32bitConstant<ObjectProperties>(D3D12_SHADER_VISIBILITY_PIXEL)                     // register(b2)
+        .append32bitConstant<ModelMvp>(b(0), D3D12_SHADER_VISIBILITY_VERTEX)
+        .append32bitConstant<ObjectProperties>(b(2), D3D12_SHADER_VISIBILITY_PIXEL)
+        .appendDescriptorTable(std::move(table))
         .compile(device);
 
     // Input layout - per vertex data
@@ -104,10 +110,12 @@ void PipelineStateController::compilePipelineStateDefault(RootSignature &rootSig
 
 void PipelineStateController::compilePipelineStateNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
+    DescriptorTable table{ D3D12_SHADER_VISIBILITY_PIXEL };
+    table.appendCbvRange(b(1), 1);
     rootSignature
-        .append32bitConstant<ModelMvp>(D3D12_SHADER_VISIBILITY_VERTEX)                            // register(b0)
-        .appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, D3D12_SHADER_VISIBILITY_PIXEL) // register(b1)
-        .append32bitConstant<ObjectProperties>(D3D12_SHADER_VISIBILITY_PIXEL)                     // register(b2)
+        .append32bitConstant<ModelMvp>(b(0), D3D12_SHADER_VISIBILITY_VERTEX)
+        .append32bitConstant<ObjectProperties>(b(2), D3D12_SHADER_VISIBILITY_PIXEL)
+        .appendDescriptorTable(std::move(table))
         .compile(device);
 
     // Input layout - per vertex data
@@ -134,12 +142,14 @@ void PipelineStateController::compilePipelineStateTexture(RootSignature &rootSig
     sampler.MaxLOD = D3D12_FLOAT32_MAX;
     sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
+    DescriptorTable table{ D3D12_SHADER_VISIBILITY_PIXEL };
+    table.appendCbvRange(b(1), 1);
+
     rootSignature
-        .append32bitConstant<ModelMvp>(D3D12_SHADER_VISIBILITY_VERTEX)                            // register(b0)
-        .appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_CBV, 1, D3D12_SHADER_VISIBILITY_PIXEL) // register(b1)
-        .append32bitConstant<ObjectProperties>(D3D12_SHADER_VISIBILITY_PIXEL)                     // register(b2)
-        .appendStaticSampler(sampler)                                                             // register(s0)
-        //.appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, D3D12_SHADER_VISIBILITY_PIXEL)
+        .append32bitConstant<ModelMvp>(b(0), D3D12_SHADER_VISIBILITY_VERTEX)
+        .append32bitConstant<ObjectProperties>(b(2), D3D12_SHADER_VISIBILITY_PIXEL)
+        .appendStaticSampler(s(0), sampler)
+        .appendDescriptorTable(std::move(table))
         .compile(device);
 
     // Input layout - per vertex data
@@ -165,10 +175,13 @@ void PipelineStateController::compilePipelineStatePostProcess(RootSignature &roo
     sampler.MaxLOD = D3D12_FLOAT32_MAX;
     sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
+    DescriptorTable table{ D3D12_SHADER_VISIBILITY_PIXEL };
+    table.appendSrvRange(t(0), 1);
+
     rootSignature
-        .append32bitConstant<PostProcessCB>(D3D12_SHADER_VISIBILITY_PIXEL)                        // register(b0)
-        .appendStaticSampler(sampler)                                                             // register(s0)
-        .appendDescriptorRange(D3D12_DESCRIPTOR_RANGE_TYPE_SRV, 1, D3D12_SHADER_VISIBILITY_PIXEL) // register(t0)
+        .append32bitConstant<PostProcessCB>(b(0), D3D12_SHADER_VISIBILITY_PIXEL)
+        .appendStaticSampler(s(0), sampler)
+        .appendDescriptorTable(std::move(table))
         .compile(device);
 
     // Input layout - per vertex data
