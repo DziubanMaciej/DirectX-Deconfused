@@ -48,13 +48,17 @@ void SceneImpl::setAmbientLight(float r, float g, float b) {
 }
 
 void SceneImpl::addLight(DXD::Light &light) {
-    lights.insert(static_cast<LightImpl *>(&light));
+    lights.push_back(static_cast<LightImpl *>(&light));
 }
 
 bool SceneImpl::removeLight(DXD::Light &light) {
-    const auto elementsRemoved = lights.erase(static_cast<LightImpl *>(&light));
-    assert(elementsRemoved < 2u);
-    return elementsRemoved == 1;
+    for (auto it = lights.begin(); it != lights.end(); it++) {
+        if (*it == &light) {
+            lights.erase(it);
+            return 1;
+        }
+    }
+    return 0;
 }
 
 void SceneImpl::addObject(DXD::Object &object) {
@@ -80,13 +84,54 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     CommandList commandList{commandQueue.getCommandAllocatorManager(), nullptr};
     const auto &backBuffer = swapChain.getCurrentBackBuffer();
     commandQueue.performResourcesDeletion();
+	
+    CD3DX12_RECT scissorRect(0, 0, LONG_MAX, LONG_MAX);
+    commandList.RSSetScissorRect(scissorRect);
 
+    // Shadow maps
+    swapChain.getShadowMap()->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+
+    CD3DX12_VIEWPORT viewportSM(0.0f, 0.0f, 2048.0f, 2048.0f);
+    commandList.RSSetViewport(viewportSM);
+
+    commandList.getCommandList()->OMSetRenderTargets(FALSE, nullptr, 1, &swapChain.getShadowMapDescriptor().getCpuHandle());
+
+    commandList.clearDepthStencilView(swapChain.getShadowMapDescriptor().getCpuHandle(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
+
+    commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_SM_NORMAL);
+
+    for (LightImpl *light : lights) {
+        // View projection matrix
+        camera->setAspectRatio(1.0f);
+        //XMFLOAT3 smUpDirection(0, 1, 0);
+        const XMMATRIX smViewMatrix = XMMatrixLookAtLH(XMVectorSet(light->getPosition().x, light->getPosition().y, light->getPosition().z, 1.f), XMVectorSet(light->getDirection().x, light->getDirection().y, light->getDirection().z, 1.f), XMVectorSet(0, 1, 0, 0.f));
+        const XMMATRIX smProjectionMatrix = XMMatrixPerspectiveFovLH(90, 1, 0.1f, 140.0f);
+        light->smViewProjectionMatrix = XMMatrixMultiply(smViewMatrix, smProjectionMatrix);
+
+        for (ObjectImpl *object : objects) {
+            MeshImpl &mesh = *object->getMesh();
+            if (mesh.getMeshType() == (MeshImpl::NORMALS | MeshImpl::TRIANGLE_STRIP)) {
+                commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
+                commandList.IASetPrimitiveTopologyTriangleList();
+
+                SMmvp smmvp;
+                smmvp.modelViewProjectionMatrix = XMMatrixMultiply(object->getModelMatrix(), light->smViewProjectionMatrix);
+
+                commandList.setGraphicsRoot32BitConstant(0, smmvp);
+
+                commandList.drawInstanced(static_cast<UINT>(mesh.getVerticesCount() / 6), 1, 0, 0); // 6 - size of position+normal
+            }
+        }
+        break;
+    }
+
+    swapChain.getShadowMap()->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+    // Forward shading
     // Transition to RENDER_TARGET
     swapChain.getPostProcessRenderTarget()->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     CD3DX12_VIEWPORT viewport(0.0f, 0.0f, (float)swapChain.getWidth(), (float)swapChain.getHeight());
-    CD3DX12_RECT scissorRect(0, 0, LONG_MAX, LONG_MAX);
-    commandList.RSSetScissorRect(scissorRect);
     commandList.RSSetViewport(viewport);
 
     commandList.OMSetRenderTarget(swapChain.getPostProcessRtvDescriptor().getCpuHandle(), swapChain.getPostProcessRenderTarget()->getResource(), // set temp
@@ -112,6 +157,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
         smplCbv->lightColor[smplCbv->lightsSize] = XMFLOAT4(light->getColor().x, light->getColor().y, light->getColor().z, light->getPower());
         smplCbv->lightPosition[smplCbv->lightsSize] = XMFLOAT4(light->getPosition().x, light->getPosition().y, light->getPosition().z, 0);
         smplCbv->lightDirection[smplCbv->lightsSize] = XMFLOAT4(light->getDirection().x, light->getDirection().y, light->getDirection().z, 0);
+        smplCbv->smViewProjectionMatrix[smplCbv->lightsSize] = light->smViewProjectionMatrix;
         smplCbv->lightsSize++;
         if (smplCbv->lightsSize >= 8) {
             break;
@@ -149,6 +195,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     //Draw NORMAL
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_NORMAL);
     commandList.setCbvSrvUavDescriptorTable(2, 0, lightConstantBuffer.getCbvHandle(), 1);
+    commandList.setCbvSrvUavDescriptorTable(2, 1, swapChain.getShadowMapSrvDescriptor());
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = *object->getMesh();
         if (mesh.getMeshType() == (MeshImpl::NORMALS | MeshImpl::TRIANGLE_STRIP)) {

@@ -92,7 +92,9 @@ struct Game : DXD::CallbackHandler {
 
         sunLight = DXD::Light::create();
         sunLight->setColor(1.0f, 1.0f, 1.0f);
-        sunLight->setPosition(0, 5, 0);
+        sunLight->setPosition(-12, 12, 0);
+        //sunLight->setDirection(1, -1, 0);
+        sunLight->setPower(10);
 
         moonLight = DXD::Light::create();
         moonLight->setColor(0.0f, 1.0f, 1.0f);
@@ -279,7 +281,7 @@ private:
         redLight->setDirection(-sin(rotation), 0, -cos(rotation));
 
         objects[8]->setRotation(XMFLOAT3(0, 1, 0), rotation - 45); // +180 for aventador
-        objects[8]->setPosition(7 * sinf(rotation) * 0.6f, objects[8]->getPosition().y, 7 * cosf(rotation) * 0.6f);
+        objects[8]->setPosition(7 * sinf(rotation) * 0.6f, -1.475, 7 * cosf(rotation) * 0.6f);
 
         objects[7]->setPosition(sunPos);
         objects[1]->setRotation(rotation, rotation, rotation);

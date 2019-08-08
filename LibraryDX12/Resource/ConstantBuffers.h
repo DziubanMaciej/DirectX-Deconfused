@@ -22,4 +22,9 @@ struct SimpleConstantBuffer { //must be 128bit padded
     XMFLOAT4 lightPosition[8];
     XMFLOAT4 lightColor[8];
     XMFLOAT4 lightDirection[8];
+    XMMATRIX smViewProjectionMatrix[8];
+};
+
+struct SMmvp {
+    XMMATRIX modelViewProjectionMatrix;
 };

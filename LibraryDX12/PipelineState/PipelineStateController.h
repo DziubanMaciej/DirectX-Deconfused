@@ -15,6 +15,7 @@ public:
         PIPELINE_STATE_TEXTURE = 1,
         PIPELINE_STATE_NORMAL = 2,
         PIPELINE_STATE_POST_PROCESS = 3,
+        PIPELINE_STATE_SM_NORMAL = 4,
         COUNT // this should be the last entry
     };
 
@@ -30,6 +31,7 @@ private:
     void compilePipelineStateNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateTexture(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStatePostProcess(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    void compilePipelineStateShadowMapNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
 
     static D3D12_GRAPHICS_PIPELINE_STATE_DESC getBaseGraphicsPipelineSateDesc();
     static D3D12_GRAPHICS_PIPELINE_STATE_DESC getPostProcessGraphicsPipelineSateDesc();

@@ -5,6 +5,7 @@ cbuffer SimpleConstantBuffer : register(b1) {
     float4 lightPosition[8];
     float4 lightColor[8];
     float4 lightDirection[8];
+    matrix smVpMatrix[8];
 };
 
 struct ObjectProperties {
@@ -14,7 +15,9 @@ struct ObjectProperties {
 
 ConstantBuffer<ObjectProperties> op : register(b2);
 
-Texture2D DiffuseTexture : register(t0);
+Texture2D shadowMap : register(t0);
+
+SamplerState s_sampler : register(s0);
 
 struct PixelShaderInput {
     float4 WorldPosition : COLOR;
@@ -27,6 +30,25 @@ float4 main(PixelShaderInput IN) : SV_Target {
     OUT_Color.xyz = OUT_Color.xyz + ambientLight.xyz;
 
     for (int i = 0; i < lightsSize; i++) {
+
+		//Check for shadow
+		if (i == 0) {
+            float4 smCoords = (mul(smVpMatrix[i], IN.WorldPosition)).xyzw;
+            smCoords.x = smCoords.x / smCoords.w / 2.0f + 0.5f;
+            smCoords.y = -smCoords.y / smCoords.w / 2.0f + 0.5f;
+
+            float smDepth = shadowMap.Sample(s_sampler, smCoords.xy).r;
+
+            if (smCoords.x >= 0 && smCoords.x <= 1) {
+                if (smCoords.y > 0 && smCoords.y < 1) {
+                    if (((smCoords.z / smCoords.w) - 0.0001f) > smDepth) {
+                        continue;
+                    }
+                }
+            }
+        }
+
+		//Light color
         float3 tempLightColor = lightColor[i].xyz;
 
         //Diffuse

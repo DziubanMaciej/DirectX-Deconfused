@@ -24,6 +24,8 @@ public:
 
 	LightImpl();
 
+    XMMATRIX smViewProjectionMatrix;
+
 protected:
     XMFLOAT3 position;
     float power;

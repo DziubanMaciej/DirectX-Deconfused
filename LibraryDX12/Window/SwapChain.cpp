@@ -15,6 +15,8 @@ SwapChain::SwapChain(HWND windowHandle, ID3D12DevicePtr device, DescriptorManage
       rtvDescriptors(descriptorManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, bufferCount)),
       postProcessRtvDescriptor(descriptorManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1)),
       dsvDescriptor(descriptorManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1)),
+      shadowMapDescriptor(descriptorManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1)),
+      shadowMapSrvDescriptor(descriptorManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1)),
       srvDescriptor(descriptorManager.allocate(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1)),
       backBufferEntries(bufferCount),
       depthStencilBuffer(nullptr),
@@ -177,6 +179,41 @@ void SwapChain::updateDepthStencilBuffer(uint32_t desiredWidth, uint32_t desired
         depthStencilBuffer->getResource().Get(),
         &dsvDesc,
         dsvDescriptor.getCpuHandle());
+
+	// Shadow map
+    D3D12_CLEAR_VALUE optimizedClearValueSM = {};
+    optimizedClearValueSM.Format = DXGI_FORMAT_D32_FLOAT;
+    optimizedClearValueSM.DepthStencil = {1.0f, 0};
+
+    shadowMap = std::make_unique<Resource>(device,
+                                           &CD3DX12_HEAP_PROPERTIES{D3D12_HEAP_TYPE_DEFAULT},
+                                           D3D12_HEAP_FLAG_NONE, // TODO D3D12_HEAP_FLAG_DENY_NON_RT_DS_TEXTURES good?
+                                           &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32_TYPELESS, static_cast<uint32_t>(2048), static_cast<uint32_t>(2048), 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+                                           D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+                                           &optimizedClearValueSM);
+
+    D3D12_DEPTH_STENCIL_VIEW_DESC shadowMapDesc = {};
+    shadowMapDesc.Format = DXGI_FORMAT_D32_FLOAT;
+    shadowMapDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+    shadowMapDesc.Flags = D3D12_DSV_FLAG_NONE;
+    shadowMapDesc.Texture2D = D3D12_TEX2D_DSV{0};
+    device->CreateDepthStencilView(
+        shadowMap->getResource().Get(),
+        &shadowMapDesc,
+        shadowMapDescriptor.getCpuHandle());
+
+    auto srvHandle = shadowMapSrvDescriptor.getCpuHandle();
+
+    D3D12_SHADER_RESOURCE_VIEW_DESC shadowMapSrvDesc = {};
+    shadowMapSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    shadowMapSrvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+    shadowMapSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    shadowMapSrvDesc.Texture2D.MipLevels = 1;
+    shadowMapSrvDesc.Texture2D.MostDetailedMip = 0;
+    shadowMapSrvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+    shadowMapSrvDesc.Texture2D.PlaneSlice = 0;
+
+    device->CreateShaderResourceView(shadowMap->getResource().Get(), &shadowMapSrvDesc, srvHandle);
 }
 
 uint64_t SwapChain::getFenceValueForCurrentBackBuffer() const {

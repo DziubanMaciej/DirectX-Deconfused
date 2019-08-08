@@ -9,6 +9,7 @@
 
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
 #include <set>
+#include <vector>
 
 class ApplicationImpl;
 class SwapChain;
@@ -45,7 +46,7 @@ protected:
     // Data set by user
     FLOAT backgroundColor[3] = {};
     FLOAT ambientLight[3] = {};
-    std::set<LightImpl *> lights;
+    std::vector<LightImpl *> lights;
     std::set<ObjectImpl *> objects; // TODO might not be the best data structure for that
     CameraImpl *camera;
 

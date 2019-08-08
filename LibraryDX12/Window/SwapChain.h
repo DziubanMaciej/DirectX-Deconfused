@@ -37,8 +37,11 @@ public:
 
     const CpuDescriptorAllocation &getSrvDescriptor() const { return srvDescriptor; }
     const CpuDescriptorAllocation &getPostProcessRtvDescriptor() const { return postProcessRtvDescriptor; }
+    const CpuDescriptorAllocation &getShadowMapDescriptor() const { return shadowMapDescriptor; }
+    const CpuDescriptorAllocation &getShadowMapSrvDescriptor() const { return shadowMapSrvDescriptor; }
 
     auto &getPostProcessRenderTarget() { return postProcessRenderTarget; }
+    auto &getShadowMap() { return shadowMap; }
 
 private:
     static bool checkTearingSupport(IDXGIFactoryPtr &factory);
@@ -60,6 +63,8 @@ private:
     CpuDescriptorAllocation dsvDescriptor;
     CpuDescriptorAllocation srvDescriptor;
     CpuDescriptorAllocation postProcessRtvDescriptor;
+    CpuDescriptorAllocation shadowMapDescriptor;
+    CpuDescriptorAllocation shadowMapSrvDescriptor;
 
     // Buffers
     std::vector<BackBufferEntry> backBufferEntries;
@@ -67,6 +72,9 @@ private:
 
     // Render Targets
     std::unique_ptr<Resource> postProcessRenderTarget;
+
+    // Shadow Maps
+    std::unique_ptr<Resource> shadowMap;
 
     // Numerical data
     uint32_t width;

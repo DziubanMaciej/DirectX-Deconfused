@@ -81,6 +81,9 @@ void PipelineStateController::compile(Identifier identifier) {
     case Identifier::PIPELINE_STATE_POST_PROCESS:
         compilePipelineStatePostProcess(rootSignature, pipelineState);
         break;
+    case Identifier::PIPELINE_STATE_SM_NORMAL:
+        compilePipelineStateShadowMapNormal(rootSignature, pipelineState);
+        break;
     default:
         UNREACHABLE_CODE();
     }
@@ -110,12 +113,23 @@ void PipelineStateController::compilePipelineStateDefault(RootSignature &rootSig
 
 void PipelineStateController::compilePipelineStateNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
+    D3D12_STATIC_SAMPLER_DESC sampler = {};
+    sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+    sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+    sampler.MaxLOD = D3D12_FLOAT32_MAX;
+    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
     DescriptorTable table{ D3D12_SHADER_VISIBILITY_PIXEL };
     table.appendCbvRange(b(1), 1);
+    table.appendSrvRange(t(0), 1);
     rootSignature
         .append32bitConstant<ModelMvp>(b(0), D3D12_SHADER_VISIBILITY_VERTEX)
         .append32bitConstant<ObjectProperties>(b(2), D3D12_SHADER_VISIBILITY_PIXEL)
         .appendDescriptorTable(std::move(table))
+        .appendStaticSampler(s(0), sampler)
         .compile(device);
 
     // Input layout - per vertex data
@@ -194,5 +208,24 @@ void PipelineStateController::compilePipelineStatePostProcess(RootSignature &roo
         .VS(L"vertex_post_process.hlsl")
         .PS(L"pixel_post_process.hlsl")
         .disableDepthStencil()
+        .compile(device, pipelineState);
+}
+
+void PipelineStateController::compilePipelineStateShadowMapNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
+    // Root signature - crossthread data
+    rootSignature
+        .append32bitConstant<SMmvp>(b(0), D3D12_SHADER_VISIBILITY_VERTEX) // register(b0)
+        .compile(device);
+
+    // Input layout - per vertex data
+    const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+    };
+
+    // Pipeline state object
+    PipelineState{inputLayout, rootSignature}
+        .VS(L"vertex_normal_sm.hlsl")
+        .PS(L"pixel_normal_sm.hlsl")
         .compile(device, pipelineState);
 }
