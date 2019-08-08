@@ -50,7 +50,7 @@ private:
             {"flat", "Resources/meshes/flat_normals.obj"},
             {"extraFlat", "Resources/meshes/extra_flat_normals.obj"},
             {"car", "Resources/meshes/porshe.obj"},
-            {"actor", "Resources/meshes/dennis.obj"},
+            //{"actor", "Resources/meshes/dennis.obj"},
             {"dxd", "Resources/meshes/dxd_comicsans.obj"}};
         for (auto mesh : meshMap) {
             meshes.insert({mesh.first, DXD::Mesh::createFromObj(*application, mesh.second)});
@@ -71,7 +71,7 @@ private:
                 {"smallCubeMesh2", "smallCube"},
                 {"smallCubeMesh3", "smallCube"},
                 {"carMesh1", "car"},
-                {"actorMesh1", "actor"},
+                //{"actorMesh1", "actor"},
                 {"dxdMesh1", "dxd"}};
 
             for (auto object : meshObjectMap) {
@@ -111,8 +111,8 @@ private:
             objects["carMesh1"]->setSpecularity(3);
             objects["carMesh1"]->setScale(0.9f, 0.9f, 0.9f);
 
-            objects["actorMesh1"]->setPosition(-2, -2, -8);
-            objects["actorMesh1"]->setScale(0.01f, 0.01f, 0.01f);
+            //objects["actorMesh1"]->setPosition(-2, -2, -8);
+            //objects["actorMesh1"]->setScale(0.01f, 0.01f, 0.01f);
 
             objects["dxdMesh1"]->setPosition(0, 2, 15);
             objects["dxdMesh1"]->setScale(20.f, 20.f, 20.f);
