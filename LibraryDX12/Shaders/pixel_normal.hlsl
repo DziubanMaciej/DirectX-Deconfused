@@ -89,8 +89,8 @@ float4 main(PixelShaderInput IN) : SV_Target {
         float specularPower = pow(max(dot(viewDir, reflectDir), 0.0), 32) * op.objectSpecularity;
 
         //Direction
-        float3 lightDirNorm = normalize(lightDirection[i].xyz / 2);
-        float directionPower = max(dot(-lightPositionNorm.xyz, lightDirNorm.xyz), 0.0);
+        float3 lightDirNorm = normalize(lightDirection[i].xyz);
+        float directionPower = pow(max((dot(-lightPositionNorm.xyz, lightDirNorm.xyz)), 0.0),4);
 
         OUT_Color.xyz = OUT_Color.xyz + (tempLightColor.xyz + op.objectColor.xyz) * tempLightPower * (normalPower + specularPower) * directionPower;
     }

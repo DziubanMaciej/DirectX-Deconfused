@@ -109,7 +109,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
         // View projection matrix
         camera->setAspectRatio(1.0f);
         const XMMATRIX smViewMatrix = XMMatrixLookAtLH(XMVectorSet(light->getPosition().x, light->getPosition().y, light->getPosition().z, 1.f), XMVectorSet(light->getDirection().x, light->getDirection().y, light->getDirection().z, 1.f), XMVectorSet(0, 1, 0, 0.f));
-        const XMMATRIX smProjectionMatrix = XMMatrixPerspectiveFovLH(90, 1, 0.1f, 140.0f);
+        const XMMATRIX smProjectionMatrix = XMMatrixPerspectiveFovLH(90, 1, 0.1f, 160.0f);
         light->smViewProjectionMatrix = XMMatrixMultiply(smViewMatrix, smProjectionMatrix);
 
         for (ObjectImpl *object : objects) {
