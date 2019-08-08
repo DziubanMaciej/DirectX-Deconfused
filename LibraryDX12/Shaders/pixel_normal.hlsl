@@ -73,10 +73,10 @@ float4 main(PixelShaderInput IN) : SV_Target {
         
 
         //Light color
-        float3 tempLightColor = lightColor[i].xyz;
+        float3 tempLightColor = lightColor[i].xyz/3;
 
         //Diffuse
-        float tempLightPower = (20 / (distance(IN.WorldPosition.xyz, lightPosition[i].xyz) * distance(IN.WorldPosition.xyz, lightPosition[i].xyz))) * lightColor[i].w;
+        float tempLightPower = (30 / (distance(IN.WorldPosition.xyz, lightPosition[i].xyz) * distance(IN.WorldPosition.xyz, lightPosition[i].xyz))) * lightColor[i].w;
 
         //Normal
         float3 lightPositionNorm = normalize(lightPosition[i].xyz - IN.WorldPosition.xyz);

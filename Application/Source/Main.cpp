@@ -86,7 +86,7 @@ struct Game : DXD::CallbackHandler {
         objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*carMesh);
         objects.back()->setPosition(0, -1, -4); // y -2 for aventador
-        objects.back()->setColor(0, 0, 0);
+        objects.back()->setColor(0.1f, 0, 0.1f);
         objects.back()->setSpecularity(3);
         objects.back()->setScale(0.9f, 0.9f, 0.9f);
 
