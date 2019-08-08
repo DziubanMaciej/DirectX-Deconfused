@@ -100,7 +100,7 @@ private:
             objects["extraFlatMesh1"]->setPosition(0, -5, 0);
             objects["extraFlatMesh1"]->setSpecularity(0);
 
-            objects["smallCubeMesh1"]->setPosition(0, 4, 0);
+            objects["smallCubeMesh1"]->setPosition(-12, 12, 0);
 
             objects["smallCubeMesh2"]->setPosition(7, 4, 6);
 
@@ -194,17 +194,9 @@ private:
     void sceneMoveTick(unsigned int deltaTimeMicroseconds) {
         static float rotation = 0.f;
         rotation += 0.000001f * deltaTimeMicroseconds;
-        XMFLOAT3 sunPos = lights["sunLight"]->getPosition();
-        sunPos.x = 7 * sin(-rotation / 4);
-        sunPos.z = 7 * cos(-rotation / 4);
-        lights["sunLight"]->setPosition(sunPos);
-        lights["moonLight"]->setPower((sin(rotation) + 1) / 2);
-        lights["blueLight"]->setDirection(sin(rotation), 0, cos(rotation));
-        lights["redLight"]->setDirection(-sin(rotation), 0, -cos(rotation));
 
         objects["carMesh1"]->setRotation(XMFLOAT3(0, 1, 0), rotation - 45); // +180 for aventador
-        objects["carMesh1"]->setPosition(7 * sinf(rotation) * 0.6f, objects["carMesh1"]->getPosition().y, 7 * cosf(rotation) * 0.6f);
-        objects["smallCubeMesh1"]->setPosition(sunPos);
+        objects["carMesh1"]->setPosition(7 * sinf(rotation) * 0.6f, -1.475, 7 * cosf(rotation) * 0.6f);
         objects["teapotMesh2"]->setRotation(rotation, rotation, rotation);
     }
 
