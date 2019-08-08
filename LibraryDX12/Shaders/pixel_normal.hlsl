@@ -15,7 +15,14 @@ struct ObjectProperties {
 
 ConstantBuffer<ObjectProperties> op : register(b2);
 
-Texture2D shadowMap : register(t0);
+Texture2D shadowMap0 : register(t0);
+Texture2D shadowMap1 : register(t1);
+Texture2D shadowMap2 : register(t2);
+Texture2D shadowMap3 : register(t3);
+Texture2D shadowMap4 : register(t4);
+Texture2D shadowMap5 : register(t5);
+Texture2D shadowMap6 : register(t6);
+Texture2D shadowMap7 : register(t7);
 
 SamplerState s_sampler : register(s0);
 
@@ -31,24 +38,41 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
     for (int i = 0; i < lightsSize; i++) {
 
-		//Check for shadow
-		if (i == 0) {
-            float4 smCoords = (mul(smVpMatrix[i], IN.WorldPosition)).xyzw;
-            smCoords.x = smCoords.x / smCoords.w / 2.0f + 0.5f;
-            smCoords.y = -smCoords.y / smCoords.w / 2.0f + 0.5f;
+        //Check for shadow
+        float4 smCoords = (mul(smVpMatrix[i], IN.WorldPosition)).xyzw;
+        smCoords.x = smCoords.x / smCoords.w / 2.0f + 0.5f;
+        smCoords.y = -smCoords.y / smCoords.w / 2.0f + 0.5f;
 
-            float smDepth = shadowMap.Sample(s_sampler, smCoords.xy).r;
+        float smDepth = 0;
 
-            if (smCoords.x >= 0 && smCoords.x <= 1) {
-                if (smCoords.y > 0 && smCoords.y < 1) {
-                    if (((smCoords.z / smCoords.w) - 0.0001f) > smDepth) {
-                        continue;
-                    }
+        if (i == 0) {
+            smDepth = shadowMap0.Sample(s_sampler, smCoords.xy).r;
+        } else if (i == 1) {
+            smDepth = shadowMap1.Sample(s_sampler, smCoords.xy).r;
+        } else if (i == 2) {
+            smDepth = shadowMap2.Sample(s_sampler, smCoords.xy).r;
+        } else if (i == 3) {
+            smDepth = shadowMap3.Sample(s_sampler, smCoords.xy).r;
+        } else if (i == 4) {
+            smDepth = shadowMap4.Sample(s_sampler, smCoords.xy).r;
+        } else if (i == 5) {
+            smDepth = shadowMap5.Sample(s_sampler, smCoords.xy).r;
+        } else if (i == 6) {
+            smDepth = shadowMap6.Sample(s_sampler, smCoords.xy).r;
+        } else if (i == 7) {
+            smDepth = shadowMap7.Sample(s_sampler, smCoords.xy).r;
+        }
+
+        if (smCoords.x >= 0 && smCoords.x <= 1) {
+            if (smCoords.y > 0 && smCoords.y < 1) {
+                if (((smCoords.z / smCoords.w) - 0.0001f) > smDepth) {
+                    continue;
                 }
             }
         }
+        
 
-		//Light color
+        //Light color
         float3 tempLightColor = lightColor[i].xyz;
 
         //Diffuse
@@ -65,7 +89,7 @@ float4 main(PixelShaderInput IN) : SV_Target {
         float specularPower = pow(max(dot(viewDir, reflectDir), 0.0), 32) * op.objectSpecularity;
 
         //Direction
-        float3 lightDirNorm = normalize(lightDirection[i].xyz);
+        float3 lightDirNorm = normalize(lightDirection[i].xyz / 2);
         float directionPower = max(dot(-lightPositionNorm.xyz, lightDirNorm.xyz), 0.0);
 
         OUT_Color.xyz = OUT_Color.xyz + (tempLightColor.xyz + op.objectColor.xyz) * tempLightPower * (normalPower + specularPower) * directionPower;

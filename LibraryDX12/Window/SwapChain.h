@@ -41,7 +41,7 @@ public:
     const CpuDescriptorAllocation &getShadowMapSrvDescriptor() const { return shadowMapSrvDescriptor; }
 
     auto &getPostProcessRenderTarget() { return postProcessRenderTarget; }
-    auto &getShadowMap() { return shadowMap; }
+    auto &getShadowMap(int i) { return shadowMap[i]; }
 
 private:
     static bool checkTearingSupport(IDXGIFactoryPtr &factory);
@@ -74,7 +74,7 @@ private:
     std::unique_ptr<Resource> postProcessRenderTarget;
 
     // Shadow Maps
-    std::unique_ptr<Resource> shadowMap;
+    std::unique_ptr<Resource> shadowMap[8];
 
     // Numerical data
     uint32_t width;

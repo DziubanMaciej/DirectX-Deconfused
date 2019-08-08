@@ -93,7 +93,7 @@ struct Game : DXD::CallbackHandler {
         sunLight = DXD::Light::create();
         sunLight->setColor(1.0f, 1.0f, 1.0f);
         sunLight->setPosition(-12, 12, 0);
-        //sunLight->setDirection(1, -1, 0);
+        sunLight->setDirection(1, -1, 0);
         sunLight->setPower(10);
 
         moonLight = DXD::Light::create();
@@ -106,15 +106,17 @@ struct Game : DXD::CallbackHandler {
 
         redLight = DXD::Light::create();
         redLight->setColor(1.0f, 0.0f, 0.0f);
-        redLight->setPosition(0, 1, -8);
+        redLight->setPosition(-12, 1, -12);
+        redLight->setDirection(1, 0, 1);
 
         objects.push_back(DXD::Object::create());
         objects.back()->setMesh(*smallCubeMesh);
-        objects.back()->setPosition(0, 1, -8);
+        objects.back()->setPosition(12, 1, -12);
 
         blueLight = DXD::Light::create();
         blueLight->setColor(0.0f, 0.0f, 1.0f);
-        blueLight->setPosition(0, 1, -8);
+        blueLight->setPosition(12, 1, -12);
+        blueLight->setDirection(-1, 0, 1);
 
         //objects.push_back(DXD::Object::create());
         //objects.back()->setMesh(*actorMesh);
@@ -135,7 +137,7 @@ struct Game : DXD::CallbackHandler {
         scene->addObject(*objects[4]);
         scene->addObject(*objects[5]);
         scene->addObject(*objects[6]);
-        scene->addObject(*objects[7]);
+        //scene->addObject(*objects[7]);
         scene->addObject(*objects[8]);
         scene->addObject(*objects[9]);
         scene->addObject(*objects[10]);
@@ -270,20 +272,20 @@ private:
     void sceneMoveTick(unsigned int deltaTimeMicroseconds) {
         static float rotation = 0.f;
         rotation += 0.000001f * deltaTimeMicroseconds;
-        XMFLOAT3 sunPos = sunLight->getPosition();
-        sunPos.x = 7 * sin(-rotation / 4);
-        sunPos.z = 7 * cos(-rotation / 4);
-        sunLight->setPosition(sunPos);
+        //XMFLOAT3 sunPos = sunLight->getPosition();
+        //sunPos.x = 7 * sin(-rotation / 4);
+        //sunPos.z = 7 * cos(-rotation / 4);
+        //sunLight->setPosition(sunPos);
 
         moonLight->setPower((sin(rotation) + 1) / 2);
 
-        blueLight->setDirection(sin(rotation), 0, cos(rotation));
-        redLight->setDirection(-sin(rotation), 0, -cos(rotation));
+        //blueLight->setDirection(sin(rotation), 0, cos(rotation));
+        //redLight->setDirection(-sin(rotation), 0, -cos(rotation));
 
         objects[8]->setRotation(XMFLOAT3(0, 1, 0), rotation - 45); // +180 for aventador
         objects[8]->setPosition(7 * sinf(rotation) * 0.6f, -1.475, 7 * cosf(rotation) * 0.6f);
 
-        objects[7]->setPosition(sunPos);
+        //objects[7]->setPosition(sunPos);
         objects[1]->setRotation(rotation, rotation, rotation);
     }
     constexpr static float movementSpeed = 0.7f;
