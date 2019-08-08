@@ -15,157 +15,200 @@
 #include <cmath>
 #include <iostream>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
-struct Game : DXD::CallbackHandler {
+class Game : DXD::CallbackHandler {
+public:
     Game(HINSTANCE hInstance) {
         application = DXD::Application::create(true);
         window = DXD::Window::create(*application, L"myClass", L"myWindow", hInstance, 1240, 720);
-        DXD::log("Loading meshes...\n");
-        teapotMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/teapot_normals.obj");
-        assert(teapotMesh);
-        cubeMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/cube.obj");
-        assert(cubeMesh);
-        cubeNormalMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/cube_normals.obj");
-        assert(cubeNormalMesh);
-        smallCubeMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/small_cube.obj");
-        assert(smallCubeMesh);
-        flatMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/flat_normals.obj");
-        assert(flatMesh);
-        extraFlatMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/extra_flat_normals.obj");
-        assert(extraFlatMesh);
-        carMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/porshe.obj");
-        assert(carMesh);
-        //actorMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/dennis.obj");
-        //assert(actorMesh);
-        dxdMesh = DXD::Mesh::createFromObj(*application, "Resources/meshes/dxd_comicsans.obj");
-        assert(dxdMesh);
-        DXD::log("Done!\n");
-        woodTexture = DXD::Texture::createFromFile(*application, "Resources/wood.jpg");
-        assert(woodTexture);
-
-        objects.push_back(DXD::Object::create());
-        objects.back()->setMesh(*teapotMesh);
-        objects.back()->setPosition(8, -1, 0);
-        objects.back()->setScale(0.1f, 0.1f, 0.1f);
-        objects.back()->setColor(0.0f, 1.0f, 0.0f);
-
-        objects.push_back(DXD::Object::create());
-        objects.back()->setMesh(*teapotMesh);
-        objects.back()->setPosition(0, 1, 0);
-        objects.back()->setScale(0.1f, 0.1f, 0.1f);
-
-        objects.push_back(DXD::Object::create());
-        objects.back()->setMesh(*teapotMesh);
-        objects.back()->setPosition(-8, -1, 0);
-        objects.back()->setScale(0.1f, 0.1f, 0.1f);
-        objects.back()->setColor(0.0f, 0.0f, 1.0f);
-
-        objects.push_back(DXD::Object::create());
-        objects.back()->setMesh(*cubeNormalMesh);
-        objects.back()->setPosition(-8, -1, -6);
-
-        objects.push_back(DXD::Object::create());
-        objects.back()->setMesh(*cubeNormalMesh);
-        objects.back()->setPosition(9, -1, -9);
-
-        objects.push_back(DXD::Object::create());
-        objects.back()->setMesh(*flatMesh);
-        objects.back()->setPosition(0, -3, 0);
-        objects.back()->setSpecularity(0.5f);
-
-        objects.push_back(DXD::Object::create());
-        objects.back()->setMesh(*extraFlatMesh);
-        objects.back()->setPosition(0, -5, 0);
-        objects.back()->setSpecularity(0);
-
-        objects.push_back(DXD::Object::create());
-        objects.back()->setMesh(*smallCubeMesh);
-        objects.back()->setPosition(0, 4, 0);
-
-        objects.push_back(DXD::Object::create());
-        objects.back()->setMesh(*carMesh);
-        objects.back()->setPosition(0, -1, -4); // y -2 for aventador
-        objects.back()->setColor(0.1f, 0, 0.1f);
-        objects.back()->setSpecularity(3);
-        objects.back()->setScale(0.9f, 0.9f, 0.9f);
-
-        sunLight = DXD::Light::create();
-        sunLight->setColor(1.0f, 1.0f, 1.0f);
-        sunLight->setPosition(-12, 12, 0);
-        sunLight->setDirection(1, -1, 0);
-        sunLight->setPower(10);
-
-        moonLight = DXD::Light::create();
-        moonLight->setColor(0.0f, 1.0f, 1.0f);
-        moonLight->setPosition(7, 4, 6);
-
-        objects.push_back(DXD::Object::create());
-        objects.back()->setMesh(*smallCubeMesh);
-        objects.back()->setPosition(7, 4, 6);
-
-        redLight = DXD::Light::create();
-        redLight->setColor(1.0f, 0.0f, 0.0f);
-        redLight->setPosition(-12, 1, -12);
-        redLight->setDirection(1, 0, 1);
-
-        objects.push_back(DXD::Object::create());
-        objects.back()->setMesh(*smallCubeMesh);
-        objects.back()->setPosition(12, 1, -12);
-
-        blueLight = DXD::Light::create();
-        blueLight->setColor(0.0f, 0.0f, 1.0f);
-        blueLight->setPosition(12, 1, -12);
-        blueLight->setDirection(-1, 0, 1);
-
-        //objects.push_back(DXD::Object::create());
-        //objects.back()->setMesh(*actorMesh);
-        //objects.back()->setPosition(-2, -2, -8);
-        //objects.back()->setScale(0.01f, 0.01f, 0.01f);
-
-        objects.push_back(DXD::Object::create());
-        objects.back()->setMesh(*dxdMesh);
-        objects.back()->setPosition(0, 2, 15);
-        objects.back()->setScale(20.f, 20.f, 20.f);
-        objects.back()->setRotation({0, 1, 0}, static_cast<float>(M_PI));
-
-        scene = DXD::Scene::create(*application);
-        scene->addObject(*objects[0]);
-        scene->addObject(*objects[1]);
-        scene->addObject(*objects[2]);
-        scene->addObject(*objects[3]);
-        scene->addObject(*objects[4]);
-        scene->addObject(*objects[5]);
-        scene->addObject(*objects[6]);
-        //scene->addObject(*objects[7]);
-        scene->addObject(*objects[8]);
-        scene->addObject(*objects[9]);
-        scene->addObject(*objects[10]);
-        scene->addObject(*objects[11]);
-        scene->setBackgroundColor(0.3f, 0.8f, 1.0f);
-        scene->setAmbientLight(0.1f, 0.1f, 0.1f);
-        scene->addLight(*sunLight);
-        scene->addLight(*moonLight);
-        scene->addLight(*redLight);
-        scene->addLight(*blueLight);
-
-        camera = DXD::Camera::create();
-        camera->setUpDirection(0, 1, 0);
-        camera->setFovAngleYDeg(70);
-        camera->setNearZ(0.1f);
-        camera->setFarZ(140.0f);
-        scene->setCamera(*camera);
+        prepMeshes();
+        prepLights();
+        prepTextures();
+        prepCamera();
+        prepScene();
         updateCamera();
 
         window->setScene(*scene);
         application->setCallbackHandler(this);
     }
-
     void run() {
         window->show();
         window->messageLoop();
     }
 
+private:
+    // preparing resources for the game
+    void prepMeshes() {
+        DXD::log("Loading meshes...\n");
+        std::unordered_map<std::string, std::string> meshMap = {
+            {"teapot", "Resources/meshes/teapot_normals.obj"},
+            {"cube", "Resources/meshes/cube.obj"},
+            {"cubeNormal", "Resources/meshes/cube_normals.obj"},
+            {"smallCube", "Resources/meshes/small_cube.obj"},
+            {"flat", "Resources/meshes/flat_normals.obj"},
+            {"extraFlat", "Resources/meshes/extra_flat_normals.obj"},
+            {"car", "Resources/meshes/porshe.obj"},
+            {"actor", "Resources/meshes/dennis.obj"},
+            {"dxd", "Resources/meshes/dxd_comicsans.obj"}};
+        for (auto mesh : meshMap) {
+            meshes.insert({mesh.first, DXD::Mesh::createFromObj(*application, mesh.second)});
+            assert(meshes[mesh.first]);
+        }
+
+        // MESH OBJECTS
+        {
+            std::unordered_map<std::string, std::string> meshObjectMap = {
+                {"teapotMesh1", "teapot"},
+                {"teapotMesh2", "teapot"},
+                {"teapotMesh3", "teapot"},
+                {"cubeNormalMesh1", "cubeNormal"},
+                {"cubeNormalMesh2", "cubeNormal"},
+                {"flatMesh1", "flat"},
+                {"extraFlatMesh1", "extraFlat"},
+                {"smallCubeMesh1", "smallCube"},
+                {"smallCubeMesh2", "smallCube"},
+                {"smallCubeMesh3", "smallCube"},
+                {"carMesh1", "car"},
+                {"actorMesh1", "actor"},
+                {"dxdMesh1", "dxd"}};
+
+            for (auto object : meshObjectMap) {
+                objects.insert({object.first, DXD::Object::create()});
+                objects[object.first]->setMesh(*meshes[object.second]);
+            }
+
+            objects["teapotMesh1"]->setPosition(8, -1, 0);
+            objects["teapotMesh1"]->setScale(0.1f, 0.1f, 0.1f);
+            objects["teapotMesh1"]->setColor(0.0f, 1.0f, 0.0f);
+
+            objects["teapotMesh2"]->setPosition(0, 1, 0);
+            objects["teapotMesh2"]->setScale(0.1f, 0.1f, 0.1f);
+
+            objects["teapotMesh3"]->setPosition(-8, -1, 0);
+            objects["teapotMesh3"]->setScale(0.1f, 0.1f, 0.1f);
+            objects["teapotMesh3"]->setColor(0.0f, 0.0f, 1.0f);
+
+            objects["cubeNormalMesh1"]->setPosition(-8, -1, -6);
+
+            objects["cubeNormalMesh2"]->setPosition(9, -1, -9);
+
+            objects["flatMesh1"]->setPosition(0, -3, 0);
+            objects["flatMesh1"]->setSpecularity(0.5f);
+
+            objects["extraFlatMesh1"]->setPosition(0, -5, 0);
+            objects["extraFlatMesh1"]->setSpecularity(0);
+
+            objects["smallCubeMesh1"]->setPosition(0, 4, 0);
+
+            objects["smallCubeMesh2"]->setPosition(7, 4, 6);
+
+            objects["smallCubeMesh3"]->setPosition(12, 1, -12);
+
+            objects["carMesh1"]->setPosition(0, -1, -4); // y -2 for aventador
+            objects["carMesh1"]->setColor(0.1f, 0, 0.1f);
+            objects["carMesh1"]->setSpecularity(3);
+            objects["carMesh1"]->setScale(0.9f, 0.9f, 0.9f);
+
+            objects["actorMesh1"]->setPosition(-2, -2, -8);
+            objects["actorMesh1"]->setScale(0.01f, 0.01f, 0.01f);
+
+            objects["dxdMesh1"]->setPosition(0, 2, 15);
+            objects["dxdMesh1"]->setScale(20.f, 20.f, 20.f);
+            objects["dxdMesh1"]->setRotation({0, 1, 0}, static_cast<float>(M_PI));
+        }
+        DXD::log("Done!\n");
+    }
+    void prepLights() {
+        DXD::log("Loading lights...\n");
+        std::vector<std::string> lightNames = {
+            "sunLight",
+            "moonLight",
+            "redLight",
+            "blueLight"};
+        for (auto light : lightNames) {
+            lights.insert({light, DXD::Light::create()});
+        }
+        // LIGHT CONFIG
+        {
+            lights["sunLight"]->setColor(1.0f, 1.0f, 1.0f);
+            lights["sunLight"]->setPosition(-12, 12, 0);
+            lights["sunLight"]->setDirection(1, -1, 0);
+            lights["sunLight"]->setPower(10);
+
+            lights["moonLight"]->setColor(0.0f, 1.0f, 1.0f);
+            lights["moonLight"]->setPosition(7, 4, 6);
+
+            lights["redLight"]->setColor(1.0f, 0.0f, 0.0f);
+            lights["redLight"]->setPosition(-12, 1, -12);
+            lights["redLight"]->setDirection(1, 0, 1);
+
+            lights["blueLight"]->setColor(0.0f, 0.0f, 1.0f);
+            lights["blueLight"]->setPosition(12, 1, -12);
+            lights["blueLight"]->setDirection(-1, 0, 1);
+
+        }
+        DXD::log("Done!\n");
+    }
+    void prepTextures() {
+        // TODO
+        woodTexture = DXD::Texture::createFromFile(*application, "Resources/wood.jpg");
+        assert(woodTexture);
+    }
+    void prepCamera() {
+        DXD::log("Preparing camera...\n");
+        camera = DXD::Camera::create();
+        camera->setUpDirection(0, 1, 0);
+        camera->setFovAngleYDeg(70);
+        camera->setNearZ(0.1f);
+        camera->setFarZ(140.0f);
+        DXD::log("Done!\n");
+    }
+    void prepScene() {
+        DXD::log("Preparing scene...\n");
+        scene = DXD::Scene::create(*application);
+        for (auto &object : objects) {
+            scene->addObject(*object.second);
+        }
+        scene->setBackgroundColor(0.3f, 0.8f, 1.0f);
+        scene->setAmbientLight(0.1f, 0.1f, 0.1f);
+        for (auto &light : lights) {
+            scene->addLight(*light.second);
+        }
+        scene->setCamera(*camera);
+        DXD::log("Done!\n");
+    }
+
+    // Internal game logic
+    void updateCamera() {
+        auto camera = scene->getCamera();
+        camera->setEyePosition(cameraPosition);
+
+        XMFLOAT3 focusPoint{cameraPosition};
+        focusPoint.x += focusDirection.x;
+        focusPoint.y += focusDirection.y;
+        focusPoint.z += focusDirection.z;
+        camera->setFocusPoint(focusPoint);
+    }
+    void sceneMoveTick(unsigned int deltaTimeMicroseconds) {
+        static float rotation = 0.f;
+        rotation += 0.000001f * deltaTimeMicroseconds;
+        XMFLOAT3 sunPos = lights["sunLight"]->getPosition();
+        sunPos.x = 7 * sin(-rotation / 4);
+        sunPos.z = 7 * cos(-rotation / 4);
+        lights["sunLight"]->setPosition(sunPos);
+        lights["moonLight"]->setPower((sin(rotation) + 1) / 2);
+        lights["blueLight"]->setDirection(sin(rotation), 0, cos(rotation));
+        lights["redLight"]->setDirection(-sin(rotation), 0, -cos(rotation));
+
+        objects["carMesh1"]->setRotation(XMFLOAT3(0, 1, 0), rotation - 45); // +180 for aventador
+        objects["carMesh1"]->setPosition(7 * sinf(rotation) * 0.6f, objects["carMesh1"]->getPosition().y, 7 * cosf(rotation) * 0.6f);
+        objects["smallCubeMesh1"]->setPosition(sunPos);
+        objects["teapotMesh2"]->setRotation(rotation, rotation, rotation);
+    }
+
+    // Callbacks
     void onMouseMove(unsigned int xPos, unsigned int yPos) override {
         if (lookingAroundEnabled) {
             XMFLOAT3 oldFocusDirection{0, 0, 1};
@@ -197,7 +240,6 @@ struct Game : DXD::CallbackHandler {
         lastMouseX = xPos;
         lastMouseY = yPos;
     }
-
     void onKeyDown(unsigned int vkCode) override {
         switch (vkCode) {
         case 'F':
@@ -246,7 +288,6 @@ struct Game : DXD::CallbackHandler {
             return;
         }
     }
-
     void onUpdate(unsigned int deltaTimeMicroseconds) override {
         fpsCounter.push(deltaTimeMicroseconds);
         if (fpsCounter.getFrameIndex() % 512) {
@@ -258,36 +299,6 @@ struct Game : DXD::CallbackHandler {
         sceneMoveTick(deltaTimeMicroseconds);
     }
 
-private:
-    void updateCamera() {
-        auto camera = scene->getCamera();
-        camera->setEyePosition(cameraPosition);
-
-        XMFLOAT3 focusPoint{cameraPosition};
-        focusPoint.x += focusDirection.x;
-        focusPoint.y += focusDirection.y;
-        focusPoint.z += focusDirection.z;
-        camera->setFocusPoint(focusPoint);
-    }
-    void sceneMoveTick(unsigned int deltaTimeMicroseconds) {
-        static float rotation = 0.f;
-        rotation += 0.000001f * deltaTimeMicroseconds;
-        //XMFLOAT3 sunPos = sunLight->getPosition();
-        //sunPos.x = 7 * sin(-rotation / 4);
-        //sunPos.z = 7 * cos(-rotation / 4);
-        //sunLight->setPosition(sunPos);
-
-        moonLight->setPower((sin(rotation) + 1) / 2);
-
-        //blueLight->setDirection(sin(rotation), 0, cos(rotation));
-        //redLight->setDirection(-sin(rotation), 0, -cos(rotation));
-
-        objects[8]->setRotation(XMFLOAT3(0, 1, 0), rotation - 45); // +180 for aventador
-        objects[8]->setPosition(7 * sinf(rotation) * 0.6f, -1.475, 7 * cosf(rotation) * 0.6f);
-
-        //objects[7]->setPosition(sunPos);
-        objects[1]->setRotation(rotation, rotation, rotation);
-    }
     constexpr static float movementSpeed = 0.7f;
     constexpr static float cameraRotationSpeed = 0.007f;
 
@@ -303,20 +314,11 @@ private:
 
     std::unique_ptr<DXD::Application> application;
     std::unique_ptr<DXD::Window> window;
-    std::unique_ptr<DXD::Mesh> teapotMesh;
-    std::unique_ptr<DXD::Mesh> cubeMesh;
-    std::unique_ptr<DXD::Mesh> smallCubeMesh;
-    std::unique_ptr<DXD::Mesh> cubeNormalMesh;
-    std::unique_ptr<DXD::Mesh> flatMesh;
-    std::unique_ptr<DXD::Mesh> extraFlatMesh;
-    std::unique_ptr<DXD::Mesh> carMesh;
-    std::unique_ptr<DXD::Mesh> actorMesh;
-    std::unique_ptr<DXD::Mesh> dxdMesh;
-    std::unique_ptr<DXD::Light> sunLight;
-    std::unique_ptr<DXD::Light> moonLight;
-    std::unique_ptr<DXD::Light> redLight;
-    std::unique_ptr<DXD::Light> blueLight;
-    std::vector<std::unique_ptr<DXD::Object>> objects;
+    std::unordered_map<std::string, std::unique_ptr<DXD::Mesh>> meshes;
+    std::unordered_map<std::string, std::unique_ptr<DXD::Light>> lights;
+    std::unordered_map<std::string, std::unique_ptr<DXD::Object>> objects;
+
+    // TODO: unordered_map for three below
     std::unique_ptr<DXD::Texture> woodTexture;
     std::unique_ptr<DXD::Scene> scene;
     std::unique_ptr<DXD::Camera> camera;
