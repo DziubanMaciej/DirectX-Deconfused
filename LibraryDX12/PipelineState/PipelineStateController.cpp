@@ -12,35 +12,6 @@
 
 using namespace ShaderRegisterHelpers;
 
-D3D12_GRAPHICS_PIPELINE_STATE_DESC PipelineStateController::getBaseGraphicsPipelineSateDesc() {
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateDesc = {};
-    pipelineStateDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-    pipelineStateDesc.SampleMask = UINT_MAX;
-    pipelineStateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-    pipelineStateDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-    pipelineStateDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
-    pipelineStateDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-    pipelineStateDesc.NumRenderTargets = 1;
-    pipelineStateDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-    pipelineStateDesc.SampleDesc.Count = 1;
-    return pipelineStateDesc;
-}
-
-D3D12_GRAPHICS_PIPELINE_STATE_DESC PipelineStateController::getPostProcessGraphicsPipelineSateDesc() {
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC pipelineStateDesc = {};
-    pipelineStateDesc.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
-    pipelineStateDesc.SampleMask = UINT_MAX;
-    pipelineStateDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-    pipelineStateDesc.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-    pipelineStateDesc.DepthStencilState.DepthEnable = FALSE;
-    pipelineStateDesc.DepthStencilState.StencilEnable = FALSE;
-    pipelineStateDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-    pipelineStateDesc.NumRenderTargets = 1;
-    pipelineStateDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-    pipelineStateDesc.SampleDesc.Count = 1;
-    return pipelineStateDesc;
-}
-
 PipelineStateController::PipelineStateController(ID3D12DevicePtr device) : device(device) {}
 
 void PipelineStateController::compileAll() {
