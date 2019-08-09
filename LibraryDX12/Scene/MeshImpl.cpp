@@ -10,7 +10,7 @@
 #include <string>
 
 namespace DXD {
-std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const std::string &filePath) {
+std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const std::string &filePath, bool useTextures) {
     std::fstream inputFile{filePath, std::ios::in};
     if (!inputFile.good()) {
         return nullptr;
@@ -27,7 +27,6 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
     std::string f1, f2, f3, f4;
 
     std::string line;
-
     while (getline(inputFile, line).good()) { //TODO change reading method in order to parse vertices with 4 values, parse faces with normals etc.
 
         std::istringstream strs(line);
@@ -85,6 +84,11 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
         }
     }
 
+    const auto meshType = MeshImpl::computeMeshType(normals, textureCoordinates, useTextures);
+    if (meshType == MeshImpl::UNKNOWN) {
+        return nullptr;
+    }
+
     // No need to rearrange vertices if there are no additional elements in them
     const bool usesIndexBuffer = normals.size() == 0 && textureCoordinates.size() == 0;
     std::vector<FLOAT> outputVertices;
@@ -125,23 +129,20 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
             outputVertices.push_back(vertices[3 * (vertexIdx - 1)]);
             outputVertices.push_back(vertices[3 * (vertexIdx - 1) + 1]);
             outputVertices.push_back(vertices[3 * (vertexIdx - 1) + 2]);
-            if (normals.size() > 0) {
+            if (meshType & MeshImpl::NORMALS) {
                 outputVertices.push_back(normals[3 * (normalIdx - 1)]);
                 outputVertices.push_back(normals[3 * (normalIdx - 1) + 1]);
                 outputVertices.push_back(normals[3 * (normalIdx - 1) + 2]);
             }
-            if (textureCoordinates.size() > 0) {
-                // TODO textures not supported yet
-                //outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1)]);
-                //outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 1]);
-                //outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 2]);
+            if (meshType & MeshImpl::TEXTURE_COORDS) {
+                outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1)]);
+                outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 1]);
+                outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 2]);
             }
         }
     }
 
-    const auto meshTypeAndVertexSize = MeshImpl::computeMeshTypeAndVertexSize(normals, textureCoordinates);
-    const auto meshType = meshTypeAndVertexSize.first;
-    const auto vertexSize = meshTypeAndVertexSize.second;
+    const auto vertexSize = MeshImpl::computeVertexSize(meshType);
     return std::unique_ptr<Mesh>{new MeshImpl(application, meshType,
                                               std::move(outputVertices), vertexSize, std::move(indices),
                                               std::move(normals), std::move(textureCoordinates))};
@@ -161,21 +162,34 @@ MeshImpl::MeshImpl(DXD::Application &application, MeshType meshType,
     uploadToGPU();
 }
 
-std::pair<MeshImpl::MeshType, UINT> MeshImpl::computeMeshTypeAndVertexSize(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates) {
+MeshImpl::MeshType MeshImpl::computeMeshType(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates, bool useTextures) {
     MeshType meshType = TRIANGLE_STRIP;
-    UINT vertexSize = 3;
     if (normals.size() > 0) {
         meshType |= NORMALS;
-        vertexSize += 3;
     }
-    if (textureCoordinates.size() > 0) {
-        // TODO textures not supported yet
-        // meshType |= TEXTURE_COORDS;
-        // vertexSize += 3;
+    if (useTextures) {
+        if (textureCoordinates.size() > 0) {
+            meshType |= TEXTURE_COORDS;
+        } else {
+            return UNKNOWN; // user wants texture coords which .obj doesn't provide - error
+        }
     }
 
-    vertexSize *= sizeof(FLOAT);
-    return {meshType, vertexSize};
+    return meshType;
+}
+
+UINT MeshImpl::computeVertexSize(MeshType meshType) {
+    UINT vertexSize = 0;
+    if (meshType & TRIANGLE_STRIP) {
+        vertexSize += 3;
+    }
+    if (meshType & TEXTURE_COORDS) {
+        vertexSize += 3;
+    }
+    if (meshType & NORMALS) {
+        vertexSize += 3;
+    }
+    return vertexSize * sizeof(FLOAT);
 }
 
 void MeshImpl::uploadToGPU() {

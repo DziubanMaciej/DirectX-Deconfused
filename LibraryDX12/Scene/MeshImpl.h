@@ -13,6 +13,7 @@
 class MeshImpl : public DXD::Mesh {
 public:
     using MeshType = unsigned int;
+    constexpr static MeshType UNKNOWN = 0x0;
     constexpr static MeshType TRIANGLE_STRIP = 0x01;
     constexpr static MeshType TEXTURE_COORDS = 0x02;
     constexpr static MeshType NORMALS = 0x04;
@@ -57,6 +58,7 @@ protected:
     std::unique_ptr<IndexBuffer> indexBuffer;
 
 private:
-    static std::pair<MeshType, UINT> computeMeshTypeAndVertexSize(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates);
+    static MeshType computeMeshType(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates, bool useTextures);
+    static UINT computeVertexSize(MeshType meshType);
     void uploadToGPU();
 };

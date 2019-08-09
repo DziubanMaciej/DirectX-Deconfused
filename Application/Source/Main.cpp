@@ -42,18 +42,25 @@ private:
     // preparing resources for the game
     void prepMeshes() {
         DXD::log("Loading meshes...\n");
-        std::unordered_map<std::string, std::string> meshMap = {
-            {"teapot", "Resources/meshes/teapot_normals.obj"},
-            {"cube", "Resources/meshes/cube.obj"},
-            {"cubeNormal", "Resources/meshes/cube_normals.obj"},
-            {"smallCube", "Resources/meshes/small_cube.obj"},
-            {"flat", "Resources/meshes/flat_normals.obj"},
-            {"extraFlat", "Resources/meshes/extra_flat_normals.obj"},
-            {"car", "Resources/meshes/porshe.obj"},
-            //{"actor", "Resources/meshes/dennis.obj"},
-            {"dxd", "Resources/meshes/dxd_comicsans.obj"}};
+
+        struct MeshCreationData {
+            std::string filePath;
+            bool useTextures;
+        };
+
+        std::unordered_map<std::string, MeshCreationData> meshMap = {
+            {"teapot", {"Resources/meshes/teapot_normals.obj", false}},
+            {"cube", {"Resources/meshes/cube.obj", false}},
+            {"cubeNormal", {"Resources/meshes/cube_normals.obj", false}},
+            {"smallCube", {"Resources/meshes/small_cube.obj", false}},
+            {"flat", {"Resources/meshes/flat_normals.obj", false}},
+            {"extraFlat", {"Resources/meshes/extra_flat_normals.obj", false}},
+            {"car", {"Resources/meshes/porshe.obj", true}},
+            //{"actor", {"Resources/meshes/dennis.obj", false}},
+            {"dxd", {"Resources/meshes/dxd_comicsans.obj", false}}};
         for (auto mesh : meshMap) {
-            meshes.insert({mesh.first, DXD::Mesh::createFromObj(*application, mesh.second)});
+            const auto creationData = mesh.second;
+            meshes.insert({mesh.first, DXD::Mesh::createFromObj(*application, creationData.filePath, creationData.useTextures)});
             assert(meshes[mesh.first]);
         }
 
@@ -147,7 +154,6 @@ private:
             lights["blueLight"]->setColor(0.0f, 0.0f, 1.0f);
             lights["blueLight"]->setPosition(12, 1, -12);
             lights["blueLight"]->setDirection(-1, 0, 1);
-
         }
         DXD::log("Done!\n");
     }
