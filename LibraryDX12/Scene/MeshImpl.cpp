@@ -11,7 +11,8 @@
 
 namespace DXD {
 std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const std::string &filePath, bool useTextures) {
-    std::fstream inputFile{filePath, std::ios::in};
+    const auto fullFilePath = std::string{RESOURCES_PATH} + filePath;
+    std::fstream inputFile{fullFilePath, std::ios::in};
     if (!inputFile.good()) {
         return nullptr;
     }

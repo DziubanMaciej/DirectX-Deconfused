@@ -75,8 +75,9 @@ macro(set_working_directory_to_bin TARGET_NAME)
     set_property(TARGET ${TARGET_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE})
 endmacro()
 
-macro(add_definitions_for_shaders_path ${TARGET_NAME})
+macro(add_definitions_for_paths ${TARGET_NAME})
     add_definitions(-DSHADERS_PATH=L"../../../${TARGET_NAME}/Shaders/")
+    add_definitions(-DRESOURCES_PATH="../../../")
 endmacro()
 
 set(DXD_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/LibraryDX12/Include)

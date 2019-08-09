@@ -19,11 +19,12 @@ std::unique_ptr<Texture> Texture::createFromFile(Application &application, const
     // TODO create views
     // TODO generate mips
 
-    if (!FileHelper::exists(filePath)) {
+    const auto fullFilePath = std::string{RESOURCES_PATH} + filePath;
+    if (!FileHelper::exists(fullFilePath)) {
         return nullptr;
     }
 
-    const StbImage image(filePath, STBI_rgb);
+    const StbImage image(fullFilePath, STBI_rgb);
     const D3D12_RESOURCE_DIMENSION dimension = TextureImpl::calculateTextureDimension(image.width, image.height);
     const DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UINT;
     const D3D12_RESOURCE_DESC description = TextureImpl::createTextureDescription(dimension, format, image.width, image.height);
