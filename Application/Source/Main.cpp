@@ -150,10 +150,12 @@ private:
             lights["redLight"]->setColor(1.0f, 0.0f, 0.0f);
             lights["redLight"]->setPosition(-12, 1, -12);
             lights["redLight"]->setDirection(1, 0, 1);
+            lights["redLight"]->setPower(2);
 
             lights["blueLight"]->setColor(0.0f, 0.0f, 1.0f);
             lights["blueLight"]->setPosition(12, 1, -12);
             lights["blueLight"]->setDirection(-1, 0, 1);
+            lights["blueLight"]->setPower(2);
         }
         DXD::log("Done!\n");
     }
