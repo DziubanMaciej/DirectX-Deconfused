@@ -48,7 +48,7 @@ void Resource::create(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeap
 void Resource::uploadToGPU(ApplicationImpl &application, const void *data) {
     assert(gpuUploadData == nullptr);
 
-    CommandQueue &commandQueue = application.getDirectCommandQueue();
+    CommandQueue &commandQueue = application.getCopyCommandQueue();
 
     // Record command list for GPU upload
     CommandList commandList{commandQueue.getCommandAllocatorManager(), nullptr};

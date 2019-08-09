@@ -55,9 +55,9 @@ private:
             {"smallCube", {"Resources/meshes/small_cube.obj", false}},
             {"flat", {"Resources/meshes/flat_normals.obj", false}},
             {"extraFlat", {"Resources/meshes/extra_flat_normals.obj", false}},
-            {"car", {"Resources/meshes/porshe.obj", false}},
             //{"actor", {"Resources/meshes/dennis.obj", false}},
-            {"dxd", {"Resources/meshes/dxd_comicsans.obj", false}}};
+            {"dxd", {"Resources/meshes/dxd_comicsans.obj", false}},
+            {"car", {"Resources/meshes/porshe.obj", false}}};
         for (auto mesh : meshMap) {
             const auto creationData = mesh.second;
             meshes.insert({mesh.first, DXD::Mesh::createFromObj(*application, creationData.filePath, creationData.useTextures)});

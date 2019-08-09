@@ -37,6 +37,7 @@ public:
     size_t getTextureCoordinatesCount() const { return textureCoordinates.size(); }
 
     MeshType getMeshType() const { return meshType; }
+    bool isUploadInProgress();
 
     auto &getVertexBuffer() { return vertexBuffer; }
     auto &getIndexBuffer() { return indexBuffer; }

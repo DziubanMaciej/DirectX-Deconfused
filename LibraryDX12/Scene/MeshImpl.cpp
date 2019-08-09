@@ -163,6 +163,14 @@ MeshImpl::MeshImpl(DXD::Application &application, MeshType meshType,
     uploadToGPU();
 }
 
+#include <cassert>
+bool MeshImpl::isUploadInProgress() {
+    const bool vertexInProgress = this->vertexBuffer->isUploadInProgress();
+    const bool indexInProgress = this->indexBuffer != nullptr && this->indexBuffer->isUploadInProgress();
+    const bool inProgress = vertexInProgress || indexBuffer;
+    return inProgress;
+}
+
 MeshImpl::MeshType MeshImpl::computeMeshType(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates, bool useTextures) {
     MeshType meshType = TRIANGLE_STRIP;
     if (normals.size() > 0) {
@@ -198,7 +206,7 @@ void MeshImpl::uploadToGPU() {
 
     // Context
     ID3D12DevicePtr device = application.getDevice();
-    auto &commandQueue = application.getDirectCommandQueue();
+    auto &commandQueue = application.getCopyCommandQueue();
 
     // Record command list for GPU upload
     CommandList commandList{commandQueue.getCommandAllocatorManager(), nullptr};
