@@ -13,7 +13,10 @@ GpuDescriptorHeapController::GpuDescriptorHeapController(CommandList &commandLis
       descriptorIncrementSize(commandList.getDevice()->GetDescriptorHandleIncrementSize(heapType)) {}
 
 void GpuDescriptorHeapController::setRootSignature(const RootSignature &rootSignature) {
-    assert(stagedDescriptorTables.size() == 0); // There shouldn't be any uncommitted tables
+    // TODO this check could be useful because uncommitted tables here means redundant change of pipeline state
+    // rendering has to be reworked though, so it changes pipeline state only when necessary
+    //assert(stagedDescriptorTables.size() == 0); // There shouldn't be any uncommitted tables
+    stagedDescriptorTables.clear();
 
     this->descriptorTableInfos.clear();
     UINT currentOffsetInStagingDescriptors = 0u;
