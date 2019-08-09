@@ -141,18 +141,15 @@ void CommandList::RSSetScissorRect(const D3D12_RECT &rect) {
     commandList->RSSetScissorRects(1, &rect);
 }
 
-void CommandList::OMSetRenderTargets(UINT renderTargetsCount, const D3D12_CPU_DESCRIPTOR_HANDLE *renderTargetDescriptors,
-                                     const ID3D12ResourcePtr *renderTargets, BOOL singleHandleToDescriptorRange,
-                                     const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor, const ID3D12ResourcePtr &depthStencilBuffer) {
-    commandList->OMSetRenderTargets(renderTargetsCount, renderTargetDescriptors, singleHandleToDescriptorRange, &depthStencilDescriptor);
-    addUsedResources(renderTargets, renderTargetsCount);
-    addUsedResource(depthStencilBuffer);
-}
-
 void CommandList::OMSetRenderTarget(const D3D12_CPU_DESCRIPTOR_HANDLE &renderTargetDescriptor, const ID3D12ResourcePtr &renderTarget,
                                     const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor, const ID3D12ResourcePtr &depthStencilBuffer) {
     commandList->OMSetRenderTargets(1, &renderTargetDescriptor, TRUE, &depthStencilDescriptor);
     addUsedResource(renderTarget);
+    addUsedResource(depthStencilBuffer);
+}
+
+void CommandList::OMSetRenderTargetDepthOnly(const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor, const ID3D12ResourcePtr &depthStencilBuffer) {
+    commandList->OMSetRenderTargets(FALSE, nullptr, 1, &depthStencilDescriptor);
     addUsedResource(depthStencilBuffer);
 }
 

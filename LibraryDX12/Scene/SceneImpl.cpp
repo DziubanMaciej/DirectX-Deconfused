@@ -90,7 +90,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
 
     // Shadow maps
     for (int i = 0; i < 8; i++) {
-        swapChain.getShadowMap(i)->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+        swapChain.getShadowMap(i).transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);
     }
 
     CD3DX12_VIEWPORT viewportSM(0.0f, 0.0f, 2048.0f, 2048.0f);
@@ -101,9 +101,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     int lightIdx = 0;
 
     for (LightImpl *light : lights) {
-
-		commandList.getCommandList()->OMSetRenderTargets(FALSE, nullptr, 1, &swapChain.getShadowMapDescriptor().getCpuHandle(lightIdx));
-
+        commandList.OMSetRenderTargetDepthOnly(swapChain.getShadowMapDescriptor().getCpuHandle(lightIdx), swapChain.getShadowMap(lightIdx).getResource());
         commandList.clearDepthStencilView(swapChain.getShadowMapDescriptor().getCpuHandle(lightIdx), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
         // View projection matrix
@@ -130,17 +128,17 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     }
 
     for (int i = 0; i < 8; i++) {
-		swapChain.getShadowMap(i)->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		swapChain.getShadowMap(i).transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	}
 
     // Forward shading
     // Transition to RENDER_TARGET
-    swapChain.getPostProcessRenderTarget()->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    swapChain.getPostProcessRenderTarget().transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     CD3DX12_VIEWPORT viewport(0.0f, 0.0f, (float)swapChain.getWidth(), (float)swapChain.getHeight());
     commandList.RSSetViewport(viewport);
 
-    commandList.OMSetRenderTarget(swapChain.getPostProcessRtvDescriptor().getCpuHandle(), swapChain.getPostProcessRenderTarget()->getResource(), // set temp
+    commandList.OMSetRenderTarget(swapChain.getPostProcessRtvDescriptor().getCpuHandle(), swapChain.getPostProcessRenderTarget().getResource(), // set temp
                                   swapChain.getDepthStencilBufferDescriptor(), swapChain.getDepthStencilBuffer()->getResource());
 
     // Render (clear color)
@@ -227,7 +225,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     //POST PROCESS
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS);
 
-    swapChain.getPostProcessRenderTarget()->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    swapChain.getPostProcessRenderTarget().transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
     backBuffer->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.getCommandList()->OMSetRenderTargets(1, &swapChain.getCurrentBackBufferDescriptor(), FALSE, nullptr);
