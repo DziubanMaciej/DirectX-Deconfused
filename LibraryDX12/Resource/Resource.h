@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CommandList/CommandList.h"
+#include "CommandList/CommandQueue.h"
 
 #include "DXD/NonCopyableAndMovable.h"
 
@@ -24,12 +25,22 @@ public:
     void transitionBarrierSingle(CommandList &commandList, D3D12_RESOURCE_STATES targetState);
     D3D12_RESOURCE_STATES getState() { return state; }
 
+    bool isUploadInProgress();
+    void registerUpload(CommandQueue &uploadingQueue, uint64_t uploadFence);
+
 private:
     void create(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeapProperties, D3D12_HEAP_FLAGS heapFlags, const D3D12_RESOURCE_DESC *pDesc, D3D12_RESOURCE_STATES initialResourceState, const D3D12_CLEAR_VALUE *pOptimizedClearValue);
 
 protected:
+    struct GpuUploadData {
+        GpuUploadData(CommandQueue &queue, uint64_t fence) : uploadingQueue(queue), uploadFence(fence) {}
+        CommandQueue &uploadingQueue;
+        uint64_t uploadFence;
+    };
+
     void uploadToGPU(ApplicationImpl &application, const void *data);
     void recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data);
     D3D12_RESOURCE_STATES state;
     ID3D12ResourcePtr resource;
+    std::unique_ptr<GpuUploadData> gpuUploadData = {};
 };

@@ -23,6 +23,18 @@ void Resource::transitionBarrierSingle(CommandList &commandList, D3D12_RESOURCE_
     }
 }
 
+bool Resource::isUploadInProgress() {
+    if (gpuUploadData != nullptr && gpuUploadData->uploadingQueue.getFence().isComplete(gpuUploadData->uploadFence)) {
+        gpuUploadData.reset();
+    }
+    return gpuUploadData != nullptr;
+}
+
+void Resource::registerUpload(CommandQueue &uploadingQueue, uint64_t uploadFence) {
+    assert(!isUploadInProgress());
+    this->gpuUploadData = std::make_unique<GpuUploadData>(uploadingQueue, uploadFence);
+}
+
 void Resource::create(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeapProperties, D3D12_HEAP_FLAGS heapFlags, const D3D12_RESOURCE_DESC *pDesc, D3D12_RESOURCE_STATES initialResourceState, const D3D12_CLEAR_VALUE *pOptimizedClearValue) {
     throwIfFailed(device->CreateCommittedResource(
         pHeapProperties,
@@ -34,6 +46,8 @@ void Resource::create(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeap
 }
 
 void Resource::uploadToGPU(ApplicationImpl &application, const void *data) {
+    assert(gpuUploadData == nullptr);
+
     CommandQueue &commandQueue = application.getDirectCommandQueue();
 
     // Record command list for GPU upload
@@ -43,7 +57,8 @@ void Resource::uploadToGPU(ApplicationImpl &application, const void *data) {
 
     // Execute on GPU
     std::vector<CommandList *> commandLists{&commandList};
-    commandQueue.executeCommandListsAndSignal(commandLists);
+    const auto fence = commandQueue.executeCommandListsAndSignal(commandLists);
+    registerUpload(commandQueue, fence);
 }
 
 void Resource::recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data) {

@@ -194,6 +194,8 @@ UINT MeshImpl::computeVertexSize(MeshType meshType) {
 }
 
 void MeshImpl::uploadToGPU() {
+    const bool useIndexBuffer = indices.size() > 0;
+
     // Context
     ID3D12DevicePtr device = application.getDevice();
     auto &commandQueue = application.getDirectCommandQueue();
@@ -201,9 +203,8 @@ void MeshImpl::uploadToGPU() {
     // Record command list for GPU upload
     CommandList commandList{commandQueue.getCommandAllocatorManager(), nullptr};
     const UINT verticesCount = static_cast<UINT>(vertices.size() / (vertexSize / sizeof(FLOAT)));
-    //const UINT vertexSize = 3 * sizeof(FLOAT);
     this->vertexBuffer = std::make_unique<VertexBuffer>(device, commandList, vertices.data(), verticesCount, vertexSize);
-    if (indices.size() > 0) {
+    if (useIndexBuffer) {
         this->indexBuffer = std::make_unique<IndexBuffer>(device, commandList, indices.data(), static_cast<UINT>(indices.size()));
     }
     commandList.close();
@@ -211,4 +212,10 @@ void MeshImpl::uploadToGPU() {
     // Execute and register obtained allocator and lists to the manager
     std::vector<CommandList *> commandLists{&commandList};
     const uint64_t fenceValue = commandQueue.executeCommandListsAndSignal(commandLists);
+
+    // Register upload status for buffers
+    this->vertexBuffer->registerUpload(commandQueue, fenceValue);
+    if (useIndexBuffer) {
+        this->indexBuffer->registerUpload(commandQueue, fenceValue);
+    }
 }
