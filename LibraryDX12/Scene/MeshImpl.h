@@ -25,7 +25,7 @@ protected:
     ~MeshImpl() = default;
 
 public:
-    UINT getVertexSize() const { return vertexSize; }
+    UINT getVertexSizeInBytes() const { return vertexSizeInBytes; }
     UINT getVerticesCount() const { return verticesCount; }
     UINT getIndicesCount() const { return indicesCount; }
 
@@ -41,7 +41,7 @@ protected:
     MeshType meshType;
 
     // CPU resources
-    const UINT vertexSize;
+    const UINT vertexSizeInBytes;
     const UINT verticesCount;
     const UINT indicesCount;
 

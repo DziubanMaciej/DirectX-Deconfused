@@ -121,7 +121,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
 
                 commandList.setGraphicsRoot32BitConstant(0, smmvp);
 
-                commandList.draw(static_cast<UINT>(mesh.getVerticesCount() / 6)); // 6 - size of position+normal
+                commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
             }
         }
         lightIdx++;
@@ -218,7 +218,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
 
             commandList.setGraphicsRoot32BitConstant(1, op);
 
-            commandList.draw(static_cast<UINT>(mesh.getVerticesCount() / 6)); // 6 - size of position+normal
+            commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
         }
     }
 
