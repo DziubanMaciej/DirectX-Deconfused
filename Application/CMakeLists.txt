@@ -10,7 +10,10 @@ source_group (TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES})
 set_output_directories()
 
 # Target definition
+set_link_directory_to_lib()
 add_executable (${TARGET_NAME} WIN32 ${SOURCES})
-target_link_libraries(${TARGET_NAME} "${CMAKE_BINARY_DIR}/lib/Debug/LibraryDX12.lib")
 set_working_directory_to_bin(${TARGET_NAME})
+
+# Dependencies
+target_link_libraries(${TARGET_NAME} LibraryDX12.lib)
 add_dependencies(${TARGET_NAME} "LibraryDX12")

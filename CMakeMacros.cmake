@@ -75,6 +75,10 @@ macro(set_working_directory_to_bin TARGET_NAME)
     set_property(TARGET ${TARGET_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/bin/${CMAKE_BUILD_TYPE})
 endmacro()
 
+macro(set_link_directory_to_lib)
+    link_directories(${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
+endmacro()
+
 macro(add_definitions_for_shaders_path ${TARGET_NAME})
     add_definitions(-DSHADERS_PATH=L"../../../${TARGET_NAME}/Shaders/")
 endmacro()
