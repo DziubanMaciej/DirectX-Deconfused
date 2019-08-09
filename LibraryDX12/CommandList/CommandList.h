@@ -38,10 +38,10 @@ public:
     void setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const CpuDescriptorAllocation &cpuDescriptorAllocation);
     void setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const CpuDescriptorAllocation &cpuDescriptorAllocation, UINT descriptorCount);
 
-    void IASetVertexBuffers(UINT startSlot, UINT numBuffers, const VertexBuffer *vertexBuffers);
-    void IASetVertexBuffer(UINT slot, const VertexBuffer &vertexBuffer);
-    void IASetVertexBuffer(const VertexBuffer &vertexBuffer);
-    void IASetIndexBuffer(const IndexBuffer &indexBuffer);
+    void IASetVertexBuffers(UINT startSlot, UINT numBuffers, VertexBuffer *vertexBuffers);
+    void IASetVertexBuffer(UINT slot, VertexBuffer &vertexBuffer);
+    void IASetVertexBuffer(VertexBuffer &vertexBuffer);
+    void IASetIndexBuffer(IndexBuffer &indexBuffer);
     void IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY primitiveTopology);
     void IASetPrimitiveTopologyTriangleList();
 

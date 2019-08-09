@@ -86,29 +86,33 @@ void CommandList::setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UI
     setCbvSrvUavDescriptorTable(rootParameterIndexOfTable, offsetInTable, cpuDescriptorAllocation.getCpuHandle(), descriptorCount);
 }
 
-void CommandList::IASetVertexBuffers(UINT startSlot, UINT numBuffers, const VertexBuffer *vertexBuffers) {
+void CommandList::IASetVertexBuffers(UINT startSlot, UINT numBuffers, VertexBuffer *vertexBuffers) {
     auto views = std::make_unique<D3D12_VERTEX_BUFFER_VIEW[]>(numBuffers);
     auto resources = std::make_unique<ID3D12ResourcePtr[]>(numBuffers);
     for (auto i = 0u; i < numBuffers; i++) {
         views[i] = vertexBuffers[i].getView();
         resources[i] = vertexBuffers[i].getResource();
+        vertexBuffers[i].transitionBarrierSingle(*this, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
     }
 
     commandList->IASetVertexBuffers(startSlot, numBuffers, views.get());
     addUsedResources(resources.get(), numBuffers);
 }
 
-void CommandList::IASetVertexBuffer(UINT slot, const VertexBuffer &vertexBuffer) {
+void CommandList::IASetVertexBuffer(UINT slot, VertexBuffer &vertexBuffer) {
+    vertexBuffer.transitionBarrierSingle(*this, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
     commandList->IASetVertexBuffers(slot, 1, &vertexBuffer.getView());
     addUsedResource(vertexBuffer.getResource());
 }
 
-void CommandList::IASetVertexBuffer(const VertexBuffer &vertexBuffer) {
+void CommandList::IASetVertexBuffer(VertexBuffer &vertexBuffer) {
+    vertexBuffer.transitionBarrierSingle(*this, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
     commandList->IASetVertexBuffers(0, 1, &vertexBuffer.getView());
     addUsedResource(vertexBuffer.getResource());
 }
 
-void CommandList::IASetIndexBuffer(const IndexBuffer &indexBuffer) {
+void CommandList::IASetIndexBuffer(IndexBuffer &indexBuffer) {
+    indexBuffer.transitionBarrierSingle(*this, D3D12_RESOURCE_STATE_INDEX_BUFFER);
     commandList->IASetIndexBuffer(&indexBuffer.getView());
     addUsedResource(indexBuffer.getResource());
 }

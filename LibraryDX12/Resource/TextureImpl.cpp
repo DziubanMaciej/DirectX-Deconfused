@@ -35,7 +35,7 @@ std::unique_ptr<Texture> Texture::createFromFile(Application &application, const
 TextureImpl::TextureImpl(ApplicationImpl &application, const D3D12_RESOURCE_DESC &description, const std::string &fileName, unsigned char *imageData)
     : Resource(application.getDevice(), &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE, &description, D3D12_RESOURCE_STATE_COPY_DEST, nullptr),
       fileName(fileName), description(description) {
-    uploadToGPU(application, imageData, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    uploadToGPU(application, imageData);
 }
 
 D3D12_RESOURCE_DIMENSION TextureImpl::calculateTextureDimension(int width, int height) {

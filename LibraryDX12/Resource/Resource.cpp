@@ -33,12 +33,12 @@ void Resource::create(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeap
         IID_PPV_ARGS(&resource)));
 }
 
-void Resource::uploadToGPU(ApplicationImpl &application, const void *data, D3D12_RESOURCE_STATES resourceStateToTransition) {
+void Resource::uploadToGPU(ApplicationImpl &application, const void *data) {
     CommandQueue &commandQueue = application.getDirectCommandQueue();
 
     // Record command list for GPU upload
     CommandList commandList{commandQueue.getCommandAllocatorManager(), nullptr};
-    recordGpuUploadCommands(application.getDevice(), commandList, data, resourceStateToTransition);
+    recordGpuUploadCommands(application.getDevice(), commandList, data);
     commandList.close();
 
     // Execute on GPU
@@ -46,7 +46,7 @@ void Resource::uploadToGPU(ApplicationImpl &application, const void *data, D3D12
     commandQueue.executeCommandListsAndSignal(commandLists);
 }
 
-void Resource::recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data, D3D12_RESOURCE_STATES resourceStateToTransition) {
+void Resource::recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data) {
     assert(state == D3D12_RESOURCE_STATE_COPY_DEST);
 
     // Create buffer on upload heap
@@ -61,6 +61,5 @@ void Resource::recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &comm
     UpdateSubresources<1>(commandList.getCommandList().Get(), this->resource.Get(), intermediateResource.getResource().Get(), 0, 0, 1, &subresourceData);
 
     // Transition destination resource and make intermediateResource tracked so it's not deleted while being processed on the GPU
-    transitionBarrierSingle(commandList, resourceStateToTransition);
     commandList.addUsedResource(intermediateResource.getResource());
 }
