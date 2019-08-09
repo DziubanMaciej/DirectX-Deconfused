@@ -10,6 +10,7 @@
 #include <string>
 
 namespace DXD {
+
 std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const std::string &filePath, bool useTextures) {
     const auto fullFilePath = std::string{RESOURCES_PATH} + filePath;
     std::fstream inputFile{fullFilePath, std::ios::in};
@@ -144,23 +145,18 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
     }
 
     const auto vertexSize = MeshImpl::computeVertexSize(meshType);
-    return std::unique_ptr<Mesh>{new MeshImpl(application, meshType,
-                                              std::move(outputVertices), vertexSize, std::move(indices),
-                                              std::move(normals), std::move(textureCoordinates))};
+    return std::unique_ptr<Mesh>{new MeshImpl(application, meshType, outputVertices, vertexSize, indices)};
 }
 } // namespace DXD
 
-MeshImpl::MeshImpl(DXD::Application &application, MeshType meshType,
-                   std::vector<FLOAT> &&vertices, UINT vertexSize, std::vector<UINT> &&indices,
-                   std::vector<FLOAT> &&normals, std::vector<FLOAT> &&textureCoordinates)
+MeshImpl::MeshImpl(DXD::Application &application, MeshType meshType, const std::vector<FLOAT> &vertices,
+                   UINT vertexSize, const std::vector<UINT> &indices)
     : application(*static_cast<ApplicationImpl *>(&application)),
       meshType(meshType),
-      vertices(std::move(vertices)),
       vertexSize(vertexSize),
-      indices(std::move(indices)),
-      normals(std::move(normals)),
-      textureCoordinates(std::move(textureCoordinates)) {
-    uploadToGPU();
+      verticesCount(vertices.size()),
+      indicesCount(indices.size()) {
+    uploadToGPU(vertices, indices);
 }
 
 #include <cassert>
@@ -201,7 +197,7 @@ UINT MeshImpl::computeVertexSize(MeshType meshType) {
     return vertexSize * sizeof(FLOAT);
 }
 
-void MeshImpl::uploadToGPU() {
+void MeshImpl::uploadToGPU(const std::vector<FLOAT> &vertices, const std::vector<UINT> &indices) {
     const bool useIndexBuffer = indices.size() > 0;
 
     // Context

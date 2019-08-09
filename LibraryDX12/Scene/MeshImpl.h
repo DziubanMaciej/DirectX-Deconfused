@@ -20,21 +20,14 @@ public:
 
 protected:
     friend class DXD::Mesh;
-    MeshImpl(DXD::Application &application, MeshType meshType,
-             std::vector<FLOAT> &&vertices, UINT vertexSize, std::vector<UINT> &&indices,
-             std::vector<FLOAT> &&normals, std::vector<FLOAT> &&textureCoordinates);
+    MeshImpl(DXD::Application &application, MeshType meshType, const std::vector<FLOAT> &vertices,
+             UINT vertexSize, const std::vector<UINT> &indices);
     ~MeshImpl() = default;
 
 public:
-    const FLOAT *getVertices() const { return vertices.data(); }
-    const UINT *getIndices() const { return indices.data(); }
-    const FLOAT *getNormals() const { return normals.data(); }
-    const FLOAT *getTextureCoordinates() const { return textureCoordinates.data(); }
-
-    size_t getVerticesCount() const { return vertices.size(); }
-    size_t getIndicesCount() const { return indices.size(); }
-    size_t getNormalsCount() const { return normals.size(); }
-    size_t getTextureCoordinatesCount() const { return textureCoordinates.size(); }
+    UINT getVertexSize() const { return vertexSize; }
+    UINT getVerticesCount() const { return verticesCount; }
+    UINT getIndicesCount() const { return indicesCount; }
 
     MeshType getMeshType() const { return meshType; }
     bool isUploadInProgress();
@@ -46,13 +39,11 @@ protected:
     // Context and metadata
     ApplicationImpl &application;
     MeshType meshType;
-    UINT vertexSize;
 
     // CPU resources
-    std::vector<FLOAT> vertices;
-    std::vector<UINT> indices;
-    std::vector<FLOAT> normals;
-    std::vector<FLOAT> textureCoordinates;
+    const UINT vertexSize;
+    const UINT verticesCount;
+    const UINT indicesCount;
 
     // GPU resources
     std::unique_ptr<VertexBuffer> vertexBuffer;
@@ -61,5 +52,5 @@ protected:
 private:
     static MeshType computeMeshType(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates, bool useTextures);
     static UINT computeVertexSize(MeshType meshType);
-    void uploadToGPU();
+    void uploadToGPU(const std::vector<FLOAT> &vertices, const std::vector<UINT> &indices);
 };
