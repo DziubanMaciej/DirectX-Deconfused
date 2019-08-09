@@ -57,9 +57,8 @@ public:
     template <typename ConstantType>
     void setGraphicsRoot32BitConstant(UINT rootParameterIndex, const ConstantType &constant);
 
-    void drawIndexedInstanced(UINT indexCountPerInstance, UINT instanceCount, UINT startIndexLocation, INT baseVertexLocation, UINT startInstanceLocation);
-    void drawIndexed(UINT indexCount, UINT startIndexLocation = 0u, INT baseVertexLocation = 0u, UINT startInstanceLocation = 0u);
-    void drawInstanced(UINT vertexCountPerInstance, UINT instanceCount, INT baseVertexLocation, UINT startInstanceLocation);
+    void drawIndexed(UINT verticesCount, INT startVertexLocation = 0u, INT startIndexLocation = 0u);
+    void draw(UINT verticesCount, INT startVertexLocation = 0u);
 
     void close();
 

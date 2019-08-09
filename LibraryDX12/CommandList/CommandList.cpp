@@ -153,19 +153,14 @@ void CommandList::OMSetRenderTargetDepthOnly(const D3D12_CPU_DESCRIPTOR_HANDLE &
     addUsedResource(depthStencilBuffer);
 }
 
-void CommandList::drawIndexedInstanced(UINT indexCountPerInstance, UINT instanceCount, UINT startIndexLocation, INT baseVertexLocation, UINT startInstanceLocation) {
+void CommandList::drawIndexed(UINT verticesCount, INT startVertexLocation, INT startIndexLocation) {
     commitDescriptors();
-    commandList->DrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
+    commandList->DrawIndexedInstanced(verticesCount, 0, startIndexLocation, startVertexLocation, 0);
 }
 
-void CommandList::drawIndexed(UINT indexCount, UINT startIndexLocation, INT baseVertexLocation, UINT startInstanceLocation) {
+void CommandList::draw(UINT verticesCount, INT startIndexLocation) {
     commitDescriptors();
-    commandList->DrawIndexedInstanced(indexCount, 1, startIndexLocation, baseVertexLocation, startInstanceLocation);
-}
-
-void CommandList::drawInstanced(UINT vertexCountPerInstance, UINT instanceCount, INT baseVertexLocation, UINT startInstanceLocation) {
-    commitDescriptors();
-    commandList->DrawInstanced(vertexCountPerInstance, instanceCount, baseVertexLocation, startInstanceLocation);
+    commandList->DrawInstanced(verticesCount, 1, startIndexLocation, 0);
 }
 
 void CommandList::close() {
