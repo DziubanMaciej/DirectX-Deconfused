@@ -197,6 +197,5 @@ void PipelineStateController::compilePipelineStateShadowMapNormal(RootSignature 
     // Pipeline state object
     PipelineState{inputLayout, rootSignature}
         .VS(L"vertex_normal_sm.hlsl")
-        .PS(L"pixel_normal_sm.hlsl")
         .compile(device, pipelineState);
 }
