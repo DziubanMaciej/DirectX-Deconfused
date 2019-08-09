@@ -17,8 +17,10 @@ Resource::Resource(ID3D12DevicePtr device, D3D12_HEAP_TYPE heapType, D3D12_HEAP_
 }
 
 void Resource::transitionBarrierSingle(CommandList &commandList, D3D12_RESOURCE_STATES targetState) {
-    commandList.transitionBarrierSingle(resource, state, targetState);
-    state = targetState;
+    if (state != targetState) {
+        commandList.transitionBarrierSingle(resource, state, targetState);
+        state = targetState;
+    }
 }
 
 void Resource::create(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeapProperties, D3D12_HEAP_FLAGS heapFlags, const D3D12_RESOURCE_DESC *pDesc, D3D12_RESOURCE_STATES initialResourceState, const D3D12_CLEAR_VALUE *pOptimizedClearValue) {
