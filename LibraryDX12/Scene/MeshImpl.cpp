@@ -165,7 +165,7 @@ MeshImpl::MeshImpl(DXD::Application &application, MeshType meshType, const std::
 bool MeshImpl::isUploadInProgress() {
     const bool vertexInProgress = this->vertexBuffer->isUploadInProgress();
     const bool indexInProgress = this->indexBuffer != nullptr && this->indexBuffer->isUploadInProgress();
-    const bool inProgress = vertexInProgress || indexBuffer;
+    const bool inProgress = vertexInProgress || indexInProgress;
     return inProgress;
 }
 

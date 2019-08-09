@@ -155,7 +155,7 @@ void CommandList::OMSetRenderTargetDepthOnly(const D3D12_CPU_DESCRIPTOR_HANDLE &
 
 void CommandList::drawIndexed(UINT verticesCount, INT startVertexLocation, INT startIndexLocation) {
     commitDescriptors();
-    commandList->DrawIndexedInstanced(verticesCount, 0, startIndexLocation, startVertexLocation, 0);
+    commandList->DrawIndexedInstanced(verticesCount, 1, startIndexLocation, startVertexLocation, 0);
 }
 
 void CommandList::draw(UINT verticesCount, INT startIndexLocation) {
