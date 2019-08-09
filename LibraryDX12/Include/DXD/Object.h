@@ -3,12 +3,15 @@
 #include "DXD/Export.h"
 #include "DXD/Mesh.h"
 #include "DXD/NonCopyableAndMovable.h"
+
 #include "DXD/ExternalHeadersWrappers/DirectXMath.h"
 #include "DXD/ExternalHeadersWrappers/windows.h"
 #include <memory>
 #include <string>
 
 namespace DXD {
+
+class Texture;
 
 class EXPORT Object : NonCopyableAndMovable {
 public:
@@ -33,8 +36,11 @@ public:
     virtual void setColor(FLOAT r, FLOAT g, FLOAT b) = 0;
     virtual XMFLOAT3 getColor() const = 0;
 
-	virtual void setSpecularity(float s) = 0;
+    virtual void setSpecularity(float s) = 0;
     virtual float getSpecularity() const = 0;
+
+    virtual void setTexture(const Texture *texture) = 0;
+    virtual const Texture *getTexture() = 0;
 
     virtual ~Object() = default;
     static std::unique_ptr<Object> create();

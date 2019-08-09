@@ -12,7 +12,7 @@ class PipelineStateController : DXD::NonCopyableAndMovable {
 public:
     enum class Identifier {
         PIPELINE_STATE_DEFAULT = 0,
-        PIPELINE_STATE_TEXTURE = 1,
+        PIPELINE_STATE_TEXTURE_NORMAL = 1,
         PIPELINE_STATE_NORMAL = 2,
         PIPELINE_STATE_POST_PROCESS = 3,
         PIPELINE_STATE_SM_NORMAL = 4,
@@ -29,7 +29,7 @@ private:
     void compile(Identifier identifier);
     void compilePipelineStateDefault(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
-    void compilePipelineStateTexture(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    void compilePipelineStateTextureNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStatePostProcess(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateShadowMapNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
 

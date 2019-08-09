@@ -19,6 +19,7 @@ ApplicationImpl::ApplicationImpl(bool debugLayer) : debugLayerEnabled(enableDebu
                                                     copyCommandQueue(device, D3D12_COMMAND_LIST_TYPE_COPY),
                                                     directCommandQueue(device, D3D12_COMMAND_LIST_TYPE_DIRECT) {
     pipelineStateController.compileAll();
+    CoInitialize(NULL);
 }
 
 bool ApplicationImpl::enableDebugLayer(bool debugLayer) {
@@ -92,6 +93,10 @@ ID3D12DevicePtr ApplicationImpl::createDevice(IDXGIAdapterPtr &adapter, bool deb
 }
 
 // ------------------------------------------------------------- Accessors
+
+ApplicationImpl::~ApplicationImpl() {
+    CoUninitialize();
+}
 
 void ApplicationImpl::setCallbackHandler(DXD::CallbackHandler *callbackHandler) {
     this->callbackHandler = callbackHandler;

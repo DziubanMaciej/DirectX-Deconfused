@@ -224,6 +224,35 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
         }
     }
 
+    //Draw TEXTURE_NORMAL
+    commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE_NORMAL);
+    commandList.setCbvSrvUavDescriptorTable(2, 0, lightConstantBuffer.getCbvHandle(), 1);
+    commandList.setCbvSrvUavDescriptorTable(2, 1, swapChain.getShadowMapSrvDescriptor(), 8);
+    for (ObjectImpl *object : objects) {
+        MeshImpl &mesh = *object->getMesh();
+        if (mesh.getMeshType() == (MeshImpl::NORMALS | MeshImpl::TRIANGLE_STRIP | MeshImpl::TEXTURE_COORDS)) {
+            assert(object->getTexture() != nullptr);
+
+            commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
+            commandList.IASetPrimitiveTopologyTriangleList();
+
+            ModelMvp mmvp;
+            mmvp.modelMatrix = object->getModelMatrix();
+            mmvp.modelViewProjectionMatrix = XMMatrixMultiply(mmvp.modelMatrix, vpMatrix);
+
+            commandList.setGraphicsRoot32BitConstant(0, mmvp);
+
+            ObjectProperties op;
+            op.objectColor = object->getColor();
+            op.objectSpecularity = object->getSpecularity();
+
+            commandList.setGraphicsRoot32BitConstant(1, op);
+
+            commandList.setCbvSrvUavDescriptorTable(2, 9, object->getTextureImpl()->getSrvDescriptor(), 1);
+            commandList.drawInstanced(static_cast<UINT>(mesh.getVerticesCount() / 9), 1, 0, 0); // 6 - size of position+normal+normal
+        }
+    }
+
     //POST PROCESS
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS);
 

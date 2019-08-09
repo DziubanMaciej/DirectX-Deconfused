@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Resource/TextureImpl.h"
 #include "Scene/MeshImpl.h"
 
 #include "DXD/Mesh.h"
@@ -33,19 +34,24 @@ public:
     void setColor(FLOAT r, FLOAT g, FLOAT b) override;
     XMFLOAT3 getColor() const override;
 
-	void setSpecularity(float s) override;
+    void setSpecularity(float s) override;
     float getSpecularity() const override;
 
+    void setTexture(const DXD::Texture *texture) override { this->texture = static_cast<const TextureImpl *>(texture); }
+    const DXD::Texture *getTexture() override { return texture; }
+    const TextureImpl *getTextureImpl() { return texture; }
+
 protected:
-    MeshImpl *mesh;
+    MeshImpl *mesh = {};
+    const TextureImpl *texture = {};
 
     XMVECTOR scale = {1, 1, 1};
     XMVECTOR position = {0, 0, 0};
     XMVECTOR rotationQuaternion = XMQuaternionIdentity();
     XMVECTOR rotationOrigin = {0, 0, 0};
 
-	XMFLOAT3 color = {0, 0, 0};
-	float specularity = 1.0f;
+    XMFLOAT3 color = {0, 0, 0};
+    float specularity = 1.0f;
 
     XMMATRIX modelMatrix;
     bool modelMatrixDirty = true;

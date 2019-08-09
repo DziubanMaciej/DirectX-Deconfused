@@ -2,6 +2,8 @@
 
 #include <fstream>
 
+class TextureImpl;
+
 namespace DXD {
 std::unique_ptr<Object> Object::create() {
     return std::unique_ptr<Object>{new ObjectImpl()};

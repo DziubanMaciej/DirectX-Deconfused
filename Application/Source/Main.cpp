@@ -23,9 +23,9 @@ public:
     Game(HINSTANCE hInstance) {
         application = DXD::Application::create(true);
         window = DXD::Window::create(*application, L"myClass", L"myWindow", hInstance, 1240, 720);
+        prepTextures();
         prepMeshes();
         prepLights();
-        prepTextures();
         prepCamera();
         prepScene();
         updateCamera();
@@ -86,6 +86,7 @@ private:
                 objects[object.first]->setMesh(*meshes[object.second]);
             }
 
+
             objects["teapotMesh1"]->setPosition(8, -1, 0);
             objects["teapotMesh1"]->setScale(0.1f, 0.1f, 0.1f);
             objects["teapotMesh1"]->setColor(0.0f, 1.0f, 0.0f);
@@ -117,6 +118,7 @@ private:
             objects["carMesh1"]->setColor(0.1f, 0, 0.1f);
             objects["carMesh1"]->setSpecularity(3);
             objects["carMesh1"]->setScale(0.9f, 0.9f, 0.9f);
+            objects["carMesh1"]->setTexture(woodTexture.get());
 
             //objects["actorMesh1"]->setPosition(-2, -2, -8);
             //objects["actorMesh1"]->setScale(0.01f, 0.01f, 0.01f);
@@ -158,8 +160,7 @@ private:
         DXD::log("Done!\n");
     }
     void prepTextures() {
-        // TODO
-        woodTexture = DXD::Texture::createFromFile(*application, "Resources/wood.jpg");
+        woodTexture = DXD::Texture::createFromFile(*application, "Resources/textures/porsche.bmp");
         assert(woodTexture);
     }
     void prepCamera() {

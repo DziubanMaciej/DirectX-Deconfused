@@ -14,6 +14,8 @@ protected:
     ApplicationImpl(bool debugLayer);
 
 public:
+    ~ApplicationImpl() override;
+
     void setCallbackHandler(DXD::CallbackHandler *callbackHandler) override;
     DXD::CallbackHandler *getCallbackHandler() const;
 
