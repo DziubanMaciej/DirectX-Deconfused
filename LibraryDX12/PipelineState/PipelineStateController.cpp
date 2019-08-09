@@ -124,14 +124,7 @@ void PipelineStateController::compilePipelineStateNormal(RootSignature &rootSign
 
     DescriptorTable table{ D3D12_SHADER_VISIBILITY_PIXEL };
     table.appendCbvRange(b(1), 1);
-    table.appendSrvRange(t(0), 1);
-    table.appendSrvRange(t(1), 1);
-    table.appendSrvRange(t(2), 1);
-    table.appendSrvRange(t(3), 1);
-    table.appendSrvRange(t(4), 1);
-    table.appendSrvRange(t(5), 1);
-    table.appendSrvRange(t(6), 1);
-    table.appendSrvRange(t(7), 1);
+    table.appendSrvRange(t(0), 8); // shadow maps
     rootSignature
         .append32bitConstant<ModelMvp>(b(0), D3D12_SHADER_VISIBILITY_VERTEX)
         .append32bitConstant<ObjectProperties>(b(2), D3D12_SHADER_VISIBILITY_PIXEL)
