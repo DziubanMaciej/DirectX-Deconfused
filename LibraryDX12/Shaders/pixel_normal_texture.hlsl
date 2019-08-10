@@ -97,6 +97,6 @@ float4 main(PixelShaderInput IN) : SV_Target {
         OUT_Color.xyz = OUT_Color.xyz + (tempLightColor.xyz + op.objectColor.xyz) * tempLightPower * (normalPower + specularPower) * directionPower;
     }
 
-    OUT_Color = diffuseTexture.Sample(s_sampler, IN.UV.xy);
+    OUT_Color = diffuseTexture.Sample(s_sampler, float2(1,1) - IN.UV.xy);
     return OUT_Color;
 }
