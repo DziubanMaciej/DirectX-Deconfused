@@ -95,7 +95,11 @@ void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapCh
 
         // View projection matrix
         camera->setAspectRatio(1.0f);
-        const XMMATRIX smViewMatrix = XMMatrixLookAtLH(XMVectorSet(light->getPosition().x, light->getPosition().y, light->getPosition().z, 1.f), XMVectorSet(light->getDirection().x, light->getDirection().y, light->getDirection().z, 1.f), XMVectorSet(0, 1, 0, 0.f));
+
+        const auto lightPosition = XMLoadFloat3(&light->getPosition());
+        const auto lightDirection = XMLoadFloat3(&light->getDirection());
+        const auto lightFocusPoint = XMVectorAdd(lightPosition, lightDirection);
+        const XMMATRIX smViewMatrix = XMMatrixLookAtLH(lightPosition, lightFocusPoint, XMVectorSet(0, 1, 0, 0.f));
         const XMMATRIX smProjectionMatrix = XMMatrixPerspectiveFovLH(90, 1, 0.1f, 160.0f);
         light->smViewProjectionMatrix = XMMatrixMultiply(smViewMatrix, smProjectionMatrix);
 
