@@ -40,8 +40,8 @@ public:
     const CpuDescriptorAllocation &getShadowMapDescriptor() const { return shadowMapDescriptor; }
     const CpuDescriptorAllocation &getShadowMapSrvDescriptor() const { return shadowMapSrvDescriptor; }
 
-    auto &getPostProcessRenderTarget() { return postProcessRenderTarget; }
-    auto &getShadowMap(int i) { return shadowMap[i]; }
+    auto &getPostProcessRenderTarget() { return *postProcessRenderTarget; }
+    auto &getShadowMap(int i) { return *shadowMap[i]; }
 
 private:
     static bool checkTearingSupport(IDXGIFactoryPtr &factory);

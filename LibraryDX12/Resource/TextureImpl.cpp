@@ -17,13 +17,14 @@ std::unique_ptr<Texture> Texture::createFromFile(Application &application, const
     // TODO create views
     // TODO generate mips
 
-    if (!FileHelper::exists(filePath)) {
+    const auto fullFilePath = std::string{RESOURCES_PATH} + filePath;
+    if (!FileHelper::exists(fullFilePath)) {
         return nullptr;
     }
 
-    const auto sz = filePath.size() + 1;
+    const auto sz = fullFilePath.size() + 1;
     auto filePathW = std::make_unique<wchar_t[]>(sz);
-    mbstowcs(filePathW.get(), filePath.c_str(), sz);
+    mbstowcs(filePathW.get(), fullFilePath.c_str(), sz);
 
     DirectX::TexMetadata metadata;
     DirectX::ScratchImage scratchImage;
@@ -31,7 +32,8 @@ std::unique_ptr<Texture> Texture::createFromFile(Application &application, const
     /*throwIfFailed(DirectX::LoadFromTGAFile(
         filePathW.get(),
         &metadata,
-        scratchImage))*/;
+        scratchImage))*/
+    ;
 
     throwIfFailed(DirectX::LoadFromWICFile(
         filePathW.get(),

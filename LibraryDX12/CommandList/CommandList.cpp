@@ -86,29 +86,33 @@ void CommandList::setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UI
     setCbvSrvUavDescriptorTable(rootParameterIndexOfTable, offsetInTable, cpuDescriptorAllocation.getCpuHandle(), descriptorCount);
 }
 
-void CommandList::IASetVertexBuffers(UINT startSlot, UINT numBuffers, const VertexBuffer *vertexBuffers) {
+void CommandList::IASetVertexBuffers(UINT startSlot, UINT numBuffers, VertexBuffer *vertexBuffers) {
     auto views = std::make_unique<D3D12_VERTEX_BUFFER_VIEW[]>(numBuffers);
     auto resources = std::make_unique<ID3D12ResourcePtr[]>(numBuffers);
     for (auto i = 0u; i < numBuffers; i++) {
         views[i] = vertexBuffers[i].getView();
         resources[i] = vertexBuffers[i].getResource();
+        vertexBuffers[i].transitionBarrierSingle(*this, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
     }
 
     commandList->IASetVertexBuffers(startSlot, numBuffers, views.get());
     addUsedResources(resources.get(), numBuffers);
 }
 
-void CommandList::IASetVertexBuffer(UINT slot, const VertexBuffer &vertexBuffer) {
+void CommandList::IASetVertexBuffer(UINT slot, VertexBuffer &vertexBuffer) {
+    vertexBuffer.transitionBarrierSingle(*this, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
     commandList->IASetVertexBuffers(slot, 1, &vertexBuffer.getView());
     addUsedResource(vertexBuffer.getResource());
 }
 
-void CommandList::IASetVertexBuffer(const VertexBuffer &vertexBuffer) {
+void CommandList::IASetVertexBuffer(VertexBuffer &vertexBuffer) {
+    vertexBuffer.transitionBarrierSingle(*this, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
     commandList->IASetVertexBuffers(0, 1, &vertexBuffer.getView());
     addUsedResource(vertexBuffer.getResource());
 }
 
-void CommandList::IASetIndexBuffer(const IndexBuffer &indexBuffer) {
+void CommandList::IASetIndexBuffer(IndexBuffer &indexBuffer) {
+    indexBuffer.transitionBarrierSingle(*this, D3D12_RESOURCE_STATE_INDEX_BUFFER);
     commandList->IASetIndexBuffer(&indexBuffer.getView());
     addUsedResource(indexBuffer.getResource());
 }
@@ -137,14 +141,6 @@ void CommandList::RSSetScissorRect(const D3D12_RECT &rect) {
     commandList->RSSetScissorRects(1, &rect);
 }
 
-void CommandList::OMSetRenderTargets(UINT renderTargetsCount, const D3D12_CPU_DESCRIPTOR_HANDLE *renderTargetDescriptors,
-                                     const ID3D12ResourcePtr *renderTargets, BOOL singleHandleToDescriptorRange,
-                                     const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor, const ID3D12ResourcePtr &depthStencilBuffer) {
-    commandList->OMSetRenderTargets(renderTargetsCount, renderTargetDescriptors, singleHandleToDescriptorRange, &depthStencilDescriptor);
-    addUsedResources(renderTargets, renderTargetsCount);
-    addUsedResource(depthStencilBuffer);
-}
-
 void CommandList::OMSetRenderTarget(const D3D12_CPU_DESCRIPTOR_HANDLE &renderTargetDescriptor, const ID3D12ResourcePtr &renderTarget,
                                     const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor, const ID3D12ResourcePtr &depthStencilBuffer) {
     commandList->OMSetRenderTargets(1, &renderTargetDescriptor, TRUE, &depthStencilDescriptor);
@@ -152,19 +148,19 @@ void CommandList::OMSetRenderTarget(const D3D12_CPU_DESCRIPTOR_HANDLE &renderTar
     addUsedResource(depthStencilBuffer);
 }
 
-void CommandList::drawIndexedInstanced(UINT indexCountPerInstance, UINT instanceCount, UINT startIndexLocation, INT baseVertexLocation, UINT startInstanceLocation) {
-    commitDescriptors();
-    commandList->DrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
+void CommandList::OMSetRenderTargetDepthOnly(const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor, const ID3D12ResourcePtr &depthStencilBuffer) {
+    commandList->OMSetRenderTargets(FALSE, nullptr, 1, &depthStencilDescriptor);
+    addUsedResource(depthStencilBuffer);
 }
 
-void CommandList::drawIndexed(UINT indexCount, UINT startIndexLocation, INT baseVertexLocation, UINT startInstanceLocation) {
+void CommandList::drawIndexed(UINT verticesCount, INT startVertexLocation, INT startIndexLocation) {
     commitDescriptors();
-    commandList->DrawIndexedInstanced(indexCount, 1, startIndexLocation, baseVertexLocation, startInstanceLocation);
+    commandList->DrawIndexedInstanced(verticesCount, 1, startIndexLocation, startVertexLocation, 0);
 }
 
-void CommandList::drawInstanced(UINT vertexCountPerInstance, UINT instanceCount, INT baseVertexLocation, UINT startInstanceLocation) {
+void CommandList::draw(UINT verticesCount, INT startIndexLocation) {
     commitDescriptors();
-    commandList->DrawInstanced(vertexCountPerInstance, instanceCount, baseVertexLocation, startInstanceLocation);
+    commandList->DrawInstanced(verticesCount, 1, startIndexLocation, 0);
 }
 
 void CommandList::close() {

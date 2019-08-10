@@ -25,7 +25,6 @@
     - LibraryDX12 - produces .dll and .lib files to link against
 - Miscellaneous
     - Documentation - outputs documentation upon build
-    - CopyResources - copies "Resources" directory into binary files location upon build. The resources are then inside the working directory during debugging in Visual Studio.
 
 ## Documentation
 Documentation is generated directly from the source code with Doxygen. You have to download it frome here: http://www.doxygen.nl/download.html and add to your PATH. Then build "Documentation" project in the solution to invoke generation. Files will be located in build/doc directory.

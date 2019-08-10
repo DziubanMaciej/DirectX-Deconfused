@@ -90,7 +90,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
 
     // Shadow maps
     for (int i = 0; i < 8; i++) {
-        swapChain.getShadowMap(i)->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+        swapChain.getShadowMap(i).transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);
     }
 
     CD3DX12_VIEWPORT viewportSM(0.0f, 0.0f, 2048.0f, 2048.0f);
@@ -101,9 +101,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     int lightIdx = 0;
 
     for (LightImpl *light : lights) {
-
-		commandList.getCommandList()->OMSetRenderTargets(FALSE, nullptr, 1, &swapChain.getShadowMapDescriptor().getCpuHandle(lightIdx));
-
+        commandList.OMSetRenderTargetDepthOnly(swapChain.getShadowMapDescriptor().getCpuHandle(lightIdx), swapChain.getShadowMap(lightIdx).getResource());
         commandList.clearDepthStencilView(swapChain.getShadowMapDescriptor().getCpuHandle(lightIdx), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
         // View projection matrix
@@ -114,7 +112,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
 
         for (ObjectImpl *object : objects) {
             MeshImpl &mesh = *object->getMesh();
-            if (mesh.getMeshType() == (MeshImpl::NORMALS | MeshImpl::TRIANGLE_STRIP)) {
+            if (!mesh.isUploadInProgress() && mesh.getMeshType() == (MeshImpl::NORMALS | MeshImpl::TRIANGLE_STRIP)) {
                 commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
                 commandList.IASetPrimitiveTopologyTriangleList();
 
@@ -123,24 +121,24 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
 
                 commandList.setGraphicsRoot32BitConstant(0, smmvp);
 
-                commandList.drawInstanced(static_cast<UINT>(mesh.getVerticesCount() / 6), 1, 0, 0); // 6 - size of position+normal
+                commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
             }
         }
         lightIdx++;
     }
 
     for (int i = 0; i < 8; i++) {
-		swapChain.getShadowMap(i)->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+		swapChain.getShadowMap(i).transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	}
 
     // Forward shading
     // Transition to RENDER_TARGET
-    swapChain.getPostProcessRenderTarget()->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    swapChain.getPostProcessRenderTarget().transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     CD3DX12_VIEWPORT viewport(0.0f, 0.0f, (float)swapChain.getWidth(), (float)swapChain.getHeight());
     commandList.RSSetViewport(viewport);
 
-    commandList.OMSetRenderTarget(swapChain.getPostProcessRtvDescriptor().getCpuHandle(), swapChain.getPostProcessRenderTarget()->getResource(), // set temp
+    commandList.OMSetRenderTarget(swapChain.getPostProcessRtvDescriptor().getCpuHandle(), swapChain.getPostProcessRenderTarget().getResource(), // set temp
                                   swapChain.getDepthStencilBufferDescriptor(), swapChain.getDepthStencilBuffer()->getResource());
 
     // Render (clear color)
@@ -177,7 +175,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = *object->getMesh();
 
-        if (mesh.getMeshType() == (MeshImpl::TRIANGLE_STRIP | MeshImpl::TRIANGLE_STRIP)) {
+        if (!mesh.isUploadInProgress() && mesh.getMeshType() == (MeshImpl::TRIANGLE_STRIP | MeshImpl::TRIANGLE_STRIP)) {
             commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
             commandList.IASetIndexBuffer(*mesh.getIndexBuffer());
             commandList.IASetPrimitiveTopologyTriangleList();
@@ -204,7 +202,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     commandList.setCbvSrvUavDescriptorTable(2, 1, swapChain.getShadowMapSrvDescriptor(), 8);
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = *object->getMesh();
-        if (mesh.getMeshType() == (MeshImpl::NORMALS | MeshImpl::TRIANGLE_STRIP)) {
+        if (!mesh.isUploadInProgress() && mesh.getMeshType() == (MeshImpl::NORMALS | MeshImpl::TRIANGLE_STRIP)) {
             commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
             commandList.IASetPrimitiveTopologyTriangleList();
 
@@ -220,7 +218,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
 
             commandList.setGraphicsRoot32BitConstant(1, op);
 
-            commandList.drawInstanced(static_cast<UINT>(mesh.getVerticesCount() / 6), 1, 0, 0); // 6 - size of position+normal
+            commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
         }
     }
 
@@ -230,7 +228,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     commandList.setCbvSrvUavDescriptorTable(2, 1, swapChain.getShadowMapSrvDescriptor(), 8);
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = *object->getMesh();
-        if (mesh.getMeshType() == (MeshImpl::NORMALS | MeshImpl::TRIANGLE_STRIP | MeshImpl::TEXTURE_COORDS)) {
+        if (!mesh.isUploadInProgress() && mesh.getMeshType() == (MeshImpl::NORMALS | MeshImpl::TRIANGLE_STRIP | MeshImpl::TEXTURE_COORDS)) {
             assert(object->getTexture() != nullptr);
 
             commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
@@ -249,14 +247,14 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
             commandList.setGraphicsRoot32BitConstant(1, op);
 
             commandList.setCbvSrvUavDescriptorTable(2, 9, object->getTextureImpl()->getSrvDescriptor(), 1);
-            commandList.drawInstanced(static_cast<UINT>(mesh.getVerticesCount() / 9), 1, 0, 0); // 6 - size of position+normal+normal
+            commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
         }
     }
 
     //POST PROCESS
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS);
 
-    swapChain.getPostProcessRenderTarget()->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    swapChain.getPostProcessRenderTarget().transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
     backBuffer->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.getCommandList()->OMSetRenderTargets(1, &swapChain.getCurrentBackBufferDescriptor(), FALSE, nullptr);
@@ -274,7 +272,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
 
     commandList.setGraphicsRoot32BitConstant(0, ppcb);
 
-    commandList.drawInstanced(6, 1, 0, 0);
+    commandList.draw(6u);
 
     // Transition to PRESENT
     backBuffer->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PRESENT);

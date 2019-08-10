@@ -17,10 +17,6 @@ set(TARGET_NAME "Documentation")
 add_subdirectory("Documentation")
 set_target_properties(${TARGET_NAME} PROPERTIES FOLDER Miscellaneous)
 
-set(TARGET_NAME "CopyResources")
-add_subdirectory("Resources")
-set_target_properties(${TARGET_NAME} PROPERTIES FOLDER Miscellaneous)
-
 set(TARGET_NAME "DirectXTex")
 add_subdirectory("ExternalLibraries/DirectXTex")
 set_target_properties(${TARGET_NAME} PROPERTIES FOLDER ExternalLibraries)

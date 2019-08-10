@@ -38,10 +38,10 @@ public:
     void setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const CpuDescriptorAllocation &cpuDescriptorAllocation);
     void setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const CpuDescriptorAllocation &cpuDescriptorAllocation, UINT descriptorCount);
 
-    void IASetVertexBuffers(UINT startSlot, UINT numBuffers, const VertexBuffer *vertexBuffers);
-    void IASetVertexBuffer(UINT slot, const VertexBuffer &vertexBuffer);
-    void IASetVertexBuffer(const VertexBuffer &vertexBuffer);
-    void IASetIndexBuffer(const IndexBuffer &indexBuffer);
+    void IASetVertexBuffers(UINT startSlot, UINT numBuffers, VertexBuffer *vertexBuffers);
+    void IASetVertexBuffer(UINT slot, VertexBuffer &vertexBuffer);
+    void IASetVertexBuffer(VertexBuffer &vertexBuffer);
+    void IASetIndexBuffer(IndexBuffer &indexBuffer);
     void IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY primitiveTopology);
     void IASetPrimitiveTopologyTriangleList();
 
@@ -50,18 +50,15 @@ public:
     void RSSetScissorRects(UINT numRects, const D3D12_RECT *rects);
     void RSSetScissorRect(const D3D12_RECT &rect);
 
-    void OMSetRenderTargets(UINT renderTargetsCount, const D3D12_CPU_DESCRIPTOR_HANDLE *renderTargetDescriptors,
-                            const ID3D12ResourcePtr *renderTargets, BOOL singleHandleToDescriptorRange,
-                            const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor, const ID3D12ResourcePtr &depthStencilBuffer);
     void OMSetRenderTarget(const D3D12_CPU_DESCRIPTOR_HANDLE &renderTargetDescriptor, const ID3D12ResourcePtr &renderTarget,
                            const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor, const ID3D12ResourcePtr &depthStencilBuffer);
+    void OMSetRenderTargetDepthOnly(const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor, const ID3D12ResourcePtr &depthStencilBuffer);
 
     template <typename ConstantType>
     void setGraphicsRoot32BitConstant(UINT rootParameterIndex, const ConstantType &constant);
 
-    void drawIndexedInstanced(UINT indexCountPerInstance, UINT instanceCount, UINT startIndexLocation, INT baseVertexLocation, UINT startInstanceLocation);
-    void drawIndexed(UINT indexCount, UINT startIndexLocation = 0u, INT baseVertexLocation = 0u, UINT startInstanceLocation = 0u);
-    void drawInstanced(UINT vertexCountPerInstance, UINT instanceCount, INT baseVertexLocation, UINT startInstanceLocation);
+    void drawIndexed(UINT verticesCount, INT startVertexLocation = 0u, INT startIndexLocation = 0u);
+    void draw(UINT verticesCount, INT startVertexLocation = 0u);
 
     void close();
 

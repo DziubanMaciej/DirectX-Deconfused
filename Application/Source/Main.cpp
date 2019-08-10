@@ -55,9 +55,9 @@ private:
             {"smallCube", {"Resources/meshes/small_cube.obj", false}},
             {"flat", {"Resources/meshes/flat_normals.obj", false}},
             {"extraFlat", {"Resources/meshes/extra_flat_normals.obj", false}},
-            {"car", {"Resources/meshes/porshe.obj", true}},
             //{"actor", {"Resources/meshes/dennis.obj", false}},
-            {"dxd", {"Resources/meshes/dxd_comicsans.obj", false}}};
+            {"dxd", {"Resources/meshes/dxd_comicsans.obj", false}},
+            {"car", {"Resources/meshes/porshe.obj", false}}};
         for (auto mesh : meshMap) {
             const auto creationData = mesh.second;
             meshes.insert({mesh.first, DXD::Mesh::createFromObj(*application, creationData.filePath, creationData.useTextures)});
@@ -152,10 +152,12 @@ private:
             lights["redLight"]->setColor(1.0f, 0.0f, 0.0f);
             lights["redLight"]->setPosition(-12, 1, -12);
             lights["redLight"]->setDirection(1, 0, 1);
+            lights["redLight"]->setPower(2);
 
             lights["blueLight"]->setColor(0.0f, 0.0f, 1.0f);
             lights["blueLight"]->setPosition(12, 1, -12);
             lights["blueLight"]->setDirection(-1, 0, 1);
+            lights["blueLight"]->setPower(2);
         }
         DXD::log("Done!\n");
     }

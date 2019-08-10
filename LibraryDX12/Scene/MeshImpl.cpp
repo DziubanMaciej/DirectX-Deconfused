@@ -5,18 +5,21 @@
 #include "Utility/ThrowIfFailed.h"
 
 #include <algorithm>
+#include <cassert>
 #include <fstream>
 #include <sstream>
 #include <string>
 
 namespace DXD {
+
 std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const std::string &filePath, bool useTextures) {
-    std::fstream inputFile{filePath, std::ios::in};
+    const auto fullFilePath = std::string{RESOURCES_PATH} + filePath;
+    std::fstream inputFile{fullFilePath, std::ios::in};
     if (!inputFile.good()) {
         return nullptr;
     }
 
-    std::vector<FLOAT> vertices;           //temp
+    std::vector<FLOAT> vertexElements;     //temp
     std::vector<UINT> indices;             //optional
     std::vector<std::string> faces;        //temp
     std::vector<FLOAT> normals;            //temp
@@ -27,7 +30,7 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
     std::string f1, f2, f3, f4;
 
     std::string line;
-    while (getline(inputFile, line).good()) { //TODO change reading method in order to parse vertices with 4 values, parse faces with normals etc.
+    while (getline(inputFile, line).good()) {
 
         std::istringstream strs(line);
 
@@ -39,9 +42,9 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
             strs >> x;
             strs >> y;
             strs >> z;
-            vertices.push_back(x);
-            vertices.push_back(y);
-            vertices.push_back(z);
+            vertexElements.push_back(x);
+            vertexElements.push_back(y);
+            vertexElements.push_back(z);
         } else if (lineType == "f") { //faces
             strs >> f1;
             strs >> f2;
@@ -91,12 +94,12 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
 
     // No need to rearrange vertices if there are no additional elements in them
     const bool usesIndexBuffer = normals.size() == 0 && textureCoordinates.size() == 0;
-    std::vector<FLOAT> outputVertices;
+    std::vector<FLOAT> outputVertexElements;
     if (usesIndexBuffer) {
-        outputVertices = std::move(vertices);
+        outputVertexElements = std::move(vertexElements);
     }
     for (std::string face : faces) {
-        UINT vertexIdx;
+        UINT vertexElementIdx;
         UINT normalIdx;
         UINT textCoordIdx;
         size_t pos = 0;
@@ -106,7 +109,7 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
             std::string t = f.substr(0, pos);
             switch (i) {
             case 0:
-                vertexIdx = std::stoi(t);
+                vertexElementIdx = std::stoi(t);
                 break;
             case 1:
                 if (t.length() > 0) {
@@ -123,43 +126,47 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
         }
         if (usesIndexBuffer) {
             // Vertices go unmodified to the vertex buffer, we use an index buffer to define polygons
-            indices.push_back(vertexIdx - 1);
+            indices.push_back(vertexElementIdx - 1);
         } else {
             // We have to embed all vertex attributes into one array
-            outputVertices.push_back(vertices[3 * (vertexIdx - 1)]);
-            outputVertices.push_back(vertices[3 * (vertexIdx - 1) + 1]);
-            outputVertices.push_back(vertices[3 * (vertexIdx - 1) + 2]);
+            outputVertexElements.push_back(vertexElements[3 * (vertexElementIdx - 1)]);
+            outputVertexElements.push_back(vertexElements[3 * (vertexElementIdx - 1) + 1]);
+            outputVertexElements.push_back(vertexElements[3 * (vertexElementIdx - 1) + 2]);
             if (meshType & MeshImpl::NORMALS) {
-                outputVertices.push_back(normals[3 * (normalIdx - 1)]);
-                outputVertices.push_back(normals[3 * (normalIdx - 1) + 1]);
-                outputVertices.push_back(normals[3 * (normalIdx - 1) + 2]);
+                outputVertexElements.push_back(normals[3 * (normalIdx - 1)]);
+                outputVertexElements.push_back(normals[3 * (normalIdx - 1) + 1]);
+                outputVertexElements.push_back(normals[3 * (normalIdx - 1) + 2]);
             }
             if (meshType & MeshImpl::TEXTURE_COORDS) {
-                outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1)]);
-                outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 1]);
-                outputVertices.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 2]);
+                outputVertexElements.push_back(textureCoordinates[3 * (textCoordIdx - 1)]);
+                outputVertexElements.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 1]);
+                outputVertexElements.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 2]);
             }
         }
     }
 
-    const auto vertexSize = MeshImpl::computeVertexSize(meshType);
-    return std::unique_ptr<Mesh>{new MeshImpl(application, meshType,
-                                              std::move(outputVertices), vertexSize, std::move(indices),
-                                              std::move(normals), std::move(textureCoordinates))};
+    const auto vertexSizeInBytes = MeshImpl::computeVertexSize(meshType);
+    return std::unique_ptr<Mesh>{new MeshImpl(application, meshType, outputVertexElements, vertexSizeInBytes, indices)};
 }
 } // namespace DXD
 
-MeshImpl::MeshImpl(DXD::Application &application, MeshType meshType,
-                   std::vector<FLOAT> &&vertices, UINT vertexSize, std::vector<UINT> &&indices,
-                   std::vector<FLOAT> &&normals, std::vector<FLOAT> &&textureCoordinates)
+MeshImpl::MeshImpl(DXD::Application &application, MeshType meshType, const std::vector<FLOAT> &vertexElements,
+                   UINT vertexSizeInBytes, const std::vector<UINT> &indices)
     : application(*static_cast<ApplicationImpl *>(&application)),
       meshType(meshType),
-      vertices(std::move(vertices)),
-      vertexSize(vertexSize),
-      indices(std::move(indices)),
-      normals(std::move(normals)),
-      textureCoordinates(std::move(textureCoordinates)) {
-    uploadToGPU();
+      vertexSizeInBytes(vertexSizeInBytes),
+      verticesCount(vertexElements.size() * sizeof(FLOAT) / vertexSizeInBytes),
+      indicesCount(indices.size()) {
+    assert(vertexSizeInBytes * verticesCount == vertexElements.size() * sizeof(FLOAT));
+    uploadToGPU(vertexElements, indices);
+}
+
+#include <cassert>
+bool MeshImpl::isUploadInProgress() {
+    const bool vertexInProgress = this->vertexBuffer->isUploadInProgress();
+    const bool indexInProgress = this->indexBuffer != nullptr && this->indexBuffer->isUploadInProgress();
+    const bool inProgress = vertexInProgress || indexInProgress;
+    return inProgress;
 }
 
 MeshImpl::MeshType MeshImpl::computeMeshType(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates, bool useTextures) {
@@ -192,17 +199,17 @@ UINT MeshImpl::computeVertexSize(MeshType meshType) {
     return vertexSize * sizeof(FLOAT);
 }
 
-void MeshImpl::uploadToGPU() {
+void MeshImpl::uploadToGPU(const std::vector<FLOAT> &vertexElements, const std::vector<UINT> &indices) {
+    const bool useIndexBuffer = indices.size() > 0;
+
     // Context
     ID3D12DevicePtr device = application.getDevice();
-    auto &commandQueue = application.getDirectCommandQueue();
+    auto &commandQueue = application.getCopyCommandQueue();
 
     // Record command list for GPU upload
     CommandList commandList{commandQueue.getCommandAllocatorManager(), nullptr};
-    const UINT verticesCount = static_cast<UINT>(vertices.size() / (vertexSize / sizeof(FLOAT)));
-    //const UINT vertexSize = 3 * sizeof(FLOAT);
-    this->vertexBuffer = std::make_unique<VertexBuffer>(device, commandList, vertices.data(), verticesCount, vertexSize);
-    if (indices.size() > 0) {
+    this->vertexBuffer = std::make_unique<VertexBuffer>(device, commandList, vertexElements.data(), verticesCount, vertexSizeInBytes);
+    if (useIndexBuffer) {
         this->indexBuffer = std::make_unique<IndexBuffer>(device, commandList, indices.data(), static_cast<UINT>(indices.size()));
     }
     commandList.close();
@@ -210,4 +217,10 @@ void MeshImpl::uploadToGPU() {
     // Execute and register obtained allocator and lists to the manager
     std::vector<CommandList *> commandLists{&commandList};
     const uint64_t fenceValue = commandQueue.executeCommandListsAndSignal(commandLists);
+
+    // Register upload status for buffers
+    this->vertexBuffer->registerUpload(commandQueue, fenceValue);
+    if (useIndexBuffer) {
+        this->indexBuffer->registerUpload(commandQueue, fenceValue);
+    }
 }

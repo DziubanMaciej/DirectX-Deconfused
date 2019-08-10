@@ -2,7 +2,7 @@ add_subdirectories()
 
 # Compile options
 add_definitions(/MP -DMAKEDLL)
-add_definitions_for_shaders_path(${TARGET_NAME})
+add_definitions_for_paths(${TARGET_NAME})
 include_directories(. ${DXD_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/ExternalLibraries)
 
 # Source files
@@ -18,4 +18,4 @@ set_shaders_properties(${TARGET_NAME} OFF)
 
 # Dependencies
 target_link_libraries(${TARGET_NAME} "DXGI.lib" "D3D12.lib" "D3Dcompiler.lib" "DirectXTex.lib")
-add_dependencies(${TARGET_NAME} "CopyResources" "DirectXTex")
+add_dependencies(${TARGET_NAME} "DirectXTex")
