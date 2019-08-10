@@ -61,6 +61,7 @@ public:
     void draw(UINT verticesCount, INT startVertexLocation = 0u);
 
     void close();
+    void registerToCommandAllocatorManagerAndClear();
 
     void addUsedResource(const ID3D12DescriptorHeapPtr &heap);
     void addUsedResource(const ID3D12ResourcePtr &resource);

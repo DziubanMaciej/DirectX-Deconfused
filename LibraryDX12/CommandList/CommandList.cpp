@@ -15,7 +15,7 @@ CommandList::CommandList(CommandAllocatorManager &commandAllocatorManager, ID3D1
       gpuDescriptorHeapControllerSampler(*this, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER) {}
 
 CommandList::~CommandList() {
-    commandAllocatorManager.registerAllocatorAndList(commandAllocator, commandList, fenceValue);
+    registerToCommandAllocatorManagerAndClear();
 }
 
 void CommandList::transitionBarrierSingle(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter) {
@@ -165,6 +165,14 @@ void CommandList::draw(UINT verticesCount, INT startIndexLocation) {
 
 void CommandList::close() {
     throwIfFailed(commandList->Close());
+}
+
+void CommandList::registerToCommandAllocatorManagerAndClear() {
+    if (commandList != nullptr) {
+        commandAllocatorManager.registerAllocatorAndList(commandAllocator, commandList, fenceValue);
+        commandList = nullptr;
+        commandAllocator = nullptr;
+    }
 }
 
 void CommandList::addUsedResource(const ID3D12DescriptorHeapPtr &heap) {

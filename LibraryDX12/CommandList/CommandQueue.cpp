@@ -39,6 +39,8 @@ uint64_t CommandQueue::executeCommandListsAndSignal(std::vector<ID3D12CommandLis
 }
 
 uint64_t CommandQueue::executeCommandListsAndSignal(std::vector<CommandList *> &commandLists) {
+    std::unique_lock<std::mutex> lock{this->lock};
+
     std::vector<ID3D12CommandList *> commandListPtrs;
     for (auto &commandList : commandLists) {
         commandListPtrs.push_back(commandList->getCommandList().Get());
@@ -47,6 +49,7 @@ uint64_t CommandQueue::executeCommandListsAndSignal(std::vector<CommandList *> &
 
     for (auto &commandList : commandLists) {
         commandList->setFenceValue(fenceValue);
+        commandList->registerToCommandAllocatorManagerAndClear();
         resourceUsageTracker.registerUsage(commandList->getUsedResources(), fenceValue);
     }
 
