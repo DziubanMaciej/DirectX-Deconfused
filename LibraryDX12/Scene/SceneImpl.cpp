@@ -79,16 +79,7 @@ DXD::Camera *SceneImpl::getCamera() {
     return camera;
 }
 
-void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
-    auto &commandQueue = application.getDirectCommandQueue();
-    CommandList commandList{commandQueue.getCommandAllocatorManager(), nullptr};
-    const auto &backBuffer = swapChain.getCurrentBackBuffer();
-    commandQueue.performResourcesDeletion();
-
-    CD3DX12_RECT scissorRect(0, 0, LONG_MAX, LONG_MAX);
-    commandList.RSSetScissorRect(scissorRect);
-
-    // Shadow maps
+void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapChain, CommandList &commandList) {
     for (int i = 0; i < 8; i++) {
         swapChain.getShadowMap(i).transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);
     }
@@ -128,8 +119,20 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     }
 
     for (int i = 0; i < 8; i++) {
-		swapChain.getShadowMap(i).transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-	}
+        swapChain.getShadowMap(i).transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    }
+}
+
+void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
+    auto &commandQueue = application.getDirectCommandQueue();
+    CommandList commandList{commandQueue.getCommandAllocatorManager(), nullptr};
+    const auto &backBuffer = swapChain.getCurrentBackBuffer();
+    commandQueue.performResourcesDeletion();
+
+    CD3DX12_RECT scissorRect(0, 0, LONG_MAX, LONG_MAX);
+    commandList.RSSetScissorRect(scissorRect);
+
+    renderShadowMaps(application, swapChain, commandList);
 
     // Forward shading
     // Transition to RENDER_TARGET

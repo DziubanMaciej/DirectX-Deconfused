@@ -36,6 +36,8 @@ public:
     void render(ApplicationImpl &application, SwapChain &swapChain);
 
 protected:
+    void renderShadowMaps(ApplicationImpl &application, SwapChain &swapChain, CommandList &commandList);
+
     // Context
     ApplicationImpl &application;
 
