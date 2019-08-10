@@ -57,7 +57,7 @@ private:
             {"extraFlat", {"Resources/meshes/extra_flat_normals.obj", false}},
             //{"actor", {"Resources/meshes/dennis.obj", false}},
             {"dxd", {"Resources/meshes/dxd_comicsans.obj", false}},
-            {"car", {"Resources/meshes/porshe.obj", false}}};
+            {"car", {"Resources/meshes/porshe.obj", true}}};
         for (auto mesh : meshMap) {
             const auto creationData = mesh.second;
             meshes.insert({mesh.first, DXD::Mesh::createFromObj(*application, creationData.filePath, creationData.useTextures)});
@@ -118,7 +118,7 @@ private:
             objects["carMesh1"]->setColor(0.1f, 0, 0.1f);
             objects["carMesh1"]->setSpecularity(3);
             objects["carMesh1"]->setScale(0.9f, 0.9f, 0.9f);
-            objects["carMesh1"]->setTexture(woodTexture.get());
+            objects["carMesh1"]->setTexture(porsheTexture.get());
 
             //objects["actorMesh1"]->setPosition(-2, -2, -8);
             //objects["actorMesh1"]->setScale(0.01f, 0.01f, 0.01f);
@@ -162,8 +162,8 @@ private:
         DXD::log("Done!\n");
     }
     void prepTextures() {
-        woodTexture = DXD::Texture::createFromFile(*application, "Resources/textures/porsche.bmp");
-        assert(woodTexture);
+        porsheTexture = DXD::Texture::createFromFile(*application, "Resources/textures/porsche.bmp");
+        assert(porsheTexture);
     }
     void prepCamera() {
         DXD::log("Preparing camera...\n");
@@ -320,7 +320,7 @@ private:
     std::unordered_map<std::string, std::unique_ptr<DXD::Object>> objects;
 
     // TODO: unordered_map for three below
-    std::unique_ptr<DXD::Texture> woodTexture;
+    std::unique_ptr<DXD::Texture> porsheTexture;
     std::unique_ptr<DXD::Scene> scene;
     std::unique_ptr<DXD::Camera> camera;
 };
