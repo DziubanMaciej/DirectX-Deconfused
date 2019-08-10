@@ -39,6 +39,7 @@ protected:
     ApplicationImpl &application;
 
     // CPU data, set during load time
+    std::atomic_bool loadingComplete = false;
     MeshType meshType = UNKNOWN;
     UINT vertexSizeInBytes = 0;
     UINT verticesCount = 0;

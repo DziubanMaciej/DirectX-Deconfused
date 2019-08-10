@@ -20,15 +20,10 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
 MeshImpl::MeshImpl(ApplicationImpl &application, const std::string &filePath, bool useTextures)
     : application(application) {
 
-    auto task = [&]() {
+    auto task = [this, &application, filePath, useTextures]() {
         loadAndUploadObj(application, filePath, useTextures);
     };
-    std::mutex mutex;
-    std::condition_variable cv;
-    application.getBackgroundWorkerManager().pushTask(task, cv);
-
-    std::unique_lock<std::mutex> lock(mutex);
-    cv.wait(lock);
+    application.getBackgroundWorkerManager().pushTask(task, this->loadingComplete);
 }
 
 void MeshImpl::loadAndUploadObj(ApplicationImpl &application, const std::string &filePath, bool useTextures) {
@@ -191,10 +186,13 @@ MeshImpl::LoadResults MeshImpl::loadObj(const std::string &filePath, bool useTex
 }
 
 bool MeshImpl::isUploadInProgress() {
+    if (!loadingComplete.load()) {
+        return false;
+    }
+
     const bool vertexInProgress = this->vertexBuffer->isUploadInProgress();
     const bool indexInProgress = this->indexBuffer != nullptr && this->indexBuffer->isUploadInProgress();
-    const bool inProgress = vertexInProgress || indexInProgress;
-    return inProgress;
+    return vertexInProgress || indexInProgress;
 }
 
 MeshImpl::MeshType MeshImpl::computeMeshType(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates, bool useTextures) {
