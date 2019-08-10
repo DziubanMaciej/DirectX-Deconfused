@@ -20,37 +20,58 @@ public:
 
 protected:
     friend class DXD::Mesh;
-    MeshImpl(DXD::Application &application, MeshType meshType, const std::vector<FLOAT> &vertices,
-             UINT vertexSize, const std::vector<UINT> &indices);
+    MeshImpl(ApplicationImpl &application, const std::string &filePath, bool useTextures);
     ~MeshImpl() = default;
 
 public:
     UINT getVertexSizeInBytes() const { return vertexSizeInBytes; }
     UINT getVerticesCount() const { return verticesCount; }
     UINT getIndicesCount() const { return indicesCount; }
-
     MeshType getMeshType() const { return meshType; }
+
     bool isUploadInProgress();
 
     auto &getVertexBuffer() { return vertexBuffer; }
     auto &getIndexBuffer() { return indexBuffer; }
 
 protected:
-    // Context and metadata
+    // Context
     ApplicationImpl &application;
-    MeshType meshType;
 
-    // CPU resources
-    const UINT vertexSizeInBytes;
-    const UINT verticesCount;
-    const UINT indicesCount;
+    // CPU data, set during load time
+    MeshType meshType = UNKNOWN;
+    UINT vertexSizeInBytes = 0;
+    UINT verticesCount = 0;
+    UINT indicesCount = 0;
 
-    // GPU resources
-    std::unique_ptr<VertexBuffer> vertexBuffer;
-    std::unique_ptr<IndexBuffer> indexBuffer;
+    // GPU data, set during upload time
+    std::unique_ptr<VertexBuffer> vertexBuffer = {};
+    std::unique_ptr<IndexBuffer> indexBuffer = {};
 
 private:
+    // Helpers
     static MeshType computeMeshType(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates, bool useTextures);
     static UINT computeVertexSize(MeshType meshType);
-    void uploadToGPU(const std::vector<FLOAT> &vertices, const std::vector<UINT> &indices);
+    void loadAndUploadObj(ApplicationImpl &application, const std::string &filePath, bool useTextures);
+
+    // Loading CPU data
+    struct LoadResults {
+        LoadResults() = default;
+
+        MeshType meshType = UNKNOWN;
+        std::vector<FLOAT> vertices = {};
+        std::vector<UINT> indices = {};
+    };
+    static LoadResults loadObj(const std::string &filePath, bool useTextures);
+
+    // Uploading GPU data
+    struct UploadResults {
+        std::unique_ptr<VertexBuffer> vertexBuffer = {};
+        std::unique_ptr<IndexBuffer> indexBuffer = {};
+    };
+    static UploadResults uploadToGPU(ApplicationImpl &application, const std::vector<FLOAT> &vertexElements, const std::vector<UINT> &indices, UINT verticesCount, UINT vertexSizeInBytes);
+
+    // Called after all CPU and GPU data is available
+    void setData(MeshType meshType, UINT vertexSizeInBytes, UINT verticesCount, UINT indicesCount,
+                 std::unique_ptr<VertexBuffer> &&vertexBuffer, std::unique_ptr<IndexBuffer> &&indexBuffer);
 };
