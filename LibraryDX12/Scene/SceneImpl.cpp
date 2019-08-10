@@ -123,25 +123,14 @@ void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapCh
     }
 }
 
-void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
-    auto &commandQueue = application.getDirectCommandQueue();
-    CommandList commandList{commandQueue.getCommandAllocatorManager(), nullptr};
-    const auto &backBuffer = swapChain.getCurrentBackBuffer();
-    commandQueue.performResourcesDeletion();
+void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain, CommandList &commandList) {
+    CD3DX12_VIEWPORT viewport(0.0f, 0.0f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+    commandList.RSSetViewport(viewport);
 
-    CD3DX12_RECT scissorRect(0, 0, LONG_MAX, LONG_MAX);
-    commandList.RSSetScissorRect(scissorRect);
-
-    renderShadowMaps(application, swapChain, commandList);
-
-    // Forward shading
     // Transition to RENDER_TARGET
     swapChain.getPostProcessRenderTarget().transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-    CD3DX12_VIEWPORT viewport(0.0f, 0.0f, (float)swapChain.getWidth(), (float)swapChain.getHeight());
-    commandList.RSSetViewport(viewport);
-
-    commandList.OMSetRenderTarget(swapChain.getPostProcessRtvDescriptor().getCpuHandle(), swapChain.getPostProcessRenderTarget().getResource(), // set temp
+    commandList.OMSetRenderTarget(swapChain.getPostProcessRtvDescriptor().getCpuHandle(), swapChain.getPostProcessRenderTarget().getResource(),
                                   swapChain.getDepthStencilBufferDescriptor(), swapChain.getDepthStencilBuffer()->getResource());
 
     // Render (clear color)
@@ -253,6 +242,21 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
             commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
         }
     }
+}
+
+void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
+    auto &commandQueue = application.getDirectCommandQueue();
+    CommandList commandList{commandQueue.getCommandAllocatorManager(), nullptr};
+    const auto &backBuffer = swapChain.getCurrentBackBuffer();
+    commandQueue.performResourcesDeletion();
+
+    // Do not scissor
+    CD3DX12_RECT scissorRect(0, 0, LONG_MAX, LONG_MAX);
+    commandList.RSSetScissorRect(scissorRect);
+
+    // Render
+    renderShadowMaps(application, swapChain, commandList);
+    renderForward(application, swapChain, commandList);
 
     //POST PROCESS
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS);
