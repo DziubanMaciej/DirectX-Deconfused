@@ -244,6 +244,27 @@ void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain
     }
 }
 
+void SceneImpl::renderPostProcess(ApplicationImpl &application, SwapChain &swapChain, CommandList &commandList, Resource &input, Resource &output) {
+    // Set resource to correct state
+    input.transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    output.transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+    // Set all the states
+    commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS);
+    commandList.getCommandList()->OMSetRenderTargets(1, &swapChain.getCurrentBackBufferDescriptor(), FALSE, nullptr);
+    commandList.setCbvSrvUavDescriptorTable(1, 0, swapChain.getSrvDescriptor());
+    commandList.clearRenderTargetView(swapChain.getCurrentBackBufferDescriptor(), backgroundColor);
+
+    // Draw black bars
+    commandList.IASetVertexBuffer(*postProcessVB);
+    commandList.IASetPrimitiveTopologyTriangleList();
+    PostProcessCB ppcb = {};
+    ppcb.screenWidth = static_cast<float>(swapChain.getWidth());
+    ppcb.screenHeight = static_cast<float>(swapChain.getHeight());
+    commandList.setGraphicsRoot32BitConstant(0, ppcb);
+    commandList.draw(6u);
+}
+
 void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     auto &commandQueue = application.getDirectCommandQueue();
     CommandList commandList{commandQueue.getCommandAllocatorManager(), nullptr};
@@ -257,29 +278,7 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     // Render
     renderShadowMaps(application, swapChain, commandList);
     renderForward(application, swapChain, commandList);
-
-    //POST PROCESS
-    commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS);
-
-    swapChain.getPostProcessRenderTarget().transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-
-    backBuffer->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    commandList.getCommandList()->OMSetRenderTargets(1, &swapChain.getCurrentBackBufferDescriptor(), FALSE, nullptr);
-
-    commandList.setCbvSrvUavDescriptorTable(1, 0, swapChain.getSrvDescriptor());
-
-    commandList.clearRenderTargetView(swapChain.getCurrentBackBufferDescriptor(), backgroundColor);
-
-    commandList.IASetVertexBuffer(*postProcessVB);
-    commandList.IASetPrimitiveTopologyTriangleList();
-
-    PostProcessCB ppcb;
-    ppcb.screenWidth = static_cast<float>(swapChain.getWidth());
-    ppcb.screenHeight = static_cast<float>(swapChain.getHeight());
-
-    commandList.setGraphicsRoot32BitConstant(0, ppcb);
-
-    commandList.draw(6u);
+    renderPostProcess(application, swapChain, commandList, swapChain.getPostProcessRenderTarget(), *backBuffer);
 
     // Transition to PRESENT
     backBuffer->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PRESENT);

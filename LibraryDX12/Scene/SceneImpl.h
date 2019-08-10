@@ -38,6 +38,7 @@ public:
 protected:
     void renderShadowMaps(ApplicationImpl &application, SwapChain &swapChain, CommandList &commandList);
     void renderForward(ApplicationImpl &application, SwapChain &swapChain, CommandList &commandList);
+    void renderPostProcess(ApplicationImpl &application, SwapChain &swapChain, CommandList &commandList, Resource &input, Resource &output);
 
     // Context
     ApplicationImpl &application;
