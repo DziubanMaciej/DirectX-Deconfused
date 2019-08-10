@@ -38,7 +38,8 @@ public:
 protected:
     void renderShadowMaps(ApplicationImpl &application, SwapChain &swapChain, CommandList &commandList);
     void renderForward(ApplicationImpl &application, SwapChain &swapChain, CommandList &commandList);
-    void renderPostProcess(ApplicationImpl &application, SwapChain &swapChain, CommandList &commandList, Resource &input, Resource &output);
+    void renderPostProcess(ApplicationImpl &application, SwapChain &swapChain, CommandList &commandList,
+                           Resource &input, Resource &output, D3D12_CPU_DESCRIPTOR_HANDLE outputDescriptor);
 
     // Context
     ApplicationImpl &application;

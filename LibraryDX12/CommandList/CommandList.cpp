@@ -130,7 +130,13 @@ void CommandList::RSSetViewports(UINT numViewports, const D3D12_VIEWPORT *viewpo
 }
 
 void CommandList::RSSetViewport(const D3D12_VIEWPORT &viewport) {
-    commandList->RSSetViewports(1, &viewport);
+    commandList->RSSetViewports(1u, &viewport);
+}
+
+void CommandList::RSSetViewport(FLOAT topLeftX, FLOAT topLeftY, FLOAT width, FLOAT height)
+{
+    CD3DX12_VIEWPORT viewport(topLeftX, topLeftY, width, height);
+    commandList->RSSetViewports(1u, &viewport);
 }
 
 void CommandList::RSSetScissorRects(UINT numRects, const D3D12_RECT *rects) {
@@ -138,7 +144,12 @@ void CommandList::RSSetScissorRects(UINT numRects, const D3D12_RECT *rects) {
 }
 
 void CommandList::RSSetScissorRect(const D3D12_RECT &rect) {
-    commandList->RSSetScissorRects(1, &rect);
+    commandList->RSSetScissorRects(1u, &rect);
+}
+
+void CommandList::RSSetScissorRectNoScissor() {
+    CD3DX12_RECT scissorRect(0, 0, LONG_MAX, LONG_MAX);
+    commandList->RSSetScissorRects(1, &scissorRect);
 }
 
 void CommandList::OMSetRenderTarget(const D3D12_CPU_DESCRIPTOR_HANDLE &renderTargetDescriptor, const ID3D12ResourcePtr &renderTarget,
@@ -149,8 +160,13 @@ void CommandList::OMSetRenderTarget(const D3D12_CPU_DESCRIPTOR_HANDLE &renderTar
 }
 
 void CommandList::OMSetRenderTargetDepthOnly(const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor, const ID3D12ResourcePtr &depthStencilBuffer) {
-    commandList->OMSetRenderTargets(FALSE, nullptr, 1, &depthStencilDescriptor);
+    commandList->OMSetRenderTargets(0u, nullptr, FALSE, &depthStencilDescriptor);
     addUsedResource(depthStencilBuffer);
+}
+
+void CommandList::OMSetRenderTargetNoDepth(const D3D12_CPU_DESCRIPTOR_HANDLE &renderTargetDescriptor, const ID3D12ResourcePtr &renderTarget) {
+    commandList->OMSetRenderTargets(1u, &renderTargetDescriptor, FALSE, nullptr);
+    addUsedResource(renderTarget);
 }
 
 void CommandList::drawIndexed(UINT verticesCount, INT startVertexLocation, INT startIndexLocation) {

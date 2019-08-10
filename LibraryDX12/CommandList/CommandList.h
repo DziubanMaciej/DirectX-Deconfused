@@ -47,12 +47,15 @@ public:
 
     void RSSetViewports(UINT numViewports, const D3D12_VIEWPORT *viewports);
     void RSSetViewport(const D3D12_VIEWPORT &viewport);
+    void RSSetViewport(FLOAT topLeftX, FLOAT topLeftY, FLOAT width, FLOAT height);
     void RSSetScissorRects(UINT numRects, const D3D12_RECT *rects);
     void RSSetScissorRect(const D3D12_RECT &rect);
+    void RSSetScissorRectNoScissor();
 
     void OMSetRenderTarget(const D3D12_CPU_DESCRIPTOR_HANDLE &renderTargetDescriptor, const ID3D12ResourcePtr &renderTarget,
                            const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor, const ID3D12ResourcePtr &depthStencilBuffer);
     void OMSetRenderTargetDepthOnly(const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor, const ID3D12ResourcePtr &depthStencilBuffer);
+    void OMSetRenderTargetNoDepth(const D3D12_CPU_DESCRIPTOR_HANDLE &renderTargetDescriptor, const ID3D12ResourcePtr &renderTarget);
 
     template <typename ConstantType>
     void setGraphicsRoot32BitConstant(UINT rootParameterIndex, const ConstantType &constant);

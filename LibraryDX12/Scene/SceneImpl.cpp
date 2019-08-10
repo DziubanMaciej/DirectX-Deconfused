@@ -84,9 +84,7 @@ void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapCh
         swapChain.getShadowMap(i).transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);
     }
 
-    CD3DX12_VIEWPORT viewportSM(0.0f, 0.0f, 2048.0f, 2048.0f);
-    commandList.RSSetViewport(viewportSM);
-
+    commandList.RSSetViewport(0.f, 0.f, 2048.f, 2048.f);
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_SM_NORMAL);
 
     int lightIdx = 0;
@@ -124,8 +122,7 @@ void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapCh
 }
 
 void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain, CommandList &commandList) {
-    CD3DX12_VIEWPORT viewport(0.0f, 0.0f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
-    commandList.RSSetViewport(viewport);
+    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
 
     // Transition to RENDER_TARGET
     swapChain.getPostProcessRenderTarget().transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -244,14 +241,15 @@ void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain
     }
 }
 
-void SceneImpl::renderPostProcess(ApplicationImpl &application, SwapChain &swapChain, CommandList &commandList, Resource &input, Resource &output) {
+void SceneImpl::renderPostProcess(ApplicationImpl &application, SwapChain &swapChain, CommandList &commandList,
+                                  Resource &input, Resource &output, D3D12_CPU_DESCRIPTOR_HANDLE outputDescriptor) {
     // Set resource to correct state
     input.transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     output.transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     // Set all the states
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS);
-    commandList.getCommandList()->OMSetRenderTargets(1, &swapChain.getCurrentBackBufferDescriptor(), FALSE, nullptr);
+    commandList.OMSetRenderTargetNoDepth(outputDescriptor, output.getResource());
     commandList.setCbvSrvUavDescriptorTable(1, 0, swapChain.getSrvDescriptor());
     commandList.clearRenderTargetView(swapChain.getCurrentBackBufferDescriptor(), backgroundColor);
 
@@ -269,16 +267,16 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     auto &commandQueue = application.getDirectCommandQueue();
     CommandList commandList{commandQueue.getCommandAllocatorManager(), nullptr};
     const auto &backBuffer = swapChain.getCurrentBackBuffer();
+    const auto backBufferDescriptorHandle = swapChain.getCurrentBackBufferDescriptor();
     commandQueue.performResourcesDeletion();
 
     // Do not scissor
-    CD3DX12_RECT scissorRect(0, 0, LONG_MAX, LONG_MAX);
-    commandList.RSSetScissorRect(scissorRect);
+    commandList.RSSetScissorRectNoScissor();
 
     // Render
     renderShadowMaps(application, swapChain, commandList);
     renderForward(application, swapChain, commandList);
-    renderPostProcess(application, swapChain, commandList, swapChain.getPostProcessRenderTarget(), *backBuffer);
+    renderPostProcess(application, swapChain, commandList, swapChain.getPostProcessRenderTarget(), *backBuffer, backBufferDescriptorHandle);
 
     // Transition to PRESENT
     backBuffer->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PRESENT);
