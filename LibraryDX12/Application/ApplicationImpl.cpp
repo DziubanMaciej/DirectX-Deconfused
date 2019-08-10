@@ -16,6 +16,7 @@ ApplicationImpl::ApplicationImpl(bool debugLayer) : debugLayerEnabled(enableDebu
                                                     device(createDevice(adapter, debugLayerEnabled)),
                                                     pipelineStateController(device),
                                                     descriptorManager(device),
+                                                    backgroundWorkerManager(),
                                                     copyCommandQueue(device, D3D12_COMMAND_LIST_TYPE_COPY),
                                                     directCommandQueue(device, D3D12_COMMAND_LIST_TYPE_DIRECT) {
     pipelineStateController.compileAll();

@@ -3,6 +3,7 @@
 #include "CommandList/CommandQueue.h"
 #include "Descriptor/DescriptorManager.h"
 #include "PipelineState/PipelineStateController.h"
+#include "Threading/BackgroundWorkerManager.h"
 
 #include "DXD/Application.h"
 
@@ -27,6 +28,7 @@ public:
     auto getDevice() { return device; }
     auto &getPipelineStateController() { return pipelineStateController; }
     auto &getDescriptorController() { return descriptorManager; }
+    auto &getBackgroundWorkerManager() { return backgroundWorkerManager; }
     auto &getDirectCommandQueue() { return directCommandQueue; }
     auto &getCopyCommandQueue() { return copyCommandQueue; }
 
@@ -43,6 +45,7 @@ protected:
     ID3D12DevicePtr device;
     PipelineStateController pipelineStateController;
     DescriptorManager descriptorManager;
+    BackgroundWorkerManager backgroundWorkerManager;
     CommandQueue copyCommandQueue;
     CommandQueue directCommandQueue;
 };

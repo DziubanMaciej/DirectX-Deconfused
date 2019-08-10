@@ -19,7 +19,16 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
 
 MeshImpl::MeshImpl(ApplicationImpl &application, const std::string &filePath, bool useTextures)
     : application(application) {
-    loadAndUploadObj(application, filePath, useTextures);
+
+    auto task = [&]() {
+        loadAndUploadObj(application, filePath, useTextures);
+    };
+    std::mutex mutex;
+    std::condition_variable cv;
+    application.getBackgroundWorkerManager().pushTask(task, cv);
+
+    std::unique_lock<std::mutex> lock(mutex);
+    cv.wait(lock);
 }
 
 void MeshImpl::loadAndUploadObj(ApplicationImpl &application, const std::string &filePath, bool useTextures) {
