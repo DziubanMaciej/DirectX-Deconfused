@@ -60,7 +60,7 @@ private:
         LoadResults() = default;
 
         MeshType meshType = UNKNOWN;
-        std::vector<FLOAT> vertices = {};
+        std::vector<FLOAT> vertexElements = {};
         std::vector<UINT> indices = {};
     };
     static LoadResults loadObj(const std::string &filePath, bool useTextures);

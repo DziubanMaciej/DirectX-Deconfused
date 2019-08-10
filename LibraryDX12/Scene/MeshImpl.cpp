@@ -30,14 +30,14 @@ void MeshImpl::loadAndUploadObj(ApplicationImpl &application, const std::string 
     const LoadResults loadResults = loadObj(filePath, useTextures);
     const auto meshType = loadResults.meshType;
     assert(meshType != UNKNOWN);
-    const auto &vertexElements = loadResults.vertices;
+    const auto &vertexElements = loadResults.vertexElements;
     const auto &indices = loadResults.indices;
     const auto vertexSizeInBytes = computeVertexSize(loadResults.meshType);
     const auto verticesCount = static_cast<UINT>(vertexElements.size() * sizeof(FLOAT) / vertexSizeInBytes);
     assert(vertexSizeInBytes * verticesCount == vertexElements.size() * sizeof(FLOAT));
     const auto indicesCount = static_cast<UINT>(indices.size());
 
-    UploadResults uploadResults = uploadToGPU(application, loadResults.vertices, loadResults.indices, verticesCount, vertexSizeInBytes);
+    UploadResults uploadResults = uploadToGPU(application, loadResults.vertexElements, loadResults.indices, verticesCount, vertexSizeInBytes);
     auto &vertexBuffer = uploadResults.vertexBuffer;
     auto &indexBuffer = uploadResults.indexBuffer;
 
@@ -45,32 +45,30 @@ void MeshImpl::loadAndUploadObj(ApplicationImpl &application, const std::string 
 }
 
 MeshImpl::LoadResults MeshImpl::loadObj(const std::string &filePath, bool useTextures) {
+    LoadResults result{};
 
+    // Initial validation
     const auto fullFilePath = std::string{RESOURCES_PATH} + filePath;
     std::fstream inputFile{fullFilePath, std::ios::in};
     if (!inputFile.good()) {
         return {};
     }
 
-    std::vector<FLOAT> vertexElements;     //temp
-    std::vector<std::string> faces;        //temp
-    std::vector<FLOAT> normals;            //temp
-    std::vector<FLOAT> textureCoordinates; //temp
-
+    // Temporary variables for loading
+    std::vector<FLOAT> vertexElements;     // vertex element is e.g x coordinate of vertex position
+    std::vector<std::string> indexTokens;  // index token is a bundle of 1-based indices of vertex/normal/uv delimeted by slash, e.g. 1//2, 1/3/21
+    std::vector<FLOAT> normalCoordinates;  // normal coordinate is e.g. x coordinate of a normal vector
+    std::vector<FLOAT> textureCoordinates; // normal coordinate is e.g. u coordinate of a texture coordinate
     std::string lineType;
     FLOAT x, y, z;
     std::string f1, f2, f3, f4;
 
-    std::string line;
-    while (getline(inputFile, line).good()) {
-
+    // Read all lines
+    for (std::string line; getline(inputFile, line).good();) {
         std::istringstream strs(line);
-
         strs >> lineType;
 
-        if (lineType == "#") { //comment
-            continue;
-        } else if (lineType == "v") { //vertices
+        if (lineType == "v") { //vertices
             strs >> x;
             strs >> y;
             strs >> z;
@@ -81,19 +79,18 @@ MeshImpl::LoadResults MeshImpl::loadObj(const std::string &filePath, bool useTex
             strs >> f1;
             strs >> f2;
             strs >> f3;
-            faces.push_back(f1);
-            faces.push_back(f2);
-            faces.push_back(f3);
+            indexTokens.push_back(f1);
+            indexTokens.push_back(f2);
+            indexTokens.push_back(f3);
 
-            try {
+            try { // TODO
                 const auto slashCount = std::count(line.begin(), line.end(), '/');
                 if (slashCount > 6 && strs.good() && !strs.eof()) {
-
                     strs >> f4;
                     if (!f4.empty()) {
-                        faces.push_back(f1);
-                        faces.push_back(f3);
-                        faces.push_back(f4);
+                        indexTokens.push_back(f1);
+                        indexTokens.push_back(f3);
+                        indexTokens.push_back(f4);
                     } else {
                         int t = 0;
                     }
@@ -106,9 +103,9 @@ MeshImpl::LoadResults MeshImpl::loadObj(const std::string &filePath, bool useTex
             strs >> x;
             strs >> y;
             strs >> z;
-            normals.push_back(x);
-            normals.push_back(y);
-            normals.push_back(z);
+            normalCoordinates.push_back(x);
+            normalCoordinates.push_back(y);
+            normalCoordinates.push_back(z);
         } else if (lineType == "vt") { //texture vector
             strs >> x;
             strs >> y;
@@ -119,19 +116,19 @@ MeshImpl::LoadResults MeshImpl::loadObj(const std::string &filePath, bool useTex
         }
     }
 
-    const auto meshType = MeshImpl::computeMeshType(normals, textureCoordinates, useTextures);
-    if (meshType == MeshImpl::UNKNOWN) {
+    // Compute some fields based on lines that were read
+    result.meshType = MeshImpl::computeMeshType(normalCoordinates, textureCoordinates, useTextures);
+    const bool usesIndexBuffer = normalCoordinates.size() == 0 && textureCoordinates.size() == 0;
+    if (result.meshType == MeshImpl::UNKNOWN) {
         return {};
     }
 
-    // No need to rearrange vertices if there are no additional elements in them
-    const bool usesIndexBuffer = normals.size() == 0 && textureCoordinates.size() == 0;
-    std::vector<FLOAT> outVertexElements = {};
-    std::vector<UINT> indices = {};
+    // Prepare final buffers for GPU upload
     if (usesIndexBuffer) {
-        outVertexElements = std::move(vertexElements);
+        // No vertex elements interleaving is required - we only have position
+        result.vertexElements = std::move(vertexElements);
     }
-    for (std::string face : faces) {
+    for (std::string face : indexTokens) {
         UINT vertexElementIdx;
         UINT normalIdx;
         UINT textCoordIdx;
@@ -159,29 +156,25 @@ MeshImpl::LoadResults MeshImpl::loadObj(const std::string &filePath, bool useTex
         }
         if (usesIndexBuffer) {
             // Vertices go unmodified to the vertex buffer, we use an index buffer to define polygons
-            indices.push_back(vertexElementIdx - 1);
+            result.indices.push_back(vertexElementIdx - 1);
         } else {
-            // We have to embed all vertex attributes into one array
-            outVertexElements.push_back(vertexElements[3 * (vertexElementIdx - 1)]);
-            outVertexElements.push_back(vertexElements[3 * (vertexElementIdx - 1) + 1]);
-            outVertexElements.push_back(vertexElements[3 * (vertexElementIdx - 1) + 2]);
-            if (meshType & MeshImpl::NORMALS) {
-                outVertexElements.push_back(normals[3 * (normalIdx - 1)]);
-                outVertexElements.push_back(normals[3 * (normalIdx - 1) + 1]);
-                outVertexElements.push_back(normals[3 * (normalIdx - 1) + 2]);
+            // We have to interleave vertex attributes gather in different arrays into one
+            result.vertexElements.push_back(vertexElements[3 * (vertexElementIdx - 1)]);
+            result.vertexElements.push_back(vertexElements[3 * (vertexElementIdx - 1) + 1]);
+            result.vertexElements.push_back(vertexElements[3 * (vertexElementIdx - 1) + 2]);
+            if (result.meshType & MeshImpl::NORMALS) {
+                result.vertexElements.push_back(normalCoordinates[3 * (normalIdx - 1)]);
+                result.vertexElements.push_back(normalCoordinates[3 * (normalIdx - 1) + 1]);
+                result.vertexElements.push_back(normalCoordinates[3 * (normalIdx - 1) + 2]);
             }
-            if (meshType & MeshImpl::TEXTURE_COORDS) {
-                outVertexElements.push_back(textureCoordinates[3 * (textCoordIdx - 1)]);
-                outVertexElements.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 1]);
-                outVertexElements.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 2]);
+            if (result.meshType & MeshImpl::TEXTURE_COORDS) {
+                result.vertexElements.push_back(textureCoordinates[3 * (textCoordIdx - 1)]);
+                result.vertexElements.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 1]);
+                result.vertexElements.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 2]);
             }
         }
     }
 
-    LoadResults result = {};
-    result.meshType = meshType;
-    result.vertices = std::move(outVertexElements);
-    result.indices = std::move(indices);
     return std::move(result);
 }
 
