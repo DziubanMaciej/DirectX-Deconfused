@@ -112,7 +112,6 @@ MeshImpl::LoadResults MeshImpl::loadObj(const std::string &filePath, bool useTex
             strs >> z;
             textureCoordinates.push_back(x);
             textureCoordinates.push_back(y);
-            textureCoordinates.push_back(z);
         }
     }
 
@@ -168,9 +167,8 @@ MeshImpl::LoadResults MeshImpl::loadObj(const std::string &filePath, bool useTex
                 result.vertexElements.push_back(normalCoordinates[3 * (normalIdx - 1) + 2]);
             }
             if (result.meshType & MeshImpl::TEXTURE_COORDS) {
-                result.vertexElements.push_back(textureCoordinates[3 * (textCoordIdx - 1)]);
-                result.vertexElements.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 1]);
-                result.vertexElements.push_back(textureCoordinates[3 * (textCoordIdx - 1) + 2]);
+                result.vertexElements.push_back(textureCoordinates[2 * (textCoordIdx - 1)]);
+                result.vertexElements.push_back(textureCoordinates[2 * (textCoordIdx - 1) + 1]);
             }
         }
     }
@@ -210,7 +208,7 @@ UINT MeshImpl::computeVertexSize(MeshType meshType) {
         vertexSize += 3;
     }
     if (meshType & TEXTURE_COORDS) {
-        vertexSize += 3;
+        vertexSize += 2;
     }
     if (meshType & NORMALS) {
         vertexSize += 3;

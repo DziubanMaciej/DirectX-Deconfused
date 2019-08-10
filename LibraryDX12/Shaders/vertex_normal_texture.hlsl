@@ -8,14 +8,14 @@ ConstantBuffer<ModelViewProjection> mmvp : register(b0);
 struct VertexShaderInput {
     float3 Position : POSITION;
     float3 Normal : NORMAL;
-    float3 UV : TEXCOORD;
+    float2 UV : TEXCOORD;
 };
 
 struct VertexShaderOutput {
     float4 WorldPosition : COLOR;
     float4 Normal : NORMAL;
     float4 Position : SV_Position;
-    float3 UV : TEXCOORD;
+    float2 UV : TEXCOORD;
 };
 
 VertexShaderOutput main(VertexShaderInput IN) {

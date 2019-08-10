@@ -32,7 +32,7 @@ struct PixelShaderInput {
     float4 WorldPosition : COLOR;
     float4 Normal : NORMAL;
     float4 Position : SV_Position;
-    float3 UV : TEXCOORD;
+    float2 UV : TEXCOORD;
 };
 
 float4 main(PixelShaderInput IN) : SV_Target {
