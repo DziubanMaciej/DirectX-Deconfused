@@ -20,7 +20,7 @@ public:
 
 protected:
     friend class DXD::Mesh;
-    MeshImpl(ApplicationImpl &application, const std::string &filePath, bool useTextures);
+    MeshImpl(ApplicationImpl &application, const std::wstring &filePath, bool useTextures);
     ~MeshImpl() = default;
 
 public:
@@ -53,7 +53,7 @@ private:
     // Helpers
     static MeshType computeMeshType(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates, bool useTextures);
     static UINT computeVertexSize(MeshType meshType);
-    void loadAndUploadObj(ApplicationImpl &application, const std::string &filePath, bool useTextures);
+    void loadAndUploadObj(ApplicationImpl &application, const std::wstring &filePath, bool useTextures);
 
     // Loading CPU data
     struct LoadResults {
@@ -63,7 +63,7 @@ private:
         std::vector<FLOAT> vertexElements = {};
         std::vector<UINT> indices = {};
     };
-    static LoadResults loadObj(const std::string &filePath, bool useTextures);
+    static LoadResults loadObj(const std::wstring &filePath, bool useTextures);
 
     // Uploading GPU data
     struct UploadResults {

@@ -12,12 +12,12 @@
 
 namespace DXD {
 
-std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const std::string &filePath, bool useTextures) {
+std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const std::wstring &filePath, bool useTextures) {
     return std::unique_ptr<Mesh>(new MeshImpl(*static_cast<ApplicationImpl *>(&application), filePath, useTextures));
 }
 } // namespace DXD
 
-MeshImpl::MeshImpl(ApplicationImpl &application, const std::string &filePath, bool useTextures)
+MeshImpl::MeshImpl(ApplicationImpl &application, const std::wstring &filePath, bool useTextures)
     : application(application) {
 
     auto task = [this, &application, filePath, useTextures]() {
@@ -26,7 +26,7 @@ MeshImpl::MeshImpl(ApplicationImpl &application, const std::string &filePath, bo
     application.getBackgroundWorkerManager().pushTask(task, this->loadingComplete);
 }
 
-void MeshImpl::loadAndUploadObj(ApplicationImpl &application, const std::string &filePath, bool useTextures) {
+void MeshImpl::loadAndUploadObj(ApplicationImpl &application, const std::wstring &filePath, bool useTextures) {
     const LoadResults loadResults = loadObj(filePath, useTextures);
     const auto meshType = loadResults.meshType;
     assert(meshType != UNKNOWN);
@@ -44,11 +44,11 @@ void MeshImpl::loadAndUploadObj(ApplicationImpl &application, const std::string 
     setData(meshType, vertexSizeInBytes, verticesCount, indicesCount, std::move(vertexBuffer), std::move(indexBuffer));
 }
 
-MeshImpl::LoadResults MeshImpl::loadObj(const std::string &filePath, bool useTextures) {
+MeshImpl::LoadResults MeshImpl::loadObj(const std::wstring &filePath, bool useTextures) {
     LoadResults result{};
 
     // Initial validation
-    const auto fullFilePath = std::string{RESOURCES_PATH} + filePath;
+    const auto fullFilePath = std::wstring{RESOURCES_PATH} + filePath;
     std::fstream inputFile{fullFilePath, std::ios::in};
     if (!inputFile.good()) {
         return {};

@@ -44,20 +44,20 @@ private:
         DXD::log("Loading meshes...\n");
 
         struct MeshCreationData {
-            std::string filePath;
+            std::wstring filePath;
             bool useTextures;
         };
 
         std::unordered_map<std::string, MeshCreationData> meshMap = {
-            {"teapot", {"Resources/meshes/teapot_normals.obj", false}},
-            {"cube", {"Resources/meshes/cube.obj", false}},
-            {"cubeNormal", {"Resources/meshes/cube_normals.obj", false}},
-            {"smallCube", {"Resources/meshes/small_cube.obj", false}},
-            {"flat", {"Resources/meshes/flat_normals.obj", false}},
-            {"extraFlat", {"Resources/meshes/extra_flat_normals.obj", false}},
-            //{"actor", {"Resources/meshes/dennis.obj", false}},
-            {"dxd", {"Resources/meshes/dxd_comicsans.obj", false}},
-            {"car", {"Resources/meshes/porshe.obj", true}}};
+            {"teapot", {L"Resources/meshes/teapot_normals.obj", false}},
+            {"cube", {L"Resources/meshes/cube.obj", false}},
+            {"cubeNormal", {L"Resources/meshes/cube_normals.obj", false}},
+            {"smallCube", {L"Resources/meshes/small_cube.obj", false}},
+            {"flat", {L"Resources/meshes/flat_normals.obj", false}},
+            {"extraFlat", {L"Resources/meshes/extra_flat_normals.obj", false}},
+            //{"actor", {L"Resources/meshes/dennis.obj", false}},
+            {"dxd", {L"Resources/meshes/dxd_comicsans.obj", false}},
+            {"car", {L"Resources/meshes/porshe.obj", true}}};
         for (auto mesh : meshMap) {
             const auto creationData = mesh.second;
             meshes.insert({mesh.first, DXD::Mesh::createFromObj(*application, creationData.filePath, creationData.useTextures)});
