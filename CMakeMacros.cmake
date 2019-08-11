@@ -81,7 +81,7 @@ endmacro()
 
 macro(add_definitions_for_paths ${TARGET_NAME})
     add_definitions(-DSHADERS_PATH=L"../../../${TARGET_NAME}/Shaders/")
-    add_definitions(-DRESOURCES_PATH="../../../")
+    add_definitions(-DRESOURCES_PATH=L"../../../")
 endmacro()
 
 set(DXD_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/LibraryDX12/Include)

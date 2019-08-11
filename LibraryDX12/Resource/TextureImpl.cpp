@@ -12,19 +12,15 @@
 #include <cstdlib>
 
 namespace DXD {
-std::unique_ptr<Texture> Texture::createFromFile(Application &application, const std::string &filePath) {
+std::unique_ptr<Texture> Texture::createFromFile(Application &application, const std::wstring &filePath) {
     // TODO if texture used as Albedo (Diffuse), make SRGB, e.g. convert DXGI_FORMAT_R8G8B8A8_UNORM to DXGI_FORMAT_R8G8B8A8_UNORM_SRGB
     // TODO create views
     // TODO generate mips
 
-    const auto fullFilePath = std::string{RESOURCES_PATH} + filePath;
+    const auto fullFilePath = std::wstring{RESOURCES_PATH} + filePath;
     if (!FileHelper::exists(fullFilePath)) {
         return nullptr;
     }
-
-    const auto sz = fullFilePath.size() + 1;
-    auto filePathW = std::make_unique<wchar_t[]>(sz);
-    mbstowcs(filePathW.get(), fullFilePath.c_str(), sz);
 
     DirectX::TexMetadata metadata;
     DirectX::ScratchImage scratchImage;
@@ -36,7 +32,7 @@ std::unique_ptr<Texture> Texture::createFromFile(Application &application, const
     ;
 
     throwIfFailed(DirectX::LoadFromWICFile(
-        filePathW.get(),
+        fullFilePath.c_str(),
         DirectX::WIC_FLAGS_FORCE_RGB,
         &metadata,
         scratchImage));
@@ -47,7 +43,7 @@ std::unique_ptr<Texture> Texture::createFromFile(Application &application, const
 }
 } // namespace DXD
 
-TextureImpl::TextureImpl(ApplicationImpl &application, const D3D12_RESOURCE_DESC &description, const std::string &fileName, const DirectX::ScratchImage &image)
+TextureImpl::TextureImpl(ApplicationImpl &application, const D3D12_RESOURCE_DESC &description, const std::wstring &fileName, const DirectX::ScratchImage &image)
     : Resource(application.getDevice(), &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE, &description, D3D12_RESOURCE_STATE_COPY_DEST, nullptr),
       fileName(fileName), description(description),
       cpuDescriptors(application.getDescriptorController().allocate(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1)) {

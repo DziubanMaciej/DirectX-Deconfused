@@ -162,7 +162,7 @@ private:
         DXD::log("Done!\n");
     }
     void prepTextures() {
-        porsheTexture = DXD::Texture::createFromFile(*application, "Resources/textures/porsche.bmp");
+        porsheTexture = DXD::Texture::createFromFile(*application, L"Resources/textures/porsche.bmp");
         assert(porsheTexture);
     }
     void prepCamera() {
