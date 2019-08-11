@@ -45,7 +45,7 @@ protected:
     ID3D12DevicePtr device;
     PipelineStateController pipelineStateController;
     DescriptorManager descriptorManager;
-    BackgroundWorkerManager backgroundWorkerManager;
     CommandQueue copyCommandQueue;
     CommandQueue directCommandQueue;
+    BackgroundWorkerManager backgroundWorkerManager;
 };
