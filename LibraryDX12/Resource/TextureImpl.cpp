@@ -25,17 +25,32 @@ std::unique_ptr<Texture> Texture::createFromFile(Application &application, const
     DirectX::TexMetadata metadata;
     DirectX::ScratchImage scratchImage;
 
-    /*throwIfFailed(DirectX::LoadFromTGAFile(
-        filePathW.get(),
-        &metadata,
-        scratchImage))*/
-    ;
-
-    throwIfFailed(DirectX::LoadFromWICFile(
-        fullFilePath.c_str(),
-        DirectX::WIC_FLAGS_FORCE_RGB,
-        &metadata,
-        scratchImage));
+    const auto extension = FileHelper::getExtension(filePath, true);
+    if (extension == L"tga") {
+        throwIfFailed(DirectX::LoadFromTGAFile(
+            fullFilePath.c_str(),
+            &metadata,
+            scratchImage));
+    } else if (extension == L"dds") {
+        throwIfFailed(DirectX::LoadFromDDSFile(
+            fullFilePath.c_str(),
+            DirectX::DDS_FLAGS_FORCE_RGB,
+            &metadata,
+            scratchImage));
+    } else if (extension == L"hdr") {
+        throwIfFailed(DirectX::LoadFromHDRFile(
+            fullFilePath.c_str(),
+            &metadata,
+            scratchImage));
+    } else if (extension == L"jpg" || extension == L"png" || extension == L"bmp") {
+        throwIfFailed(DirectX::LoadFromWICFile(
+            fullFilePath.c_str(),
+            DirectX::WIC_FLAGS_FORCE_RGB,
+            &metadata,
+            scratchImage));
+    } else {
+        UNREACHABLE_CODE();
+    }
 
     const DXGI_FORMAT format = DXGI_FORMAT_R8G8B8A8_UINT;
     const D3D12_RESOURCE_DESC description = TextureImpl::createTextureDescription(metadata);
