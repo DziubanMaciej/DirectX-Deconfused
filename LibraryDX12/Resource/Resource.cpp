@@ -45,14 +45,14 @@ void Resource::create(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeap
         IID_PPV_ARGS(&resource)));
 }
 
-void Resource::uploadToGPU(ApplicationImpl &application, const void *data) {
+void Resource::uploadToGPU(ApplicationImpl &application, const void *data, UINT rowPitch, UINT slicePitch) {
     assert(gpuUploadData == nullptr);
 
     CommandQueue &commandQueue = application.getCopyCommandQueue();
 
     // Record command list for GPU upload
     CommandList commandList{commandQueue.getCommandAllocatorManager(), nullptr};
-    recordGpuUploadCommands(application.getDevice(), commandList, data);
+    recordGpuUploadCommands(application.getDevice(), commandList, data, rowPitch, slicePitch);
     commandList.close();
 
     // Execute on GPU
@@ -61,20 +61,19 @@ void Resource::uploadToGPU(ApplicationImpl &application, const void *data) {
     registerUpload(commandQueue, fence);
 }
 
-void Resource::recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data) {
-    assert(state == D3D12_RESOURCE_STATE_COPY_DEST);
+void Resource::recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data, UINT rowPitch, UINT slicePitch) {
+    assert(state & D3D12_RESOURCE_STATE_COPY_DEST);
 
     // Create buffer on upload heap
     Resource intermediateResource(device, D3D12_HEAP_TYPE_UPLOAD, D3D12_HEAP_FLAG_NONE, GetRequiredIntermediateSize(resource.Get(), 0, 1), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr);
 
     // Transfer data through the upload heap to destination resource
-    const auto resourceDescription = resource->GetDesc();
     D3D12_SUBRESOURCE_DATA subresourceData = {};
     subresourceData.pData = data;
-    subresourceData.RowPitch = resourceDescription.Width;
-    subresourceData.SlicePitch = resourceDescription.Height;
+    subresourceData.RowPitch = rowPitch;
+    subresourceData.SlicePitch = slicePitch;
     UpdateSubresources<1>(commandList.getCommandList().Get(), this->resource.Get(), intermediateResource.getResource().Get(), 0, 0, 1, &subresourceData);
 
-    // Transition destination resource and make intermediateResource tracked so it's not deleted while being processed on the GPU
+    // Make intermediateResource tracked so it's not deleted while still being processed on the GPU
     commandList.addUsedResource(intermediateResource.getResource());
 }

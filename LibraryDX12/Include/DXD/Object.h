@@ -39,7 +39,7 @@ public:
     virtual void setSpecularity(float s) = 0;
     virtual float getSpecularity() const = 0;
 
-    virtual void setTexture(const Texture *texture) = 0;
+    virtual void setTexture(Texture *texture) = 0;
     virtual const Texture *getTexture() = 0;
 
     virtual ~Object() = default;

@@ -11,7 +11,8 @@ class VertexOrIndexBuffer : public Resource {
 public:
     VertexOrIndexBuffer(ID3D12DevicePtr device, CommandList &commandList, const void *data, UINT size)
         : Resource(device, D3D12_HEAP_TYPE_DEFAULT, D3D12_HEAP_FLAG_NONE, size, D3D12_RESOURCE_STATE_COPY_DEST, nullptr) {
-        recordGpuUploadCommands(device, commandList, data);
+        const auto desc = this->resource->GetDesc();
+        recordGpuUploadCommands(device, commandList, data, desc.Width, desc.Height);
     }
 };
 

@@ -37,13 +37,13 @@ public:
     void setSpecularity(float s) override;
     float getSpecularity() const override;
 
-    void setTexture(const DXD::Texture *texture) override { this->texture = static_cast<const TextureImpl *>(texture); }
-    const DXD::Texture *getTexture() override { return texture; }
-    const TextureImpl *getTextureImpl() { return texture; }
+    void setTexture( DXD::Texture *texture) override { this->texture = static_cast<TextureImpl *>(texture); }
+    DXD::Texture *getTexture() override { return texture; }
+    TextureImpl *getTextureImpl() { return texture; }
 
 protected:
     MeshImpl *mesh = {};
-    const TextureImpl *texture = {};
+    TextureImpl *texture = {};
 
     XMVECTOR scale = {1, 1, 1};
     XMVECTOR position = {0, 0, 0};

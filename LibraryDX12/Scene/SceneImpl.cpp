@@ -221,9 +221,8 @@ void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain
     commandList.setCbvSrvUavDescriptorTable(2, 1, swapChain.getShadowMapSrvDescriptor(), 8);
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = *object->getMesh();
-        if (!mesh.isUploadInProgress() && mesh.getMeshType() == (MeshImpl::NORMALS | MeshImpl::TRIANGLE_STRIP | MeshImpl::TEXTURE_COORDS)) {
-            assert(object->getTexture() != nullptr);
-
+        TextureImpl *texture = object->getTextureImpl();
+        if (!mesh.isUploadInProgress() && texture != nullptr && !texture->isUploadInProgress() && mesh.getMeshType() == (MeshImpl::NORMALS | MeshImpl::TRIANGLE_STRIP | MeshImpl::TEXTURE_COORDS)) {
             commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
             commandList.IASetPrimitiveTopologyTriangleList();
 
@@ -239,7 +238,7 @@ void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain
 
             commandList.setGraphicsRoot32BitConstant(1, op);
 
-            commandList.setCbvSrvUavDescriptorTable(2, 9, object->getTextureImpl()->getSrvDescriptor(), 1);
+            commandList.setCbvSrvUavDescriptorTable(2, 9, texture->getSrvDescriptor(), 1);
             commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
         }
     }

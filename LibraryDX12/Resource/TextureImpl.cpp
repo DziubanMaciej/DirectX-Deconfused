@@ -60,33 +60,12 @@ std::unique_ptr<Texture> Texture::createFromFile(Application &application, const
 
 TextureImpl::TextureImpl(ApplicationImpl &application, const D3D12_RESOURCE_DESC &description, const std::wstring &fileName, const DirectX::ScratchImage &image)
     : Resource(application.getDevice(), &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE, &description, D3D12_RESOURCE_STATE_COPY_DEST, nullptr),
-      fileName(fileName), description(description),
-      cpuDescriptors(application.getDescriptorController().allocate(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1)) {
+    fileName(fileName), description(description),
+    cpuDescriptors(application.getDescriptorController().allocate(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1)) {
+    // Copy texture to GPU
+    uploadToGPU(application, image.GetPixels(), image.GetImages()->rowPitch, image.GetImages()->slicePitch);
 
-    // Create command list
-    CommandQueue &commandQueue = application.getDirectCommandQueue();
-    CommandList commandList{commandQueue.getCommandAllocatorManager(), nullptr};
-
-    // Create buffer on upload heap
-    Resource intermediateResource(application.getDevice(), D3D12_HEAP_TYPE_UPLOAD, D3D12_HEAP_FLAG_NONE, GetRequiredIntermediateSize(resource.Get(), 0, 1), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr);
-
-    // Transfer data through the upload heap to destination resource
-    const auto resourceDescription = resource->GetDesc();
-    D3D12_SUBRESOURCE_DATA subresourceData = {};
-    subresourceData.pData = image.GetPixels();
-    subresourceData.RowPitch = image.GetImages()->rowPitch;
-    subresourceData.SlicePitch = image.GetImages()->slicePitch;
-    UpdateSubresources<1>(commandList.getCommandList().Get(), this->resource.Get(), intermediateResource.getResource().Get(), 0, 0, 1, &subresourceData);
-
-    // Transition destination resource and make intermediateResource tracked so it's not deleted while being processed on the GPU
-    transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    commandList.addUsedResource(intermediateResource.getResource());
-
-    // Send command list
-    commandList.close();
-    std::vector<CommandList *> commandLists{&commandList};
-    commandQueue.executeCommandListsAndSignal(commandLists);
-
+    // Create SRV
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDescription = {};
     srvDescription.Format = this->description.Format;
     srvDescription.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;

@@ -38,8 +38,8 @@ protected:
         uint64_t uploadFence;
     };
 
-    void uploadToGPU(ApplicationImpl &application, const void *data);
-    void recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data);
+    void uploadToGPU(ApplicationImpl &application, const void *data, UINT rowPitch, UINT slicePitch);
+    void recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data, UINT rowPitch, UINT slicePitch);
     D3D12_RESOURCE_STATES state;
     ID3D12ResourcePtr resource;
     std::unique_ptr<GpuUploadData> gpuUploadData = {};
