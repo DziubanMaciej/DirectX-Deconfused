@@ -7,8 +7,9 @@
 
 #include <cassert>
 
-CommandList::CommandList(CommandAllocatorManager &commandAllocatorManager, ID3D12PipelineState *initialPipelineState)
-    : commandAllocatorManager(commandAllocatorManager),
+CommandList::CommandList(DescriptorManager &descriptorManager, CommandAllocatorManager &commandAllocatorManager, ID3D12PipelineState *initialPipelineState)
+    : descriptorManager(descriptorManager),
+      commandAllocatorManager(commandAllocatorManager),
       commandAllocator(commandAllocatorManager.retieveCommandAllocator()),
       commandList(commandAllocatorManager.retrieveCommandList(commandAllocator, initialPipelineState)),
       gpuDescriptorHeapControllerCbvSrvUav(*this, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV),
@@ -133,8 +134,7 @@ void CommandList::RSSetViewport(const D3D12_VIEWPORT &viewport) {
     commandList->RSSetViewports(1u, &viewport);
 }
 
-void CommandList::RSSetViewport(FLOAT topLeftX, FLOAT topLeftY, FLOAT width, FLOAT height)
-{
+void CommandList::RSSetViewport(FLOAT topLeftX, FLOAT topLeftY, FLOAT width, FLOAT height) {
     CD3DX12_VIEWPORT viewport(topLeftX, topLeftY, width, height);
     commandList->RSSetViewports(1u, &viewport);
 }

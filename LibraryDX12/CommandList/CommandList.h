@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CommandList/CommandAllocatorManager.h"
+#include "Descriptor/DescriptorManager.h"
 #include "Descriptor/GpuDescriptorHeapController.h"
 #include "PipelineState/PipelineStateController.h"
 
@@ -19,7 +20,7 @@ class DescriptorAllocation;
 class CommandList : DXD::NonCopyableAndMovable {
 public:
     /// Retrieves command list and allocator from the commandAllocatorManager's pool
-    CommandList(CommandAllocatorManager &commandAllocatorManager, ID3D12PipelineState *initialPipelineState);
+    CommandList(DescriptorManager &descriptorManager, CommandAllocatorManager &commandAllocatorManager, ID3D12PipelineState *initialPipelineState);
     /// Registers the command list and allocator back to the commandAllocatorManager for later reuse
     ~CommandList();
 
@@ -74,11 +75,13 @@ public:
     auto getCommandList() { return commandList; }
     auto &getUsedResources() { return usedResources; }
     auto getDevice() const { return commandAllocatorManager.getDevice(); }
+    auto &getDescriptorManager() const { return descriptorManager; }
 
 private:
     void commitDescriptors();
 
     // Base CommandList data
+    DescriptorManager &descriptorManager;
     CommandAllocatorManager &commandAllocatorManager;
     ID3D12CommandAllocatorPtr commandAllocator;
     ID3D12GraphicsCommandListPtr commandList;
