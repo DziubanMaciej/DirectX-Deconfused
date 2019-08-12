@@ -48,9 +48,7 @@ uint64_t CommandQueue::executeCommandListsAndSignal(std::vector<CommandList *> &
     const uint64_t fenceValue = executeCommandListsAndSignal(commandListPtrs);
 
     for (auto &commandList : commandLists) {
-        commandList->setFenceValue(fenceValue);
-        commandList->registerToCommandAllocatorManagerAndClear();
-        resourceUsageTracker.registerUsage(commandList->getUsedResources(), fenceValue);
+        commandList->registerAllData(resourceUsageTracker, fenceValue);
     }
 
     return fenceValue;

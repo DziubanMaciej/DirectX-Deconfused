@@ -4,6 +4,7 @@
 #include "Descriptor/DescriptorManager.h"
 #include "Descriptor/GpuDescriptorHeapController.h"
 #include "PipelineState/PipelineStateController.h"
+#include "Resource/ResourceUsageTracker.h"
 
 #include "DXD/NonCopyableAndMovable.h"
 
@@ -65,15 +66,13 @@ public:
     void draw(UINT verticesCount, INT startVertexLocation = 0u);
 
     void close();
-    void registerToCommandAllocatorManagerAndClear();
+    void registerAllData(ResourceUsageTracker &resourceUsageTracker, uint64_t fenceValue);
 
     void addUsedResource(const ID3D12DescriptorHeapPtr &heap);
     void addUsedResource(const ID3D12ResourcePtr &resource);
     void addUsedResources(const ID3D12ResourcePtr *resources, UINT resourcesCount);
-    void setFenceValue(uint64_t fenceValue) { this->fenceValue = fenceValue; }
 
     auto getCommandList() { return commandList; }
-    auto &getUsedResources() { return usedResources; }
     auto getDevice() const { return commandAllocatorManager.getDevice(); }
     auto &getDescriptorManager() const { return descriptorManager; }
 
@@ -85,7 +84,6 @@ private:
     CommandAllocatorManager &commandAllocatorManager;
     ID3D12CommandAllocatorPtr commandAllocator;
     ID3D12GraphicsCommandListPtr commandList;
-    uint64_t fenceValue;
 
     // Descriptor controllers
     GpuDescriptorHeapController gpuDescriptorHeapControllerSampler;

@@ -16,7 +16,7 @@ CommandList::CommandList(DescriptorManager &descriptorManager, CommandAllocatorM
       gpuDescriptorHeapControllerSampler(*this, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER) {}
 
 CommandList::~CommandList() {
-    registerToCommandAllocatorManagerAndClear();
+    assert(!commandAllocator && !commandList); // registerAllData should be called
 }
 
 void CommandList::transitionBarrierSingle(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter) {
@@ -183,12 +183,14 @@ void CommandList::close() {
     throwIfFailed(commandList->Close());
 }
 
-void CommandList::registerToCommandAllocatorManagerAndClear() {
-    if (commandList != nullptr) {
-        commandAllocatorManager.registerAllocatorAndList(commandAllocator, commandList, fenceValue);
-        commandList = nullptr;
-        commandAllocator = nullptr;
-    }
+void CommandList::registerAllData(ResourceUsageTracker &resourceUsageTracker, uint64_t fenceValue) {
+    // Give ID3D12CommandList and ID3D12CommandAllocator back to the pool
+    commandAllocatorManager.registerAllocatorAndList(commandAllocator, commandList, fenceValue);
+    commandList = nullptr;
+    commandAllocator = nullptr;
+
+    // Resources reference by GPU in this CommandList
+    resourceUsageTracker.registerUsage(usedResources, fenceValue);
 }
 
 void CommandList::addUsedResource(const ID3D12DescriptorHeapPtr &heap) {
