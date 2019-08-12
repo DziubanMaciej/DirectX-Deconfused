@@ -33,11 +33,13 @@ DescriptorAllocation DescriptorManager::allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE t
     return std::move(*allocation.get());
 }
 
-DescriptorAllocation DescriptorManager::allocateGpu(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount) {
+std::pair<ID3D12DescriptorHeapPtr, DescriptorAllocation> DescriptorManager::allocateGpu(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount) {
     DescriptorHeap &heap = getGpuHeap(type);
+    ID3D12DescriptorHeapPtr dx12Heap = heap.getDescriptorHeap();
+
     auto allocation = heap.allocate(descriptorsCount);
     assert(allocation != nullptr);
-    return std::move(*allocation.get());
+    return std::make_pair(std::move(dx12Heap), std::move(*allocation.get()));
 }
 
 DescriptorHeap &DescriptorManager::getGpuHeap(D3D12_DESCRIPTOR_HEAP_TYPE type) {

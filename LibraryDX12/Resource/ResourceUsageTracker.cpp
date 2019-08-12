@@ -29,6 +29,13 @@ void ResourceUsageTracker::performDeletion(uint64_t fenceValue) {
             it++;
         }
     }
+    for (auto it = descriptorUsageMap.begin(); it != descriptorUsageMap.end();) {
+        if (it->second <= fenceValue) {
+            it = descriptorUsageMap.erase(it);
+        } else {
+            it++;
+        }
+    }
 }
 
 void ResourceUsageTracker::validateResourceFence(ID3D12Pageable *resource, uint64_t fenceValue) {

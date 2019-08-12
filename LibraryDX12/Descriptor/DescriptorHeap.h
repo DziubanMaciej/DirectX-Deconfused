@@ -25,6 +25,8 @@ public:
     /// \return valid allocation object or nullptr
     std::unique_ptr<DescriptorAllocation> allocate(UINT descriptorsCount);
 
+    ID3D12DescriptorHeapPtr getDescriptorHeap() { return heap; }
+
 private:
     using FreeListOffset = UINT;
     using FreeListSize = UINT;
@@ -45,7 +47,9 @@ private:
     const D3D12_DESCRIPTOR_HEAP_TYPE type;
     const UINT descriptorIncrementSize;
     const ID3D12DescriptorHeapPtr heap;
-    const D3D12_CPU_DESCRIPTOR_HANDLE heapStartHandle;
+    const bool gpuVisible;
+    const D3D12_CPU_DESCRIPTOR_HANDLE cpuHeapStartHandle;
+    const D3D12_GPU_DESCRIPTOR_HANDLE gpuHeapStartHandle;
     FreeList freeList;
     UINT totalFreeSpace;
 };

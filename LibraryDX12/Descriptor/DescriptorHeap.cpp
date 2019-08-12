@@ -7,7 +7,9 @@ DescriptorHeap::DescriptorHeap(ID3D12DevicePtr device, D3D12_DESCRIPTOR_HEAP_TYP
     : type(type),
       descriptorIncrementSize(device->GetDescriptorHandleIncrementSize(type)),
       heap(createDescriptorHeap(device, type, descriptorsCount, flags)),
-      heapStartHandle(heap->GetCPUDescriptorHandleForHeapStart()),
+      gpuVisible(flags & D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE),
+      cpuHeapStartHandle(heap->GetCPUDescriptorHandleForHeapStart()),
+      gpuHeapStartHandle(gpuVisible ? heap->GetGPUDescriptorHandleForHeapStart() : D3D12_GPU_DESCRIPTOR_HANDLE{}),
       totalFreeSpace(descriptorsCount) {
     freeList.emplace(0, descriptorsCount);
 }
@@ -32,7 +34,13 @@ std::unique_ptr<DescriptorAllocation> DescriptorHeap::allocate(UINT descriptorsC
             }
 
             const auto offsetInHeap = freeRangeOffset + freeRangeSize - descriptorsCount;
-            return std::make_unique<DescriptorAllocation>(*this, offsetInHeap, descriptorsCount, this->heapStartHandle, this->descriptorIncrementSize);
+            if (gpuVisible) {
+                return std::make_unique<DescriptorAllocation>(*this, offsetInHeap, descriptorsCount, this->cpuHeapStartHandle,
+                                                              this->gpuHeapStartHandle, this->descriptorIncrementSize);
+            } else {
+                return std::make_unique<DescriptorAllocation>(*this, offsetInHeap, descriptorsCount, this->cpuHeapStartHandle,
+                                                              this->descriptorIncrementSize);
+            }
         }
     }
 
