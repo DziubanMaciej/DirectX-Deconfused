@@ -1,6 +1,6 @@
 add_sources_and_cmake_file(${TARGET_NAME}
-    ${CMAKE_CURRENT_SOURCE_DIR}/CpuDescriptorHeap.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/CpuDescriptorHeap.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/DescriptorHeap.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/DescriptorHeap.h
     ${CMAKE_CURRENT_SOURCE_DIR}/DescriptorAllocation.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/DescriptorAllocation.h
     ${CMAKE_CURRENT_SOURCE_DIR}/DescriptorManager.cpp

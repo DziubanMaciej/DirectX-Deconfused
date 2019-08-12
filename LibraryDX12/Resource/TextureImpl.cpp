@@ -61,7 +61,7 @@ std::unique_ptr<Texture> Texture::createFromFile(Application &application, const
 TextureImpl::TextureImpl(ApplicationImpl &application, const D3D12_RESOURCE_DESC &description, const std::wstring &fileName, const DirectX::ScratchImage &image)
     : Resource(application.getDevice(), &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE, &description, D3D12_RESOURCE_STATE_COPY_DEST, nullptr),
     fileName(fileName), description(description),
-    cpuDescriptors(application.getDescriptorController().allocate(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1)) {
+    cpuDescriptors(application.getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1)) {
     // Copy texture to GPU
     uploadToGPU(application, image.GetPixels(), image.GetImages()->rowPitch, image.GetImages()->slicePitch);
 

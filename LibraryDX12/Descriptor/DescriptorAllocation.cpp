@@ -1,11 +1,11 @@
 #include "DescriptorAllocation.h"
 
-#include "Descriptor/CpuDescriptorHeap.h"
+#include "Descriptor/DescriptorHeap.h"
 
 #include <cassert>
 
-DescriptorAllocation::DescriptorAllocation(CpuDescriptorHeap &heap, CpuDescriptorHeap::FreeListOffset offsetInHeap,
-                                           CpuDescriptorHeap::FreeListSize handlesCount, D3D12_CPU_DESCRIPTOR_HANDLE heapBaseHandle, UINT descriptorIncrementSize)
+DescriptorAllocation::DescriptorAllocation(DescriptorHeap &heap, DescriptorHeap::FreeListOffset offsetInHeap,
+                                           DescriptorHeap::FreeListSize handlesCount, D3D12_CPU_DESCRIPTOR_HANDLE heapBaseHandle, UINT descriptorIncrementSize)
     : heap(&heap),
       offsetInHeap(offsetInHeap),
       handlesCount(handlesCount),
@@ -15,8 +15,8 @@ DescriptorAllocation::DescriptorAllocation(CpuDescriptorHeap &heap, CpuDescripto
       descriptorIncrementSize(descriptorIncrementSize) {
 }
 
-DescriptorAllocation::DescriptorAllocation(CpuDescriptorHeap &heap, CpuDescriptorHeap::FreeListOffset offsetInHeap,
-                                           CpuDescriptorHeap::FreeListSize handlesCount, D3D12_CPU_DESCRIPTOR_HANDLE cpuHeapBaseHandle,
+DescriptorAllocation::DescriptorAllocation(DescriptorHeap &heap, DescriptorHeap::FreeListOffset offsetInHeap,
+                                           DescriptorHeap::FreeListSize handlesCount, D3D12_CPU_DESCRIPTOR_HANDLE cpuHeapBaseHandle,
                                            D3D12_GPU_DESCRIPTOR_HANDLE gpuHeapBaseHandle, UINT descriptorIncrementSize)
     : heap(&heap),
       offsetInHeap(offsetInHeap),

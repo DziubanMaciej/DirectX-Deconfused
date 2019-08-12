@@ -1,18 +1,18 @@
-#include "CpuDescriptorHeap.h"
+#include "DescriptorHeap.h"
 
 #include "Descriptor/DescriptorAllocation.h"
 #include "Utility/ThrowIfFailed.h"
 
-CpuDescriptorHeap::CpuDescriptorHeap(ID3D12DevicePtr device, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount)
+DescriptorHeap::DescriptorHeap(ID3D12DevicePtr device, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount, D3D12_DESCRIPTOR_HEAP_FLAGS flags)
     : type(type),
       descriptorIncrementSize(device->GetDescriptorHandleIncrementSize(type)),
-      heap(createDescriptorHeap(device, type, descriptorsCount)),
+      heap(createDescriptorHeap(device, type, descriptorsCount, flags)),
       heapStartHandle(heap->GetCPUDescriptorHandleForHeapStart()),
       totalFreeSpace(descriptorsCount) {
     freeList.emplace(0, descriptorsCount);
 }
 
-std::unique_ptr<DescriptorAllocation> CpuDescriptorHeap::allocate(UINT descriptorsCount) {
+std::unique_ptr<DescriptorAllocation> DescriptorHeap::allocate(UINT descriptorsCount) {
     if (descriptorsCount > totalFreeSpace) {
         return false;
     }
@@ -40,7 +40,7 @@ std::unique_ptr<DescriptorAllocation> CpuDescriptorHeap::allocate(UINT descripto
     return nullptr;
 }
 
-void CpuDescriptorHeap::deallocate(const DescriptorAllocation &allocation) {
+void DescriptorHeap::deallocate(const DescriptorAllocation &allocation) {
     const auto offset = allocation.getOffsetInHeap();
     const auto size = allocation.getHandlesCount();
     auto right = findFreeRangeAfter(offset);
@@ -70,11 +70,11 @@ void CpuDescriptorHeap::deallocate(const DescriptorAllocation &allocation) {
     totalFreeSpace += size;
 }
 
-ID3D12DescriptorHeapPtr CpuDescriptorHeap::createDescriptorHeap(ID3D12DevicePtr device, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount) {
+ID3D12DescriptorHeapPtr DescriptorHeap::createDescriptorHeap(ID3D12DevicePtr device, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount, D3D12_DESCRIPTOR_HEAP_FLAGS flags) {
     D3D12_DESCRIPTOR_HEAP_DESC heapDescription = {};
     heapDescription.Type = type;
     heapDescription.NumDescriptors = descriptorsCount;
-    heapDescription.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE; // non shader visible
+    heapDescription.Flags = flags;
     heapDescription.NodeMask = 1;
 
     ID3D12DescriptorHeapPtr descriptorHeap;
@@ -82,11 +82,11 @@ ID3D12DescriptorHeapPtr CpuDescriptorHeap::createDescriptorHeap(ID3D12DevicePtr 
     return descriptorHeap;
 }
 
-CpuDescriptorHeap::FreeList::iterator CpuDescriptorHeap::findFreeRangeAfter(FreeListOffset offset) {
+DescriptorHeap::FreeList::iterator DescriptorHeap::findFreeRangeAfter(FreeListOffset offset) {
     return freeList.upper_bound(offset);
 }
 
-CpuDescriptorHeap::FreeList::iterator CpuDescriptorHeap::findPreviousRange(FreeList::iterator elementAfter) {
+DescriptorHeap::FreeList::iterator DescriptorHeap::findPreviousRange(FreeList::iterator elementAfter) {
     if (elementAfter == freeList.begin()) {
         return freeList.end();
     } else {
@@ -94,14 +94,14 @@ CpuDescriptorHeap::FreeList::iterator CpuDescriptorHeap::findPreviousRange(FreeL
     }
 }
 
-bool CpuDescriptorHeap::areFreeRangesAdjacent(FreeList::iterator left, FreeList::iterator right) {
+bool DescriptorHeap::areFreeRangesAdjacent(FreeList::iterator left, FreeList::iterator right) {
     return right != freeList.end() && areFreeRangesAdjacent(left, right->first);
 }
 
-bool CpuDescriptorHeap::areFreeRangesAdjacent(FreeList::iterator left, FreeListOffset rightOffset) {
+bool DescriptorHeap::areFreeRangesAdjacent(FreeList::iterator left, FreeListOffset rightOffset) {
     return left != freeList.end() && left->first + left->second == rightOffset;
 }
 
-bool CpuDescriptorHeap::areFreeRangesAdjacent(FreeListOffset leftOffset, FreeListSize leftSize, FreeList::iterator right) {
+bool DescriptorHeap::areFreeRangesAdjacent(FreeListOffset leftOffset, FreeListSize leftSize, FreeList::iterator right) {
     return right != freeList.end() && leftOffset + leftSize == right->first;
 }
