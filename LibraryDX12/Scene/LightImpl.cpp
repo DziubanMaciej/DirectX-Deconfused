@@ -9,7 +9,7 @@ std::unique_ptr<Light> Light::create() {
 LightImpl::LightImpl() {
     position = XMFLOAT3(0, 0, 0);
     color = XMFLOAT3(0, 0, 0);
-    direction = XMFLOAT3(0, -100000, 0);
+    direction = XMFLOAT3(0.001f, -1.0f, 0.001);
     power = 1;
 }
 
@@ -38,7 +38,7 @@ XMFLOAT3 LightImpl::getDirection() const {
 }
 
 void LightImpl::setDirection(FLOAT x, FLOAT y, FLOAT z) {
-    setDirection(XMFLOAT3{x * 100000, y * 100000, z * 100000});
+    setDirection(XMFLOAT3{x + 0.001f, y, z + 0.001f});
 }
 
 void LightImpl::setDirection(XMFLOAT3 xyz) {

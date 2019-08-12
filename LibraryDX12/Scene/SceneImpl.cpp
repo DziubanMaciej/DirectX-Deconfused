@@ -85,7 +85,7 @@ void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapCh
     }
 
     commandList.RSSetViewport(0.f, 0.f, 2048.f, 2048.f);
-    commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_SM_NORMAL);
+    
 
     int lightIdx = 0;
 
@@ -98,10 +98,13 @@ void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapCh
 
         const auto lightPosition = XMLoadFloat3(&light->getPosition());
         const auto lightDirection = XMLoadFloat3(&light->getDirection());
-        const auto lightFocusPoint = XMVectorAdd(lightPosition, lightDirection);
+        const auto lightFocusPoint = XMVectorAdd(lightDirection, lightPosition);
         const XMMATRIX smViewMatrix = XMMatrixLookAtLH(lightPosition, lightFocusPoint, XMVectorSet(0, 1, 0, 0.f));
         const XMMATRIX smProjectionMatrix = XMMatrixPerspectiveFovLH(90, 1, 0.1f, 160.0f);
         light->smViewProjectionMatrix = XMMatrixMultiply(smViewMatrix, smProjectionMatrix);
+
+		// Draw NORMAL
+		commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_SM_NORMAL);
 
         for (ObjectImpl *object : objects) {
             MeshImpl &mesh = *object->getMesh();
@@ -117,6 +120,25 @@ void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapCh
                 commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
             }
         }
+
+		// Draw TEXTURE NORMAL
+        commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_SM_TEXTURE_NORMAL);
+
+        for (ObjectImpl *object : objects) {
+            MeshImpl &mesh = *object->getMesh();
+            if (!mesh.isUploadInProgress() && mesh.getMeshType() == (MeshImpl::NORMALS | MeshImpl::TRIANGLE_STRIP | MeshImpl::TEXTURE_COORDS)) {
+                commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
+                commandList.IASetPrimitiveTopologyTriangleList();
+
+                SMmvp smmvp;
+                smmvp.modelViewProjectionMatrix = XMMatrixMultiply(object->getModelMatrix(), light->smViewProjectionMatrix);
+
+                commandList.setGraphicsRoot32BitConstant(0, smmvp);
+
+                commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
+            }
+        }
+
         lightIdx++;
     }
 

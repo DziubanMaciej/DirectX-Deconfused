@@ -16,6 +16,7 @@ public:
         PIPELINE_STATE_NORMAL = 2,
         PIPELINE_STATE_POST_PROCESS = 3,
         PIPELINE_STATE_SM_NORMAL = 4,
+        PIPELINE_STATE_SM_TEXTURE_NORMAL = 5,
         COUNT // this should be the last entry
     };
 
@@ -32,6 +33,7 @@ private:
     void compilePipelineStateTextureNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStatePostProcess(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateShadowMapNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    void compilePipelineStateShadowMapTextureNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
 
     ID3D12DevicePtr device;
     ID3D12PipelineStatePtr pipelineStates[static_cast<int>(Identifier::COUNT)] = {};

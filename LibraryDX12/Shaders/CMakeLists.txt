@@ -7,6 +7,7 @@ add_shaders_and_cmake_file(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/vertex.hlsl                Vertex
     ${CMAKE_CURRENT_SOURCE_DIR}/vertex_normal.hlsl         Vertex
     ${CMAKE_CURRENT_SOURCE_DIR}/vertex_normal_texture.hlsl Vertex
+    ${CMAKE_CURRENT_SOURCE_DIR}/vertex_normal_texture_sm.hlsl Vertex
     ${CMAKE_CURRENT_SOURCE_DIR}/vertex_normal_sm.hlsl      Vertex
     ${CMAKE_CURRENT_SOURCE_DIR}/vertex_post_process.hlsl   Vertex
 )

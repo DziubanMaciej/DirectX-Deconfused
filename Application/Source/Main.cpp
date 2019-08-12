@@ -144,10 +144,11 @@ private:
             lights["sunLight"]->setColor(1.0f, 1.0f, 1.0f);
             lights["sunLight"]->setPosition(-12, 12, 0);
             lights["sunLight"]->setDirection(1, -1, 0);
-            lights["sunLight"]->setPower(10);
+            lights["sunLight"]->setPower(12);
 
             lights["moonLight"]->setColor(0.0f, 1.0f, 1.0f);
             lights["moonLight"]->setPosition(7, 4, 6);
+            lights["moonLight"]->setPower(2);
 
             lights["redLight"]->setColor(1.0f, 0.0f, 0.0f);
             lights["redLight"]->setPosition(-12, 1, -12);
