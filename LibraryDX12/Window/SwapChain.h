@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Descriptor/CpuDescriptorAllocation.h"
+#include "Descriptor/DescriptorAllocation.h"
 #include "Resource/Resource.h"
 
 #include "DXD/NonCopyableAndMovable.h"
@@ -35,10 +35,10 @@ public:
     D3D12_CPU_DESCRIPTOR_HANDLE getDepthStencilBufferDescriptor() const;
     auto &getDepthStencilBuffer() { return depthStencilBuffer; };
 
-    const CpuDescriptorAllocation &getSrvDescriptor() const { return srvDescriptor; }
-    const CpuDescriptorAllocation &getPostProcessRtvDescriptor() const { return postProcessRtvDescriptor; }
-    const CpuDescriptorAllocation &getShadowMapDescriptor() const { return shadowMapDescriptor; }
-    const CpuDescriptorAllocation &getShadowMapSrvDescriptor() const { return shadowMapSrvDescriptor; }
+    const DescriptorAllocation &getSrvDescriptor() const { return srvDescriptor; }
+    const DescriptorAllocation &getPostProcessRtvDescriptor() const { return postProcessRtvDescriptor; }
+    const DescriptorAllocation &getShadowMapDescriptor() const { return shadowMapDescriptor; }
+    const DescriptorAllocation &getShadowMapSrvDescriptor() const { return shadowMapSrvDescriptor; }
 
     auto &getPostProcessRenderTarget() { return *postProcessRenderTarget; }
     auto &getShadowMap(int i) { return *shadowMap[i]; }
@@ -59,12 +59,12 @@ private:
 
     // Descriptors data
     DescriptorManager &descriptorManager;
-    CpuDescriptorAllocation rtvDescriptors;
-    CpuDescriptorAllocation dsvDescriptor;
-    CpuDescriptorAllocation srvDescriptor;
-    CpuDescriptorAllocation postProcessRtvDescriptor;
-    CpuDescriptorAllocation shadowMapDescriptor;
-    CpuDescriptorAllocation shadowMapSrvDescriptor;
+    DescriptorAllocation rtvDescriptors;
+    DescriptorAllocation dsvDescriptor;
+    DescriptorAllocation srvDescriptor;
+    DescriptorAllocation postProcessRtvDescriptor;
+    DescriptorAllocation shadowMapDescriptor;
+    DescriptorAllocation shadowMapSrvDescriptor;
 
     // Buffers
     std::vector<BackBufferEntry> backBufferEntries;

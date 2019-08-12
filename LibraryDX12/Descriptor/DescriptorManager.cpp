@@ -1,13 +1,13 @@
 #include "DescriptorManager.h"
 
-#include "Descriptor/CpuDescriptorAllocation.h"
+#include "Descriptor/DescriptorAllocation.h"
 
 DescriptorManager::DescriptorManager(ID3D12DevicePtr device)
     : device(device) {}
 
-CpuDescriptorAllocation DescriptorManager::allocate(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount) {
+DescriptorAllocation DescriptorManager::allocate(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount) {
     HeapVector &heapsForGivenType = this->heaps[type];
-    std::unique_ptr<CpuDescriptorAllocation> allocation = nullptr;
+    std::unique_ptr<DescriptorAllocation> allocation = nullptr;
 
     // Try allocating in existing heaps
     for (auto &heap : heapsForGivenType) {

@@ -1,7 +1,7 @@
 #include "CommandList.h"
 
 #include "CommandList/CommandAllocatorManager.h"
-#include "Descriptor/CpuDescriptorAllocation.h"
+#include "Descriptor/DescriptorAllocation.h"
 #include "Resource/VertexOrIndexBuffer.h"
 #include "Utility/ThrowIfFailed.h"
 
@@ -77,11 +77,11 @@ void CommandList::setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UI
     gpuDescriptorHeapControllerCbvSrvUav.stage(rootParameterIndexOfTable, offsetInTable, firstDescriptor, descriptorCount);
 }
 
-void CommandList::setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const CpuDescriptorAllocation &cpuDescriptorAllocation) {
+void CommandList::setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const DescriptorAllocation &cpuDescriptorAllocation) {
     setCbvSrvUavDescriptorTable(rootParameterIndexOfTable, offsetInTable, cpuDescriptorAllocation.getCpuHandle(), cpuDescriptorAllocation.getHandlesCount());
 }
 
-void CommandList::setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const CpuDescriptorAllocation &cpuDescriptorAllocation, UINT descriptorCount) {
+void CommandList::setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const DescriptorAllocation &cpuDescriptorAllocation, UINT descriptorCount) {
     assert(descriptorCount <= cpuDescriptorAllocation.getHandlesCount());
     setCbvSrvUavDescriptorTable(rootParameterIndexOfTable, offsetInTable, cpuDescriptorAllocation.getCpuHandle(), descriptorCount);
 }

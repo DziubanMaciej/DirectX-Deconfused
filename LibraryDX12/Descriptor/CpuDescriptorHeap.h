@@ -6,7 +6,7 @@
 #include <map>
 #include <memory>
 
-class CpuDescriptorAllocation;
+class DescriptorAllocation;
 
 /// \brief Manages a single descriptor heap of given type and size
 ///
@@ -15,10 +15,10 @@ class CpuDescriptorAllocation;
 /// heap at recording time.
 ///
 /// Class manages free list to keep track of free space inside the heap. Allocation means finding space in
-/// free list, delete it and returning CpuDescriptorAllocation object, which encapsulates cpu descriptor and
+/// free list, delete it and returning DescriptorAllocation object, which encapsulates cpu descriptor and
 /// allocation size in descriptors. Allocation can fail if there's not enough space. Proper deallocation is
-/// handled automatically upon destruction of CpuDescriptorAllocation object and it consists of returning space
-/// taken by CpuDescriptorAllocation to the free list. If space is adjacent to already existing, block are merged.
+/// handled automatically upon destruction of DescriptorAllocation object and it consists of returning space
+/// taken by DescriptorAllocation to the free list. If space is adjacent to already existing, block are merged.
 class CpuDescriptorHeap : DXD::NonCopyableAndMovable {
 public:
     CpuDescriptorHeap(ID3D12DevicePtr device, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount);
@@ -26,17 +26,17 @@ public:
     /// Finds free space using free list, marks the space as not free and returns allocation object
     /// \param descriptorsCount quantity of descriptors to allocate. Free list is searched for contiguous block
     /// \return valid allocation object or nullptr
-    std::unique_ptr<CpuDescriptorAllocation> allocate(UINT descriptorsCount);
+    std::unique_ptr<DescriptorAllocation> allocate(UINT descriptorsCount);
 
 private:
     using FreeListOffset = UINT;
     using FreeListSize = UINT;
     using FreeList = std::map<FreeListOffset, FreeListSize>;
 
-    /// Should only be called by CpuDescriptorAllocation. Descriptor block is merged with existing ones if possible
+    /// Should only be called by DescriptorAllocation. Descriptor block is merged with existing ones if possible
     /// \param allocation allocation object to free
-    void deallocate(const CpuDescriptorAllocation &allocation);
-    friend CpuDescriptorAllocation; // for deallocate()
+    void deallocate(const DescriptorAllocation &allocation);
+    friend DescriptorAllocation; // for deallocate()
 
     static ID3D12DescriptorHeapPtr createDescriptorHeap(ID3D12DevicePtr device, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount);
     FreeList::iterator findFreeRangeAfter(FreeListOffset offset);

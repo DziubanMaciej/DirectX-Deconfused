@@ -13,7 +13,7 @@
 
 class VertexBuffer;
 class IndexBuffer;
-class CpuDescriptorAllocation;
+class DescriptorAllocation;
 
 /// Class encapsulating DX12 command list
 class CommandList : DXD::NonCopyableAndMovable {
@@ -35,8 +35,8 @@ public:
     void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, ID3D12DescriptorHeapPtr descriptorHeap);
 
     void setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, D3D12_CPU_DESCRIPTOR_HANDLE firstDescriptor, UINT descriptorCount);
-    void setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const CpuDescriptorAllocation &cpuDescriptorAllocation);
-    void setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const CpuDescriptorAllocation &cpuDescriptorAllocation, UINT descriptorCount);
+    void setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const DescriptorAllocation &cpuDescriptorAllocation);
+    void setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const DescriptorAllocation &cpuDescriptorAllocation, UINT descriptorCount);
 
     void IASetVertexBuffers(UINT startSlot, UINT numBuffers, VertexBuffer *vertexBuffers);
     void IASetVertexBuffer(UINT slot, VertexBuffer &vertexBuffer);

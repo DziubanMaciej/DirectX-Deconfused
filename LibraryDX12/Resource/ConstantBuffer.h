@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Descriptor/CpuDescriptorAllocation.h"
+#include "Descriptor/DescriptorAllocation.h"
 #include "Resource/Resource.h"
 #include "Utility/BitHelper.h"
 
@@ -26,7 +26,7 @@ private:
     static void *map(ID3D12ResourcePtr &resource);
     void createDescriptor(ID3D12DevicePtr &device);
 
-    const CpuDescriptorAllocation descriptor;
+    const DescriptorAllocation descriptor;
     const UINT size;
     void *const mappedConstantBuffer;
     std::unique_ptr<uint8_t[]> data;

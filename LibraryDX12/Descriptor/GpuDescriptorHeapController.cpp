@@ -1,7 +1,7 @@
 #include "GpuDescriptorHeapController.h"
 
 #include "CommandList/CommandList.h"
-#include "Descriptor/CpuDescriptorAllocation.h"
+#include "Descriptor/DescriptorAllocation.h"
 #include "PipelineState/RootSignature.h"
 #include "Utility/ThrowIfFailed.h"
 

@@ -1,6 +1,6 @@
 #include "CpuDescriptorHeap.h"
 
-#include "Descriptor/CpuDescriptorAllocation.h"
+#include "Descriptor/DescriptorAllocation.h"
 #include "Utility/ThrowIfFailed.h"
 
 CpuDescriptorHeap::CpuDescriptorHeap(ID3D12DevicePtr device, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount)
@@ -12,7 +12,7 @@ CpuDescriptorHeap::CpuDescriptorHeap(ID3D12DevicePtr device, D3D12_DESCRIPTOR_HE
     freeList.emplace(0, descriptorsCount);
 }
 
-std::unique_ptr<CpuDescriptorAllocation> CpuDescriptorHeap::allocate(UINT descriptorsCount) {
+std::unique_ptr<DescriptorAllocation> CpuDescriptorHeap::allocate(UINT descriptorsCount) {
     if (descriptorsCount > totalFreeSpace) {
         return false;
     }
@@ -32,7 +32,7 @@ std::unique_ptr<CpuDescriptorAllocation> CpuDescriptorHeap::allocate(UINT descri
             }
 
             const auto offsetInHeap = freeRangeOffset + freeRangeSize - descriptorsCount;
-            return std::make_unique<CpuDescriptorAllocation>(*this, offsetInHeap, descriptorsCount, this->heapStartHandle, this->descriptorIncrementSize);
+            return std::make_unique<DescriptorAllocation>(*this, offsetInHeap, descriptorsCount, this->heapStartHandle, this->descriptorIncrementSize);
         }
     }
 
@@ -40,7 +40,7 @@ std::unique_ptr<CpuDescriptorAllocation> CpuDescriptorHeap::allocate(UINT descri
     return nullptr;
 }
 
-void CpuDescriptorHeap::deallocate(const CpuDescriptorAllocation &allocation) {
+void CpuDescriptorHeap::deallocate(const DescriptorAllocation &allocation) {
     const auto offset = allocation.getOffsetInHeap();
     const auto size = allocation.getHandlesCount();
     auto right = findFreeRangeAfter(offset);

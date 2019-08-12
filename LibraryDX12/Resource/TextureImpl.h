@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Descriptor/CpuDescriptorAllocation.h"
+#include "Descriptor/DescriptorAllocation.h"
 #include "DirectXTex/DirectXTex/DirectXTex.h"
 #include "Resource/Resource.h"
 
@@ -22,7 +22,7 @@ private:
     static D3D12_RESOURCE_DIMENSION calculateTextureDimension(int width, int height);
     static D3D12_RESOURCE_DESC createTextureDescription(const DirectX::TexMetadata &metadata);
 
-    CpuDescriptorAllocation cpuDescriptors;
+    DescriptorAllocation cpuDescriptors;
     const D3D12_RESOURCE_DESC description;
     const std::wstring &fileName;
 };

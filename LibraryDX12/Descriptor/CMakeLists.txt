@@ -1,8 +1,8 @@
 add_sources_and_cmake_file(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/CpuDescriptorHeap.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/CpuDescriptorHeap.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/CpuDescriptorAllocation.cpp
-    ${CMAKE_CURRENT_SOURCE_DIR}/CpuDescriptorAllocation.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/DescriptorAllocation.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/DescriptorAllocation.h
     ${CMAKE_CURRENT_SOURCE_DIR}/DescriptorManager.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/DescriptorManager.h
     ${CMAKE_CURRENT_SOURCE_DIR}/GpuDescriptorHeapController.cpp
