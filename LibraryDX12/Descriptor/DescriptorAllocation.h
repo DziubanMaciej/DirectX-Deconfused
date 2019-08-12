@@ -14,12 +14,19 @@ class DescriptorAllocation : DXD::NonCopyable {
 public:
     /// CPU only descriptor handle. Used for staging descriptors
     DescriptorAllocation(DescriptorHeap &heap, DescriptorHeap::FreeListOffset offsetInHeap,
-                            DescriptorHeap::FreeListSize handlesCount, D3D12_CPU_DESCRIPTOR_HANDLE heapBaseHandle, UINT descriptorIncrementSize);
+                         DescriptorHeap::FreeListSize handlesCount, D3D12_CPU_DESCRIPTOR_HANDLE heapBaseHandle, UINT descriptorIncrementSize);
 
     /// GPU visible descriptor handle.
     DescriptorAllocation(DescriptorHeap &heap, DescriptorHeap::FreeListOffset offsetInHeap,
-                            DescriptorHeap::FreeListSize handlesCount, D3D12_CPU_DESCRIPTOR_HANDLE cpuHeapBaseHandle,
-                            D3D12_GPU_DESCRIPTOR_HANDLE gpuHeapBaseHandle, UINT descriptorIncrementSize);
+                         DescriptorHeap::FreeListSize handlesCount, D3D12_CPU_DESCRIPTOR_HANDLE cpuHeapBaseHandle,
+                         D3D12_GPU_DESCRIPTOR_HANDLE gpuHeapBaseHandle, UINT descriptorIncrementSize);
+
+    bool operator<(const DescriptorAllocation &allocation) const {
+        return cpuHandle.ptr < allocation.cpuHandle.ptr;
+    }
+
+    DescriptorAllocation(const DescriptorAllocation &other) = delete;
+    DescriptorAllocation &operator=(const DescriptorAllocation &other) = delete;
 
     DescriptorAllocation(DescriptorAllocation &&other);
     DescriptorAllocation &operator=(DescriptorAllocation &&other);
