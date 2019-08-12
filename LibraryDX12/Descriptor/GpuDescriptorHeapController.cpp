@@ -69,17 +69,14 @@ void GpuDescriptorHeapController::commit() {
 
     // TODO check if we have enough available handles
 
-    // Create and set descriptor heap if it's not present
-    if (descriptorHeap == nullptr) {
-        D3D12_DESCRIPTOR_HEAP_DESC heapDescription = {};
-        heapDescription.Type = heapType;
-        heapDescription.NumDescriptors = 1024; // TODO
-        heapDescription.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
-        throwIfFailed(device->CreateDescriptorHeap(&heapDescription, IID_PPV_ARGS(&this->descriptorHeap)));
-        commandList.setDescriptorHeap(this->heapType, this->descriptorHeap);
-        currentCpuHandle = CD3DX12_CPU_DESCRIPTOR_HANDLE{descriptorHeap->GetCPUDescriptorHandleForHeapStart()};
-        currentGpuHandle = CD3DX12_GPU_DESCRIPTOR_HANDLE{descriptorHeap->GetGPUDescriptorHandleForHeapStart()};
-    }
+    // Allocate space for gpu-visible desciptors
+    auto allocationResult = commandList.getDescriptorManager().allocateGpu(heapType, calculateStagedDescriptorsCount());
+    this->gpuDescriptorAllocations.push_back(std::move(std::get<DescriptorAllocation>(allocationResult)));
+    CD3DX12_CPU_DESCRIPTOR_HANDLE currentCpuHandle = gpuDescriptorAllocations.back().getCpuHandle();
+    CD3DX12_GPU_DESCRIPTOR_HANDLE currentGpuHandle = gpuDescriptorAllocations.back().getGpuHandle();
+
+    // Bind descriptor heap
+    commandList.setDescriptorHeap(heapType, std::get<ID3D12DescriptorHeapPtr>(allocationResult));
 
     // Process each descriptor table
     for (auto it = stagedDescriptorTables.begin(); it != stagedDescriptorTables.end(); it++) {
@@ -122,4 +119,13 @@ bool GpuDescriptorHeapController::isRootParameterCompatibleTable(const D3D12_ROO
     default:
         UNREACHABLE_CODE();
     }
+}
+
+UINT GpuDescriptorHeapController::calculateStagedDescriptorsCount() const {
+    UINT result = 0u;
+    for (auto it = stagedDescriptorTables.begin(); it != stagedDescriptorTables.end(); it++) {
+        const auto descriptorTableInfo = descriptorTableInfos.at(*it);
+        result += descriptorTableInfo.descriptorCount;
+    }
+    return result;
 }

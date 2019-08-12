@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Descriptor/DescriptorAllocation.h"
+
 #include "DXD/NonCopyableAndMovable.h"
 
 #include "DXD/ExternalHeadersWrappers/d3dx12.h"
@@ -25,7 +27,6 @@ struct D3D12_CPU_DESCRIPTOR_HANDLE;
 /// middle of command list  may have a performance penalty on some hardware and should be avoided.
 ///
 /// Currently descriptor heap handling is not ideal
-/// TODO: ID3D12DescriptorHeap is allocated and deallocated for every CommandList. This could be pooled.
 /// TODO: No support for heap overflow
 /// TODO: validation if all of the required descriptors where staged could be useful
 class GpuDescriptorHeapController : DXD::NonCopyableAndMovable {
@@ -59,8 +60,11 @@ public:
     /// draw/dispatch call is ideal.
     void commit();
 
+    auto &getGpuDescriptorAllocations() { return gpuDescriptorAllocations; }
+
 private:
     bool isRootParameterCompatibleTable(const D3D12_ROOT_PARAMETER1 &parameter) const;
+    UINT calculateStagedDescriptorsCount() const;
 
     // Constant data
     CommandList &commandList;
@@ -75,7 +79,5 @@ private:
     std::vector<D3D12_CPU_DESCRIPTOR_HANDLE> stagingDescriptors = {};
 
     // Committing data
-    ID3D12DescriptorHeapPtr descriptorHeap = {};
-    CD3DX12_CPU_DESCRIPTOR_HANDLE currentCpuHandle = {};
-    CD3DX12_GPU_DESCRIPTOR_HANDLE currentGpuHandle = {};
+    std::vector<DescriptorAllocation> gpuDescriptorAllocations = {};
 };

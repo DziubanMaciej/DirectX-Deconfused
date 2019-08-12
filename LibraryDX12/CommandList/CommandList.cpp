@@ -191,6 +191,8 @@ void CommandList::registerAllData(ResourceUsageTracker &resourceUsageTracker, ui
 
     // Resources reference by GPU in this CommandList
     resourceUsageTracker.registerUsage(usedResources, fenceValue);
+    resourceUsageTracker.registerUsage(gpuDescriptorHeapControllerCbvSrvUav.getGpuDescriptorAllocations(), fenceValue);
+    resourceUsageTracker.registerUsage(gpuDescriptorHeapControllerSampler.getGpuDescriptorAllocations(), fenceValue);
 }
 
 void CommandList::addUsedResource(const ID3D12DescriptorHeapPtr &heap) {
