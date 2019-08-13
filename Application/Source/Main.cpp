@@ -86,7 +86,6 @@ private:
                 objects[object.first]->setMesh(*meshes[object.second]);
             }
 
-
             objects["teapotMesh1"]->setPosition(8, -1, 0);
             objects["teapotMesh1"]->setScale(0.1f, 0.1f, 0.1f);
             objects["teapotMesh1"]->setColor(0.0f, 1.0f, 0.0f);
@@ -108,7 +107,7 @@ private:
             objects["extraFlatMesh1"]->setPosition(0, -5, 0);
             objects["extraFlatMesh1"]->setSpecularity(0);
 
-            objects["smallCubeMesh1"]->setPosition(-12, 12, 0);
+            objects["smallCubeMesh1"]->setPosition(-12, 12, 6);
 
             objects["smallCubeMesh2"]->setPosition(7, 4, 6);
 
@@ -142,9 +141,10 @@ private:
         // LIGHT CONFIG
         {
             lights["sunLight"]->setColor(1.0f, 1.0f, 1.0f);
-            lights["sunLight"]->setPosition(-12, 12, 0);
-            lights["sunLight"]->setDirection(1, -1, 0);
+            lights["sunLight"]->setPosition(-12, 12, 6);
+            lights["sunLight"]->setDirection(1, -1, -0.5);
             lights["sunLight"]->setPower(12);
+            lights["sunLight"]->setType(DXD::LightType::DIRECTIONAL_LIGHT);
 
             lights["moonLight"]->setColor(0.0f, 1.0f, 1.0f);
             lights["moonLight"]->setPosition(7, 4, 6);

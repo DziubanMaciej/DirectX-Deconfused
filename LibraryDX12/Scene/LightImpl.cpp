@@ -11,6 +11,7 @@ LightImpl::LightImpl() {
     color = XMFLOAT3(0, 0, 0);
     direction = XMFLOAT3(0.001f, -1.0f, 0.001);
     power = 1;
+    type = DXD::LightType::SPOT_LIGHT;
 }
 
 void LightImpl::setPosition(FLOAT x, FLOAT y, FLOAT z) {

@@ -78,7 +78,7 @@ float4 main(PixelShaderInput IN) : SV_Target {
                             smDepth = shadowMap7.Sample(s_sampler, smCoords.xy + offset).r;
                         }
 
-                        if (((smCoords.z / smCoords.w) - 0.0001f) > smDepth) {
+                        if (((smCoords.z / smCoords.w) - 0.0005f) > smDepth) {
                             shadowFactor = shadowFactor - 1;
                         }
                     }

@@ -100,8 +100,13 @@ void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapCh
         const auto lightDirection = XMLoadFloat3(&light->getDirection());
         const auto lightFocusPoint = XMVectorAdd(lightDirection, lightPosition);
         const XMMATRIX smViewMatrix = XMMatrixLookAtLH(lightPosition, lightFocusPoint, XMVectorSet(0, 1, 0, 0.f));
-        const XMMATRIX smProjectionMatrix = XMMatrixPerspectiveFovLH(90, 1, 0.1f, 160.0f);
-        light->smViewProjectionMatrix = XMMatrixMultiply(smViewMatrix, smProjectionMatrix);
+        if (light->getType() == DXD::LightType::SPOT_LIGHT) {
+            const XMMATRIX smProjectionMatrix = XMMatrixPerspectiveFovLH(90, 1, 0.1f, 160.0f);
+            light->smViewProjectionMatrix = XMMatrixMultiply(smViewMatrix, smProjectionMatrix);
+        } else {
+            const XMMATRIX smProjectionMatrix = XMMatrixOrthographicLH(40, 40, 0.1f, 160.0f);
+            light->smViewProjectionMatrix = XMMatrixMultiply(smViewMatrix, smProjectionMatrix);
+        }
 
 		// Draw NORMAL
 		commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_SM_NORMAL);
