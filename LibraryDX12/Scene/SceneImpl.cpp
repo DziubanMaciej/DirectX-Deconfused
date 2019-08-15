@@ -85,7 +85,6 @@ void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapCh
     }
 
     commandList.RSSetViewport(0.f, 0.f, 2048.f, 2048.f);
-    
 
     int lightIdx = 0;
 
@@ -108,8 +107,8 @@ void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapCh
             light->smViewProjectionMatrix = XMMatrixMultiply(smViewMatrix, smProjectionMatrix);
         }
 
-		// Draw NORMAL
-		commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_SM_NORMAL);
+        // Draw NORMAL
+        commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_SM_NORMAL);
 
         for (ObjectImpl *object : objects) {
             MeshImpl &mesh = *object->getMesh();
@@ -126,7 +125,7 @@ void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapCh
             }
         }
 
-		// Draw TEXTURE NORMAL
+        // Draw TEXTURE NORMAL
         commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_SM_TEXTURE_NORMAL);
 
         for (ObjectImpl *object : objects) {

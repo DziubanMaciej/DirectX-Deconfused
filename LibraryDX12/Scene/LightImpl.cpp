@@ -9,7 +9,7 @@ std::unique_ptr<Light> Light::create() {
 LightImpl::LightImpl() {
     position = XMFLOAT3(0, 0, 0);
     color = XMFLOAT3(0, 0, 0);
-    direction = XMFLOAT3(0.001f, -1.0f, 0.001);
+    direction = XMFLOAT3(0.001f, -1.0f, 0.001f);
     power = 1;
     type = DXD::LightType::SPOT_LIGHT;
 }
