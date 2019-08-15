@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Application/ApplicationImpl.h"
+#include "PipelineState/PipelineStateController.h"
 #include "Resource/Resource.h"
 #include "Resource/VertexOrIndexBuffer.h"
 
@@ -32,6 +33,7 @@ public:
     UINT getVerticesCount() const { return verticesCount; }
     UINT getIndicesCount() const { return indicesCount; }
     MeshType getMeshType() const { return meshType; }
+    PipelineStateController::Identifier getPipelineStateIdentifier() const { return pipelineStateIdentifier; }
 
     bool isUploadInProgress();
 
@@ -48,6 +50,7 @@ protected:
     UINT vertexSizeInBytes = 0;
     UINT verticesCount = 0;
     UINT indicesCount = 0;
+    PipelineStateController::Identifier pipelineStateIdentifier;
 
     // GPU data, set during upload time
     std::unique_ptr<VertexBuffer> vertexBuffer = {};
@@ -57,6 +60,8 @@ private:
     // Helpers
     static MeshType computeMeshType(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates, bool useTextures);
     static UINT computeVertexSize(MeshType meshType);
+    static std::map<MeshType, PipelineStateController::Identifier> getPipelineStateIdentifierMap();
+    static PipelineStateController::Identifier computePipelineStateIdentifier(MeshType meshType);
     void loadAndUploadObj(ApplicationImpl &application, const std::wstring &filePath, bool useTextures);
 
     // Loading CPU data
@@ -78,5 +83,6 @@ private:
 
     // Called after all CPU and GPU data is available
     void setData(MeshType meshType, UINT vertexSizeInBytes, UINT verticesCount, UINT indicesCount,
+                 PipelineStateController::Identifier pipelineStateIdentifier,
                  std::unique_ptr<VertexBuffer> &&vertexBuffer, std::unique_ptr<IndexBuffer> &&indexBuffer);
 };

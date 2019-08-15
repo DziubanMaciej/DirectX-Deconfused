@@ -13,6 +13,7 @@ protected:
 
 public:
     MeshImpl &getMesh() { return mesh; }
+    const MeshImpl &getMesh() const { return mesh; }
     const XMMATRIX &getModelMatrix();
 
     void setPosition(FLOAT x, FLOAT y, FLOAT z) override;
