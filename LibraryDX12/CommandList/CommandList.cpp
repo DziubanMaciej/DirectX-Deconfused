@@ -44,7 +44,7 @@ void CommandList::setGraphicsRootSignature(ID3D12RootSignaturePtr rootSignature)
 void CommandList::setPipelineStateAndGraphicsRootSignature(PipelineStateController &pipelineStateController, PipelineStateController::Identifier identifier) {
     setPipelineState(pipelineStateController.getPipelineState(identifier));
 
-    auto rootSignature = pipelineStateController.getRootSignature(identifier);
+    auto &rootSignature = pipelineStateController.getRootSignature(identifier);
     setGraphicsRootSignature(rootSignature.getRootSignature());
     gpuDescriptorHeapControllerCbvSrvUav.setRootSignature(rootSignature);
     gpuDescriptorHeapControllerSampler.setRootSignature(rootSignature);

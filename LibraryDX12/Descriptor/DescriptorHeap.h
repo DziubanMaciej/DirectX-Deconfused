@@ -16,9 +16,18 @@ class DescriptorAllocation;
 /// allocation size in descriptors. Allocation can fail if there's not enough space. Proper deallocation is
 /// handled automatically upon destruction of DescriptorAllocation object and it consists of returning space
 /// taken by DescriptorAllocation to the free list. If space is adjacent to already existing, blocks are merged.
-class DescriptorHeap : DXD::NonCopyableAndMovable {
+class DescriptorHeap : DXD::NonCopyable {
 public:
     DescriptorHeap(ID3D12DevicePtr device, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount, D3D12_DESCRIPTOR_HEAP_FLAGS flags);
+    DescriptorHeap(DescriptorHeap &&other) : type(other.type),
+                                             descriptorIncrementSize(other.descriptorIncrementSize),
+                                             heap(std::move(other.heap)),
+                                             gpuVisible(other.gpuVisible),
+                                             cpuHeapStartHandle(other.cpuHeapStartHandle),
+                                             gpuHeapStartHandle(other.gpuHeapStartHandle),
+                                             freeList(std::move(other.freeList)),
+                                             totalFreeSpace(std::move(other.totalFreeSpace)) {}
+    DescriptorHeap &operator=(DescriptorHeap &&) = delete;
 
     /// Finds free space using free list, marks the space as not free and returns allocation object
     /// \param descriptorsCount quantity of descriptors to allocate. Free list is searched for contiguous block
@@ -46,10 +55,10 @@ private:
 
     const D3D12_DESCRIPTOR_HEAP_TYPE type;
     const UINT descriptorIncrementSize;
-    const ID3D12DescriptorHeapPtr heap;
+    ID3D12DescriptorHeapPtr heap;
     const bool gpuVisible;
     const D3D12_CPU_DESCRIPTOR_HANDLE cpuHeapStartHandle;
     const D3D12_GPU_DESCRIPTOR_HANDLE gpuHeapStartHandle;
-    FreeList freeList;
+    FreeList freeList = {};
     UINT totalFreeSpace;
 };
