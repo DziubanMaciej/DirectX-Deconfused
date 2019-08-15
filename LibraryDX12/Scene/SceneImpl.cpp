@@ -112,13 +112,11 @@ void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapCh
         for (ObjectImpl *object : objects) {
             MeshImpl &mesh = object->getMesh();
             if (!mesh.isUploadInProgress() && mesh.getShadowMapPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
-                commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
-
                 SMmvp smmvp;
                 smmvp.modelViewProjectionMatrix = XMMatrixMultiply(object->getModelMatrix(), light->smViewProjectionMatrix);
-
                 commandList.setGraphicsRoot32BitConstant(0, smmvp);
 
+                commandList.IASetVertexAndIndexBuffer(mesh);
                 commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
             }
         }
@@ -128,13 +126,11 @@ void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapCh
         for (ObjectImpl *object : objects) {
             MeshImpl &mesh = object->getMesh();
             if (!mesh.isUploadInProgress() && mesh.getShadowMapPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
-                commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
-
                 SMmvp smmvp;
                 smmvp.modelViewProjectionMatrix = XMMatrixMultiply(object->getModelMatrix(), light->smViewProjectionMatrix);
-
                 commandList.setGraphicsRoot32BitConstant(0, smmvp);
 
+                commandList.IASetVertexAndIndexBuffer(mesh);
                 commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
             }
         }
@@ -189,23 +185,18 @@ void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain
     commandList.setCbvSrvUavDescriptorTable(2, 0, lightConstantBuffer.getCbvHandle(), 1);
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = object->getMesh();
-
         if (!mesh.isUploadInProgress() && mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
-            commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
-            commandList.IASetIndexBuffer(*mesh.getIndexBuffer());
-
             ModelMvp mmvp;
             mmvp.modelMatrix = object->getModelMatrix();
             mmvp.modelViewProjectionMatrix = XMMatrixMultiply(mmvp.modelMatrix, vpMatrix);
-
             commandList.setGraphicsRoot32BitConstant(0, mmvp);
 
             ObjectProperties op;
             op.objectColor = object->getColor();
             op.objectSpecularity = object->getSpecularity(); //Not supported in objects without normals
-
             commandList.setGraphicsRoot32BitConstant(1, op);
 
+            commandList.IASetVertexAndIndexBuffer(mesh);
             commandList.drawIndexed(static_cast<UINT>(mesh.getIndicesCount()));
         }
     }
@@ -217,20 +208,17 @@ void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = object->getMesh();
         if (!mesh.isUploadInProgress() && mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
-            commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
-
             ModelMvp mmvp;
             mmvp.modelMatrix = object->getModelMatrix();
             mmvp.modelViewProjectionMatrix = XMMatrixMultiply(mmvp.modelMatrix, vpMatrix);
-
             commandList.setGraphicsRoot32BitConstant(0, mmvp);
 
             ObjectProperties op;
             op.objectColor = object->getColor();
             op.objectSpecularity = object->getSpecularity();
-
             commandList.setGraphicsRoot32BitConstant(1, op);
 
+            commandList.IASetVertexAndIndexBuffer(mesh);
             commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
         }
     }
@@ -243,20 +231,17 @@ void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain
         MeshImpl &mesh = object->getMesh();
         TextureImpl *texture = object->getTextureImpl();
         if (!mesh.isUploadInProgress() && texture != nullptr && !texture->isUploadInProgress() && mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
-            commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
-
             ModelMvp mmvp;
             mmvp.modelMatrix = object->getModelMatrix();
             mmvp.modelViewProjectionMatrix = XMMatrixMultiply(mmvp.modelMatrix, vpMatrix);
-
             commandList.setGraphicsRoot32BitConstant(0, mmvp);
 
             ObjectProperties op;
             op.objectColor = object->getColor();
             op.objectSpecularity = object->getSpecularity();
-
             commandList.setGraphicsRoot32BitConstant(1, op);
 
+            commandList.IASetVertexAndIndexBuffer(mesh);
             commandList.setCbvSrvUavDescriptorTable(2, 9, texture->getSrvDescriptor(), 1);
             commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
         }

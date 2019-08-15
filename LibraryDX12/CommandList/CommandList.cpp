@@ -3,6 +3,7 @@
 #include "CommandList/CommandAllocatorManager.h"
 #include "Descriptor/DescriptorAllocation.h"
 #include "Resource/VertexOrIndexBuffer.h"
+#include "Scene/MeshImpl.h"
 #include "Utility/ThrowIfFailed.h"
 
 #include <cassert>
@@ -118,6 +119,13 @@ void CommandList::IASetIndexBuffer(IndexBuffer &indexBuffer) {
     indexBuffer.transitionBarrierSingle(*this, D3D12_RESOURCE_STATE_INDEX_BUFFER);
     commandList->IASetIndexBuffer(&indexBuffer.getView());
     addUsedResource(indexBuffer.getResource());
+}
+
+void CommandList::IASetVertexAndIndexBuffer(MeshImpl &mesh) {
+    IASetVertexBuffer(*mesh.getVertexBuffer());
+    if (mesh.getIndicesCount() > 0u) {
+        IASetIndexBuffer(*mesh.getIndexBuffer());
+    }
 }
 
 void CommandList::IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY primitiveTopology) {

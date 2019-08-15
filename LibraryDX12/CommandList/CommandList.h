@@ -16,6 +16,7 @@
 class VertexBuffer;
 class IndexBuffer;
 class DescriptorAllocation;
+class MeshImpl;
 
 /// Class encapsulating DX12 command list
 class CommandList : DXD::NonCopyableAndMovable {
@@ -44,6 +45,7 @@ public:
     void IASetVertexBuffer(UINT slot, VertexBuffer &vertexBuffer);
     void IASetVertexBuffer(VertexBuffer &vertexBuffer);
     void IASetIndexBuffer(IndexBuffer &indexBuffer);
+    void IASetVertexAndIndexBuffer(MeshImpl &mesh);
     void IASetPrimitiveTopology(D3D12_PRIMITIVE_TOPOLOGY primitiveTopology);
     void IASetPrimitiveTopologyTriangleList();
 
