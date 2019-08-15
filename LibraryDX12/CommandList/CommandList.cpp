@@ -42,6 +42,8 @@ void CommandList::setGraphicsRootSignature(ID3D12RootSignaturePtr rootSignature)
 }
 
 void CommandList::setPipelineStateAndGraphicsRootSignature(PipelineStateController &pipelineStateController, PipelineStateController::Identifier identifier) {
+    this->pipelineStateIdentifier = identifier;
+
     setPipelineState(pipelineStateController.getPipelineState(identifier));
 
     auto &rootSignature = pipelineStateController.getRootSignature(identifier);

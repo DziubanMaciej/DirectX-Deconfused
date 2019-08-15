@@ -75,6 +75,7 @@ public:
     auto getCommandList() { return commandList; }
     auto getDevice() const { return commandAllocatorManager.getDevice(); }
     auto &getDescriptorManager() const { return descriptorManager; }
+    auto getPipelineStateIdentifier() const { return pipelineStateIdentifier; }
 
 private:
     void commitDescriptors();
@@ -93,6 +94,9 @@ private:
     ID3D12DescriptorHeapPtr descriptorHeapCbvSrvUav = {};
     ID3D12DescriptorHeapPtr descriptorHeapSampler = {};
     std::set<ID3D12PageablePtr> usedResources = {};
+
+    // Data currently set on this CommandList
+    PipelineStateController::Identifier pipelineStateIdentifier;
 };
 
 template <typename ConstantType>

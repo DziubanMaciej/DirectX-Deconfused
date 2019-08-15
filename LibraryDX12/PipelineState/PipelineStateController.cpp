@@ -40,6 +40,8 @@ void PipelineStateController::compile(Identifier identifier) {
     ID3D12PipelineStatePtr &pipelineState = this->pipelineStates[index];
 
     switch (identifier) {
+    case Identifier::PIPELINE_STATE_UNKNOWN:
+        break;
     case Identifier::PIPELINE_STATE_DEFAULT:
         compilePipelineStateDefault(rootSignature, pipelineState);
         break;

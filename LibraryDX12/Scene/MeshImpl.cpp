@@ -37,12 +37,15 @@ void MeshImpl::loadAndUploadObj(ApplicationImpl &application, const std::wstring
     assert(vertexSizeInBytes * verticesCount == vertexElements.size() * sizeof(FLOAT));
     const auto indicesCount = static_cast<UINT>(indices.size());
     const auto pipelineStateIdentifier = computePipelineStateIdentifier(meshType);
+    const auto shadowMapPipelineStateIdentifier = computeShadowMapPipelineStateIdentifier(meshType);
 
     UploadResults uploadResults = uploadToGPU(application, loadResults.vertexElements, loadResults.indices, verticesCount, vertexSizeInBytes);
     auto &vertexBuffer = uploadResults.vertexBuffer;
     auto &indexBuffer = uploadResults.indexBuffer;
 
-    setData(meshType, vertexSizeInBytes, verticesCount, indicesCount, pipelineStateIdentifier, std::move(vertexBuffer), std::move(indexBuffer));
+    setData(meshType, vertexSizeInBytes, verticesCount, indicesCount,
+            pipelineStateIdentifier, shadowMapPipelineStateIdentifier,
+            std::move(vertexBuffer), std::move(indexBuffer));
 }
 
 MeshImpl::LoadResults MeshImpl::loadObj(const std::wstring &filePath, bool useTextures) {
@@ -234,6 +237,22 @@ PipelineStateController::Identifier MeshImpl::computePipelineStateIdentifier(Mes
     return it->second;
 }
 
+std::map<MeshImpl::MeshType, PipelineStateController::Identifier> MeshImpl::getShadowMapPipelineStateIdentifierMap() {
+    std::map<MeshImpl::MeshType, PipelineStateController::Identifier> map = {};
+    map[TRIANGLE_STRIP | NORMALS] = PipelineStateController::Identifier::PIPELINE_STATE_SM_NORMAL;
+    map[TRIANGLE_STRIP | NORMALS | TEXTURE_COORDS] = PipelineStateController::Identifier::PIPELINE_STATE_SM_TEXTURE_NORMAL;
+    return std::move(map);
+}
+
+PipelineStateController::Identifier MeshImpl::computeShadowMapPipelineStateIdentifier(MeshType meshType) {
+    static const auto map = getShadowMapPipelineStateIdentifierMap();
+    auto it = map.find(meshType);
+    if (it == map.end()) {
+        return PipelineStateController::Identifier::PIPELINE_STATE_UNKNOWN;
+    }
+    return it->second;
+}
+
 MeshImpl::UploadResults MeshImpl::uploadToGPU(ApplicationImpl &application, const std::vector<FLOAT> &vertexElements, const std::vector<UINT> &indices, UINT verticesCount, UINT vertexSizeInBytes) {
     UploadResults results = {};
     const bool useIndexBuffer = indices.size() > 0;
@@ -264,13 +283,14 @@ MeshImpl::UploadResults MeshImpl::uploadToGPU(ApplicationImpl &application, cons
 }
 
 void MeshImpl::setData(MeshType meshType, UINT vertexSizeInBytes, UINT verticesCount, UINT indicesCount,
-                       PipelineStateController::Identifier pipelineStateIdentifier,
+                       PipelineStateController::Identifier pipelineStateIdentifier, PipelineStateController::Identifier shadowMapPipelineStateIdentifier,
                        std::unique_ptr<VertexBuffer> &&vertexBuffer, std::unique_ptr<IndexBuffer> &&indexBuffer) {
     this->meshType = meshType;
     this->vertexSizeInBytes = vertexSizeInBytes;
     this->verticesCount = verticesCount;
     this->indicesCount = indicesCount;
     this->pipelineStateIdentifier = pipelineStateIdentifier;
+    this->shadowMapPipelineStateIdentifier = shadowMapPipelineStateIdentifier;
     this->vertexBuffer = std::move(vertexBuffer);
     this->indexBuffer = std::move(indexBuffer);
 }

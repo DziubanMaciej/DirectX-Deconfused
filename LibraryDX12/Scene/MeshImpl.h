@@ -34,6 +34,7 @@ public:
     UINT getIndicesCount() const { return indicesCount; }
     MeshType getMeshType() const { return meshType; }
     PipelineStateController::Identifier getPipelineStateIdentifier() const { return pipelineStateIdentifier; }
+    PipelineStateController::Identifier getShadowMapPipelineStateIdentifier() const { return shadowMapPipelineStateIdentifier; }
 
     bool isUploadInProgress();
 
@@ -51,6 +52,7 @@ protected:
     UINT verticesCount = 0;
     UINT indicesCount = 0;
     PipelineStateController::Identifier pipelineStateIdentifier;
+    PipelineStateController::Identifier shadowMapPipelineStateIdentifier;
 
     // GPU data, set during upload time
     std::unique_ptr<VertexBuffer> vertexBuffer = {};
@@ -62,6 +64,8 @@ private:
     static UINT computeVertexSize(MeshType meshType);
     static std::map<MeshType, PipelineStateController::Identifier> getPipelineStateIdentifierMap();
     static PipelineStateController::Identifier computePipelineStateIdentifier(MeshType meshType);
+    static std::map<MeshType, PipelineStateController::Identifier> getShadowMapPipelineStateIdentifierMap();
+    static PipelineStateController::Identifier computeShadowMapPipelineStateIdentifier(MeshType meshType);
     void loadAndUploadObj(ApplicationImpl &application, const std::wstring &filePath, bool useTextures);
 
     // Loading CPU data
@@ -83,6 +87,6 @@ private:
 
     // Called after all CPU and GPU data is available
     void setData(MeshType meshType, UINT vertexSizeInBytes, UINT verticesCount, UINT indicesCount,
-                 PipelineStateController::Identifier pipelineStateIdentifier,
+                 PipelineStateController::Identifier pipelineStateIdentifier, PipelineStateController::Identifier shadowMapPipelineStateIdentifier,
                  std::unique_ptr<VertexBuffer> &&vertexBuffer, std::unique_ptr<IndexBuffer> &&indexBuffer);
 };

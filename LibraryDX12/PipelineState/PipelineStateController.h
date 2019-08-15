@@ -11,12 +11,13 @@
 class PipelineStateController : DXD::NonCopyableAndMovable {
 public:
     enum class Identifier {
-        PIPELINE_STATE_DEFAULT = 0,
-        PIPELINE_STATE_TEXTURE_NORMAL = 1,
-        PIPELINE_STATE_NORMAL = 2,
-        PIPELINE_STATE_POST_PROCESS = 3,
-        PIPELINE_STATE_SM_NORMAL = 4,
-        PIPELINE_STATE_SM_TEXTURE_NORMAL = 5,
+        PIPELINE_STATE_UNKNOWN = 0,
+        PIPELINE_STATE_DEFAULT = 1,
+        PIPELINE_STATE_TEXTURE_NORMAL = 2,
+        PIPELINE_STATE_NORMAL = 3,
+        PIPELINE_STATE_POST_PROCESS = 4,
+        PIPELINE_STATE_SM_NORMAL = 5,
+        PIPELINE_STATE_SM_TEXTURE_NORMAL = 6,
         COUNT // this should be the last entry
     };
 
