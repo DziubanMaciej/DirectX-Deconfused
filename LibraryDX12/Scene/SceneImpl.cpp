@@ -113,7 +113,6 @@ void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapCh
             MeshImpl &mesh = object->getMesh();
             if (!mesh.isUploadInProgress() && mesh.getShadowMapPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
                 commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
-                commandList.IASetPrimitiveTopologyTriangleList();
 
                 SMmvp smmvp;
                 smmvp.modelViewProjectionMatrix = XMMatrixMultiply(object->getModelMatrix(), light->smViewProjectionMatrix);
@@ -130,7 +129,6 @@ void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapCh
             MeshImpl &mesh = object->getMesh();
             if (!mesh.isUploadInProgress() && mesh.getShadowMapPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
                 commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
-                commandList.IASetPrimitiveTopologyTriangleList();
 
                 SMmvp smmvp;
                 smmvp.modelViewProjectionMatrix = XMMatrixMultiply(object->getModelMatrix(), light->smViewProjectionMatrix);
@@ -195,7 +193,6 @@ void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain
         if (!mesh.isUploadInProgress() && mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
             commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
             commandList.IASetIndexBuffer(*mesh.getIndexBuffer());
-            commandList.IASetPrimitiveTopologyTriangleList();
 
             ModelMvp mmvp;
             mmvp.modelMatrix = object->getModelMatrix();
@@ -221,7 +218,6 @@ void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain
         MeshImpl &mesh = object->getMesh();
         if (!mesh.isUploadInProgress() && mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
             commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
-            commandList.IASetPrimitiveTopologyTriangleList();
 
             ModelMvp mmvp;
             mmvp.modelMatrix = object->getModelMatrix();
@@ -248,7 +244,6 @@ void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain
         TextureImpl *texture = object->getTextureImpl();
         if (!mesh.isUploadInProgress() && texture != nullptr && !texture->isUploadInProgress() && mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
             commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
-            commandList.IASetPrimitiveTopologyTriangleList();
 
             ModelMvp mmvp;
             mmvp.modelMatrix = object->getModelMatrix();
@@ -282,7 +277,6 @@ void SceneImpl::renderPostProcess(ApplicationImpl &application, SwapChain &swapC
 
     // Draw black bars
     commandList.IASetVertexBuffer(*postProcessVB);
-    commandList.IASetPrimitiveTopologyTriangleList();
     PostProcessCB ppcb = {};
     ppcb.screenWidth = static_cast<float>(swapChain.getWidth());
     ppcb.screenHeight = static_cast<float>(swapChain.getHeight());
@@ -297,8 +291,9 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     const auto backBufferDescriptorHandle = swapChain.getCurrentBackBufferDescriptor();
     commandQueue.performResourcesDeletion();
 
-    // Do not scissor
+    // Constant settings
     commandList.RSSetScissorRectNoScissor();
+    commandList.IASetPrimitiveTopologyTriangleList();
 
     // Render
     renderShadowMaps(application, swapChain, commandList);
