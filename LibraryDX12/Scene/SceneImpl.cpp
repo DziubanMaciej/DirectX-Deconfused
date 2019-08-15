@@ -111,7 +111,7 @@ void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapCh
         commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_SM_NORMAL);
 
         for (ObjectImpl *object : objects) {
-            MeshImpl &mesh = *object->getMesh();
+            MeshImpl &mesh = object->getMesh();
             if (!mesh.isUploadInProgress() && mesh.getMeshType() == (MeshImpl::NORMALS | MeshImpl::TRIANGLE_STRIP)) {
                 commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
                 commandList.IASetPrimitiveTopologyTriangleList();
@@ -129,7 +129,7 @@ void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapCh
         commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_SM_TEXTURE_NORMAL);
 
         for (ObjectImpl *object : objects) {
-            MeshImpl &mesh = *object->getMesh();
+            MeshImpl &mesh = object->getMesh();
             if (!mesh.isUploadInProgress() && mesh.getMeshType() == (MeshImpl::NORMALS | MeshImpl::TRIANGLE_STRIP | MeshImpl::TEXTURE_COORDS)) {
                 commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
                 commandList.IASetPrimitiveTopologyTriangleList();
@@ -192,7 +192,7 @@ void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT);
     commandList.setCbvSrvUavDescriptorTable(2, 0, lightConstantBuffer.getCbvHandle(), 1);
     for (ObjectImpl *object : objects) {
-        MeshImpl &mesh = *object->getMesh();
+        MeshImpl &mesh = object->getMesh();
 
         if (!mesh.isUploadInProgress() && mesh.getMeshType() == (MeshImpl::TRIANGLE_STRIP | MeshImpl::TRIANGLE_STRIP)) {
             commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
@@ -220,7 +220,7 @@ void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain
     commandList.setCbvSrvUavDescriptorTable(2, 0, lightConstantBuffer.getCbvHandle(), 1);
     commandList.setCbvSrvUavDescriptorTable(2, 1, swapChain.getShadowMapSrvDescriptor(), 8);
     for (ObjectImpl *object : objects) {
-        MeshImpl &mesh = *object->getMesh();
+        MeshImpl &mesh = object->getMesh();
         if (!mesh.isUploadInProgress() && mesh.getMeshType() == (MeshImpl::NORMALS | MeshImpl::TRIANGLE_STRIP)) {
             commandList.IASetVertexBuffer(*mesh.getVertexBuffer());
             commandList.IASetPrimitiveTopologyTriangleList();
@@ -246,7 +246,7 @@ void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain
     commandList.setCbvSrvUavDescriptorTable(2, 0, lightConstantBuffer.getCbvHandle(), 1);
     commandList.setCbvSrvUavDescriptorTable(2, 1, swapChain.getShadowMapSrvDescriptor(), 8);
     for (ObjectImpl *object : objects) {
-        MeshImpl &mesh = *object->getMesh();
+        MeshImpl &mesh = object->getMesh();
         TextureImpl *texture = object->getTextureImpl();
         if (!mesh.isUploadInProgress() && texture != nullptr && !texture->isUploadInProgress() && mesh.getMeshType() == (MeshImpl::NORMALS | MeshImpl::TRIANGLE_STRIP | MeshImpl::TEXTURE_COORDS)) {
             commandList.IASetVertexBuffer(*mesh.getVertexBuffer());

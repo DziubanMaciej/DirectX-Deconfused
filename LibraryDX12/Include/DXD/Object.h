@@ -15,8 +15,6 @@ class Texture;
 
 class EXPORT Object : NonCopyableAndMovable {
 public:
-    virtual void setMesh(DXD::Mesh &mesh) = 0;
-
     virtual void setPosition(FLOAT x, FLOAT y, FLOAT z) = 0;
     virtual void setPosition(XMFLOAT3 pos) = 0;
     virtual XMFLOAT3 getPosition() const = 0;
@@ -43,7 +41,7 @@ public:
     virtual const Texture *getTexture() = 0;
 
     virtual ~Object() = default;
-    static std::unique_ptr<Object> create();
+    static std::unique_ptr<Object> create(DXD::Mesh &mesh);
 
 protected:
     Object() = default;

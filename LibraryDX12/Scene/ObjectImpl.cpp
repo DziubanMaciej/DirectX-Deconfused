@@ -5,10 +5,13 @@
 class TextureImpl;
 
 namespace DXD {
-std::unique_ptr<Object> Object::create() {
-    return std::unique_ptr<Object>{new ObjectImpl()};
+std::unique_ptr<Object> Object::create(DXD::Mesh &mesh) {
+    return std::unique_ptr<Object>{new ObjectImpl(mesh)};
 }
 } // namespace DXD
+
+ObjectImpl::ObjectImpl(DXD::Mesh &mesh) : mesh(*static_cast<MeshImpl *>(&mesh)) {
+}
 
 const XMMATRIX &ObjectImpl::getModelMatrix() {
     if (modelMatrixDirty) {

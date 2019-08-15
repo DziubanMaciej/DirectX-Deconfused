@@ -9,10 +9,10 @@
 class ObjectImpl : public DXD::Object {
 protected:
     friend class DXD::Object;
+    ObjectImpl(DXD::Mesh &mesh);
 
 public:
-    void setMesh(DXD::Mesh &mesh) { this->mesh = static_cast<MeshImpl *>(&mesh); }
-    MeshImpl *getMesh() { return mesh; }
+    MeshImpl &getMesh() { return mesh; }
     const XMMATRIX &getModelMatrix();
 
     void setPosition(FLOAT x, FLOAT y, FLOAT z) override;
@@ -42,7 +42,7 @@ public:
     TextureImpl *getTextureImpl() { return texture; }
 
 protected:
-    MeshImpl *mesh = {};
+    MeshImpl &mesh;
     TextureImpl *texture = {};
 
     XMVECTOR scale = {1, 1, 1};

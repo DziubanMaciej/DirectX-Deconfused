@@ -82,8 +82,7 @@ private:
                 {"dxdMesh1", "dxd"}};
 
             for (auto object : meshObjectMap) {
-                objects.insert({object.first, DXD::Object::create()});
-                objects[object.first]->setMesh(*meshes[object.second]);
+                objects.insert({object.first, DXD::Object::create(*meshes[object.second])});
             }
 
             objects["teapotMesh1"]->setPosition(8, -1, 0);
