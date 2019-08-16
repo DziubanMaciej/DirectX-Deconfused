@@ -95,6 +95,10 @@ TextureImpl::LoadResults TextureImpl::loadOnCpu(ApplicationImpl &application, co
     return result;
 }
 
+bool TextureImpl::isUploadInProgress() {
+    return loadingComplete.load() && Resource::isUploadInProgress();
+}
+
 D3D12_RESOURCE_DIMENSION TextureImpl::calculateTextureDimension(int width, int height) {
     if (height == 1) {
         return D3D12_RESOURCE_DIMENSION_TEXTURE1D;

@@ -17,10 +17,10 @@ class TextureImpl : public DXD::Texture, public Resource {
 protected:
     friend class DXD::Texture;
     TextureImpl(ApplicationImpl &application, const std::wstring &filePath);
-    TextureImpl(ApplicationImpl &application, const D3D12_RESOURCE_DESC &description, const std::wstring &fileName, const DirectX::ScratchImage &image);
 
 public:
     D3D12_CPU_DESCRIPTOR_HANDLE getSrvDescriptor() const { return cpuDescriptors.getCpuHandle(0); }
+    bool isUploadInProgress() override;
 
 private:
     static D3D12_RESOURCE_DIMENSION calculateTextureDimension(int width, int height);

@@ -30,7 +30,7 @@ public:
     D3D12_RESOURCE_STATES getState() { return state; }
 
     // Gpu upload functions
-    bool isUploadInProgress();
+    virtual bool isUploadInProgress();
     void registerUpload(CommandQueue &uploadingQueue, uint64_t uploadFence);
 
 protected:
