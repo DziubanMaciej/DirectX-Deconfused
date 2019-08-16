@@ -36,6 +36,8 @@ public:
     void render(ApplicationImpl &application, SwapChain &swapChain);
 
 protected:
+    void inspectObjectsNotReady();
+
     void renderShadowMaps(ApplicationImpl &application, SwapChain &swapChain, CommandList &commandList);
     void renderForward(ApplicationImpl &application, SwapChain &swapChain, CommandList &commandList);
     void renderPostProcess(ApplicationImpl &application, SwapChain &swapChain, CommandList &commandList,
@@ -53,6 +55,7 @@ protected:
     FLOAT ambientLight[3] = {};
     std::vector<LightImpl *> lights;
     std::set<ObjectImpl *> objects; // TODO might not be the best data structure for that
+    std::set<ObjectImpl*> objectsNotReady;
     CameraImpl *camera;
 
     XMFLOAT3 postProcessSquare[6] =
