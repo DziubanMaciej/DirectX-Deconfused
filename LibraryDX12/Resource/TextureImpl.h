@@ -7,6 +7,7 @@
 #include "DXD/Texture.h"
 
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
+#include <atomic>
 
 class ApplicationImpl;
 
@@ -24,10 +25,12 @@ public:
 private:
     static D3D12_RESOURCE_DIMENSION calculateTextureDimension(int width, int height);
     static D3D12_RESOURCE_DESC createTextureDescription(const DirectX::TexMetadata &metadata);
+    void loadAndUpload(ApplicationImpl &application, const std::wstring &filePath);
 
     DescriptorAllocation cpuDescriptors = {};
     D3D12_RESOURCE_DESC description = {};
     std::wstring fileName = {};
+    std::atomic_bool loadingComplete = false;
 
     // Loading texture on CPU
     struct LoadResults {

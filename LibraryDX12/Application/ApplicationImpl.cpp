@@ -20,7 +20,7 @@ ApplicationImpl::ApplicationImpl(bool debugLayer) : debugLayerEnabled(enableDebu
                                                     directCommandQueue(device, D3D12_COMMAND_LIST_TYPE_DIRECT),
                                                     backgroundWorkerManager() {
     pipelineStateController.compileAll();
-    CoInitialize(NULL);
+    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 }
 
 bool ApplicationImpl::enableDebugLayer(bool debugLayer) {

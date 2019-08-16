@@ -18,6 +18,13 @@ std::unique_ptr<Texture> Texture::createFromFile(Application &application, const
 } // namespace DXD
 
 TextureImpl::TextureImpl(ApplicationImpl &application, const std::wstring &filePath) {
+    auto task = [this, &application, filePath]() {
+        loadAndUpload(application, filePath);
+    };
+    application.getBackgroundWorkerManager().pushTask(task, this->loadingComplete);
+}
+
+void TextureImpl::loadAndUpload(ApplicationImpl &application, const std::wstring &filePath) {
     // Load on CPU
     const LoadResults loadResults = loadOnCpu(application, filePath);
     assert(loadResults.success);

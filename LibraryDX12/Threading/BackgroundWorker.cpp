@@ -1,5 +1,7 @@
 #include "BackgroundWorker.h"
 
+#include <Objbase.h>
+
 BackgroundWorker::BackgroundWorker(TaskQueue &taskQueue, const std::atomic_bool &terminate)
     : thread(work, std::reference_wrapper<TaskQueue>(taskQueue), std::reference_wrapper<const std::atomic_bool>(terminate)) {
 }
@@ -11,6 +13,8 @@ BackgroundWorker::~BackgroundWorker() {
 }
 
 void BackgroundWorker::work(TaskQueue &taskQueue, const std::atomic_bool &terminate) {
+    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+
     while (!terminate.load()) {
         // Try to pop task from queue
         TaskData taskData = {};
@@ -29,4 +33,6 @@ void BackgroundWorker::work(TaskQueue &taskQueue, const std::atomic_bool &termin
             }
         }
     }
+
+    CoUninitialize();
 }
