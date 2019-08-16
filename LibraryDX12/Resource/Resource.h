@@ -33,10 +33,9 @@ public:
     bool isUploadInProgress();
     void registerUpload(CommandQueue &uploadingQueue, uint64_t uploadFence);
 
-private:
+protected:
     void create(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeapProperties, D3D12_HEAP_FLAGS heapFlags, const D3D12_RESOURCE_DESC *pDesc, D3D12_RESOURCE_STATES initialResourceState, const D3D12_CLEAR_VALUE *pOptimizedClearValue);
 
-protected:
     // Gpu upload functions
     struct GpuUploadData {
         GpuUploadData(CommandQueue &queue, uint64_t fence) : uploadingQueue(queue), uploadFence(fence) {}

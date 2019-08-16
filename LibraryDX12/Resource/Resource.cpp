@@ -43,6 +43,7 @@ void Resource::create(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeap
         initialResourceState,
         pOptimizedClearValue,
         IID_PPV_ARGS(&resource)));
+    this->state = initialResourceState;
 }
 
 void Resource::uploadToGPU(ApplicationImpl &application, const void *data, UINT rowPitch, UINT slicePitch) {

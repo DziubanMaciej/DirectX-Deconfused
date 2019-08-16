@@ -10,9 +10,12 @@
 
 class ApplicationImpl;
 
+// TODO if texture used as Albedo (Diffuse), make SRGB, e.g. convert DXGI_FORMAT_R8G8B8A8_UNORM to DXGI_FORMAT_R8G8B8A8_UNORM_SRGB
+// TODO mips
 class TextureImpl : public DXD::Texture, public Resource {
 protected:
     friend class DXD::Texture;
+    TextureImpl(ApplicationImpl &application, const std::wstring &filePath);
     TextureImpl(ApplicationImpl &application, const D3D12_RESOURCE_DESC &description, const std::wstring &fileName, const DirectX::ScratchImage &image);
 
 public:
@@ -22,7 +25,18 @@ private:
     static D3D12_RESOURCE_DIMENSION calculateTextureDimension(int width, int height);
     static D3D12_RESOURCE_DESC createTextureDescription(const DirectX::TexMetadata &metadata);
 
-    DescriptorAllocation cpuDescriptors;
-    const D3D12_RESOURCE_DESC description;
-    const std::wstring &fileName;
+    DescriptorAllocation cpuDescriptors = {};
+    D3D12_RESOURCE_DESC description = {};
+    std::wstring fileName = {};
+
+    // Loading texture on CPU
+    struct LoadResults {
+        bool success = false;
+        DirectX::TexMetadata metadata = {};
+        DirectX::ScratchImage scratchImage = {};
+    };
+    LoadResults loadOnCpu(ApplicationImpl &application, const std::wstring &filePath);
+
+    // Setting all the data after loading and uploading to the GPU
+    void setData(DescriptorAllocation &&cpuDescriptors, D3D12_RESOURCE_DESC &&description, const std::wstring &fileName);
 };
