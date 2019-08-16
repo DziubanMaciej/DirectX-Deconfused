@@ -111,7 +111,7 @@ void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapCh
         commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_SM_NORMAL);
         for (ObjectImpl *object : objects) {
             MeshImpl &mesh = object->getMesh();
-            if (!mesh.isUploadInProgress() && mesh.getShadowMapPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
+            if (!object->isUploadInProgress() && mesh.getShadowMapPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
                 SMmvp smmvp;
                 smmvp.modelViewProjectionMatrix = XMMatrixMultiply(object->getModelMatrix(), light->smViewProjectionMatrix);
                 commandList.setGraphicsRoot32BitConstant(0, smmvp);
@@ -125,7 +125,7 @@ void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapCh
         commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_SM_TEXTURE_NORMAL);
         for (ObjectImpl *object : objects) {
             MeshImpl &mesh = object->getMesh();
-            if (!mesh.isUploadInProgress() && mesh.getShadowMapPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
+            if (!object->isUploadInProgress() && mesh.getShadowMapPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
                 SMmvp smmvp;
                 smmvp.modelViewProjectionMatrix = XMMatrixMultiply(object->getModelMatrix(), light->smViewProjectionMatrix);
                 commandList.setGraphicsRoot32BitConstant(0, smmvp);
@@ -185,7 +185,7 @@ void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain
     commandList.setCbvSrvUavDescriptorTable(2, 0, lightConstantBuffer.getCbvHandle(), 1);
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = object->getMesh();
-        if (!mesh.isUploadInProgress() && mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
+        if (!object->isUploadInProgress() && mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
             ModelMvp mmvp;
             mmvp.modelMatrix = object->getModelMatrix();
             mmvp.modelViewProjectionMatrix = XMMatrixMultiply(mmvp.modelMatrix, vpMatrix);
@@ -207,7 +207,7 @@ void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain
     commandList.setCbvSrvUavDescriptorTable(2, 1, swapChain.getShadowMapSrvDescriptor(), 8);
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = object->getMesh();
-        if (!mesh.isUploadInProgress() && mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
+        if (!object->isUploadInProgress() && mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
             ModelMvp mmvp;
             mmvp.modelMatrix = object->getModelMatrix();
             mmvp.modelViewProjectionMatrix = XMMatrixMultiply(mmvp.modelMatrix, vpMatrix);
@@ -230,7 +230,7 @@ void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = object->getMesh();
         TextureImpl *texture = object->getTextureImpl();
-        if (!mesh.isUploadInProgress() && texture != nullptr && !texture->isUploadInProgress() && mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
+        if (!object->isUploadInProgress() && mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
             ModelMvp mmvp;
             mmvp.modelMatrix = object->getModelMatrix();
             mmvp.modelViewProjectionMatrix = XMMatrixMultiply(mmvp.modelMatrix, vpMatrix);

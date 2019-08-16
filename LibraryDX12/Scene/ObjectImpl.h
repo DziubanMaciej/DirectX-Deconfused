@@ -42,6 +42,8 @@ public:
     DXD::Texture *getTexture() override { return texture; }
     TextureImpl *getTextureImpl() { return texture; }
 
+    bool isUploadInProgress();
+
 protected:
     MeshImpl &mesh;
     TextureImpl *texture = {};

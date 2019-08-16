@@ -93,3 +93,7 @@ void ObjectImpl::setSpecularity(float s) {
 float ObjectImpl::getSpecularity() const {
     return specularity;
 }
+
+bool ObjectImpl::isUploadInProgress() {
+    return mesh.isUploadInProgress() || (texture != nullptr && texture->isUploadInProgress());
+}
