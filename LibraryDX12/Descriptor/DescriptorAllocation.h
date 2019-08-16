@@ -12,6 +12,9 @@
 /// This class automatically manages deallocation in the heap object.
 class DescriptorAllocation : DXD::NonCopyable {
 public:
+    /// Null descriptor handle.
+    DescriptorAllocation();
+
     /// CPU only descriptor handle. Used for staging descriptors
     DescriptorAllocation(DescriptorHeap &heap, DescriptorHeap::FreeListOffset offsetInHeap,
                          DescriptorHeap::FreeListSize handlesCount, D3D12_CPU_DESCRIPTOR_HANDLE heapBaseHandle, UINT descriptorIncrementSize);

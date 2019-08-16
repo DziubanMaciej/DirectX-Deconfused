@@ -4,6 +4,16 @@
 
 #include <cassert>
 
+DescriptorAllocation::DescriptorAllocation()
+    : heap(nullptr),
+      offsetInHeap(),
+      handlesCount(),
+      cpuHandle(),
+      gpuHandle(),
+      isGpuVisible(false),
+      descriptorIncrementSize() {
+}
+
 DescriptorAllocation::DescriptorAllocation(DescriptorHeap &heap, DescriptorHeap::FreeListOffset offsetInHeap,
                                            DescriptorHeap::FreeListSize handlesCount, D3D12_CPU_DESCRIPTOR_HANDLE heapBaseHandle, UINT descriptorIncrementSize)
     : heap(&heap),
