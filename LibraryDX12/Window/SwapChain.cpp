@@ -17,10 +17,6 @@ SwapChain::SwapChain(HWND windowHandle, ID3D12DevicePtr device, DescriptorManage
       width(width),
       height(height),
       currentBackBufferIndex(swapChain->GetCurrentBackBufferIndex()) {
-    for (auto &entry : backBufferEntries) {
-        entry.backBuffer = std::make_unique<Resource>(nullptr, D3D12_RESOURCE_STATE_PRESENT);
-    }
-    updateRenderTargetViews();
 }
 
 bool SwapChain::checkTearingSupport(IDXGIFactoryPtr &factory) {

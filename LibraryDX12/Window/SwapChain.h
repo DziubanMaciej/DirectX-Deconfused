@@ -16,7 +16,7 @@ class DescriptorManager;
 
 class SwapChain : DXD::NonCopyableAndMovable {
     struct BackBufferEntry {
-        std::unique_ptr<Resource> backBuffer;
+        std::unique_ptr<Resource> backBuffer = std::make_unique<Resource>(nullptr, D3D12_RESOURCE_STATE_PRESENT);
         uint64_t lastFence;
     };
 
