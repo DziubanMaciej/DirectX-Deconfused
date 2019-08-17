@@ -10,26 +10,32 @@ public:
     void resize(int width, int height);
 
     // Getters
+    Resource &getPostProcessRenderTarget() { return *postProcessRenderTarget; }
     const DescriptorAllocation &getPostProcessSrvDescriptor() const { return postProcessSrvDescriptor; }
     const DescriptorAllocation &getPostProcessRtvDescriptor() const { return postProcessRtvDescriptor; }
+
+    Resource &getShadowMap(int i) { return *shadowMap[i]; }
     const DescriptorAllocation &getShadowMapDsvDescriptors() const { return shadowMapDsvDescriptors; }
     const DescriptorAllocation &getShadowMapSrvDescriptors() const { return shadowMapSrvDescriptors; }
-    Resource &getPostProcessRenderTarget() { return *postProcessRenderTarget; }
-    Resource &getShadowMap(int i) { return *shadowMap[i]; }
+
+    Resource &getDepthStencilBuffer() { return *depthStencilBuffer; };
+    const DescriptorAllocation &getDepthStencilBufferDescriptor() const { return dsvDescriptor; }
 
 private:
     // Base objects
     ID3D12DevicePtr device = {};
 
-    // Descriptors
+    // Post process render target
+    std::unique_ptr<Resource> postProcessRenderTarget = {};
     DescriptorAllocation postProcessSrvDescriptor = {};
     DescriptorAllocation postProcessRtvDescriptor = {};
+
+    // Shadow maps
+    std::unique_ptr<Resource> shadowMap[8] = {};
     DescriptorAllocation shadowMapDsvDescriptors = {};
     DescriptorAllocation shadowMapSrvDescriptors = {};
 
-    // Render Targets
-    std::unique_ptr<Resource> postProcessRenderTarget = {};
-
-    // Shadow Maps
-    std::unique_ptr<Resource> shadowMap[8] = {};
+    // Depth stencil buffer
+    std::unique_ptr<Resource> depthStencilBuffer = {};
+    DescriptorAllocation dsvDescriptor = {};
 };

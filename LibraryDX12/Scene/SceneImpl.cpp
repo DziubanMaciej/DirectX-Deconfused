@@ -165,11 +165,11 @@ void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain
     renderData.getPostProcessRenderTarget().transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     commandList.OMSetRenderTarget(renderData.getPostProcessRtvDescriptor().getCpuHandle(), renderData.getPostProcessRenderTarget().getResource(),
-                                  swapChain.getDepthStencilBufferDescriptor(), swapChain.getDepthStencilBuffer()->getResource());
+        renderData.getDepthStencilBufferDescriptor().getCpuHandle(), renderData.getDepthStencilBuffer().getResource());
 
     // Render (clear color)
     commandList.clearRenderTargetView(renderData.getPostProcessRtvDescriptor().getCpuHandle(), backgroundColor);
-    commandList.clearDepthStencilView(swapChain.getDepthStencilBufferDescriptor(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
+    commandList.clearDepthStencilView(renderData.getDepthStencilBufferDescriptor().getCpuHandle(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
     // View projection matrix
     float aspectRatio = (float)swapChain.getWidth() / swapChain.getHeight();

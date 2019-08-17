@@ -12,10 +12,8 @@ SwapChain::SwapChain(HWND windowHandle, ID3D12DevicePtr device, DescriptorManage
     : swapChain(createSwapChain(windowHandle, factory, commandQueue, width, height, bufferCount)),
       device(device),
       descriptorManager(descriptorManager),
-      rtvDescriptors(descriptorManager.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, bufferCount)),
-      dsvDescriptor(descriptorManager.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1)),
       backBufferEntries(bufferCount),
-      depthStencilBuffer(nullptr),
+      backBufferRtvDescriptors(descriptorManager.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, bufferCount)),
       width(width),
       height(height),
       currentBackBufferIndex(swapChain->GetCurrentBackBufferIndex()) {
@@ -23,7 +21,6 @@ SwapChain::SwapChain(HWND windowHandle, ID3D12DevicePtr device, DescriptorManage
         entry.backBuffer = std::make_unique<Resource>(nullptr, D3D12_RESOURCE_STATE_PRESENT);
     }
     updateRenderTargetViews();
-    updateDepthStencilBuffer(width, height);
 }
 
 bool SwapChain::checkTearingSupport(IDXGIFactoryPtr &factory) {
@@ -65,7 +62,7 @@ IDXGISwapChainPtr SwapChain::createSwapChain(HWND hwnd, IDXGIFactoryPtr &factory
 void SwapChain::updateRenderTargetViews() {
     const auto rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
-    auto rtvHandle = rtvDescriptors.getCpuHandle();
+    auto rtvHandle = backBufferRtvDescriptors.getCpuHandle();
     for (auto i = 0u; i < backBufferEntries.size(); i++) {
         ID3D12ResourcePtr backBuffer;
         throwIfFailed(swapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer)));
@@ -93,10 +90,9 @@ void SwapChain::present(uint64_t fenceValue) {
 void SwapChain::resize(int desiredWidth, int desiredHeight) {
     this->width = std::max(static_cast<uint32_t>(desiredWidth), 1u);
     this->height = std::max(static_cast<uint32_t>(desiredHeight), 1u);
-    resetRenderTargetViews();                // release references to back buffers, set all fences to currentValue
-    resizeRenderTargets(width, height);      // reallocate buffers of appriopriate size
-    updateRenderTargetViews();               // update rtv descriptors;
-    updateDepthStencilBuffer(width, height); // create new buffer and update descriptor on the heap
+    resetRenderTargetViews();           // release references to back buffers, set all fences to currentValue
+    resizeRenderTargets(width, height); // reallocate buffers of appriopriate size
+    updateRenderTargetViews();          // update rtv descriptors;
 }
 
 void SwapChain::resetRenderTargetViews() {
@@ -117,33 +113,10 @@ void SwapChain::resizeRenderTargets(uint32_t desiredWidth, uint32_t desiredHeigh
     currentBackBufferIndex = swapChain->GetCurrentBackBufferIndex();
 }
 
-void SwapChain::updateDepthStencilBuffer(uint32_t desiredWidth, uint32_t desiredHeight) {
-    depthStencilBuffer = std::make_unique<Resource>(device,
-                                                    &CD3DX12_HEAP_PROPERTIES{D3D12_HEAP_TYPE_DEFAULT},
-                                                    D3D12_HEAP_FLAG_NONE, // TODO D3D12_HEAP_FLAG_DENY_NON_RT_DS_TEXTURES good?
-                                                    &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, width, height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
-                                                    D3D12_RESOURCE_STATE_DEPTH_WRITE,
-                                                    &CD3DX12_CLEAR_VALUE{DXGI_FORMAT_D32_FLOAT, 1.0f, 0});
-
-    D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
-    dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
-    dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-    dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
-    dsvDesc.Texture2D = D3D12_TEX2D_DSV{0};
-    device->CreateDepthStencilView(
-        depthStencilBuffer->getResource().Get(),
-        &dsvDesc,
-        dsvDescriptor.getCpuHandle());
-}
-
 uint64_t SwapChain::getFenceValueForCurrentBackBuffer() const {
     return backBufferEntries[this->currentBackBufferIndex].lastFence;
 }
 
-D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::getDepthStencilBufferDescriptor() const {
-    return dsvDescriptor.getCpuHandle();
-}
-
 D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::getCurrentBackBufferDescriptor() const {
-    return rtvDescriptors.getCpuHandle(currentBackBufferIndex);
+    return backBufferRtvDescriptors.getCpuHandle(currentBackBufferIndex);
 }

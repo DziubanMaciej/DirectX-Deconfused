@@ -32,8 +32,6 @@ public:
     uint64_t getFenceValueForCurrentBackBuffer() const;
     D3D12_CPU_DESCRIPTOR_HANDLE getCurrentBackBufferDescriptor() const;
     auto &getCurrentBackBuffer() { return backBufferEntries[this->currentBackBufferIndex].backBuffer; };
-    D3D12_CPU_DESCRIPTOR_HANDLE getDepthStencilBufferDescriptor() const;
-    auto &getDepthStencilBuffer() { return depthStencilBuffer; };
 
 private:
     static bool checkTearingSupport(IDXGIFactoryPtr &factory);
@@ -41,22 +39,16 @@ private:
 
     void resetRenderTargetViews();
     void updateRenderTargetViews();
-    void updateDepthStencilBuffer(uint32_t desiredWidth, uint32_t desiredHeight);
-
     void resizeRenderTargets(uint32_t desiredWidth, uint32_t desiredHeight);
 
     // Base objects
     IDXGISwapChainPtr swapChain;
     ID3D12DevicePtr device;
-
-    // Descriptors data
     DescriptorManager &descriptorManager;
-    DescriptorAllocation rtvDescriptors;
-    DescriptorAllocation dsvDescriptor;
 
-    // Buffers
+    // Back buffer data
     std::vector<BackBufferEntry> backBufferEntries;
-    std::unique_ptr<Resource> depthStencilBuffer;
+    DescriptorAllocation backBufferRtvDescriptors;
 
     // Numerical data
     uint32_t width;
