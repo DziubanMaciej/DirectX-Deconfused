@@ -10,6 +10,9 @@ RenderData::RenderData(ID3D12DevicePtr &device, DescriptorManager &descriptorMan
 }
 
 void RenderData::resize(int width, int height) {
+    width = std::max(width, 1);
+    height = std::max(height, 1);
+
     //Post process render target
     D3D12_RESOURCE_DESC renderTargetDesc;
     renderTargetDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
