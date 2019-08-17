@@ -13,11 +13,7 @@ SwapChain::SwapChain(HWND windowHandle, ID3D12DevicePtr device, DescriptorManage
       device(device),
       descriptorManager(descriptorManager),
       rtvDescriptors(descriptorManager.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, bufferCount)),
-      postProcessRtvDescriptor(descriptorManager.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1)),
       dsvDescriptor(descriptorManager.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1)),
-      shadowMapDescriptor(descriptorManager.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 8)),
-      shadowMapSrvDescriptor(descriptorManager.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 8)),
-      srvDescriptor(descriptorManager.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1)),
       backBufferEntries(bufferCount),
       depthStencilBuffer(nullptr),
       width(width),
@@ -79,43 +75,6 @@ void SwapChain::updateRenderTargetViews() {
 
         rtvHandle.ptr += rtvDescriptorSize;
     }
-
-    //Craete post process render target
-    auto postProcessRtvHandle = postProcessRtvDescriptor.getCpuHandle();
-    const auto srvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
-
-    D3D12_RESOURCE_DESC renderTargetDesc;
-    renderTargetDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    renderTargetDesc.Alignment = 0;
-    renderTargetDesc.Width = width;
-    renderTargetDesc.Height = height;
-    renderTargetDesc.DepthOrArraySize = 1;
-    renderTargetDesc.MipLevels = 0;
-    renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    DXGI_SAMPLE_DESC sampleDesc;
-    sampleDesc.Count = 1;
-    sampleDesc.Quality = 0;
-    renderTargetDesc.SampleDesc = sampleDesc;
-    renderTargetDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    renderTargetDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-
-    D3D12_CLEAR_VALUE clearValue = {};
-    clearValue.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-
-    postProcessRenderTarget = std::make_unique<Resource>(
-        device,
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-        D3D12_HEAP_FLAG_NONE,
-        &renderTargetDesc,
-        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-        &clearValue);
-
-    device->CreateRenderTargetView(postProcessRenderTarget->getResource().Get(), nullptr, postProcessRtvHandle);
-    postProcessRtvHandle.Offset(1, rtvDescriptorSize);
-
-    auto srvHandle = srvDescriptor.getCpuHandle();
-    device->CreateShaderResourceView(postProcessRenderTarget->getResource().Get(), nullptr, srvHandle);
-    //srvHandle.Offset(1, srvDescriptorSize);
 }
 
 void SwapChain::present(uint64_t fenceValue) {
@@ -159,16 +118,12 @@ void SwapChain::resizeRenderTargets(uint32_t desiredWidth, uint32_t desiredHeigh
 }
 
 void SwapChain::updateDepthStencilBuffer(uint32_t desiredWidth, uint32_t desiredHeight) {
-    D3D12_CLEAR_VALUE optimizedClearValue = {};
-    optimizedClearValue.Format = DXGI_FORMAT_D32_FLOAT;
-    optimizedClearValue.DepthStencil = {1.0f, 0};
-
     depthStencilBuffer = std::make_unique<Resource>(device,
                                                     &CD3DX12_HEAP_PROPERTIES{D3D12_HEAP_TYPE_DEFAULT},
                                                     D3D12_HEAP_FLAG_NONE, // TODO D3D12_HEAP_FLAG_DENY_NON_RT_DS_TEXTURES good?
                                                     &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, width, height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
                                                     D3D12_RESOURCE_STATE_DEPTH_WRITE,
-                                                    &optimizedClearValue);
+                                                    &CD3DX12_CLEAR_VALUE{DXGI_FORMAT_D32_FLOAT, 1.0f, 0});
 
     D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc = {};
     dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
@@ -179,44 +134,6 @@ void SwapChain::updateDepthStencilBuffer(uint32_t desiredWidth, uint32_t desired
         depthStencilBuffer->getResource().Get(),
         &dsvDesc,
         dsvDescriptor.getCpuHandle());
-
-    // Shadow map
-    for (int i = 0; i < 8; i++) {
-
-        D3D12_CLEAR_VALUE optimizedClearValueSM = {};
-        optimizedClearValueSM.Format = DXGI_FORMAT_D32_FLOAT;
-        optimizedClearValueSM.DepthStencil = {1.0f, 0};
-
-        shadowMap[i] = std::make_unique<Resource>(device,
-                                                  &CD3DX12_HEAP_PROPERTIES{D3D12_HEAP_TYPE_DEFAULT},
-                                                  D3D12_HEAP_FLAG_NONE, // TODO D3D12_HEAP_FLAG_DENY_NON_RT_DS_TEXTURES good?
-                                                  &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32_TYPELESS, static_cast<uint32_t>(2048), static_cast<uint32_t>(2048), 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
-                                                  D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-                                                  &optimizedClearValueSM);
-
-        D3D12_DEPTH_STENCIL_VIEW_DESC shadowMapDesc = {};
-        shadowMapDesc.Format = DXGI_FORMAT_D32_FLOAT;
-        shadowMapDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-        shadowMapDesc.Flags = D3D12_DSV_FLAG_NONE;
-        shadowMapDesc.Texture2D = D3D12_TEX2D_DSV{0};
-        device->CreateDepthStencilView(
-            shadowMap[i]->getResource().Get(),
-            &shadowMapDesc,
-            shadowMapDescriptor.getCpuHandle(i));
-
-        auto srvHandle = shadowMapSrvDescriptor.getCpuHandle(i);
-
-        D3D12_SHADER_RESOURCE_VIEW_DESC shadowMapSrvDesc = {};
-        shadowMapSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-        shadowMapSrvDesc.Format = DXGI_FORMAT_R32_FLOAT;
-        shadowMapSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-        shadowMapSrvDesc.Texture2D.MipLevels = 1;
-        shadowMapSrvDesc.Texture2D.MostDetailedMip = 0;
-        shadowMapSrvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-        shadowMapSrvDesc.Texture2D.PlaneSlice = 0;
-
-        device->CreateShaderResourceView(shadowMap[i]->getResource().Get(), &shadowMapSrvDesc, srvHandle);
-    }
 }
 
 uint64_t SwapChain::getFenceValueForCurrentBackBuffer() const {

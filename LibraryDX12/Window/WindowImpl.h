@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Scene/RenderData.h"
 #include "Window/SwapChain.h"
 
 #include "DXD/Window.h"
@@ -68,6 +69,7 @@ protected:
     const HINSTANCE hInstance;
     const HWND windowHandle;
     SwapChain swapChain;
+    RenderData renderData;
     Clock::time_point lastFrameTime;
     SceneImpl *scene = nullptr;
     FullscreenData fullscreenData = {}; // Used to restore position and size after exiting fullscreen mode

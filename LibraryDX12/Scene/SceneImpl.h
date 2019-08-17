@@ -17,6 +17,7 @@ class WindowImpl;
 class LightImpl;
 class ObjectImpl;
 class CameraImpl;
+class RenderData;
 
 class SceneImpl : public DXD::Scene {
 protected:
@@ -33,14 +34,14 @@ public:
     void setCamera(DXD::Camera &camera) override;
     virtual DXD::Camera *getCamera() override;
 
-    void render(ApplicationImpl &application, SwapChain &swapChain);
+    void render(ApplicationImpl &application, SwapChain &swapChain, RenderData &renderData);
 
 protected:
     void inspectObjectsNotReady();
 
-    void renderShadowMaps(ApplicationImpl &application, SwapChain &swapChain, CommandList &commandList);
-    void renderForward(ApplicationImpl &application, SwapChain &swapChain, CommandList &commandList);
-    void renderPostProcess(ApplicationImpl &application, SwapChain &swapChain, CommandList &commandList,
+    void renderShadowMaps(ApplicationImpl &application, SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
+    void renderForward(ApplicationImpl &application, SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
+    void renderPostProcess(ApplicationImpl &application, SwapChain &swapChain, RenderData &renderData, CommandList &commandList,
                            Resource &input, Resource &output, D3D12_CPU_DESCRIPTOR_HANDLE outputDescriptor);
 
     // Context
@@ -55,7 +56,7 @@ protected:
     FLOAT ambientLight[3] = {};
     std::vector<LightImpl *> lights;
     std::set<ObjectImpl *> objects; // TODO might not be the best data structure for that
-    std::set<ObjectImpl*> objectsNotReady;
+    std::set<ObjectImpl *> objectsNotReady;
     CameraImpl *camera;
 
     XMFLOAT3 postProcessSquare[6] =

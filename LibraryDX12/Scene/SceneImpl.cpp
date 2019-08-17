@@ -4,6 +4,7 @@
 #include "CommandList/CommandList.h"
 #include "CommandList/CommandQueue.h"
 #include "Resource/ConstantBuffers.h"
+#include "Scene/RenderData.h"
 #include "Utility/ThrowIfFailed.h"
 #include "Window/WindowImpl.h"
 
@@ -93,9 +94,9 @@ void SceneImpl::inspectObjectsNotReady() {
     }
 }
 
-void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapChain, CommandList &commandList) {
+void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapChain, RenderData &renderData, CommandList &commandList) {
     for (int i = 0; i < 8; i++) {
-        swapChain.getShadowMap(i).transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+        renderData.getShadowMap(i).transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);
     }
 
     commandList.RSSetViewport(0.f, 0.f, 2048.f, 2048.f);
@@ -103,8 +104,8 @@ void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapCh
     int lightIdx = 0;
 
     for (LightImpl *light : lights) {
-        commandList.OMSetRenderTargetDepthOnly(swapChain.getShadowMapDescriptor().getCpuHandle(lightIdx), swapChain.getShadowMap(lightIdx).getResource());
-        commandList.clearDepthStencilView(swapChain.getShadowMapDescriptor().getCpuHandle(lightIdx), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
+        commandList.OMSetRenderTargetDepthOnly(renderData.getShadowMapDsvDescriptors().getCpuHandle(lightIdx), renderData.getShadowMap(lightIdx).getResource());
+        commandList.clearDepthStencilView(renderData.getShadowMapDsvDescriptors().getCpuHandle(lightIdx), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
         // View projection matrix
         camera->setAspectRatio(1.0f);
@@ -153,21 +154,21 @@ void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapCh
     }
 
     for (int i = 0; i < 8; i++) {
-        swapChain.getShadowMap(i).transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        renderData.getShadowMap(i).transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     }
 }
 
-void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain, CommandList &commandList) {
+void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain, RenderData &renderData, CommandList &commandList) {
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
 
     // Transition to RENDER_TARGET
-    swapChain.getPostProcessRenderTarget().transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    renderData.getPostProcessRenderTarget().transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-    commandList.OMSetRenderTarget(swapChain.getPostProcessRtvDescriptor().getCpuHandle(), swapChain.getPostProcessRenderTarget().getResource(),
+    commandList.OMSetRenderTarget(renderData.getPostProcessRtvDescriptor().getCpuHandle(), renderData.getPostProcessRenderTarget().getResource(),
                                   swapChain.getDepthStencilBufferDescriptor(), swapChain.getDepthStencilBuffer()->getResource());
 
     // Render (clear color)
-    commandList.clearRenderTargetView(swapChain.getPostProcessRtvDescriptor().getCpuHandle(), backgroundColor);
+    commandList.clearRenderTargetView(renderData.getPostProcessRtvDescriptor().getCpuHandle(), backgroundColor);
     commandList.clearDepthStencilView(swapChain.getDepthStencilBufferDescriptor(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
     // View projection matrix
@@ -218,7 +219,7 @@ void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain
     //Draw NORMAL
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_NORMAL);
     commandList.setCbvSrvUavDescriptorTable(2, 0, lightConstantBuffer.getCbvHandle(), 1);
-    commandList.setCbvSrvUavDescriptorTable(2, 1, swapChain.getShadowMapSrvDescriptor(), 8);
+    commandList.setCbvSrvUavDescriptorTable(2, 1, renderData.getShadowMapSrvDescriptors(), 8);
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = object->getMesh();
         if (mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
@@ -240,7 +241,7 @@ void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain
     //Draw TEXTURE_NORMAL
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE_NORMAL);
     commandList.setCbvSrvUavDescriptorTable(2, 0, lightConstantBuffer.getCbvHandle(), 1);
-    commandList.setCbvSrvUavDescriptorTable(2, 1, swapChain.getShadowMapSrvDescriptor(), 8);
+    commandList.setCbvSrvUavDescriptorTable(2, 1, renderData.getShadowMapSrvDescriptors(), 8);
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = object->getMesh();
         TextureImpl *texture = object->getTextureImpl();
@@ -262,7 +263,7 @@ void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain
     }
 }
 
-void SceneImpl::renderPostProcess(ApplicationImpl &application, SwapChain &swapChain, CommandList &commandList,
+void SceneImpl::renderPostProcess(ApplicationImpl &application, SwapChain &swapChain, RenderData &renderData, CommandList &commandList,
                                   Resource &input, Resource &output, D3D12_CPU_DESCRIPTOR_HANDLE outputDescriptor) {
     // Set resource to correct state
     input.transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
@@ -271,7 +272,7 @@ void SceneImpl::renderPostProcess(ApplicationImpl &application, SwapChain &swapC
     // Set all the states
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS);
     commandList.OMSetRenderTargetNoDepth(outputDescriptor, output.getResource());
-    commandList.setCbvSrvUavDescriptorTable(1, 0, swapChain.getSrvDescriptor());
+    commandList.setCbvSrvUavDescriptorTable(1, 0, renderData.getPostProcessSrvDescriptor());
     commandList.clearRenderTargetView(swapChain.getCurrentBackBufferDescriptor(), backgroundColor);
 
     // Draw black bars
@@ -283,7 +284,7 @@ void SceneImpl::renderPostProcess(ApplicationImpl &application, SwapChain &swapC
     commandList.draw(6u);
 }
 
-void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
+void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain, RenderData &renderData) {
     auto &commandQueue = application.getDirectCommandQueue();
     CommandList commandList{application.getDescriptorController(), commandQueue.getCommandAllocatorManager(), nullptr};
     const auto &backBuffer = swapChain.getCurrentBackBuffer();
@@ -296,9 +297,9 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain) {
     commandList.IASetPrimitiveTopologyTriangleList();
 
     // Render
-    renderShadowMaps(application, swapChain, commandList);
-    renderForward(application, swapChain, commandList);
-    renderPostProcess(application, swapChain, commandList, swapChain.getPostProcessRenderTarget(), *backBuffer, backBufferDescriptorHandle);
+    renderShadowMaps(application, swapChain, renderData, commandList);
+    renderForward(application, swapChain, renderData, commandList);
+    renderPostProcess(application, swapChain, renderData, commandList, renderData.getPostProcessRenderTarget(), *backBuffer, backBufferDescriptorHandle);
 
     // Transition to PRESENT
     backBuffer->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PRESENT);

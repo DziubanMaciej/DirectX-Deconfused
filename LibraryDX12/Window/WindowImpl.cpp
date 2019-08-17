@@ -40,6 +40,7 @@ WindowImpl::WindowImpl(DXD::Application &application, const std::wstring &window
     : application(*static_cast<ApplicationImpl *>(&application)), windowClassName(windowClassName), hInstance(hInstance),
       windowHandle(registerClassAndCreateWindow(windowTitle, bounds)),
       swapChain(windowHandle, this->application.getDevice(), this->application.getDescriptorController(), this->application.getFactory(), this->application.getDirectCommandQueue(), bounds.width, bounds.height, swapChainBufferCount),
+      renderData(this->application.getDevice(), this->application.getDescriptorController(), bounds.width, bounds.height),
       lastFrameTime(Clock::now()) {
 }
 
@@ -171,7 +172,7 @@ void WindowImpl::handlePaint() {
     }
 
     if (scene != nullptr) {
-        scene->render(application, swapChain);
+        scene->render(application, swapChain, renderData);
     }
 }
 
@@ -200,6 +201,7 @@ void WindowImpl::handleResize() {
         application.flushAllQueues();
         application.flushAllResources();
         swapChain.resize(newWidth, newHeight);
+        renderData.resize(newWidth, newHeight);
     }
 
     auto handler = application.getCallbackHandler();

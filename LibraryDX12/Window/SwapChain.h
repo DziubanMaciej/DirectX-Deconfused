@@ -35,14 +35,6 @@ public:
     D3D12_CPU_DESCRIPTOR_HANDLE getDepthStencilBufferDescriptor() const;
     auto &getDepthStencilBuffer() { return depthStencilBuffer; };
 
-    const DescriptorAllocation &getSrvDescriptor() const { return srvDescriptor; }
-    const DescriptorAllocation &getPostProcessRtvDescriptor() const { return postProcessRtvDescriptor; }
-    const DescriptorAllocation &getShadowMapDescriptor() const { return shadowMapDescriptor; }
-    const DescriptorAllocation &getShadowMapSrvDescriptor() const { return shadowMapSrvDescriptor; }
-
-    auto &getPostProcessRenderTarget() { return *postProcessRenderTarget; }
-    auto &getShadowMap(int i) { return *shadowMap[i]; }
-
 private:
     static bool checkTearingSupport(IDXGIFactoryPtr &factory);
     static IDXGISwapChainPtr createSwapChain(HWND hwnd, IDXGIFactoryPtr &factory, CommandQueue &commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount);
@@ -61,20 +53,10 @@ private:
     DescriptorManager &descriptorManager;
     DescriptorAllocation rtvDescriptors;
     DescriptorAllocation dsvDescriptor;
-    DescriptorAllocation srvDescriptor;
-    DescriptorAllocation postProcessRtvDescriptor;
-    DescriptorAllocation shadowMapDescriptor;
-    DescriptorAllocation shadowMapSrvDescriptor;
 
     // Buffers
     std::vector<BackBufferEntry> backBufferEntries;
     std::unique_ptr<Resource> depthStencilBuffer;
-
-    // Render Targets
-    std::unique_ptr<Resource> postProcessRenderTarget;
-
-    // Shadow Maps
-    std::unique_ptr<Resource> shadowMap[8];
 
     // Numerical data
     uint32_t width;
