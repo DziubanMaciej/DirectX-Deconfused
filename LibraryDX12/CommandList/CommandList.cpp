@@ -20,10 +20,14 @@ CommandList::~CommandList() {
     assert(!commandAllocator && !commandList); // registerAllData should be called
 }
 
-void CommandList::transitionBarrierSingle(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter) {
-    const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource.Get(), stateBefore, stateAfter);
-    commandList->ResourceBarrier(1, &barrier);
-    addUsedResource(resource);
+void CommandList::transitionBarrier(Resource &resource, D3D12_RESOURCE_STATES targetState) {
+    const auto currentState = resource.getState();
+    if (currentState != targetState) {
+        const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource.getResource().Get(), currentState, targetState);
+        commandList->ResourceBarrier(1, &barrier);
+        addUsedResource(resource.getResource());
+        resource.setState(targetState);
+    }
 }
 
 void CommandList::clearRenderTargetView(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT colorRGBA[4]) {
@@ -96,7 +100,7 @@ void CommandList::IASetVertexBuffers(UINT startSlot, UINT numBuffers, VertexBuff
     for (auto i = 0u; i < numBuffers; i++) {
         views[i] = vertexBuffers[i].getView();
         resources[i] = vertexBuffers[i].getResource();
-        vertexBuffers[i].transitionBarrierSingle(*this, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+        transitionBarrier(vertexBuffers[i], D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
     }
 
     commandList->IASetVertexBuffers(startSlot, numBuffers, views.get());
@@ -104,19 +108,19 @@ void CommandList::IASetVertexBuffers(UINT startSlot, UINT numBuffers, VertexBuff
 }
 
 void CommandList::IASetVertexBuffer(UINT slot, VertexBuffer &vertexBuffer) {
-    vertexBuffer.transitionBarrierSingle(*this, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+    transitionBarrier(vertexBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
     commandList->IASetVertexBuffers(slot, 1, &vertexBuffer.getView());
     addUsedResource(vertexBuffer.getResource());
 }
 
 void CommandList::IASetVertexBuffer(VertexBuffer &vertexBuffer) {
-    vertexBuffer.transitionBarrierSingle(*this, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
+    transitionBarrier(vertexBuffer, D3D12_RESOURCE_STATE_VERTEX_AND_CONSTANT_BUFFER);
     commandList->IASetVertexBuffers(0, 1, &vertexBuffer.getView());
     addUsedResource(vertexBuffer.getResource());
 }
 
 void CommandList::IASetIndexBuffer(IndexBuffer &indexBuffer) {
-    indexBuffer.transitionBarrierSingle(*this, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+    transitionBarrier(indexBuffer, D3D12_RESOURCE_STATE_INDEX_BUFFER);
     commandList->IASetIndexBuffer(&indexBuffer.getView());
     addUsedResource(indexBuffer.getResource());
 }

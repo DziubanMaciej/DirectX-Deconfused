@@ -22,8 +22,6 @@ public:
     Resource(Resource &&other) = default;
     Resource &operator=(Resource &&other) = default;
 
-    void transitionBarrierSingle(CommandList &commandList, D3D12_RESOURCE_STATES targetState);
-
     auto &getResource() { return resource; };
     const auto &getResource() const { return resource; }
     void setResource(ID3D12ResourcePtr resource) { this->resource = resource; };
@@ -44,6 +42,11 @@ protected:
     };
     void uploadToGPU(ApplicationImpl &application, const void *data, UINT rowPitch, UINT slicePitch);
     void recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data, UINT rowPitch, UINT slicePitch);
+
+    // state accessors, should be used only by CommandList
+    D3D12_RESOURCE_STATES getState() const { return state; }
+    void setState(D3D12_RESOURCE_STATES state) { this->state = state; }
+    friend class CommandList;
 
     // Data
     D3D12_RESOURCE_STATES state = {};

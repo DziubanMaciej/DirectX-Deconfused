@@ -17,6 +17,7 @@ class VertexBuffer;
 class IndexBuffer;
 class DescriptorAllocation;
 class MeshImpl;
+class Resource;
 
 /// Class encapsulating DX12 command list
 class CommandList : DXD::NonCopyableAndMovable {
@@ -26,7 +27,7 @@ public:
     /// Registers the command list and allocator back to the commandAllocatorController for later reuse
     ~CommandList();
 
-    void transitionBarrierSingle(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter);
+    void transitionBarrier(Resource &resource, D3D12_RESOURCE_STATES targetState);
 
     void clearRenderTargetView(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT colorRGBA[4]);
     void clearDepthStencilView(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags, FLOAT depth, UINT8 stencil);

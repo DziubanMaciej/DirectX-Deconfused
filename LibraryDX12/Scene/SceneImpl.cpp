@@ -96,7 +96,7 @@ void SceneImpl::inspectObjectsNotReady() {
 
 void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, CommandList &commandList) {
     for (int i = 0; i < 8; i++) {
-        renderData.getShadowMap(i).transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);
+        commandList.transitionBarrier(renderData.getShadowMap(i), D3D12_RESOURCE_STATE_DEPTH_WRITE);
     }
 
     commandList.RSSetViewport(0.f, 0.f, 2048.f, 2048.f);
@@ -154,7 +154,7 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
     }
 
     for (int i = 0; i < 8; i++) {
-        renderData.getShadowMap(i).transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        commandList.transitionBarrier(renderData.getShadowMap(i), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     }
 }
 
@@ -162,7 +162,7 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
 
     // Transition to RENDER_TARGET
-    renderData.getPostProcessRenderTarget().transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    commandList.transitionBarrier(renderData.getPostProcessRenderTarget(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     commandList.OMSetRenderTarget(renderData.getPostProcessRtvDescriptor().getCpuHandle(), renderData.getPostProcessRenderTarget().getResource(),
                                   renderData.getDepthStencilBufferDescriptor().getCpuHandle(), renderData.getDepthStencilBuffer().getResource());
@@ -266,8 +266,8 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
 void SceneImpl::renderPostProcess(SwapChain &swapChain, RenderData &renderData, CommandList &commandList,
                                   Resource &input, Resource &output, D3D12_CPU_DESCRIPTOR_HANDLE outputDescriptor) {
     // Set resource to correct state
-    input.transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    output.transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    commandList.transitionBarrier(input, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     // Set all the states
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS);
@@ -302,7 +302,7 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     renderPostProcess(swapChain, renderData, commandList, renderData.getPostProcessRenderTarget(), *backBuffer, backBufferDescriptorHandle);
 
     // Transition to PRESENT
-    backBuffer->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PRESENT);
+    commandList.transitionBarrier(*backBuffer, D3D12_RESOURCE_STATE_PRESENT);
 
     // Close command list
     commandList.close();
