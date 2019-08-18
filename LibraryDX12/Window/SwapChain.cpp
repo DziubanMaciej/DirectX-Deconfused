@@ -1,17 +1,16 @@
 #include "Swapchain.h"
 
+#include "Application/ApplicationImpl.h"
 #include "CommandList/CommandQueue.h"
-#include "Descriptor/DescriptorManager.h"
 #include "Utility/ThrowIfFailed.h"
 
 #include "DXD/ExternalHeadersWrappers/d3dx12.h"
 #include <algorithm>
 
-SwapChain::SwapChain(HWND windowHandle, ID3D12DevicePtr device, DescriptorManager &descriptorManager, IDXGIFactoryPtr factory,
-                     CommandQueue &commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount)
-    : swapChain(createSwapChain(windowHandle, factory, commandQueue, width, height, bufferCount)),
-      device(device),
-      descriptorManager(descriptorManager),
+SwapChain::SwapChain(HWND windowHandle, ApplicationImpl &application, CommandQueue &commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount)
+    : swapChain(createSwapChain(windowHandle, application.getFactory(), commandQueue, width, height, bufferCount)),
+      device(application.getDevice()),
+      descriptorManager(application.getDescriptorController()),
       backBufferEntries(bufferCount),
       backBufferRtvDescriptors(descriptorManager.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, bufferCount)),
       width(width),

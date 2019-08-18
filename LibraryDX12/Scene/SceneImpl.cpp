@@ -14,19 +14,19 @@
 
 namespace DXD {
 std::unique_ptr<Scene> Scene::create(DXD::Application &application) {
-    return std::unique_ptr<Scene>{new SceneImpl(application)};
+    return std::unique_ptr<Scene>{new SceneImpl(*static_cast<ApplicationImpl *>(&application))};
 }
 } // namespace DXD
 
-SceneImpl::SceneImpl(DXD::Application &application)
-    : application(*static_cast<ApplicationImpl *>(&application)),
-      lightConstantBuffer(this->application.getDevice(), this->application.getDescriptorController(), sizeof(SimpleConstantBuffer)) {
+SceneImpl::SceneImpl(ApplicationImpl &application)
+    : application(application),
+      lightConstantBuffer(application.getDevice(), application.getDescriptorController(), sizeof(SimpleConstantBuffer)) {
 
-    ID3D12DevicePtr device = this->application.getDevice();
-    auto &commandQueue = this->application.getDirectCommandQueue();
+    ID3D12DevicePtr device = application.getDevice();
+    auto &commandQueue = application.getDirectCommandQueue();
 
     // Record command list for GPU upload
-    CommandList commandList{static_cast<ApplicationImpl *>(&application)->getDescriptorController(), commandQueue.getCommandAllocatorManager(), nullptr};
+    CommandList commandList{application.getDescriptorController(), commandQueue.getCommandAllocatorManager(), nullptr};
     postProcessVB = std::make_unique<VertexBuffer>(device, commandList, postProcessSquare, 6, 12);
 
     commandList.close();
@@ -94,7 +94,7 @@ void SceneImpl::inspectObjectsNotReady() {
     }
 }
 
-void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapChain, RenderData &renderData, CommandList &commandList) {
+void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, CommandList &commandList) {
     for (int i = 0; i < 8; i++) {
         renderData.getShadowMap(i).transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_DEPTH_WRITE);
     }
@@ -158,14 +158,14 @@ void SceneImpl::renderShadowMaps(ApplicationImpl &application, SwapChain &swapCh
     }
 }
 
-void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain, RenderData &renderData, CommandList &commandList) {
+void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, CommandList &commandList) {
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
 
     // Transition to RENDER_TARGET
     renderData.getPostProcessRenderTarget().transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     commandList.OMSetRenderTarget(renderData.getPostProcessRtvDescriptor().getCpuHandle(), renderData.getPostProcessRenderTarget().getResource(),
-        renderData.getDepthStencilBufferDescriptor().getCpuHandle(), renderData.getDepthStencilBuffer().getResource());
+                                  renderData.getDepthStencilBufferDescriptor().getCpuHandle(), renderData.getDepthStencilBuffer().getResource());
 
     // Render (clear color)
     commandList.clearRenderTargetView(renderData.getPostProcessRtvDescriptor().getCpuHandle(), backgroundColor);
@@ -263,7 +263,7 @@ void SceneImpl::renderForward(ApplicationImpl &application, SwapChain &swapChain
     }
 }
 
-void SceneImpl::renderPostProcess(ApplicationImpl &application, SwapChain &swapChain, RenderData &renderData, CommandList &commandList,
+void SceneImpl::renderPostProcess(SwapChain &swapChain, RenderData &renderData, CommandList &commandList,
                                   Resource &input, Resource &output, D3D12_CPU_DESCRIPTOR_HANDLE outputDescriptor) {
     // Set resource to correct state
     input.transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
@@ -284,7 +284,7 @@ void SceneImpl::renderPostProcess(ApplicationImpl &application, SwapChain &swapC
     commandList.draw(6u);
 }
 
-void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain, RenderData &renderData) {
+void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     auto &commandQueue = application.getDirectCommandQueue();
     CommandList commandList{application.getDescriptorController(), commandQueue.getCommandAllocatorManager(), nullptr};
     const auto &backBuffer = swapChain.getCurrentBackBuffer();
@@ -297,9 +297,9 @@ void SceneImpl::render(ApplicationImpl &application, SwapChain &swapChain, Rende
     commandList.IASetPrimitiveTopologyTriangleList();
 
     // Render
-    renderShadowMaps(application, swapChain, renderData, commandList);
-    renderForward(application, swapChain, renderData, commandList);
-    renderPostProcess(application, swapChain, renderData, commandList, renderData.getPostProcessRenderTarget(), *backBuffer, backBufferDescriptorHandle);
+    renderShadowMaps(swapChain, renderData, commandList);
+    renderForward(swapChain, renderData, commandList);
+    renderPostProcess(swapChain, renderData, commandList, renderData.getPostProcessRenderTarget(), *backBuffer, backBufferDescriptorHandle);
 
     // Transition to PRESENT
     backBuffer->transitionBarrierSingle(commandList, D3D12_RESOURCE_STATE_PRESENT);

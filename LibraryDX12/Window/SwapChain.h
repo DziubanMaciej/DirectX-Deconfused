@@ -21,8 +21,7 @@ class SwapChain : DXD::NonCopyableAndMovable {
     };
 
 public:
-    SwapChain(HWND windowHandle, ID3D12DevicePtr device, DescriptorManager &descriptorManager, IDXGIFactoryPtr factory,
-              CommandQueue &commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount);
+    SwapChain(HWND windowHandle, ApplicationImpl &application, CommandQueue &commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount);
     void present(uint64_t fenceValue);
     void resize(int desiredWidth, int desiredHeight);
 

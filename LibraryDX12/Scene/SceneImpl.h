@@ -22,7 +22,7 @@ class RenderData;
 class SceneImpl : public DXD::Scene {
 protected:
     friend class DXD::Scene;
-    SceneImpl(DXD::Application &application);
+    SceneImpl(ApplicationImpl &application);
 
 public:
     void setBackgroundColor(float r, float g, float b) override;
@@ -34,14 +34,14 @@ public:
     void setCamera(DXD::Camera &camera) override;
     virtual DXD::Camera *getCamera() override;
 
-    void render(ApplicationImpl &application, SwapChain &swapChain, RenderData &renderData);
+    void render(SwapChain &swapChain, RenderData &renderData);
 
 protected:
     void inspectObjectsNotReady();
 
-    void renderShadowMaps(ApplicationImpl &application, SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
-    void renderForward(ApplicationImpl &application, SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
-    void renderPostProcess(ApplicationImpl &application, SwapChain &swapChain, RenderData &renderData, CommandList &commandList,
+    void renderShadowMaps(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
+    void renderForward(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
+    void renderPostProcess(SwapChain &swapChain, RenderData &renderData, CommandList &commandList,
                            Resource &input, Resource &output, D3D12_CPU_DESCRIPTOR_HANDLE outputDescriptor);
 
     // Context
