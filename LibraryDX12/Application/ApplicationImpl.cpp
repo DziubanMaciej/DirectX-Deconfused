@@ -107,6 +107,10 @@ DXD::CallbackHandler *ApplicationImpl::getCallbackHandler() const {
     return this->callbackHandler;
 }
 
+DXD::Settings &ApplicationImpl::getSettings() {
+    return this->settings;
+}
+
 void ApplicationImpl::flushAllQueues() {
     copyCommandQueue.flush();
     directCommandQueue.flush();

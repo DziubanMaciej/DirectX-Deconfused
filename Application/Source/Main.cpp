@@ -9,6 +9,7 @@
 #include "DXD/Mesh.h"
 #include "DXD/Object.h"
 #include "DXD/Scene.h"
+#include "DXD/Settings.h"
 #include "DXD/Texture.h"
 #include "DXD/Window.h"
 
@@ -282,11 +283,10 @@ private:
             break;
         case 'T':
             toggleSceneMovement ^= 1;
-        case VK_SPACE:
-            if (toggleSceneMovement)
-                break;
-            sceneMoveTick(10000);
-            return;
+            break;
+        case 'V':
+            application->getSettings().setVerticalSyncEnabled(!application->getSettings().getVerticalSyncEnabled());
+            break;
         }
     }
     void onUpdate(unsigned int deltaTimeMicroseconds) override {

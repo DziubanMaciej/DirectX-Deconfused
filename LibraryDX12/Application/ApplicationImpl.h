@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Application/SettingsImpl.h"
 #include "CommandList/CommandQueue.h"
 #include "Descriptor/DescriptorManager.h"
 #include "PipelineState/PipelineStateController.h"
@@ -19,10 +20,12 @@ public:
 
     void setCallbackHandler(DXD::CallbackHandler *callbackHandler) override;
     DXD::CallbackHandler *getCallbackHandler() const;
+    DXD::Settings &getSettings() override;
 
     void flushAllQueues();
     void flushAllResources();
 
+    auto &getSettingsImpl() { return settings; }
     auto getFactory() { return factory; }
     auto getAdapter() { return adapter; }
     auto getDevice() { return device; }
@@ -40,6 +43,7 @@ protected:
 
     const bool debugLayerEnabled;
     DXD::CallbackHandler *callbackHandler;
+    SettingsImpl settings;
     IDXGIFactoryPtr factory;
     IDXGIAdapterPtr adapter;
     ID3D12DevicePtr device;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Application/SettingsImpl.h"
 #include "Descriptor/DescriptorAllocation.h"
 #include "Resource/Resource.h"
 
@@ -31,7 +32,6 @@ public:
     uint64_t getFenceValueForCurrentBackBuffer() const;
     D3D12_CPU_DESCRIPTOR_HANDLE getCurrentBackBufferDescriptor() const;
     auto &getCurrentBackBuffer() { return backBufferEntries[this->currentBackBufferIndex].backBuffer; };
-
 private:
     static bool checkTearingSupport(IDXGIFactoryPtr &factory);
     static IDXGISwapChainPtr createSwapChain(HWND hwnd, IDXGIFactoryPtr &factory, CommandQueue &commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount);
@@ -44,6 +44,7 @@ private:
     IDXGISwapChainPtr swapChain;
     ID3D12DevicePtr device;
     DescriptorManager &descriptorManager;
+    SettingsImpl &settings;
 
     // Back buffer data
     std::vector<BackBufferEntry> backBufferEntries;
@@ -53,4 +54,5 @@ private:
     uint32_t width;
     uint32_t height;
     UINT currentBackBufferIndex;
+
 };

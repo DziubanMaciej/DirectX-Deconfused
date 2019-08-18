@@ -11,6 +11,7 @@ SwapChain::SwapChain(HWND windowHandle, ApplicationImpl &application, CommandQue
     : swapChain(createSwapChain(windowHandle, application.getFactory(), commandQueue, width, height, bufferCount)),
       device(application.getDevice()),
       descriptorManager(application.getDescriptorController()),
+      settings(application.getSettingsImpl()),
       backBufferEntries(bufferCount),
       backBufferRtvDescriptors(descriptorManager.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, bufferCount)),
       width(width),
@@ -74,9 +75,9 @@ void SwapChain::present(uint64_t fenceValue) {
     backBufferEntries[currentBackBufferIndex].lastFence = fenceValue;
 
     // Present
-    //UINT syncInterval = g_VSync ? 1 : 0;
+    UINT syncInterval = settings.getVerticalSyncEnabled() ? 1u : 0u;
     //UINT presentFlags = g_TearingSupported && !g_VSync ? DXGI_PRESENT_ALLOW_TEARING : 0;
-    throwIfFailed(swapChain->Present(0u, 0)); // TODO
+    throwIfFailed(swapChain->Present(syncInterval, 0)); // TODO
 
     // Move to next back buffer
     currentBackBufferIndex = swapChain->GetCurrentBackBufferIndex();
