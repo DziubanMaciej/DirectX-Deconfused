@@ -82,6 +82,7 @@ public:
 
 private:
     void commitDescriptors();
+    void commitResourceBarriers();
 
     // Base CommandList data
     DescriptorController &descriptorController;
@@ -100,6 +101,9 @@ private:
 
     // Data currently set on this CommandList
     PipelineStateController::Identifier pipelineStateIdentifier;
+
+    // Data cached to be flushed when needed
+    std::vector<D3D12_RESOURCE_BARRIER> cachedResourceBarriers = {};
 };
 
 template <typename ConstantType>

@@ -23,18 +23,18 @@ CommandList::~CommandList() {
 void CommandList::transitionBarrier(Resource &resource, D3D12_RESOURCE_STATES targetState) {
     const auto currentState = resource.getState();
     if (currentState != targetState) {
-        const auto barrier = CD3DX12_RESOURCE_BARRIER::Transition(resource.getResource().Get(), currentState, targetState);
-        commandList->ResourceBarrier(1, &barrier);
-        addUsedResource(resource.getResource());
+        cachedResourceBarriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(resource.getResource().Get(), currentState, targetState));
         resource.setState(targetState);
     }
 }
 
 void CommandList::clearRenderTargetView(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT colorRGBA[4]) {
+    commitResourceBarriers();
     commandList->ClearRenderTargetView(renderTargetView, colorRGBA, 0, nullptr);
 }
 
 void CommandList::clearDepthStencilView(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags, FLOAT depth, UINT8 stencil) {
+    commitResourceBarriers();
     commandList->ClearDepthStencilView(depthStencilView, clearFlags, depth, stencil, 0, nullptr);
 }
 
@@ -185,15 +185,18 @@ void CommandList::OMSetRenderTargetNoDepth(const D3D12_CPU_DESCRIPTOR_HANDLE &re
 
 void CommandList::drawIndexed(UINT verticesCount, INT startVertexLocation, INT startIndexLocation) {
     commitDescriptors();
+    commitResourceBarriers();
     commandList->DrawIndexedInstanced(verticesCount, 1, startIndexLocation, startVertexLocation, 0);
 }
 
 void CommandList::draw(UINT verticesCount, INT startIndexLocation) {
     commitDescriptors();
+    commitResourceBarriers();
     commandList->DrawInstanced(verticesCount, 1, startIndexLocation, 0);
 }
 
 void CommandList::close() {
+    commitResourceBarriers();
     throwIfFailed(commandList->Close());
 }
 
@@ -224,4 +227,14 @@ void CommandList::addUsedResources(const ID3D12ResourcePtr *resources, UINT reso
 void CommandList::commitDescriptors() {
     gpuDescriptorHeapControllerCbvSrvUav.commit();
     gpuDescriptorHeapControllerSampler.commit();
+}
+
+void CommandList::commitResourceBarriers() {
+    const auto barriersCount = static_cast<UINT>(cachedResourceBarriers.size());
+    if (barriersCount == 0u) {
+        return;
+    }
+
+    commandList->ResourceBarrier(barriersCount, cachedResourceBarriers.data());
+    cachedResourceBarriers.clear();
 }
