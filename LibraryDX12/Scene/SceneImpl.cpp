@@ -241,7 +241,7 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
     //Draw TEXTURE_NORMAL
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE_NORMAL);
     commandList.setCbvSrvUavDescriptorTable(2, 0, lightConstantBuffer.getCbvHandle(), 1);
-    commandList.setCbvSrvUavDescriptorTable(2, 1, renderData.getShadowMapSrvDescriptors(), 8);
+    commandList.setCbvSrvUavDescriptorTable(2, 2, renderData.getShadowMapSrvDescriptors(), 8);
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = object->getMesh();
         TextureImpl *texture = object->getTextureImpl();
@@ -257,7 +257,7 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
             commandList.setGraphicsRoot32BitConstant(1, op);
 
             commandList.IASetVertexAndIndexBuffer(mesh);
-            commandList.setCbvSrvUavDescriptorTable(2, 9, texture->getSrvDescriptor(), 1);
+            commandList.setCbvSrvUavDescriptorTable(2, 1, texture->getSrvDescriptor(), 1);
             commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
         }
     }

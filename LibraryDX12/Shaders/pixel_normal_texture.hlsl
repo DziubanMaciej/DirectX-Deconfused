@@ -15,16 +15,8 @@ struct ObjectProperties {
 
 ConstantBuffer<ObjectProperties> op : register(b2);
 
-Texture2D shadowMap0 : register(t0);
-Texture2D shadowMap1 : register(t1);
-Texture2D shadowMap2 : register(t2);
-Texture2D shadowMap3 : register(t3);
-Texture2D shadowMap4 : register(t4);
-Texture2D shadowMap5 : register(t5);
-Texture2D shadowMap6 : register(t6);
-Texture2D shadowMap7 : register(t7);
-
-Texture2D diffuseTexture : register(t8);
+Texture2D diffuseTexture : register(t0);
+Texture2D shadowMaps[8] : register(t1);
 
 SamplerState s_sampler : register(s0);
 
@@ -57,26 +49,8 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
                 for (int ox = -1; ox < 2; ox++) {
                     for (int oy = -1; oy < 2; oy++) {
-
                         float2 offset = float2(float(ox) / 2048.0f, float(oy) / 2048.0f);
-
-                        if (i == 0) {
-                            smDepth = shadowMap0.Sample(s_sampler, smCoords.xy + offset).r;
-                        } else if (i == 1) {
-                            smDepth = shadowMap1.Sample(s_sampler, smCoords.xy + offset).r;
-                        } else if (i == 2) {
-                            smDepth = shadowMap2.Sample(s_sampler, smCoords.xy + offset).r;
-                        } else if (i == 3) {
-                            smDepth = shadowMap3.Sample(s_sampler, smCoords.xy + offset).r;
-                        } else if (i == 4) {
-                            smDepth = shadowMap4.Sample(s_sampler, smCoords.xy + offset).r;
-                        } else if (i == 5) {
-                            smDepth = shadowMap5.Sample(s_sampler, smCoords.xy + offset).r;
-                        } else if (i == 6) {
-                            smDepth = shadowMap6.Sample(s_sampler, smCoords.xy + offset).r;
-                        } else if (i == 7) {
-                            smDepth = shadowMap7.Sample(s_sampler, smCoords.xy + offset).r;
-                        }
+                        smDepth = shadowMaps[i].Sample(s_sampler, smCoords.xy + offset).r;
 
                         if (((smCoords.z / smCoords.w) - 0.0005f) > smDepth) {
                             shadowFactor = shadowFactor - 1;

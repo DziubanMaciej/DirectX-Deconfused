@@ -134,8 +134,8 @@ void PipelineStateController::compilePipelineStateTextureNormal(RootSignature &r
 
     DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
     table.appendCbvRange(b(1), 1);
-    table.appendSrvRange(t(0), 8); // shadow maps
-    table.appendSrvRange(t(8), 1); // diffuse texture
+    table.appendSrvRange(t(0), 1); // diffuse texture
+    table.appendSrvRange(t(1), 8); // shadow maps
     rootSignature
         .append32bitConstant<ModelMvp>(b(0), D3D12_SHADER_VISIBILITY_VERTEX)
         .append32bitConstant<ObjectProperties>(b(2), D3D12_SHADER_VISIBILITY_PIXEL)
