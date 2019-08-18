@@ -95,7 +95,9 @@ void SceneImpl::inspectObjectsNotReady() {
 }
 
 void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, CommandList &commandList) {
-    for (int i = 0; i < 8; i++) {
+    const auto shadowMapsUsed = std::min(size_t{8u}, lights.size());
+
+    for (int i = 0; i < shadowMapsUsed; i++) {
         commandList.transitionBarrier(renderData.getShadowMap(i), D3D12_RESOURCE_STATE_DEPTH_WRITE);
     }
 
@@ -153,7 +155,7 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
         lightIdx++;
     }
 
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < shadowMapsUsed; i++) {
         commandList.transitionBarrier(renderData.getShadowMap(i), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     }
 }
