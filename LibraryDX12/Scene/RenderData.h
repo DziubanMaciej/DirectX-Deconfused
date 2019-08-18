@@ -1,12 +1,12 @@
 #pragma once
 
 #include "Descriptor/DescriptorAllocation.h"
-#include "Descriptor/DescriptorManager.h"
+#include "Descriptor/DescriptorController.h"
 #include "Resource/Resource.h"
 
 class RenderData {
 public:
-    RenderData(ID3D12DevicePtr &device, DescriptorManager &descriptorManager, int width, int height);
+    RenderData(ID3D12DevicePtr &device, DescriptorController &descriptorController, int width, int height);
     void resize(int width, int height);
 
     // Getters

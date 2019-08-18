@@ -1,16 +1,16 @@
-#include "DescriptorManager.h"
+#include "DescriptorController.h"
 
 #include "Descriptor/DescriptorAllocation.h"
 #include "Utility/ThrowIfFailed.h"
 
 #include <cassert>
 
-DescriptorManager::DescriptorManager(ID3D12DevicePtr device)
+DescriptorController::DescriptorController(ID3D12DevicePtr device)
     : device(device),
       gpuCbvSrcUavHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1024, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE),
       gpuSamplerHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 1024, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE) {}
 
-DescriptorAllocation DescriptorManager::allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount) {
+DescriptorAllocation DescriptorController::allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount) {
     HeapVector &heapsForGivenType = this->cpuHeaps[type];
     std::unique_ptr<DescriptorAllocation> allocation = nullptr;
 
@@ -33,7 +33,7 @@ DescriptorAllocation DescriptorManager::allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE t
     return std::move(*allocation.get());
 }
 
-std::pair<ID3D12DescriptorHeapPtr, DescriptorAllocation> DescriptorManager::allocateGpu(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount) {
+std::pair<ID3D12DescriptorHeapPtr, DescriptorAllocation> DescriptorController::allocateGpu(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount) {
     DescriptorHeap &heap = getGpuHeap(type);
     ID3D12DescriptorHeapPtr dx12Heap = heap.getDescriptorHeap();
 
@@ -42,7 +42,7 @@ std::pair<ID3D12DescriptorHeapPtr, DescriptorAllocation> DescriptorManager::allo
     return std::make_pair(std::move(dx12Heap), std::move(*allocation.get()));
 }
 
-DescriptorHeap &DescriptorManager::getGpuHeap(D3D12_DESCRIPTOR_HEAP_TYPE type) {
+DescriptorHeap &DescriptorController::getGpuHeap(D3D12_DESCRIPTOR_HEAP_TYPE type) {
     switch (type) {
     case D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV:
         return gpuCbvSrcUavHeap;

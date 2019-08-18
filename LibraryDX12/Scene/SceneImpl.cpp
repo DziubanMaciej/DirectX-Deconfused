@@ -26,7 +26,7 @@ SceneImpl::SceneImpl(ApplicationImpl &application)
     auto &commandQueue = application.getDirectCommandQueue();
 
     // Record command list for GPU upload
-    CommandList commandList{application.getDescriptorController(), commandQueue.getCommandAllocatorManager(), nullptr};
+    CommandList commandList{application.getDescriptorController(), commandQueue.getCommandAllocatorController(), nullptr};
     postProcessVB = std::make_unique<VertexBuffer>(device, commandList, postProcessSquare, 6, 12);
 
     commandList.close();
@@ -286,7 +286,7 @@ void SceneImpl::renderPostProcess(SwapChain &swapChain, RenderData &renderData, 
 
 void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     auto &commandQueue = application.getDirectCommandQueue();
-    CommandList commandList{application.getDescriptorController(), commandQueue.getCommandAllocatorManager(), nullptr};
+    CommandList commandList{application.getDescriptorController(), commandQueue.getCommandAllocatorController(), nullptr};
     const auto &backBuffer = swapChain.getCurrentBackBuffer();
     const auto backBufferDescriptorHandle = swapChain.getCurrentBackBufferDescriptor();
     commandQueue.performResourcesDeletion();

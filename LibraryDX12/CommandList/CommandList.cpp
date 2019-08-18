@@ -1,6 +1,6 @@
 #include "CommandList.h"
 
-#include "CommandList/CommandAllocatorManager.h"
+#include "CommandList/CommandAllocatorController.h"
 #include "Descriptor/DescriptorAllocation.h"
 #include "Resource/VertexOrIndexBuffer.h"
 #include "Scene/MeshImpl.h"
@@ -8,11 +8,11 @@
 
 #include <cassert>
 
-CommandList::CommandList(DescriptorManager &descriptorManager, CommandAllocatorManager &commandAllocatorManager, ID3D12PipelineState *initialPipelineState)
-    : descriptorManager(descriptorManager),
-      commandAllocatorManager(commandAllocatorManager),
-      commandAllocator(commandAllocatorManager.retieveCommandAllocator()),
-      commandList(commandAllocatorManager.retrieveCommandList(commandAllocator, initialPipelineState)),
+CommandList::CommandList(DescriptorController &descriptorController, CommandAllocatorController &commandAllocatorController, ID3D12PipelineState *initialPipelineState)
+    : descriptorController(descriptorController),
+      commandAllocatorController(commandAllocatorController),
+      commandAllocator(commandAllocatorController.retieveCommandAllocator()),
+      commandList(commandAllocatorController.retrieveCommandList(commandAllocator, initialPipelineState)),
       gpuDescriptorHeapControllerCbvSrvUav(*this, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV),
       gpuDescriptorHeapControllerSampler(*this, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER) {}
 
@@ -195,7 +195,7 @@ void CommandList::close() {
 
 void CommandList::registerAllData(ResourceUsageTracker &resourceUsageTracker, uint64_t fenceValue) {
     // Give ID3D12CommandList and ID3D12CommandAllocator back to the pool
-    commandAllocatorManager.registerAllocatorAndList(commandAllocator, commandList, fenceValue);
+    commandAllocatorController.registerAllocatorAndList(commandAllocator, commandList, fenceValue);
     commandList = nullptr;
     commandAllocator = nullptr;
 

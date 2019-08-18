@@ -5,9 +5,9 @@
 #include <array>
 #include <vector>
 
-class DescriptorManager : DXD::NonCopyableAndMovable {
+class DescriptorController : DXD::NonCopyableAndMovable {
 public:
-    DescriptorManager(ID3D12DevicePtr device);
+    DescriptorController(ID3D12DevicePtr device);
     DescriptorAllocation allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount);
     std::pair<ID3D12DescriptorHeapPtr, DescriptorAllocation> allocateGpu(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount);
 

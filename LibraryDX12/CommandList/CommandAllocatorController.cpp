@@ -1,14 +1,14 @@
-#include "CommandAllocatorManager.h"
+#include "CommandAllocatorController.h"
 
 #include "Synchronization/Fence.h"
 #include "Utility/ThrowIfFailed.h"
 
 #include <cassert>
 
-CommandAllocatorManager::CommandAllocatorManager(ID3D12DevicePtr device, Fence &fence, D3D12_COMMAND_LIST_TYPE type)
+CommandAllocatorController::CommandAllocatorController(ID3D12DevicePtr device, Fence &fence, D3D12_COMMAND_LIST_TYPE type)
     : device(device), fence(fence), type(type) {}
 
-ID3D12CommandAllocatorPtr CommandAllocatorManager::retieveCommandAllocator() {
+ID3D12CommandAllocatorPtr CommandAllocatorController::retieveCommandAllocator() {
     if (!commandAllocators.empty() && fence.isComplete(commandAllocators.front().lastFence)) {
         // First allocator is done, we can reuse it
         ID3D12CommandAllocatorPtr result = commandAllocators.front().commandAllocator;
@@ -21,7 +21,7 @@ ID3D12CommandAllocatorPtr CommandAllocatorManager::retieveCommandAllocator() {
     }
 }
 
-ID3D12GraphicsCommandListPtr CommandAllocatorManager::retrieveCommandList(ID3D12CommandAllocatorPtr commandAllocator, ID3D12PipelineState *initialPipelineState) {
+ID3D12GraphicsCommandListPtr CommandAllocatorController::retrieveCommandList(ID3D12CommandAllocatorPtr commandAllocator, ID3D12PipelineState *initialPipelineState) {
     if (commandLists.empty()) {
         // Allocate new command list
         ID3D12GraphicsCommandListPtr commandList;
@@ -36,13 +36,13 @@ ID3D12GraphicsCommandListPtr CommandAllocatorManager::retrieveCommandList(ID3D12
     return commandList;
 }
 
-ID3D12CommandAllocatorPtr CommandAllocatorManager::createCommandAllocator() {
+ID3D12CommandAllocatorPtr CommandAllocatorController::createCommandAllocator() {
     ID3D12CommandAllocatorPtr commandAllocator;
     throwIfFailed(device->CreateCommandAllocator(type, IID_PPV_ARGS(&commandAllocator)));
     return commandAllocator;
 }
 
-void CommandAllocatorManager::registerAllocatorAndList(ID3D12CommandAllocatorPtr commandAllocator, ID3D12GraphicsCommandListPtr commandList, uint64_t fence) {
+void CommandAllocatorController::registerAllocatorAndList(ID3D12CommandAllocatorPtr commandAllocator, ID3D12GraphicsCommandListPtr commandList, uint64_t fence) {
     commandAllocators.emplace_back(CommandAllocatorEntry{commandAllocator, fence});
     commandLists.push_back(commandList);
 #if defined(_DEBUG)
@@ -51,14 +51,14 @@ void CommandAllocatorManager::registerAllocatorAndList(ID3D12CommandAllocatorPtr
 #endif
 }
 
-void CommandAllocatorManager::validateCommandAllocators() {
+void CommandAllocatorController::validateCommandAllocators() {
     for (auto i = 1u; i < commandAllocators.size(); i++) {
         const bool nondecreasing = commandAllocators[i - 1].lastFence <= commandAllocators[i].lastFence;
         assert(nondecreasing);
     }
 }
 
-void CommandAllocatorManager::validateCommandLists() {
+void CommandAllocatorController::validateCommandLists() {
     for (const auto &commandList : commandLists) {
         // TODO it does not work but it should
         //const auto result = commandList->Close();

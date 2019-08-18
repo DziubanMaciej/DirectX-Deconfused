@@ -70,7 +70,7 @@ void GpuDescriptorHeapController::commit() {
     // TODO check if we have enough available handles
 
     // Allocate space for gpu-visible desciptors
-    auto allocationResult = commandList.getDescriptorManager().allocateGpu(heapType, calculateStagedDescriptorsCount());
+    auto allocationResult = commandList.getDescriptorController().allocateGpu(heapType, calculateStagedDescriptorsCount());
     this->gpuDescriptorAllocations.push_back(std::move(std::get<DescriptorAllocation>(allocationResult)));
     CD3DX12_CPU_DESCRIPTOR_HANDLE currentCpuHandle = gpuDescriptorAllocations.back().getCpuHandle();
     CD3DX12_GPU_DESCRIPTOR_HANDLE currentGpuHandle = gpuDescriptorAllocations.back().getGpuHandle();

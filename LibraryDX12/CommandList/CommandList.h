@@ -1,7 +1,7 @@
 #pragma once
 
-#include "CommandList/CommandAllocatorManager.h"
-#include "Descriptor/DescriptorManager.h"
+#include "CommandList/CommandAllocatorController.h"
+#include "Descriptor/DescriptorController.h"
 #include "Descriptor/GpuDescriptorHeapController.h"
 #include "PipelineState/PipelineStateController.h"
 #include "Resource/ResourceUsageTracker.h"
@@ -21,9 +21,9 @@ class MeshImpl;
 /// Class encapsulating DX12 command list
 class CommandList : DXD::NonCopyableAndMovable {
 public:
-    /// Retrieves command list and allocator from the commandAllocatorManager's pool
-    CommandList(DescriptorManager &descriptorManager, CommandAllocatorManager &commandAllocatorManager, ID3D12PipelineState *initialPipelineState);
-    /// Registers the command list and allocator back to the commandAllocatorManager for later reuse
+    /// Retrieves command list and allocator from the CommandAllocatorController's pool
+    CommandList(DescriptorController &descriptorController, CommandAllocatorController &commandAllocatorController, ID3D12PipelineState *initialPipelineState);
+    /// Registers the command list and allocator back to the commandAllocatorController for later reuse
     ~CommandList();
 
     void transitionBarrierSingle(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES stateBefore, D3D12_RESOURCE_STATES stateAfter);
@@ -75,16 +75,16 @@ public:
     void addUsedResources(const ID3D12ResourcePtr *resources, UINT resourcesCount);
 
     auto getCommandList() { return commandList; }
-    auto getDevice() const { return commandAllocatorManager.getDevice(); }
-    auto &getDescriptorManager() const { return descriptorManager; }
+    auto getDevice() const { return commandAllocatorController.getDevice(); }
+    auto &getDescriptorController() const { return descriptorController; }
     auto getPipelineStateIdentifier() const { return pipelineStateIdentifier; }
 
 private:
     void commitDescriptors();
 
     // Base CommandList data
-    DescriptorManager &descriptorManager;
-    CommandAllocatorManager &commandAllocatorManager;
+    DescriptorController &descriptorController;
+    CommandAllocatorController &commandAllocatorController;
     ID3D12CommandAllocatorPtr commandAllocator;
     ID3D12GraphicsCommandListPtr commandList;
 

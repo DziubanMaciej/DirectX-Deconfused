@@ -1,12 +1,12 @@
 #include "RenderData.h"
 
-RenderData::RenderData(ID3D12DevicePtr &device, DescriptorManager &descriptorManager, int width, int height)
+RenderData::RenderData(ID3D12DevicePtr &device, DescriptorController &descriptorController, int width, int height)
     : device(device),
-      postProcessSrvDescriptor(descriptorManager.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1)),
-      postProcessRtvDescriptor(descriptorManager.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1)),
-      shadowMapDsvDescriptors(descriptorManager.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 8)),
-      shadowMapSrvDescriptors(descriptorManager.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 8)),
-      dsvDescriptor(descriptorManager.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1)) {
+      postProcessSrvDescriptor(descriptorController.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1)),
+      postProcessRtvDescriptor(descriptorController.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1)),
+      shadowMapDsvDescriptors(descriptorController.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 8)),
+      shadowMapSrvDescriptors(descriptorController.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 8)),
+      dsvDescriptor(descriptorController.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1)) {
 }
 
 void RenderData::resize(int width, int height) {

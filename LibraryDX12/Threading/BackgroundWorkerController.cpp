@@ -1,6 +1,6 @@
-#include "BackgroundWorkerManager.h"
+#include "BackgroundWorkerController.h"
 
-BackgroundWorkerManager::BackgroundWorkerManager() {
+BackgroundWorkerController::BackgroundWorkerController() {
     auto concurentThreadsSupported = std::thread::hardware_concurrency();
     if (concurentThreadsSupported == 0u) {
         concurentThreadsSupported = 1u;
@@ -11,32 +11,32 @@ BackgroundWorkerManager::BackgroundWorkerManager() {
     }
 }
 
-BackgroundWorkerManager::~BackgroundWorkerManager() {
+BackgroundWorkerController::~BackgroundWorkerController() {
     terminate.store(true);
     taskQueue.clear();
     workers.clear();
 }
 
-void BackgroundWorkerManager::pushTask(BackgroundWorker::Task task) {
+void BackgroundWorkerController::pushTask(BackgroundWorker::Task task) {
     BackgroundWorker::TaskData taskData{task, nullptr, nullptr};
     pushTask(taskData);
 }
 
-void BackgroundWorkerManager::pushTask(BackgroundWorker::Task task, std::atomic_bool &completed) {
+void BackgroundWorkerController::pushTask(BackgroundWorker::Task task, std::atomic_bool &completed) {
     BackgroundWorker::TaskData taskData{task, nullptr, &completed};
     pushTask(taskData);
 }
 
-void BackgroundWorkerManager::pushTask(BackgroundWorker::Task task, std::condition_variable &completed) {
+void BackgroundWorkerController::pushTask(BackgroundWorker::Task task, std::condition_variable &completed) {
     BackgroundWorker::TaskData taskData{task, &completed, nullptr};
     pushTask(taskData);
 }
 
-void BackgroundWorkerManager::pushTask(BackgroundWorker::Task task, std::atomic_bool &completed, std::condition_variable &completedCV) {
+void BackgroundWorkerController::pushTask(BackgroundWorker::Task task, std::atomic_bool &completed, std::condition_variable &completedCV) {
     BackgroundWorker::TaskData taskData{task, &completedCV, &completed};
     pushTask(taskData);
 }
 
-void BackgroundWorkerManager::pushTask(BackgroundWorker::TaskData taskData) {
+void BackgroundWorkerController::pushTask(BackgroundWorker::TaskData taskData) {
     taskQueue.push(taskData);
 }

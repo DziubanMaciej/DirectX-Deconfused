@@ -1,11 +1,11 @@
 #include "ConstantBuffer.h"
 
-#include "Descriptor/DescriptorManager.h"
+#include "Descriptor/DescriptorController.h"
 #include "Utility/ThrowIfFailed.h"
 
-ConstantBuffer::ConstantBuffer(ID3D12DevicePtr device, DescriptorManager &descriptorManager, UINT size)
+ConstantBuffer::ConstantBuffer(ID3D12DevicePtr device, DescriptorController &descriptorController, UINT size)
     : Resource(device, D3D12_HEAP_TYPE_UPLOAD, D3D12_HEAP_FLAG_NONE, BitHelper::alignUp<64 * 1024>(size), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr),
-      descriptor(descriptorManager.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1)),
+      descriptor(descriptorController.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1)),
       size(size),
       mappedConstantBuffer(map(this->resource)),
       data(std::make_unique<uint8_t[]>(size)) {

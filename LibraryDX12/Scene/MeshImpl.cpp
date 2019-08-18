@@ -23,7 +23,7 @@ MeshImpl::MeshImpl(ApplicationImpl &application, const std::wstring &filePath, b
     auto task = [this, &application, filePath, useTextures]() {
         loadAndUploadObj(application, filePath, useTextures);
     };
-    application.getBackgroundWorkerManager().pushTask(task, this->loadingComplete);
+    application.getBackgroundWorkerController().pushTask(task, this->loadingComplete);
 }
 
 void MeshImpl::loadAndUploadObj(ApplicationImpl &application, const std::wstring &filePath, bool useTextures) {
@@ -262,7 +262,7 @@ MeshImpl::UploadResults MeshImpl::uploadToGPU(ApplicationImpl &application, cons
     auto &commandQueue = application.getCopyCommandQueue();
 
     // Record command list for GPU upload
-    CommandList commandList{application.getDescriptorController(), commandQueue.getCommandAllocatorManager(), nullptr};
+    CommandList commandList{application.getDescriptorController(), commandQueue.getCommandAllocatorController(), nullptr};
     results.vertexBuffer = std::make_unique<VertexBuffer>(device, commandList, vertexElements.data(), verticesCount, vertexSizeInBytes);
     if (useIndexBuffer) {
         results.indexBuffer = std::make_unique<IndexBuffer>(device, commandList, indices.data(), static_cast<UINT>(indices.size()));

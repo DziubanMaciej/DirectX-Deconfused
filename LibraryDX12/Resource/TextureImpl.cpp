@@ -21,7 +21,7 @@ TextureImpl::TextureImpl(ApplicationImpl &application, const std::wstring &fileP
     auto task = [this, &application, filePath]() {
         loadAndUpload(application, filePath);
     };
-    application.getBackgroundWorkerManager().pushTask(task, this->loadingComplete);
+    application.getBackgroundWorkerController().pushTask(task, this->loadingComplete);
 }
 
 void TextureImpl::loadAndUpload(ApplicationImpl &application, const std::wstring &filePath) {

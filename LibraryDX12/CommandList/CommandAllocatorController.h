@@ -17,15 +17,15 @@ class Fence;
 /// as soon as the CommandList is scheduled for execution to the CommandQueue.
 ///
 /// This class should be directly used only by CommandList class
-class CommandAllocatorManager : DXD::NonCopyableAndMovable {
+class CommandAllocatorController : DXD::NonCopyableAndMovable {
     struct CommandAllocatorEntry {
         ID3D12CommandAllocatorPtr commandAllocator;
         uint64_t lastFence;
     };
 
 public:
-    CommandAllocatorManager(ID3D12DevicePtr device, Fence &fence, D3D12_COMMAND_LIST_TYPE type);
-    virtual ~CommandAllocatorManager() = default;
+    CommandAllocatorController(ID3D12DevicePtr device, Fence &fence, D3D12_COMMAND_LIST_TYPE type);
+    virtual ~CommandAllocatorController() = default;
 
     /// Retrieves command allocator that was registered to this manager
     /// (see registerAllocatorAndList(ID3D12CommandAllocatorPtr, ID3D12GraphicsCommandListPtr, uint64_t)).

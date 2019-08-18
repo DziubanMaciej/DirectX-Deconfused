@@ -2,9 +2,9 @@
 
 #include "Application/SettingsImpl.h"
 #include "CommandList/CommandQueue.h"
-#include "Descriptor/DescriptorManager.h"
+#include "Descriptor/DescriptorController.h"
 #include "PipelineState/PipelineStateController.h"
-#include "Threading/BackgroundWorkerManager.h"
+#include "Threading/BackgroundWorkerController.h"
 
 #include "DXD/Application.h"
 
@@ -18,38 +18,47 @@ protected:
 public:
     ~ApplicationImpl() override;
 
-    void setCallbackHandler(DXD::CallbackHandler *callbackHandler) override;
-    DXD::CallbackHandler *getCallbackHandler() const;
-    DXD::Settings &getSettings() override;
+    // API accessors
+    void setCallbackHandler(DXD::CallbackHandler *arg) override { this->callbackHandler = arg; }
+    DXD::Settings &getSettings() override { return settings; }
 
+    // Flushing all work
     void flushAllQueues();
     void flushAllResources();
 
+    // Internal getters
     auto &getSettingsImpl() { return settings; }
+    auto getCallbackHandler() const { return callbackHandler; }
     auto getFactory() { return factory; }
     auto getAdapter() { return adapter; }
     auto getDevice() { return device; }
     auto &getPipelineStateController() { return pipelineStateController; }
-    auto &getDescriptorController() { return descriptorManager; }
-    auto &getBackgroundWorkerManager() { return backgroundWorkerManager; }
+    auto &getDescriptorController() { return descriptorController; }
+    auto &getBackgroundWorkerController() { return backgroundWorkerController; }
     auto &getDirectCommandQueue() { return directCommandQueue; }
     auto &getCopyCommandQueue() { return copyCommandQueue; }
 
 protected:
+    // Creation helpers
     static bool enableDebugLayer(bool debugLayer);
     static IDXGIFactoryPtr createFactory(bool debugLayer);
     static IDXGIAdapterPtr createAdapter(IDXGIFactoryPtr factory, bool useWarp);
     static ID3D12DevicePtr createDevice(IDXGIAdapterPtr &adapter, bool debugLayer);
 
+    // DX12 context
     const bool debugLayerEnabled;
-    DXD::CallbackHandler *callbackHandler;
-    SettingsImpl settings;
     IDXGIFactoryPtr factory;
     IDXGIAdapterPtr adapter;
     ID3D12DevicePtr device;
+
+    // API objects
+    SettingsImpl settings = {};
+    DXD::CallbackHandler *callbackHandler = {};
+
+    // Internal objects used globally
     PipelineStateController pipelineStateController;
-    DescriptorManager descriptorManager;
+    DescriptorController descriptorController;
     CommandQueue copyCommandQueue;
     CommandQueue directCommandQueue;
-    BackgroundWorkerManager backgroundWorkerManager;
+    BackgroundWorkerController backgroundWorkerController;
 };

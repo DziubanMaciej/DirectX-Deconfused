@@ -2,25 +2,28 @@
 
 #include "Utility/ThrowIfFailed.h"
 
-// ------------------------------------------------------------- Creating
-
 namespace DXD {
 std::unique_ptr<Application> Application::create(bool debugLayer) {
     return std::unique_ptr<Application>{new ApplicationImpl(debugLayer)};
 }
 } // namespace DXD
 
-ApplicationImpl::ApplicationImpl(bool debugLayer) : debugLayerEnabled(enableDebugLayer(debugLayer)),
-                                                    factory(createFactory(debugLayerEnabled)),
-                                                    adapter(createAdapter(factory, false)),
-                                                    device(createDevice(adapter, debugLayerEnabled)),
-                                                    pipelineStateController(device),
-                                                    descriptorManager(device),
-                                                    copyCommandQueue(device, D3D12_COMMAND_LIST_TYPE_COPY),
-                                                    directCommandQueue(device, D3D12_COMMAND_LIST_TYPE_DIRECT),
-                                                    backgroundWorkerManager() {
+ApplicationImpl::ApplicationImpl(bool debugLayer)
+    : debugLayerEnabled(enableDebugLayer(debugLayer)),
+      factory(createFactory(debugLayerEnabled)),
+      adapter(createAdapter(factory, false)),
+      device(createDevice(adapter, debugLayerEnabled)),
+      pipelineStateController(device),
+      descriptorController(device),
+      copyCommandQueue(device, D3D12_COMMAND_LIST_TYPE_COPY),
+      directCommandQueue(device, D3D12_COMMAND_LIST_TYPE_DIRECT),
+      backgroundWorkerController() {
     pipelineStateController.compileAll();
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+}
+
+ApplicationImpl::~ApplicationImpl() {
+    CoUninitialize();
 }
 
 bool ApplicationImpl::enableDebugLayer(bool debugLayer) {
@@ -91,24 +94,6 @@ ID3D12DevicePtr ApplicationImpl::createDevice(IDXGIAdapterPtr &adapter, bool deb
         }
     }
     return device;
-}
-
-// ------------------------------------------------------------- Accessors
-
-ApplicationImpl::~ApplicationImpl() {
-    CoUninitialize();
-}
-
-void ApplicationImpl::setCallbackHandler(DXD::CallbackHandler *callbackHandler) {
-    this->callbackHandler = callbackHandler;
-}
-
-DXD::CallbackHandler *ApplicationImpl::getCallbackHandler() const {
-    return this->callbackHandler;
-}
-
-DXD::Settings &ApplicationImpl::getSettings() {
-    return this->settings;
 }
 
 void ApplicationImpl::flushAllQueues() {

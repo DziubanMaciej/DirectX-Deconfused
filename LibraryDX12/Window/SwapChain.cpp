@@ -10,10 +10,10 @@
 SwapChain::SwapChain(HWND windowHandle, ApplicationImpl &application, CommandQueue &commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount)
     : swapChain(createSwapChain(windowHandle, application.getFactory(), commandQueue, width, height, bufferCount)),
       device(application.getDevice()),
-      descriptorManager(application.getDescriptorController()),
+      descriptorController(application.getDescriptorController()),
       settings(application.getSettingsImpl()),
       backBufferEntries(bufferCount),
-      backBufferRtvDescriptors(descriptorManager.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, bufferCount)),
+      backBufferRtvDescriptors(descriptorController.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, bufferCount)),
       width(width),
       height(height),
       currentBackBufferIndex(swapChain->GetCurrentBackBufferIndex()) {

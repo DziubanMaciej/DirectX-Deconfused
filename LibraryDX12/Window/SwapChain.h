@@ -13,7 +13,7 @@
 #include <vector>
 
 class CommandQueue;
-class DescriptorManager;
+class DescriptorController;
 
 class SwapChain : DXD::NonCopyableAndMovable {
     struct BackBufferEntry {
@@ -43,7 +43,7 @@ private:
     // Base objects
     IDXGISwapChainPtr swapChain;
     ID3D12DevicePtr device;
-    DescriptorManager &descriptorManager;
+    DescriptorController &descriptorController;
     SettingsImpl &settings;
 
     // Back buffer data

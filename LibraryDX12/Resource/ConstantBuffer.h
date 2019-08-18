@@ -6,13 +6,13 @@
 
 #include <memory>
 
-class DescriptorManager;
+class DescriptorController;
 
 // TODO: mapped buffer volatile?
 // TODO: buffer versioning
 class ConstantBuffer : public Resource {
 public:
-    ConstantBuffer(ID3D12DevicePtr device, DescriptorManager &descriptorManager, UINT size);
+    ConstantBuffer(ID3D12DevicePtr device, DescriptorController &descriptorController, UINT size);
     ~ConstantBuffer() override;
 
     template <typename CbType>

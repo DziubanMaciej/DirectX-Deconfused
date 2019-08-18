@@ -10,7 +10,7 @@ CommandQueue::CommandQueue(ID3D12DevicePtr device, D3D12_COMMAND_LIST_TYPE type)
       commandQueue(createCommandQueue(device, type)),
       type(type),
       fence(device),
-      commandAllocatorManager(device, fence, type) {
+      commandAllocatorController(device, fence, type) {
 }
 
 CommandQueue::~CommandQueue() {
