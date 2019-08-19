@@ -60,6 +60,9 @@ void PipelineStateController::compile(Identifier identifier) {
     case Identifier::PIPELINE_STATE_SM_TEXTURE_NORMAL:
         compilePipelineStateShadowMapTextureNormal(rootSignature, pipelineState);
         break;
+    case Identifier::PIPELINE_STATE_POST_PROCESS_CONVOLUTION:
+        compilePipelineStatePostProcessConvolution(rootSignature, pipelineState);
+        break;
     default:
         UNREACHABLE_CODE();
     }
@@ -224,5 +227,37 @@ void PipelineStateController::compilePipelineStateShadowMapTextureNormal(RootSig
     // Pipeline state object
     PipelineState{inputLayout, rootSignature}
         .VS(L"vertex_normal_texture_sm.hlsl")
+        .compile(device, pipelineState);
+}
+
+void PipelineStateController::compilePipelineStatePostProcessConvolution(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
+    // Root signature - crossthread data
+    D3D12_STATIC_SAMPLER_DESC sampler = {};
+    sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+    sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+    sampler.MaxLOD = D3D12_FLOAT32_MAX;
+    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+    DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
+    table.appendSrvRange(t(0), 1);
+    table.appendCbvRange(b(0), 1);
+    rootSignature
+        .appendStaticSampler(s(0), sampler)
+        .appendDescriptorTable(std::move(table))
+        .compile(device);
+
+    // Input layout - per vertex data
+    const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+    };
+
+    // Pipeline state object
+    PipelineState{inputLayout, rootSignature}
+        .VS(L"vertex_post_process.hlsl")
+        .PS(L"pixel_post_process_convolution.hlsl")
+        .disableDepthStencil()
         .compile(device, pipelineState);
 }

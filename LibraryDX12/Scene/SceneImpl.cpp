@@ -267,23 +267,40 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
 
 void SceneImpl::renderPostProcess(SwapChain &swapChain, RenderData &renderData, CommandList &commandList,
                                   Resource &input, Resource &output, D3D12_CPU_DESCRIPTOR_HANDLE outputDescriptor) {
-    // Set resource to correct state
-    commandList.transitionBarrier(input, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    if (application.getSettingsImpl().getVerticalSyncEnabled()) {
+        // Set resource to correct state
+        commandList.transitionBarrier(input, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-    // Set all the states
-    commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS);
-    commandList.OMSetRenderTargetNoDepth(outputDescriptor, output.getResource());
-    commandList.setCbvSrvUavDescriptorTable(1, 0, renderData.getPostProcessSrvDescriptor());
-    commandList.clearRenderTargetView(swapChain.getCurrentBackBufferDescriptor(), backgroundColor);
+        // Set all the states
+        commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_CONVOLUTION);
+        commandList.OMSetRenderTargetNoDepth(outputDescriptor, output.getResource());
+        commandList.setCbvSrvUavDescriptorTable(0, 0, renderData.getPostProcessSrvDescriptor());
+        commandList.setCbvSrvUavDescriptorTable(0, 1, renderData.getPostProcessConvolutionCB().getCbvHandle(), 1);
+        commandList.clearRenderTargetView(swapChain.getCurrentBackBufferDescriptor(), backgroundColor);
 
-    // Draw black bars
-    commandList.IASetVertexBuffer(*postProcessVB);
-    PostProcessCB ppcb = {};
-    ppcb.screenWidth = static_cast<float>(swapChain.getWidth());
-    ppcb.screenHeight = static_cast<float>(swapChain.getHeight());
-    commandList.setGraphicsRoot32BitConstant(0, ppcb);
-    commandList.draw(6u);
+        // Draw black bars
+        commandList.IASetVertexBuffer(*postProcessVB);
+        commandList.draw(6u);
+    } else {
+        // Set resource to correct state
+        commandList.transitionBarrier(input, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+        // Set all the states
+        commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS);
+        commandList.OMSetRenderTargetNoDepth(outputDescriptor, output.getResource());
+        commandList.setCbvSrvUavDescriptorTable(1, 0, renderData.getPostProcessSrvDescriptor());
+        commandList.clearRenderTargetView(swapChain.getCurrentBackBufferDescriptor(), backgroundColor);
+
+        // Draw black bars
+        commandList.IASetVertexBuffer(*postProcessVB);
+        PostProcessCB ppcb = {};
+        ppcb.screenWidth = static_cast<float>(swapChain.getWidth());
+        ppcb.screenHeight = static_cast<float>(swapChain.getHeight());
+        commandList.setGraphicsRoot32BitConstant(0, ppcb);
+        commandList.draw(6u);
+    }
 }
 
 void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {

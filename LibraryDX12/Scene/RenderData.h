@@ -3,6 +3,7 @@
 #include "Descriptor/DescriptorAllocation.h"
 #include "Descriptor/DescriptorController.h"
 #include "Resource/Resource.h"
+#include "Resource/ConstantBuffer.h"
 
 class RenderData {
 public:
@@ -13,6 +14,7 @@ public:
     Resource &getPostProcessRenderTarget() { return *postProcessRenderTarget; }
     const DescriptorAllocation &getPostProcessSrvDescriptor() const { return postProcessSrvDescriptor; }
     const DescriptorAllocation &getPostProcessRtvDescriptor() const { return postProcessRtvDescriptor; }
+    ConstantBuffer &getPostProcessConvolutionCB() { return postProcessConvolutionCb; }
 
     Resource &getShadowMap(int i) { return *shadowMap[i]; }
     const DescriptorAllocation &getShadowMapDsvDescriptors() const { return shadowMapDsvDescriptors; }
@@ -29,6 +31,7 @@ private:
     std::unique_ptr<Resource> postProcessRenderTarget = {};
     DescriptorAllocation postProcessSrvDescriptor = {};
     DescriptorAllocation postProcessRtvDescriptor = {};
+    ConstantBuffer postProcessConvolutionCb;
 
     // Shadow maps
     std::unique_ptr<Resource> shadowMap[8] = {};

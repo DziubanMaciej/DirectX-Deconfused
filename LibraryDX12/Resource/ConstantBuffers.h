@@ -10,6 +10,13 @@ struct PostProcessCB {
     float screenHeight;
 };
 
+struct PostProcessConvolutionCB {
+    XMFLOAT4X3 kernel; // We actually use 3x3, but 4x3 is required due to HLSL packing
+    float screenWidth;
+    float screenHeight;
+    float sum;
+};
+
 struct ObjectProperties {
     XMFLOAT3 objectColor;
     float objectSpecularity;
