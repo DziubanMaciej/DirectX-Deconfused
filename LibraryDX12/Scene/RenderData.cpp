@@ -11,9 +11,7 @@ RenderData::RenderData(ID3D12DevicePtr &device, DescriptorController &descriptor
 }
 
 PostProcessRenderTargets::PostProcessRenderTargets(ID3D12DevicePtr &device, DescriptorController &descriptorController)
-    : device(device),
-      srvDescriptors(descriptorController.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 2)),
-      rtvDescriptors(descriptorController.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2)) {
+    : device(device) {
 }
 
 void RenderData::resize(int width, int height) {
@@ -84,14 +82,14 @@ void PostProcessRenderTargets::resize(int width, int height) {
     renderTargetDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 
     for (int i = 0; i <= 1; i++) { // Initialize resource0 and resource1 the same way
-        resources[i] = std::make_unique<Resource>(
+        resources[i] = std::make_unique<RenderTarget>(
             device,
             &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
             D3D12_HEAP_FLAG_NONE,
             &renderTargetDesc,
             D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
             nullptr);
-        device->CreateRenderTargetView(resources[i]->getResource().Get(), nullptr, rtvDescriptors.getCpuHandle(i));
-        device->CreateShaderResourceView(resources[i]->getResource().Get(), nullptr, srvDescriptors.getCpuHandle(i));
+        resources[i]->createSrv(nullptr);
+        resources[i]->createRtv(nullptr);
     }
 }

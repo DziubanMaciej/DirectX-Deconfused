@@ -3,31 +3,23 @@
 #include "Descriptor/DescriptorAllocation.h"
 #include "Descriptor/DescriptorController.h"
 #include "Resource/ConstantBuffer.h"
-#include "Resource/Resource.h"
+#include "Resource/RenderTarget.h"
 
 struct PostProcessRenderTargets {
     PostProcessRenderTargets(ID3D12DevicePtr &device, DescriptorController &descriptorController);
     void resize(int width, int height);
 
-    Resource &getSource() { return *resources[sourceResourceIndex]; }
-    Resource &getDestination() { return *resources[destinationResourceIndex]; }
-    D3D12_CPU_DESCRIPTOR_HANDLE getSourceSrv() { return srvDescriptors.getCpuHandle(sourceResourceIndex); }
-    D3D12_CPU_DESCRIPTOR_HANDLE getDestinationSrv() { return srvDescriptors.getCpuHandle(destinationResourceIndex); }
-    D3D12_CPU_DESCRIPTOR_HANDLE getSourceRtv() { return rtvDescriptors.getCpuHandle(sourceResourceIndex); }
-    D3D12_CPU_DESCRIPTOR_HANDLE getDestinationRtv() { return rtvDescriptors.getCpuHandle(destinationResourceIndex); }
+    RenderTarget &getSource() { return *resources[sourceResourceIndex]; }
+    RenderTarget &getDestination() { return *resources[1 - sourceResourceIndex]; }
 
     void swapResources() {
         sourceResourceIndex = 1 - sourceResourceIndex;
-        destinationResourceIndex = 1 - destinationResourceIndex;
     }
 
 private:
     ID3D12DevicePtr device = {};
     int sourceResourceIndex = 0;
-    int destinationResourceIndex = 1;
-    std::unique_ptr<Resource> resources[2] = {};
-    DescriptorAllocation srvDescriptors;
-    DescriptorAllocation rtvDescriptors;
+    std::unique_ptr<RenderTarget> resources[2] = {};
 };
 
 class RenderData {

@@ -174,18 +174,17 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
     }
 }
 
-void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, CommandList &commandList,
-                              Resource &output, D3D12_CPU_DESCRIPTOR_HANDLE outputDescriptor) {
+void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, RenderTarget &output) {
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
 
     // Transition to RENDER_TARGET
     commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-    commandList.OMSetRenderTarget(outputDescriptor, output.getResource(),
+    commandList.OMSetRenderTarget(output.getRtv(), output.getResource(),
                                   renderData.getDepthStencilBufferDescriptor().getCpuHandle(), renderData.getDepthStencilBuffer().getResource());
 
     // Render (clear color)
-    commandList.clearRenderTargetView(outputDescriptor, backgroundColor);
+    commandList.clearRenderTargetView(output.getRtv(), backgroundColor);
     commandList.clearDepthStencilView(renderData.getDepthStencilBufferDescriptor().getCpuHandle(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
     // View projection matrix
@@ -281,7 +280,7 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
 }
 
 void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTargets &renderTargets, CommandList &commandList,
-                                    size_t enablePostProcessesCount, Resource &output, D3D12_CPU_DESCRIPTOR_HANDLE outputDescriptor) {
+                                    size_t enablePostProcessesCount, RenderTarget &output) {
     // TODO skip disabled post processes
     size_t postProcessIndex = 0u;
     for (PostProcessImpl *postProcess : postProcesses) {
@@ -290,19 +289,17 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
         }
 
         // Get source and destination resources
-        Resource &source = renderTargets.getSource();
-        D3D12_CPU_DESCRIPTOR_HANDLE sourceDescriptor = renderTargets.getSourceSrv();
         const bool lastPostProcess = (postProcessIndex == enablePostProcessesCount - 1);
-        Resource &destination = lastPostProcess ? output : renderTargets.getDestination();
-        D3D12_CPU_DESCRIPTOR_HANDLE destinationDescriptor = lastPostProcess ? outputDescriptor : renderTargets.getDestinationRtv();
+        RenderTarget &destination = lastPostProcess ? output : renderTargets.getDestination();
+        RenderTarget &source = renderTargets.getSource();
 
         // Resources states
         commandList.transitionBarrier(source, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
         commandList.transitionBarrier(destination, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
         // Prepare render target
-        commandList.OMSetRenderTargetNoDepth(destinationDescriptor, destination.getResource());
-        commandList.clearRenderTargetView(destinationDescriptor, backgroundColor);
+        commandList.OMSetRenderTargetNoDepth(destination.getRtv(), destination.getResource());
+        commandList.clearRenderTargetView(destination.getRtv(), backgroundColor);
 
         // Render post process base on its type
         if (postProcess->getType() == PostProcessImpl::Type::CONVOLUTION) {
@@ -313,7 +310,7 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
 
             // Pipeline state
             commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_CONVOLUTION);
-            commandList.setCbvSrvUavDescriptorTable(0, 0, sourceDescriptor, 1);
+            commandList.setCbvSrvUavDescriptorTable(0, 0, source.getSrv(), 1);
             commandList.setGraphicsRoot32BitConstant(1, postProcessData);
 
             // Render
@@ -327,7 +324,7 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
 
             // Pipeline state
             commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_BLACK_BARS);
-            commandList.setCbvSrvUavDescriptorTable(1, 0, sourceDescriptor, 1);
+            commandList.setCbvSrvUavDescriptorTable(1, 0, source.getSrv(), 1);
             commandList.setGraphicsRoot32BitConstant(0, postProcessData);
 
             // Render
@@ -362,13 +359,12 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     // Render 3D
     const auto postProcessesCount = getEnabledPostProcessesCount();
     auto &renderForwardOutput = postProcessesCount == 0 ? backBuffer : renderData.getPostProcessRenderTargets().getDestination();
-    auto renderForwardOutputDescriptor = postProcessesCount == 0 ? backBuffer.getRtv() : renderData.getPostProcessRenderTargets().getDestinationRtv();
-    renderForward(swapChain, renderData, commandList, renderForwardOutput, renderForwardOutputDescriptor);
+    renderForward(swapChain, renderData, commandList, renderForwardOutput);
     renderData.getPostProcessRenderTargets().swapResources();
 
     // Render post processes
     if (postProcessesCount != 0) {
-        renderPostProcesses(swapChain, renderData.getPostProcessRenderTargets(), commandList, postProcessesCount, backBuffer, backBuffer.getRtv());
+        renderPostProcesses(swapChain, renderData.getPostProcessRenderTargets(), commandList, postProcessesCount, backBuffer);
     }
 
     // Transition to PRESENT
