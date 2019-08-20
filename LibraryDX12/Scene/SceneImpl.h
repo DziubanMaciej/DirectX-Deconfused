@@ -41,12 +41,13 @@ public:
 
 protected:
     void inspectObjectsNotReady();
+    size_t getEnabledPostProcessesCount() const;
 
     void renderShadowMaps(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
     void renderForward(SwapChain &swapChain, RenderData &renderData, CommandList &commandList,
                        Resource &output, D3D12_CPU_DESCRIPTOR_HANDLE outputDescriptor);
     void renderPostProcesses(SwapChain &swapChain, PostProcessRenderTargets &renderTargets, CommandList &commandList,
-                             Resource &output, D3D12_CPU_DESCRIPTOR_HANDLE outputDescriptor);
+                             size_t enablePostProcessesCount, Resource &output, D3D12_CPU_DESCRIPTOR_HANDLE outputDescriptor);
 
     // Context
     ApplicationImpl &application;

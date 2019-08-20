@@ -98,6 +98,16 @@ void SceneImpl::inspectObjectsNotReady() {
     }
 }
 
+size_t SceneImpl::getEnabledPostProcessesCount() const {
+    size_t count = 0u;
+    for (const auto &postProcess : this->postProcesses) {
+        if (postProcess->isEnabled()) {
+            count++;
+        }
+    }
+    return count;
+}
+
 void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, CommandList &commandList) {
     const auto shadowMapsUsed = std::min(size_t{8u}, lights.size());
 
@@ -271,15 +281,18 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
 }
 
 void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTargets &renderTargets, CommandList &commandList,
-                                    Resource &output, D3D12_CPU_DESCRIPTOR_HANDLE outputDescriptor) {
+                                    size_t enablePostProcessesCount, Resource &output, D3D12_CPU_DESCRIPTOR_HANDLE outputDescriptor) {
     // TODO skip disabled post processes
-    for (auto postProcessIndex = 0u; postProcessIndex < postProcesses.size(); postProcessIndex++) {
-        PostProcessImpl &postProcess = *postProcesses[postProcessIndex];
+    size_t postProcessIndex = 0u;
+    for (PostProcessImpl *postProcess : postProcesses) {
+        if (!postProcess->isEnabled()) {
+            continue;
+        }
 
         // Get source and destination resources
         Resource &source = renderTargets.getSource();
         D3D12_CPU_DESCRIPTOR_HANDLE sourceDescriptor = renderTargets.getSourceSrv();
-        const bool lastPostProcess = (postProcessIndex == postProcesses.size() - 1);
+        const bool lastPostProcess = (postProcessIndex == enablePostProcessesCount - 1);
         Resource &destination = lastPostProcess ? output : renderTargets.getDestination();
         D3D12_CPU_DESCRIPTOR_HANDLE destinationDescriptor = lastPostProcess ? outputDescriptor : renderTargets.getDestinationRtv();
 
@@ -292,9 +305,9 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
         commandList.clearRenderTargetView(destinationDescriptor, backgroundColor);
 
         // Render post process base on its type
-        if (postProcess.getType() == PostProcessImpl::Type::CONVOLUTION) {
+        if (postProcess->getType() == PostProcessImpl::Type::CONVOLUTION) {
             // Constant buffer
-            auto &postProcessData = postProcess.getDataConvolution();
+            auto &postProcessData = postProcess->getDataConvolution();
             postProcessData.screenWidth = static_cast<float>(swapChain.getWidth());
             postProcessData.screenHeight = static_cast<float>(swapChain.getHeight());
 
@@ -306,7 +319,7 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
             // Render
             commandList.IASetVertexBuffer(*postProcessVB);
             commandList.draw(6u);
-        } else if (postProcess.getType() == PostProcessImpl::Type::BLACK_BARS) {
+        } else if (postProcess->getType() == PostProcessImpl::Type::BLACK_BARS) {
             // Constant buffer
             PostProcessCB ppcb = {};
             ppcb.screenWidth = static_cast<float>(swapChain.getWidth());
@@ -325,6 +338,7 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
         }
 
         renderTargets.swapResources();
+        postProcessIndex++;
     }
 
     // Swap once again, so two resource state transitions will be avoided in next frame
@@ -347,15 +361,16 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     renderShadowMaps(swapChain, renderData, commandList);
 
     // Render 3D
-    // TODO if there are no post processes we can render directly to a back buffer
-    auto &renderForwardOutput = renderData.getPostProcessRenderTargets().getDestination();
-    auto renderForwardOutputDescriptor = renderData.getPostProcessRenderTargets().getDestinationRtv();
+    const auto postProcessesCount = getEnabledPostProcessesCount();
+    auto &renderForwardOutput = postProcessesCount == 0 ? *backBuffer : renderData.getPostProcessRenderTargets().getDestination();
+    auto renderForwardOutputDescriptor = postProcessesCount == 0 ? backBufferDescriptorHandle : renderData.getPostProcessRenderTargets().getDestinationRtv();
     renderForward(swapChain, renderData, commandList, renderForwardOutput, renderForwardOutputDescriptor);
     renderData.getPostProcessRenderTargets().swapResources();
 
     // Render post processes
-    // TODO skip if there are none
-    renderPostProcesses(swapChain, renderData.getPostProcessRenderTargets(), commandList, *backBuffer, backBufferDescriptorHandle);
+    if (postProcessesCount != 0) {
+        renderPostProcesses(swapChain, renderData.getPostProcessRenderTargets(), commandList, postProcessesCount, *backBuffer, backBufferDescriptorHandle);
+    }
 
     // Transition to PRESENT
     commandList.transitionBarrier(*backBuffer, D3D12_RESOURCE_STATE_PRESENT);
