@@ -1,3 +1,5 @@
+#pragma once
+
 #include "DXD/ExternalHeadersWrappers/DirectXMath.h"
 
 struct ModelMvp {
@@ -14,7 +16,7 @@ struct PostProcessConvolutionCB {
     XMFLOAT4X3 kernel; // We actually use 3x3, but 4x3 is required due to HLSL packing
     float screenWidth;
     float screenHeight;
-    float sum;
+    float divider;
 };
 
 struct ObjectProperties {

@@ -6,39 +6,12 @@ RenderData::RenderData(ID3D12DevicePtr &device, DescriptorController &descriptor
     : device(device),
       postProcessSrvDescriptor(descriptorController.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1)),
       postProcessRtvDescriptor(descriptorController.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1)),
-      postProcessConvolutionCb(device, descriptorController, sizeof(PostProcessConvolutionCB)),
       shadowMapDsvDescriptors(descriptorController.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 8)),
       shadowMapSrvDescriptors(descriptorController.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 8)),
       dsvDescriptor(descriptorController.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1)) {
 }
 
 void RenderData::resize(int width, int height) {
-    width = std::max(width, 1);
-    height = std::max(height, 1);
-
-    auto data = postProcessConvolutionCb.getData<PostProcessConvolutionCB>();
-    data->screenWidth = width;
-    data->screenHeight = height;
-
-    data->kernel = XMFLOAT4X3(1.f, 2.f, 1.f, 0.f, 2.f, 4.f, 2.f, 0.f, 1.f, 2.f, 1.f, 0.f);
-    data->sum = 16;
-
-    data->kernel = XMFLOAT4X3(-1.f, -1.f, -1.f, 0.f, -1.f, 8.f, -1.f, 0.f, -1.f, -1.f, -1.f, 0.f);
-    data->sum = 1;
-
-    //data->kernel = XMFLOAT3X3(-1.f, -1.f, -1.f, -1.f, 8.f, -1.f, -1.f, -1.f, -1.f);
-    //data->sum = 1.f;
-
-    //data->kernel = XMFLOAT3X3(1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f, 1.f);
-    //data->sum = 9.f;
-
-    //data->kernel = XMFLOAT4X3(-1.f, -1.f, -1.f, -1.f, 8.f, -1.f, -1.f, -1.f, -1.f, 0.f, 0.f, 0.f);
-    // data->sum = 1;
-
-    // data->kernel = XMFLOAT4X3(0.1f, 0.2f, 0.3f, 0.f, 0.4f, 0.5f, 0.6f, 0.f, 0.7f, 0.8f, 0.9f, 0.f);
-    // data->sum = 1;
-    postProcessConvolutionCb.upload();
-
     //Post process render target
     D3D12_RESOURCE_DESC renderTargetDesc;
     renderTargetDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;

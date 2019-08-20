@@ -2,7 +2,7 @@ struct PostProcessConvolutionCB {
     float4x3 kernel;
     float screenWidth;
     float screenHeight;
-    float sum;
+    float divider;
 };
 ConstantBuffer<PostProcessConvolutionCB> cb : register(b0);
 Texture2D scene : register(t0);
@@ -28,6 +28,6 @@ float4 main(PixelShaderInput IN) : SV_Target {
     OUT_Color.rgb += cb.kernel[2][0] * scene.Sample(sceneSampler, float2(uBase + uOffset, vBase - vOffset));
     OUT_Color.rgb += cb.kernel[2][1] * scene.Sample(sceneSampler, float2(uBase + uOffset, vBase));
     OUT_Color.rgb += cb.kernel[2][2] * scene.Sample(sceneSampler, float2(uBase + uOffset, vBase + vOffset));
-    OUT_Color.rgb /= cb.sum;
+    OUT_Color.rgb /= cb.divider;
     return float4(OUT_Color);
 }

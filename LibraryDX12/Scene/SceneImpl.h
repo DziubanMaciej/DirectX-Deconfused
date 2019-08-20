@@ -4,6 +4,7 @@
 #include "Scene/CameraImpl.h"
 #include "Scene/LightImpl.h"
 #include "Scene/ObjectImpl.h"
+#include "Scene/PostProcessImpl.h"
 
 #include "DXD/Scene.h"
 
@@ -28,6 +29,7 @@ public:
     void setBackgroundColor(float r, float g, float b) override;
     void setAmbientLight(float r, float g, float b) override;
     void addLight(DXD::Light &light) override;
+    void addPostProcess(DXD::PostProcess &postProcess) override;
     bool removeLight(DXD::Light &light) override;
     void addObject(DXD::Object &object) override;
     bool removeObject(DXD::Object &object) override;
@@ -57,6 +59,7 @@ protected:
     std::vector<LightImpl *> lights;
     std::set<ObjectImpl *> objects; // TODO might not be the best data structure for that
     std::set<ObjectImpl *> objectsNotReady;
+    std::vector<PostProcessImpl *> postProcesses = {};
     CameraImpl *camera;
 
     XMFLOAT3 postProcessSquare[6] =

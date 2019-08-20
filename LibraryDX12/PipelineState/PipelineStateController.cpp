@@ -243,10 +243,10 @@ void PipelineStateController::compilePipelineStatePostProcessConvolution(RootSig
 
     DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
     table.appendSrvRange(t(0), 1);
-    table.appendCbvRange(b(0), 1);
     rootSignature
         .appendStaticSampler(s(0), sampler)
         .appendDescriptorTable(std::move(table))
+        .append32bitConstant<PostProcessConvolutionCB>(b(0), D3D12_SHADER_VISIBILITY_PIXEL)
         .compile(device);
 
     // Input layout - per vertex data

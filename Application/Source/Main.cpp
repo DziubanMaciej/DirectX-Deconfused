@@ -8,6 +8,7 @@
 #include "DXD/Logger.h"
 #include "DXD/Mesh.h"
 #include "DXD/Object.h"
+#include "DXD/PostProcess.h"
 #include "DXD/Scene.h"
 #include "DXD/Settings.h"
 #include "DXD/Texture.h"
@@ -28,6 +29,7 @@ public:
         prepMeshes();
         prepLights();
         prepCamera();
+        prepPostProcesses();
         prepScene();
         updateCamera();
 
@@ -175,19 +177,34 @@ private:
         camera->setFarZ(140.0f);
         DXD::log("Done!\n");
     }
+    void prepPostProcesses() {
+        postProcesses.push_back(DXD::PostProcess::create());
+        postProcesses.back()->setBlackBars(0.3f, 0.1f, 0.3f, 0.3f);
+
+        postProcesses.push_back(DXD::PostProcess::create());
+        postProcesses.back()->setConvolution(1,
+                                             -1, -1, -1,
+                                             -1, 8, -1,
+                                             -1, -1, -1);
+    }
     void prepScene() {
         DXD::log("Preparing scene...\n");
         scene = DXD::Scene::create(*application);
+        scene->setBackgroundColor(0.3f, 0.8f, 1.0f);
+        scene->setAmbientLight(0.1f, 0.1f, 0.1f);
+        scene->setCamera(*camera);
+
         for (auto &object : objects) {
             scene->addObject(*object.second);
         }
-        scene->setBackgroundColor(0.3f, 0.8f, 1.0f);
-        scene->setAmbientLight(0.1f, 0.1f, 0.1f);
         for (auto &light : lights) {
             scene->addLight(*light.second);
         }
-        scene->setCamera(*camera);
-        DXD::log("Done!\n");
+        for (auto &postProcess : postProcesses) {
+            scene->addPostProcess(*postProcess);
+        }
+
+        DXD::log("Preparing scene done.\n");
     }
 
     // Internal game logic
@@ -318,6 +335,7 @@ private:
     std::unordered_map<std::string, std::unique_ptr<DXD::Mesh>> meshes;
     std::unordered_map<std::string, std::unique_ptr<DXD::Light>> lights;
     std::unordered_map<std::string, std::unique_ptr<DXD::Object>> objects;
+    std::vector<std::unique_ptr<DXD::PostProcess>> postProcesses;
 
     // TODO: unordered_map for three below
     std::unique_ptr<DXD::Texture> porsheTexture;

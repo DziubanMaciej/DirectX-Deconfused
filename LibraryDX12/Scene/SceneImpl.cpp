@@ -52,6 +52,10 @@ void SceneImpl::addLight(DXD::Light &light) {
     lights.push_back(static_cast<LightImpl *>(&light));
 }
 
+void SceneImpl::addPostProcess(DXD::PostProcess &postProcess) {
+    postProcesses.push_back(static_cast<PostProcessImpl *>(&postProcess));
+}
+
 bool SceneImpl::removeLight(DXD::Light &light) {
     for (auto it = lights.begin(); it != lights.end(); it++) {
         if (*it == &light) {
@@ -267,23 +271,29 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
 
 void SceneImpl::renderPostProcess(SwapChain &swapChain, RenderData &renderData, CommandList &commandList,
                                   Resource &input, Resource &output, D3D12_CPU_DESCRIPTOR_HANDLE outputDescriptor) {
-    if (application.getSettingsImpl().getVerticalSyncEnabled()) {
-        // Set resource to correct state
+    PostProcessImpl &postProcess = *postProcesses[0];
+    if (postProcess.getType() == PostProcessImpl::Type::CONVOLUTION) {
+        // Constant buffer
+        auto &postProcessData = postProcess.getDataConvolution();
+        postProcessData.screenWidth = static_cast<float>(swapChain.getWidth());
+        postProcessData.screenHeight = static_cast<float>(swapChain.getHeight());
+
+        // Resources states
         commandList.transitionBarrier(input, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
         commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-        // Set all the states
+        // Pipeline state
         commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_CONVOLUTION);
         commandList.OMSetRenderTargetNoDepth(outputDescriptor, output.getResource());
         commandList.setCbvSrvUavDescriptorTable(0, 0, renderData.getPostProcessSrvDescriptor());
-        commandList.setCbvSrvUavDescriptorTable(0, 1, renderData.getPostProcessConvolutionCB().getCbvHandle(), 1);
+        commandList.setGraphicsRoot32BitConstant(1, postProcessData);
         commandList.clearRenderTargetView(swapChain.getCurrentBackBufferDescriptor(), backgroundColor);
 
-        // Draw black bars
+        // Render
         commandList.IASetVertexBuffer(*postProcessVB);
         commandList.draw(6u);
-    } else {
-        // Set resource to correct state
+    } else if (postProcess.getType() == PostProcessImpl::Type::BLACK_BARS) {
+        // Resources states
         commandList.transitionBarrier(input, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
         commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
