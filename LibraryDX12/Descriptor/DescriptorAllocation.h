@@ -43,7 +43,9 @@ public:
     CD3DX12_GPU_DESCRIPTOR_HANDLE getGpuHandle(UINT offset) const;
 
 private:
-    DescriptorHeap *heap;
+    void deallocate();
+
+    DescriptorHeap *heap = {};
     DescriptorHeap::FreeListOffset offsetInHeap;
     DescriptorHeap::FreeListSize handlesCount;
     CD3DX12_CPU_DESCRIPTOR_HANDLE cpuHandle;

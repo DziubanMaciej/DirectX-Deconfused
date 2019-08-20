@@ -42,6 +42,8 @@ DescriptorAllocation::DescriptorAllocation(DescriptorAllocation &&other) {
 }
 
 DescriptorAllocation &DescriptorAllocation::operator=(DescriptorAllocation &&other) {
+    deallocate();
+
     heap = std::move(other.heap);
     offsetInHeap = std::move(other.offsetInHeap);
     handlesCount = std::move(other.handlesCount);
@@ -54,6 +56,10 @@ DescriptorAllocation &DescriptorAllocation::operator=(DescriptorAllocation &&oth
 }
 
 DescriptorAllocation::~DescriptorAllocation() {
+    deallocate();
+}
+
+void DescriptorAllocation::deallocate() {
     if (heap != nullptr) {
         heap->deallocate(*this);
         heap = nullptr;
