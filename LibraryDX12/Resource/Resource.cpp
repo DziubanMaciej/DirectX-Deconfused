@@ -6,15 +6,20 @@
 
 #include <cassert>
 
-Resource::Resource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES state) : resource(resource), state(state) {}
+Resource::Resource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES state)
+    : resource(resource),
+      state(state) {}
 
-Resource::Resource(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeapProperties, D3D12_HEAP_FLAGS heapFlags, const D3D12_RESOURCE_DESC *pDesc, D3D12_RESOURCE_STATES initialResourceState, const D3D12_CLEAR_VALUE *pOptimizedClearValue) : state(initialResourceState) {
-    create(device, pHeapProperties, heapFlags, pDesc, state, pOptimizedClearValue);
-}
+Resource::Resource(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeapProperties, D3D12_HEAP_FLAGS heapFlags,
+                   const D3D12_RESOURCE_DESC *pDesc, D3D12_RESOURCE_STATES initialResourceState,
+                   const D3D12_CLEAR_VALUE *pOptimizedClearValue)
+    : resource(createResource(device, pHeapProperties, heapFlags, pDesc, state, pOptimizedClearValue)),
+      state(initialResourceState) {}
 
-Resource::Resource(ID3D12DevicePtr device, D3D12_HEAP_TYPE heapType, D3D12_HEAP_FLAGS heapFlags, UINT64 bufferSize, D3D12_RESOURCE_STATES initialResourceState, const D3D12_CLEAR_VALUE *pOptimizedClearValue) : state(initialResourceState) {
-    create(device, &CD3DX12_HEAP_PROPERTIES(heapType), heapFlags, &CD3DX12_RESOURCE_DESC::Buffer(bufferSize), state, pOptimizedClearValue);
-}
+Resource::Resource(ID3D12DevicePtr device, D3D12_HEAP_TYPE heapType, D3D12_HEAP_FLAGS heapFlags, UINT64 bufferSize,
+                   D3D12_RESOURCE_STATES initialResourceState, const D3D12_CLEAR_VALUE *pOptimizedClearValue)
+    : resource(createResource(device, &CD3DX12_HEAP_PROPERTIES(heapType), heapFlags, &CD3DX12_RESOURCE_DESC::Buffer(bufferSize), state, pOptimizedClearValue)),
+      state(initialResourceState) {}
 
 bool Resource::isUploadInProgress() {
     if (gpuUploadData != nullptr && gpuUploadData->uploadingQueue.getFence().isComplete(gpuUploadData->uploadFence)) {
@@ -28,7 +33,9 @@ void Resource::registerUpload(CommandQueue &uploadingQueue, uint64_t uploadFence
     this->gpuUploadData = std::make_unique<GpuUploadData>(uploadingQueue, uploadFence);
 }
 
-void Resource::create(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeapProperties, D3D12_HEAP_FLAGS heapFlags, const D3D12_RESOURCE_DESC *pDesc, D3D12_RESOURCE_STATES initialResourceState, const D3D12_CLEAR_VALUE *pOptimizedClearValue) {
+ID3D12ResourcePtr Resource::createResource(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeapProperties, D3D12_HEAP_FLAGS heapFlags,
+                                           const D3D12_RESOURCE_DESC *pDesc, D3D12_RESOURCE_STATES initialResourceState, const D3D12_CLEAR_VALUE *pOptimizedClearValue) {
+    ID3D12ResourcePtr resource = {};
     throwIfFailed(device->CreateCommittedResource(
         pHeapProperties,
         heapFlags,
@@ -36,7 +43,7 @@ void Resource::create(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeap
         initialResourceState,
         pOptimizedClearValue,
         IID_PPV_ARGS(&resource)));
-    this->state = initialResourceState;
+    return resource;
 }
 
 void Resource::uploadToGPU(ApplicationImpl &application, const void *data, UINT rowPitch, UINT slicePitch) {

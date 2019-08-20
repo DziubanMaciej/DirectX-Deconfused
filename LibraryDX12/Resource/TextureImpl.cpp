@@ -34,8 +34,9 @@ void TextureImpl::loadAndUpload(ApplicationImpl &application, const std::wstring
     const auto &metadata = loadResults.metadata;
 
     // Create GPU resource
-    this->create(application.getDevice(), &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
-                 &description, D3D12_RESOURCE_STATE_COPY_DEST, nullptr);
+    this->resource = this->createResource(application.getDevice(), &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
+                                          &description, D3D12_RESOURCE_STATE_COPY_DEST, nullptr);
+    this->state = D3D12_RESOURCE_STATE_COPY_DEST;
 
     // Upload data to the GPU resource
     uploadToGPU(application, image.GetPixels(), static_cast<UINT>(image.GetImages()->rowPitch), static_cast<UINT>(image.GetImages()->slicePitch));
