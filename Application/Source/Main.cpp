@@ -180,20 +180,6 @@ private:
     void prepPostProcesses() {
         postProcesses.push_back(DXD::PostProcess::create());
         postProcesses.back()->setBlackBars(0.0f, 0.0f, 0.05f, 0.05f);
-
-        postProcesses.push_back(DXD::PostProcess::create());
-        postProcesses.back()->setConvolution(1,
-                                             -1, -1, -1,
-                                             -1, 8, -1,
-                                             -1, -1, -1);
-        postProcesses.back()->setEnabled(false);
-
-        postProcesses.push_back(DXD::PostProcess::create());
-        postProcesses.back()->setConvolution(1,
-            -1, -1, -1,
-            -1, 8, -1,
-            -1, -1, -1);
-        postProcesses.back()->setEnabled(false);
     }
     void prepScene() {
         DXD::log("Preparing scene...\n");
@@ -231,7 +217,7 @@ private:
         rotation += 0.000001f * deltaTimeMicroseconds;
 
         objects["carMesh1"]->setRotation(XMFLOAT3(0, 1, 0), rotation - 45); // +180 for aventador
-        objects["carMesh1"]->setPosition(7 * sinf(rotation) * 0.6f, -1.475, 7 * cosf(rotation) * 0.6f);
+        objects["carMesh1"]->setPosition(7 * sinf(rotation) * 0.6f, -1.475f, 7 * cosf(rotation) * 0.6f);
         objects["teapotMesh2"]->setRotation(rotation, rotation, rotation);
     }
 

@@ -26,7 +26,9 @@ public:
         float a00, float a01, float a02,
         float a10, float a11, float a12,
         float a20, float a21, float a22) = 0;
-
+    virtual void setConvolutionSharpen() = 0;
+    virtual void setConvolutionGaussianBlur() = 0;
+    virtual void setConvolutionEdgeDetection() = 0;
 
 protected:
     PostProcess() = default;

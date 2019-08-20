@@ -27,6 +27,9 @@ public:
                         float a00, float a01, float a02,
                         float a10, float a11, float a12,
                         float a20, float a21, float a22) override;
+    void setConvolutionSharpen() override;
+    void setConvolutionGaussianBlur() override;
+    void setConvolutionEdgeDetection() override;
 
     auto isEnabled() const { return enabled; }
     auto getType() const { return type; }

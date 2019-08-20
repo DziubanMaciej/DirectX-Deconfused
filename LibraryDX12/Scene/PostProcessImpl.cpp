@@ -50,3 +50,24 @@ void PostProcessImpl::setConvolution(float divider,
                                                a10, a11, a12, 0.f,
                                                a20, a21, a22, 0.f);
 }
+
+void PostProcessImpl::setConvolutionSharpen() {
+    setConvolution(1,
+                   0, -1, 0,
+                   -1, 5, -1,
+                   0, -1, 0);
+}
+
+void PostProcessImpl::setConvolutionGaussianBlur() {
+    setConvolution(16,
+                   1, 2, 1,
+                   2, 4, 2,
+                   1, 2, 1);
+}
+
+void PostProcessImpl::setConvolutionEdgeDetection() {
+    setConvolution(1,
+                   0, 1, 0,
+                   1, -4, 1,
+                   0, 1, 0);
+}
