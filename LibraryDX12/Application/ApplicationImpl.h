@@ -27,6 +27,7 @@ public:
     void flushAllResources();
 
     // Internal getters
+    static auto &getInstance() { return *instance; }
     auto &getSettingsImpl() { return settings; }
     auto getCallbackHandler() const { return callbackHandler; }
     auto getFactory() { return factory; }
@@ -44,6 +45,9 @@ protected:
     static IDXGIFactoryPtr createFactory(bool debugLayer);
     static IDXGIAdapterPtr createAdapter(IDXGIFactoryPtr factory, bool useWarp);
     static ID3D12DevicePtr createDevice(IDXGIAdapterPtr &adapter, bool debugLayer);
+
+    // Singleton instance
+    static ApplicationImpl *instance;
 
     // DX12 context
     const bool debugLayerEnabled;

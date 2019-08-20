@@ -7,13 +7,10 @@
 #include "DXD/ExternalHeadersWrappers/d3dx12.h"
 #include <algorithm>
 
-SwapChain::SwapChain(HWND windowHandle, ApplicationImpl &application, CommandQueue &commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount)
-    : swapChain(createSwapChain(windowHandle, application.getFactory(), commandQueue, width, height, bufferCount)),
-      device(application.getDevice()),
-      descriptorController(application.getDescriptorController()),
-      settings(application.getSettingsImpl()),
+SwapChain::SwapChain(HWND windowHandle, CommandQueue &commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount)
+    : swapChain(createSwapChain(windowHandle, ApplicationImpl::getInstance().getFactory(), commandQueue, width, height, bufferCount)),
       backBufferEntries(bufferCount),
-      backBufferRtvDescriptors(descriptorController.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, bufferCount)),
+      backBufferRtvDescriptors(ApplicationImpl::getInstance().getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, bufferCount)),
       width(width),
       height(height),
       currentBackBufferIndex(swapChain->GetCurrentBackBufferIndex()) {
@@ -56,6 +53,7 @@ IDXGISwapChainPtr SwapChain::createSwapChain(HWND hwnd, IDXGIFactoryPtr &factory
 }
 
 void SwapChain::updateRenderTargetViews() {
+    auto device = ApplicationImpl::getInstance().getDevice();
     const auto rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 
     auto rtvHandle = backBufferRtvDescriptors.getCpuHandle();
@@ -75,7 +73,7 @@ void SwapChain::present(uint64_t fenceValue) {
     backBufferEntries[currentBackBufferIndex].lastFence = fenceValue;
 
     // Present
-    UINT syncInterval = settings.getVerticalSyncEnabled() ? 1u : 0u;
+    UINT syncInterval = ApplicationImpl::getInstance().getSettings().getVerticalSyncEnabled() ? 1u : 0u;
     //UINT presentFlags = g_TearingSupported && !g_VSync ? DXGI_PRESENT_ALLOW_TEARING : 0;
     throwIfFailed(swapChain->Present(syncInterval, 0)); // TODO
 

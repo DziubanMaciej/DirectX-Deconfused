@@ -2,11 +2,16 @@
 
 #include "Utility/ThrowIfFailed.h"
 
+#include <cassert>
+
 namespace DXD {
 std::unique_ptr<Application> Application::create(bool debugLayer) {
+    assert(ApplicationImpl::instance == nullptr);
     return std::unique_ptr<Application>{new ApplicationImpl(debugLayer)};
 }
 } // namespace DXD
+
+ApplicationImpl *ApplicationImpl::instance = nullptr;
 
 ApplicationImpl::ApplicationImpl(bool debugLayer)
     : debugLayerEnabled(enableDebugLayer(debugLayer)),
@@ -18,12 +23,14 @@ ApplicationImpl::ApplicationImpl(bool debugLayer)
       copyCommandQueue(device, D3D12_COMMAND_LIST_TYPE_COPY),
       directCommandQueue(device, D3D12_COMMAND_LIST_TYPE_DIRECT),
       backgroundWorkerController() {
+    instance = this;
     pipelineStateController.compileAll();
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
 }
 
 ApplicationImpl::~ApplicationImpl() {
     CoUninitialize();
+    instance = nullptr;
 }
 
 bool ApplicationImpl::enableDebugLayer(bool debugLayer) {

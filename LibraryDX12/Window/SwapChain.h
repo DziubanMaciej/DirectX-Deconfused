@@ -22,7 +22,7 @@ class SwapChain : DXD::NonCopyableAndMovable {
     };
 
 public:
-    SwapChain(HWND windowHandle, ApplicationImpl &application, CommandQueue &commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount);
+    SwapChain(HWND windowHandle, CommandQueue &commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount);
     void present(uint64_t fenceValue);
     void resize(int desiredWidth, int desiredHeight);
 
@@ -40,11 +40,8 @@ private:
     void updateRenderTargetViews();
     void resizeRenderTargets(uint32_t desiredWidth, uint32_t desiredHeight);
 
-    // Base objects
+    // Wrapped object
     IDXGISwapChainPtr swapChain;
-    ID3D12DevicePtr device;
-    DescriptorController &descriptorController;
-    SettingsImpl &settings;
 
     // Back buffer data
     std::vector<BackBufferEntry> backBufferEntries;
