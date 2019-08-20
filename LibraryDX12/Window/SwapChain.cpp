@@ -10,7 +10,6 @@
 SwapChain::SwapChain(HWND windowHandle, CommandQueue &commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount)
     : swapChain(createSwapChain(windowHandle, ApplicationImpl::getInstance().getFactory(), commandQueue, width, height, bufferCount)),
       backBufferEntries(bufferCount),
-      backBufferRtvDescriptors(ApplicationImpl::getInstance().getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, bufferCount)),
       width(width),
       height(height),
       currentBackBufferIndex(swapChain->GetCurrentBackBufferIndex()) {
@@ -55,16 +54,12 @@ IDXGISwapChainPtr SwapChain::createSwapChain(HWND hwnd, IDXGIFactoryPtr &factory
 void SwapChain::updateRenderTargetViews() {
     auto device = ApplicationImpl::getInstance().getDevice();
     const auto rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
-
-    auto rtvHandle = backBufferRtvDescriptors.getCpuHandle();
     for (auto i = 0u; i < backBufferEntries.size(); i++) {
         ID3D12ResourcePtr backBuffer;
         throwIfFailed(swapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer)));
 
-        device->CreateRenderTargetView(backBuffer.Get(), nullptr, rtvHandle);
-        backBufferEntries[i].backBuffer->setResource(backBuffer);
-
-        rtvHandle.ptr += rtvDescriptorSize;
+        backBufferEntries[i].backBuffer.setResource(backBuffer);
+        backBufferEntries[i].backBuffer.createRtv(nullptr);
     }
 }
 
@@ -91,7 +86,7 @@ void SwapChain::resize(int desiredWidth, int desiredHeight) {
 
 void SwapChain::resetRenderTargetViews() {
     for (auto &backBufferEntry : backBufferEntries) {
-        backBufferEntry.backBuffer->getResource().Reset();
+        backBufferEntry.backBuffer.getResource().Reset();
         backBufferEntry.lastFence = currentBackBufferIndex;
     }
 }
@@ -109,8 +104,4 @@ void SwapChain::resizeRenderTargets(uint32_t desiredWidth, uint32_t desiredHeigh
 
 uint64_t SwapChain::getFenceValueForCurrentBackBuffer() const {
     return backBufferEntries[this->currentBackBufferIndex].lastFence;
-}
-
-D3D12_CPU_DESCRIPTOR_HANDLE SwapChain::getCurrentBackBufferDescriptor() const {
-    return backBufferRtvDescriptors.getCpuHandle(currentBackBufferIndex);
 }

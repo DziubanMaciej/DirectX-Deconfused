@@ -348,8 +348,7 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
 void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     auto &commandQueue = application.getDirectCommandQueue();
     CommandList commandList{application.getDescriptorController(), commandQueue.getCommandAllocatorController(), nullptr};
-    const auto &backBuffer = swapChain.getCurrentBackBuffer();
-    const auto backBufferDescriptorHandle = swapChain.getCurrentBackBufferDescriptor();
+    auto &backBuffer = swapChain.getCurrentBackBuffer();
     commandQueue.performResourcesDeletion();
     inspectObjectsNotReady();
 
@@ -362,18 +361,18 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
 
     // Render 3D
     const auto postProcessesCount = getEnabledPostProcessesCount();
-    auto &renderForwardOutput = postProcessesCount == 0 ? *backBuffer : renderData.getPostProcessRenderTargets().getDestination();
-    auto renderForwardOutputDescriptor = postProcessesCount == 0 ? backBufferDescriptorHandle : renderData.getPostProcessRenderTargets().getDestinationRtv();
+    auto &renderForwardOutput = postProcessesCount == 0 ? backBuffer : renderData.getPostProcessRenderTargets().getDestination();
+    auto renderForwardOutputDescriptor = postProcessesCount == 0 ? backBuffer.getRtv() : renderData.getPostProcessRenderTargets().getDestinationRtv();
     renderForward(swapChain, renderData, commandList, renderForwardOutput, renderForwardOutputDescriptor);
     renderData.getPostProcessRenderTargets().swapResources();
 
     // Render post processes
     if (postProcessesCount != 0) {
-        renderPostProcesses(swapChain, renderData.getPostProcessRenderTargets(), commandList, postProcessesCount, *backBuffer, backBufferDescriptorHandle);
+        renderPostProcesses(swapChain, renderData.getPostProcessRenderTargets(), commandList, postProcessesCount, backBuffer, backBuffer.getRtv());
     }
 
     // Transition to PRESENT
-    commandList.transitionBarrier(*backBuffer, D3D12_RESOURCE_STATE_PRESENT);
+    commandList.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_PRESENT);
 
     // Close command list
     commandList.close();

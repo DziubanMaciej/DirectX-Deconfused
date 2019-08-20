@@ -2,7 +2,7 @@
 
 #include "Application/SettingsImpl.h"
 #include "Descriptor/DescriptorAllocation.h"
-#include "Resource/Resource.h"
+#include "Resource/RenderTarget.h"
 
 #include "DXD/NonCopyableAndMovable.h"
 
@@ -17,7 +17,7 @@ class DescriptorController;
 
 class SwapChain : DXD::NonCopyableAndMovable {
     struct BackBufferEntry {
-        std::unique_ptr<Resource> backBuffer = std::make_unique<Resource>(nullptr, D3D12_RESOURCE_STATE_PRESENT);
+        RenderTarget backBuffer{nullptr, D3D12_RESOURCE_STATE_PRESENT};
         uint64_t lastFence;
     };
 
@@ -30,8 +30,8 @@ public:
     uint32_t getHeight() const { return height; }
 
     uint64_t getFenceValueForCurrentBackBuffer() const;
-    D3D12_CPU_DESCRIPTOR_HANDLE getCurrentBackBufferDescriptor() const;
     auto &getCurrentBackBuffer() { return backBufferEntries[this->currentBackBufferIndex].backBuffer; };
+
 private:
     static bool checkTearingSupport(IDXGIFactoryPtr &factory);
     static IDXGISwapChainPtr createSwapChain(HWND hwnd, IDXGIFactoryPtr &factory, CommandQueue &commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount);
@@ -40,16 +40,12 @@ private:
     void updateRenderTargetViews();
     void resizeRenderTargets(uint32_t desiredWidth, uint32_t desiredHeight);
 
-    // Wrapped object
+    // DX12 data
     IDXGISwapChainPtr swapChain;
-
-    // Back buffer data
     std::vector<BackBufferEntry> backBufferEntries;
-    DescriptorAllocation backBufferRtvDescriptors;
 
     // Numerical data
     uint32_t width;
     uint32_t height;
     UINT currentBackBufferIndex;
-
 };
