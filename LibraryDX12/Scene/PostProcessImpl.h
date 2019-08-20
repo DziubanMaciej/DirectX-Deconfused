@@ -30,16 +30,14 @@ public:
 
     auto isEnabled() const { return enabled; }
     auto getType() const { return type; }
-    const auto &getDataBlackBars() { return *dataBlackBars; }
+    auto &getDataBlackBars() { return *dataBlackBars; }
     auto &getDataConvolution() { return *dataConvolution; }
 
 private:
     bool enabled = false;
     Type type = Type::UNDEFINED;
 
-    struct DataBlackBars {
-        float leftMarginPercent, rightMarginPercent, topMarginPercent, bottomMarginPercent;
-    };
+    using DataBlackBars = PostProcessBlackBarsCB;
     std::unique_ptr<DataBlackBars> dataBlackBars = {};
 
     using DataConvolution = PostProcessConvolutionCB;

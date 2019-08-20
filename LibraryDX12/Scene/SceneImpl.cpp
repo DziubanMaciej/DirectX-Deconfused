@@ -321,14 +321,14 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
             commandList.draw(6u);
         } else if (postProcess->getType() == PostProcessImpl::Type::BLACK_BARS) {
             // Constant buffer
-            PostProcessCB ppcb = {};
-            ppcb.screenWidth = static_cast<float>(swapChain.getWidth());
-            ppcb.screenHeight = static_cast<float>(swapChain.getHeight());
+            auto &postProcessData = postProcess->getDataBlackBars();
+            postProcessData.screenWidth = static_cast<float>(swapChain.getWidth());
+            postProcessData.screenHeight = static_cast<float>(swapChain.getHeight());
 
             // Pipeline state
-            commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS);
+            commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_BLACK_BARS);
             commandList.setCbvSrvUavDescriptorTable(1, 0, sourceDescriptor, 1);
-            commandList.setGraphicsRoot32BitConstant(0, ppcb);
+            commandList.setGraphicsRoot32BitConstant(0, postProcessData);
 
             // Render
             commandList.IASetVertexBuffer(*postProcessVB);

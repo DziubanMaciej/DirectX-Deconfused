@@ -179,7 +179,7 @@ private:
     }
     void prepPostProcesses() {
         postProcesses.push_back(DXD::PostProcess::create());
-        postProcesses.back()->setBlackBars(0.3f, 0.1f, 0.3f, 0.3f);
+        postProcesses.back()->setBlackBars(0.0f, 0.0f, 0.05f, 0.05f);
 
         postProcesses.push_back(DXD::PostProcess::create());
         postProcesses.back()->setConvolution(1,

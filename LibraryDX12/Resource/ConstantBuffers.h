@@ -7,9 +7,13 @@ struct ModelMvp {
     XMMATRIX modelViewProjectionMatrix;
 };
 
-struct PostProcessCB {
+struct PostProcessBlackBarsCB {
     float screenWidth;
     float screenHeight;
+    float leftMarginPercent;
+    float rightMarginPercent;
+    float topMarginPercent;
+    float bottomMarginPercent;
 };
 
 struct PostProcessConvolutionCB {

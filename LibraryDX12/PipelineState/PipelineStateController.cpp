@@ -51,8 +51,8 @@ void PipelineStateController::compile(Identifier identifier) {
     case Identifier::PIPELINE_STATE_NORMAL:
         compilePipelineStateNormal(rootSignature, pipelineState);
         break;
-    case Identifier::PIPELINE_STATE_POST_PROCESS:
-        compilePipelineStatePostProcess(rootSignature, pipelineState);
+    case Identifier::PIPELINE_STATE_POST_PROCESS_BLACK_BARS:
+        compilePipelineStatePostProcessBlackBars(rootSignature, pipelineState);
         break;
     case Identifier::PIPELINE_STATE_SM_NORMAL:
         compilePipelineStateShadowMapNormal(rootSignature, pipelineState);
@@ -160,7 +160,7 @@ void PipelineStateController::compilePipelineStateTextureNormal(RootSignature &r
         .compile(device, pipelineState);
 }
 
-void PipelineStateController::compilePipelineStatePostProcess(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
+void PipelineStateController::compilePipelineStatePostProcessBlackBars(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
     D3D12_STATIC_SAMPLER_DESC sampler = {};
     sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
@@ -175,7 +175,7 @@ void PipelineStateController::compilePipelineStatePostProcess(RootSignature &roo
     table.appendSrvRange(t(0), 1);
 
     rootSignature
-        .append32bitConstant<PostProcessCB>(b(0), D3D12_SHADER_VISIBILITY_PIXEL)
+        .append32bitConstant<PostProcessBlackBarsCB>(b(0), D3D12_SHADER_VISIBILITY_PIXEL)
         .appendStaticSampler(s(0), sampler)
         .appendDescriptorTable(std::move(table))
         .compile(device);
@@ -188,7 +188,7 @@ void PipelineStateController::compilePipelineStatePostProcess(RootSignature &roo
     // Pipeline state object
     PipelineState{inputLayout, rootSignature}
         .VS(L"vertex_post_process.hlsl")
-        .PS(L"pixel_post_process.hlsl")
+        .PS(L"pixel_post_process_black_bars.hlsl")
         .disableDepthStencil()
         .compile(device, pipelineState);
 }

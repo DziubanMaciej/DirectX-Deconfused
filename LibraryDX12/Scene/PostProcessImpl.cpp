@@ -20,6 +20,8 @@ void PostProcessImpl::setBlackBars(float leftMarginPercent, float rightMarginPer
     this->enabled = true;
 
     this->dataBlackBars = std::make_unique<DataBlackBars>();
+    this->dataBlackBars->screenHeight = -1;
+    this->dataBlackBars->screenWidth = -1;
     this->dataBlackBars->leftMarginPercent = leftMarginPercent;
     this->dataBlackBars->rightMarginPercent = rightMarginPercent;
     this->dataBlackBars->topMarginPercent = topMarginPercent;

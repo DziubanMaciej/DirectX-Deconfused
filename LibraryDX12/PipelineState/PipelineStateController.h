@@ -15,7 +15,7 @@ public:
         PIPELINE_STATE_DEFAULT = 1,
         PIPELINE_STATE_TEXTURE_NORMAL = 2,
         PIPELINE_STATE_NORMAL = 3,
-        PIPELINE_STATE_POST_PROCESS = 4,
+        PIPELINE_STATE_POST_PROCESS_BLACK_BARS = 4,
         PIPELINE_STATE_SM_NORMAL = 5,
         PIPELINE_STATE_SM_TEXTURE_NORMAL = 6,
         PIPELINE_STATE_POST_PROCESS_CONVOLUTION = 7,
@@ -33,7 +33,7 @@ private:
     void compilePipelineStateDefault(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateTextureNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
-    void compilePipelineStatePostProcess(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    void compilePipelineStatePostProcessBlackBars(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateShadowMapNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateShadowMapTextureNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStatePostProcessConvolution(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
