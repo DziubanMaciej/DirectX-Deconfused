@@ -4,36 +4,20 @@
 
 RenderData::RenderData(ID3D12DevicePtr &device, DescriptorController &descriptorController, int width, int height)
     : device(device),
-      postProcessSrvDescriptor(descriptorController.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1)),
-      postProcessRtvDescriptor(descriptorController.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1)),
+      postProcessRenderTargets(device, descriptorController),
       shadowMapDsvDescriptors(descriptorController.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 8)),
       shadowMapSrvDescriptors(descriptorController.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 8)),
       dsvDescriptor(descriptorController.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1)) {
 }
 
+PostProcessRenderTargets::PostProcessRenderTargets(ID3D12DevicePtr &device, DescriptorController &descriptorController)
+    : device(device),
+      srvDescriptors(descriptorController.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 2)),
+      rtvDescriptors(descriptorController.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 2)) {
+}
+
 void RenderData::resize(int width, int height) {
-    //Post process render target
-    D3D12_RESOURCE_DESC renderTargetDesc;
-    renderTargetDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    renderTargetDesc.Alignment = 0;
-    renderTargetDesc.Width = width;
-    renderTargetDesc.Height = height;
-    renderTargetDesc.DepthOrArraySize = 1;
-    renderTargetDesc.MipLevels = 0;
-    renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    renderTargetDesc.SampleDesc.Count = 1;
-    renderTargetDesc.SampleDesc.Quality = 0;
-    renderTargetDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    renderTargetDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-    postProcessRenderTarget = std::make_unique<Resource>(
-        device,
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-        D3D12_HEAP_FLAG_NONE,
-        &renderTargetDesc,
-        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-        nullptr);
-    device->CreateRenderTargetView(postProcessRenderTarget->getResource().Get(), nullptr, postProcessRtvDescriptor.getCpuHandle());
-    device->CreateShaderResourceView(postProcessRenderTarget->getResource().Get(), nullptr, postProcessSrvDescriptor.getCpuHandle());
+    postProcessRenderTargets.resize(width, height);
 
     // Shadow maps
     for (int i = 0; i < 8; i++) {
@@ -82,4 +66,32 @@ void RenderData::resize(int width, int height) {
         depthStencilBuffer->getResource().Get(),
         &dsvDesc,
         dsvDescriptor.getCpuHandle());
+}
+
+void PostProcessRenderTargets::resize(int width, int height) {
+    //Description
+    D3D12_RESOURCE_DESC renderTargetDesc;
+    renderTargetDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    renderTargetDesc.Alignment = 0;
+    renderTargetDesc.Width = width;
+    renderTargetDesc.Height = height;
+    renderTargetDesc.DepthOrArraySize = 1;
+    renderTargetDesc.MipLevels = 0;
+    renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    renderTargetDesc.SampleDesc.Count = 1;
+    renderTargetDesc.SampleDesc.Quality = 0;
+    renderTargetDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    renderTargetDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+    for (int i = 0; i <= 1; i++) { // Initialize resource0 and resource1 the same way
+        resources[i] = std::make_unique<Resource>(
+            device,
+            &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+            D3D12_HEAP_FLAG_NONE,
+            &renderTargetDesc,
+            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+            nullptr);
+        device->CreateRenderTargetView(resources[i]->getResource().Get(), nullptr, rtvDescriptors.getCpuHandle(i));
+        device->CreateShaderResourceView(resources[i]->getResource().Get(), nullptr, srvDescriptors.getCpuHandle(i));
+    }
 }

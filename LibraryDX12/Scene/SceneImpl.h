@@ -19,6 +19,7 @@ class LightImpl;
 class ObjectImpl;
 class CameraImpl;
 class RenderData;
+struct PostProcessRenderTargets;
 
 class SceneImpl : public DXD::Scene {
 protected:
@@ -42,9 +43,10 @@ protected:
     void inspectObjectsNotReady();
 
     void renderShadowMaps(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
-    void renderForward(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
-    void renderPostProcess(SwapChain &swapChain, RenderData &renderData, CommandList &commandList,
-                           Resource &input, Resource &output, D3D12_CPU_DESCRIPTOR_HANDLE outputDescriptor);
+    void renderForward(SwapChain &swapChain, RenderData &renderData, CommandList &commandList,
+                       Resource &output, D3D12_CPU_DESCRIPTOR_HANDLE outputDescriptor);
+    void renderPostProcesses(SwapChain &swapChain, PostProcessRenderTargets &renderTargets, CommandList &commandList,
+                             Resource &output, D3D12_CPU_DESCRIPTOR_HANDLE outputDescriptor);
 
     // Context
     ApplicationImpl &application;

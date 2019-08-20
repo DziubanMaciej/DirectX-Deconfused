@@ -22,7 +22,7 @@ float4 main(PixelShaderInput IN) : SV_Target {
     OUT_Color.xyz = scene.Sample(g_sampler, float2(pos_x, pos_y)).rgb;
 
 	if (pos_y < 0.05 || pos_y > 0.95) {
-        return float4(0, 0, 0, 1);
+        return float4(0, 1, 0, 1);
 	}
 
     return OUT_Color;

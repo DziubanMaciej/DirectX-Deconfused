@@ -164,17 +164,18 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
     }
 }
 
-void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, CommandList &commandList) {
+void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, CommandList &commandList,
+                              Resource &output, D3D12_CPU_DESCRIPTOR_HANDLE outputDescriptor) {
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
 
     // Transition to RENDER_TARGET
-    commandList.transitionBarrier(renderData.getPostProcessRenderTarget(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+    commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-    commandList.OMSetRenderTarget(renderData.getPostProcessRtvDescriptor().getCpuHandle(), renderData.getPostProcessRenderTarget().getResource(),
+    commandList.OMSetRenderTarget(outputDescriptor, output.getResource(),
                                   renderData.getDepthStencilBufferDescriptor().getCpuHandle(), renderData.getDepthStencilBuffer().getResource());
 
     // Render (clear color)
-    commandList.clearRenderTargetView(renderData.getPostProcessRtvDescriptor().getCpuHandle(), backgroundColor);
+    commandList.clearRenderTargetView(outputDescriptor, backgroundColor);
     commandList.clearDepthStencilView(renderData.getDepthStencilBufferDescriptor().getCpuHandle(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
     // View projection matrix
@@ -269,48 +270,65 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
     }
 }
 
-void SceneImpl::renderPostProcess(SwapChain &swapChain, RenderData &renderData, CommandList &commandList,
-                                  Resource &input, Resource &output, D3D12_CPU_DESCRIPTOR_HANDLE outputDescriptor) {
-    PostProcessImpl &postProcess = *postProcesses[0];
-    if (postProcess.getType() == PostProcessImpl::Type::CONVOLUTION) {
-        // Constant buffer
-        auto &postProcessData = postProcess.getDataConvolution();
-        postProcessData.screenWidth = static_cast<float>(swapChain.getWidth());
-        postProcessData.screenHeight = static_cast<float>(swapChain.getHeight());
+void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTargets &renderTargets, CommandList &commandList,
+                                    Resource &output, D3D12_CPU_DESCRIPTOR_HANDLE outputDescriptor) {
+    // TODO skip disabled post processes
+    for (auto postProcessIndex = 0u; postProcessIndex < postProcesses.size(); postProcessIndex++) {
+        PostProcessImpl &postProcess = *postProcesses[postProcessIndex];
+
+        // Get source and destination resources
+        Resource &source = renderTargets.getSource();
+        D3D12_CPU_DESCRIPTOR_HANDLE sourceDescriptor = renderTargets.getSourceSrv();
+        const bool lastPostProcess = (postProcessIndex == postProcesses.size() - 1);
+        Resource &destination = lastPostProcess ? output : renderTargets.getDestination();
+        D3D12_CPU_DESCRIPTOR_HANDLE destinationDescriptor = lastPostProcess ? outputDescriptor : renderTargets.getDestinationRtv();
 
         // Resources states
-        commandList.transitionBarrier(input, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        commandList.transitionBarrier(source, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        commandList.transitionBarrier(destination, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-        // Pipeline state
-        commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_CONVOLUTION);
-        commandList.OMSetRenderTargetNoDepth(outputDescriptor, output.getResource());
-        commandList.setCbvSrvUavDescriptorTable(0, 0, renderData.getPostProcessSrvDescriptor());
-        commandList.setGraphicsRoot32BitConstant(1, postProcessData);
-        commandList.clearRenderTargetView(swapChain.getCurrentBackBufferDescriptor(), backgroundColor);
+        // Prepare render target
+        commandList.OMSetRenderTargetNoDepth(destinationDescriptor, destination.getResource());
+        commandList.clearRenderTargetView(destinationDescriptor, backgroundColor);
 
-        // Render
-        commandList.IASetVertexBuffer(*postProcessVB);
-        commandList.draw(6u);
-    } else if (postProcess.getType() == PostProcessImpl::Type::BLACK_BARS) {
-        // Resources states
-        commandList.transitionBarrier(input, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        // Render post process base on its type
+        if (postProcess.getType() == PostProcessImpl::Type::CONVOLUTION) {
+            // Constant buffer
+            auto &postProcessData = postProcess.getDataConvolution();
+            postProcessData.screenWidth = static_cast<float>(swapChain.getWidth());
+            postProcessData.screenHeight = static_cast<float>(swapChain.getHeight());
 
-        // Set all the states
-        commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS);
-        commandList.OMSetRenderTargetNoDepth(outputDescriptor, output.getResource());
-        commandList.setCbvSrvUavDescriptorTable(1, 0, renderData.getPostProcessSrvDescriptor());
-        commandList.clearRenderTargetView(swapChain.getCurrentBackBufferDescriptor(), backgroundColor);
+            // Pipeline state
+            commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_CONVOLUTION);
+            commandList.setCbvSrvUavDescriptorTable(0, 0, sourceDescriptor, 1);
+            commandList.setGraphicsRoot32BitConstant(1, postProcessData);
 
-        // Draw black bars
-        commandList.IASetVertexBuffer(*postProcessVB);
-        PostProcessCB ppcb = {};
-        ppcb.screenWidth = static_cast<float>(swapChain.getWidth());
-        ppcb.screenHeight = static_cast<float>(swapChain.getHeight());
-        commandList.setGraphicsRoot32BitConstant(0, ppcb);
-        commandList.draw(6u);
+            // Render
+            commandList.IASetVertexBuffer(*postProcessVB);
+            commandList.draw(6u);
+        } else if (postProcess.getType() == PostProcessImpl::Type::BLACK_BARS) {
+            // Constant buffer
+            PostProcessCB ppcb = {};
+            ppcb.screenWidth = static_cast<float>(swapChain.getWidth());
+            ppcb.screenHeight = static_cast<float>(swapChain.getHeight());
+
+            // Pipeline state
+            commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS);
+            commandList.setCbvSrvUavDescriptorTable(1, 0, sourceDescriptor, 1);
+            commandList.setGraphicsRoot32BitConstant(0, ppcb);
+
+            // Render
+            commandList.IASetVertexBuffer(*postProcessVB);
+            commandList.draw(6u);
+        } else {
+            UNREACHABLE_CODE();
+        }
+
+        renderTargets.swapResources();
     }
+
+    // Swap once again, so two resource state transitions will be avoided in next frame
+    renderTargets.swapResources();
 }
 
 void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
@@ -325,10 +343,19 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
-    // Render
+    // Render shadow maps
     renderShadowMaps(swapChain, renderData, commandList);
-    renderForward(swapChain, renderData, commandList);
-    renderPostProcess(swapChain, renderData, commandList, renderData.getPostProcessRenderTarget(), *backBuffer, backBufferDescriptorHandle);
+
+    // Render 3D
+    // TODO if there are no post processes we can render directly to a back buffer
+    auto &renderForwardOutput = renderData.getPostProcessRenderTargets().getDestination();
+    auto renderForwardOutputDescriptor = renderData.getPostProcessRenderTargets().getDestinationRtv();
+    renderForward(swapChain, renderData, commandList, renderForwardOutput, renderForwardOutputDescriptor);
+    renderData.getPostProcessRenderTargets().swapResources();
+
+    // Render post processes
+    // TODO skip if there are none
+    renderPostProcesses(swapChain, renderData.getPostProcessRenderTargets(), commandList, *backBuffer, backBufferDescriptorHandle);
 
     // Transition to PRESENT
     commandList.transitionBarrier(*backBuffer, D3D12_RESOURCE_STATE_PRESENT);

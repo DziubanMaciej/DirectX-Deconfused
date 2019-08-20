@@ -180,12 +180,6 @@ private:
     void prepPostProcesses() {
         postProcesses.push_back(DXD::PostProcess::create());
         postProcesses.back()->setBlackBars(0.3f, 0.1f, 0.3f, 0.3f);
-
-        postProcesses.push_back(DXD::PostProcess::create());
-        postProcesses.back()->setConvolution(1,
-                                             -1, -1, -1,
-                                             -1, 8, -1,
-                                             -1, -1, -1);
     }
     void prepScene() {
         DXD::log("Preparing scene...\n");
