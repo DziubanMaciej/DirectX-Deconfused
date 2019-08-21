@@ -337,9 +337,6 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
         renderTargets.swapResources();
         postProcessIndex++;
     }
-
-    // Swap once again, so two resource state transitions will be avoided in next frame
-    renderTargets.swapResources();
 }
 
 void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
