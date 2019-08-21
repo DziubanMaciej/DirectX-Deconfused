@@ -208,7 +208,8 @@ void PipelineStateController::compilePipelineStateShadowMapTextureNormal(RootSig
 
 // --------------------------------------------------------------------------------------------- Post processes
 
-void PipelineStateController::compilePipelineStatePostProcessBlackBars(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
+template <typename ConstantType>
+static void compileBasicPipelineStatePostProcess(ID3D12DevicePtr device, RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState, const std::wstring &psPath) {
     // Root signature - crossthread data
     D3D12_STATIC_SAMPLER_DESC sampler = {};
     sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
@@ -223,8 +224,8 @@ void PipelineStateController::compilePipelineStatePostProcessBlackBars(RootSigna
     table.appendSrvRange(t(0), 1);
 
     rootSignature
-        .append32bitConstant<PostProcessBlackBarsCB>(b(0), D3D12_SHADER_VISIBILITY_PIXEL)
         .appendStaticSampler(s(0), sampler)
+        .append32bitConstant<ConstantType>(b(0), D3D12_SHADER_VISIBILITY_PIXEL)
         .appendDescriptorTable(std::move(table))
         .compile(device);
 
@@ -236,71 +237,19 @@ void PipelineStateController::compilePipelineStatePostProcessBlackBars(RootSigna
     // Pipeline state object
     PipelineState{inputLayout, rootSignature}
         .VS(L"vertex_post_process.hlsl")
-        .PS(L"pixel_post_process_black_bars.hlsl")
+        .PS(psPath)
         .disableDepthStencil()
         .compile(device, pipelineState);
+}
+
+void PipelineStateController::compilePipelineStatePostProcessBlackBars(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
+    compileBasicPipelineStatePostProcess<PostProcessBlackBarsCB>(device, rootSignature, pipelineState, L"pixel_post_process_black_bars.hlsl");
 }
 
 void PipelineStateController::compilePipelineStatePostProcessConvolution(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
-    // Root signature - crossthread data
-    D3D12_STATIC_SAMPLER_DESC sampler = {};
-    sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-    sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-    sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-    sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-    sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-    sampler.MaxLOD = D3D12_FLOAT32_MAX;
-    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-    DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
-    table.appendSrvRange(t(0), 1);
-    rootSignature
-        .appendStaticSampler(s(0), sampler)
-        .appendDescriptorTable(std::move(table))
-        .append32bitConstant<PostProcessConvolutionCB>(b(0), D3D12_SHADER_VISIBILITY_PIXEL)
-        .compile(device);
-
-    // Input layout - per vertex data
-    const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
-        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-    };
-
-    // Pipeline state object
-    PipelineState{inputLayout, rootSignature}
-        .VS(L"vertex_post_process.hlsl")
-        .PS(L"pixel_post_process_convolution.hlsl")
-        .disableDepthStencil()
-        .compile(device, pipelineState);
+    compileBasicPipelineStatePostProcess<PostProcessConvolutionCB>(device, rootSignature, pipelineState, L"pixel_post_process_convolution.hlsl");
 }
 
 void PipelineStateController::compilePipelineStatePostProcessLinearColorCorrection(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
-    // Root signature - crossthread data
-    D3D12_STATIC_SAMPLER_DESC sampler = {};
-    sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-    sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-    sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-    sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-    sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-    sampler.MaxLOD = D3D12_FLOAT32_MAX;
-    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-    DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
-    table.appendSrvRange(t(0), 1);
-    rootSignature
-        .appendStaticSampler(s(0), sampler)
-        .appendDescriptorTable(std::move(table))
-        .append32bitConstant<PostProcessConvolutionCB>(b(0), D3D12_SHADER_VISIBILITY_PIXEL)
-        .compile(device);
-
-    // Input layout - per vertex data
-    const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
-        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-    };
-
-    // Pipeline state object
-    PipelineState{inputLayout, rootSignature}
-        .VS(L"vertex_post_process.hlsl")
-        .PS(L"pixel_post_process_linear_color_correction.hlsl")
-        .disableDepthStencil()
-        .compile(device, pipelineState);
+    compileBasicPipelineStatePostProcess<PostProcessLinearColorCorrectionCB>(device, rootSignature, pipelineState, L"pixel_post_process_linear_color_correction.hlsl");
 }

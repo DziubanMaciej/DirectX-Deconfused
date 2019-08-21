@@ -310,8 +310,8 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
 
             // Pipeline state
             commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_CONVOLUTION);
-            commandList.setCbvSrvUavDescriptorTable(0, 0, source.getSrv(), 1);
-            commandList.setGraphicsRoot32BitConstant(1, postProcessData);
+            commandList.setGraphicsRoot32BitConstant(0, postProcessData);
+            commandList.setCbvSrvUavDescriptorTable(1, 0, source.getSrv(), 1);
 
             // Render
             commandList.IASetVertexBuffer(*postProcessVB);
@@ -324,8 +324,8 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
 
             // Pipeline state
             commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_BLACK_BARS);
-            commandList.setCbvSrvUavDescriptorTable(1, 0, source.getSrv(), 1);
             commandList.setGraphicsRoot32BitConstant(0, postProcessData);
+            commandList.setCbvSrvUavDescriptorTable(1, 0, source.getSrv(), 1);
 
             // Render
             commandList.IASetVertexBuffer(*postProcessVB);
@@ -338,8 +338,8 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
 
             // Pipeline state
             commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_LINEAR_COLOR_CORRECTION);
-            commandList.setCbvSrvUavDescriptorTable(0, 0, source.getSrv(), 1);
-            commandList.setGraphicsRoot32BitConstant(1, postProcessData);
+            commandList.setGraphicsRoot32BitConstant(0, postProcessData);
+            commandList.setCbvSrvUavDescriptorTable(1, 0, source.getSrv(), 1);
 
             // Render
             commandList.IASetVertexBuffer(*postProcessVB);
