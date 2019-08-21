@@ -71,3 +71,30 @@ void PostProcessImpl::setConvolutionEdgeDetection() {
                    1, -4, 1,
                    0, 1, 0);
 }
+
+void PostProcessImpl::setLinearColorCorrection(float a00, float a01, float a02,
+                                               float a10, float a11, float a12,
+                                               float a20, float a21, float a22) {
+    this->type = Type::LINEAR_COLOR_CORRECTION;
+    this->enabled = true;
+
+    this->dataLinearColorCorrection = std::make_unique<PostProcessLinearColorCorrectionCB>();
+    this->dataLinearColorCorrection->screenWidth = -1;
+    this->dataLinearColorCorrection->screenHeight = -1;
+    this->dataLinearColorCorrection->colorMatrix = XMFLOAT4X3(a00, a01, a02, 0.f,
+                                                              a10, a11, a12, 0.f,
+                                                              a20, a21, a22, 0.f);
+}
+
+void PostProcessImpl::setLinearColorCorrection(XMFLOAT3X3 matrix) {
+    setLinearColorCorrection(matrix._11, matrix._12, matrix._13,
+                                  matrix._21, matrix._22, matrix._23,
+                                  matrix._31, matrix._32, matrix._33);
+}
+
+void PostProcessImpl::setLinearColorCorrectionSepia() {
+    setLinearColorCorrection(
+        0.393f, 0.769f, 0.189f,
+        0.349f, 0.686f, 0.168f,
+        0.272f, 0.534f, 0.131f);
+}

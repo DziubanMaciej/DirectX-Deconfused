@@ -15,7 +15,8 @@ public:
     enum class Type {
         UNDEFINED,
         BLACK_BARS,
-        CONVOLUTION
+        CONVOLUTION,
+        LINEAR_COLOR_CORRECTION
     };
 
     void setEnabled(bool enabled) override;
@@ -31,10 +32,17 @@ public:
     void setConvolutionGaussianBlur() override;
     void setConvolutionEdgeDetection() override;
 
+    void setLinearColorCorrection(XMFLOAT3X3 matrix) override;
+    void setLinearColorCorrection(float a00, float a01, float a02,
+                                  float a10, float a11, float a12,
+                                  float a20, float a21, float a22) override;
+    void setLinearColorCorrectionSepia() override;
+
     auto isEnabled() const { return enabled; }
     auto getType() const { return type; }
     auto &getDataBlackBars() { return *dataBlackBars; }
     auto &getDataConvolution() { return *dataConvolution; }
+    auto &getDataLinearColorCorrection() { return *dataLinearColorCorrection; }
 
 private:
     bool enabled = false;
@@ -45,4 +53,7 @@ private:
 
     using DataConvolution = PostProcessConvolutionCB;
     std::unique_ptr<DataConvolution> dataConvolution = {};
+
+    using DataLinearColorCorrection = PostProcessLinearColorCorrectionCB;
+    std::unique_ptr<DataLinearColorCorrection> dataLinearColorCorrection = {};
 };

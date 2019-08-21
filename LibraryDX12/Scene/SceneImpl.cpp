@@ -330,6 +330,20 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
             // Render
             commandList.IASetVertexBuffer(*postProcessVB);
             commandList.draw(6u);
+        } else if (postProcess->getType() == PostProcessImpl::Type::LINEAR_COLOR_CORRECTION) {
+            // Constant buffer
+            auto &postProcessData = postProcess->getDataLinearColorCorrection();
+            postProcessData.screenWidth = static_cast<float>(swapChain.getWidth());
+            postProcessData.screenHeight = static_cast<float>(swapChain.getHeight());
+
+            // Pipeline state
+            commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_SEPIA);
+            commandList.setCbvSrvUavDescriptorTable(0, 0, source.getSrv(), 1);
+            commandList.setGraphicsRoot32BitConstant(1, postProcessData);
+
+            // Render
+            commandList.IASetVertexBuffer(*postProcessVB);
+            commandList.draw(6u);
         } else {
             UNREACHABLE_CODE();
         }

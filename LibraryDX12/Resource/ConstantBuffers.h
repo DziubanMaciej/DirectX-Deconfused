@@ -23,6 +23,12 @@ struct PostProcessConvolutionCB {
     float divider;
 };
 
+struct PostProcessLinearColorCorrectionCB {
+    XMFLOAT4X3 colorMatrix; // We actually use 3x3, but 4x3 is required due to HLSL packing
+    float screenWidth;
+    float screenHeight;
+};
+
 struct ObjectProperties {
     XMFLOAT3 objectColor;
     float objectSpecularity;
