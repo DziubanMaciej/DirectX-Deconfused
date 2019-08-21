@@ -10,6 +10,8 @@
 #include "DXD/ExternalHeadersWrappers/DirectXMath.h"
 #include <cassert>
 
+// --------------------------------------------------------------------------------------------- General methods
+
 using namespace ShaderRegisterHelpers;
 
 PipelineStateController::PipelineStateController(ID3D12DevicePtr device) : device(device) {}
@@ -63,13 +65,15 @@ void PipelineStateController::compile(Identifier identifier) {
     case Identifier::PIPELINE_STATE_POST_PROCESS_CONVOLUTION:
         compilePipelineStatePostProcessConvolution(rootSignature, pipelineState);
         break;
-    case Identifier::PIPELINE_STATE_POST_PROCESS_SEPIA:
-        compilePipelineStatePostProcessSepia(rootSignature, pipelineState);
+    case Identifier::PIPELINE_STATE_POST_PROCESS_LINEAR_COLOR_CORRECTION:
+        compilePipelineStatePostProcessLinearColorCorrection(rootSignature, pipelineState);
         break;
     default:
         UNREACHABLE_CODE();
     }
 }
+
+// --------------------------------------------------------------------------------------------- 3D
 
 void PipelineStateController::compilePipelineStateDefault(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
@@ -163,38 +167,7 @@ void PipelineStateController::compilePipelineStateTextureNormal(RootSignature &r
         .compile(device, pipelineState);
 }
 
-void PipelineStateController::compilePipelineStatePostProcessBlackBars(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
-    // Root signature - crossthread data
-    D3D12_STATIC_SAMPLER_DESC sampler = {};
-    sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
-    sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-    sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-    sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
-    sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
-    sampler.MaxLOD = D3D12_FLOAT32_MAX;
-    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
-
-    DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
-    table.appendSrvRange(t(0), 1);
-
-    rootSignature
-        .append32bitConstant<PostProcessBlackBarsCB>(b(0), D3D12_SHADER_VISIBILITY_PIXEL)
-        .appendStaticSampler(s(0), sampler)
-        .appendDescriptorTable(std::move(table))
-        .compile(device);
-
-    // Input layout - per vertex data
-    const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
-        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-    };
-
-    // Pipeline state object
-    PipelineState{inputLayout, rootSignature}
-        .VS(L"vertex_post_process.hlsl")
-        .PS(L"pixel_post_process_black_bars.hlsl")
-        .disableDepthStencil()
-        .compile(device, pipelineState);
-}
+// --------------------------------------------------------------------------------------------- Shadow maps
 
 void PipelineStateController::compilePipelineStateShadowMapNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
@@ -233,6 +206,41 @@ void PipelineStateController::compilePipelineStateShadowMapTextureNormal(RootSig
         .compile(device, pipelineState);
 }
 
+// --------------------------------------------------------------------------------------------- Post processes
+
+void PipelineStateController::compilePipelineStatePostProcessBlackBars(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
+    // Root signature - crossthread data
+    D3D12_STATIC_SAMPLER_DESC sampler = {};
+    sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+    sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+    sampler.MaxLOD = D3D12_FLOAT32_MAX;
+    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+    DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
+    table.appendSrvRange(t(0), 1);
+
+    rootSignature
+        .append32bitConstant<PostProcessBlackBarsCB>(b(0), D3D12_SHADER_VISIBILITY_PIXEL)
+        .appendStaticSampler(s(0), sampler)
+        .appendDescriptorTable(std::move(table))
+        .compile(device);
+
+    // Input layout - per vertex data
+    const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+    };
+
+    // Pipeline state object
+    PipelineState{inputLayout, rootSignature}
+        .VS(L"vertex_post_process.hlsl")
+        .PS(L"pixel_post_process_black_bars.hlsl")
+        .disableDepthStencil()
+        .compile(device, pipelineState);
+}
+
 void PipelineStateController::compilePipelineStatePostProcessConvolution(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
     D3D12_STATIC_SAMPLER_DESC sampler = {};
@@ -265,8 +273,7 @@ void PipelineStateController::compilePipelineStatePostProcessConvolution(RootSig
         .compile(device, pipelineState);
 }
 
-void PipelineStateController::compilePipelineStatePostProcessSepia(RootSignature & rootSignature, ID3D12PipelineStatePtr & pipelineState)
-{
+void PipelineStateController::compilePipelineStatePostProcessLinearColorCorrection(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
     D3D12_STATIC_SAMPLER_DESC sampler = {};
     sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
@@ -277,7 +284,7 @@ void PipelineStateController::compilePipelineStatePostProcessSepia(RootSignature
     sampler.MaxLOD = D3D12_FLOAT32_MAX;
     sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-    DescriptorTable table{ D3D12_SHADER_VISIBILITY_PIXEL };
+    DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
     table.appendSrvRange(t(0), 1);
     rootSignature
         .appendStaticSampler(s(0), sampler)
@@ -291,7 +298,7 @@ void PipelineStateController::compilePipelineStatePostProcessSepia(RootSignature
     };
 
     // Pipeline state object
-    PipelineState{ inputLayout, rootSignature }
+    PipelineState{inputLayout, rootSignature}
         .VS(L"vertex_post_process.hlsl")
         .PS(L"pixel_post_process_linear_color_correction.hlsl")
         .disableDepthStencil()

@@ -337,7 +337,7 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
             postProcessData.screenHeight = static_cast<float>(swapChain.getHeight());
 
             // Pipeline state
-            commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_SEPIA);
+            commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_LINEAR_COLOR_CORRECTION);
             commandList.setCbvSrvUavDescriptorTable(0, 0, source.getSrv(), 1);
             commandList.setGraphicsRoot32BitConstant(1, postProcessData);
 
