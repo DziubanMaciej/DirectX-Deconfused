@@ -4,6 +4,7 @@
 
 #include <atomic>
 #include <thread>
+#include <functional>
 
 class BackgroundWorker {
 public:
