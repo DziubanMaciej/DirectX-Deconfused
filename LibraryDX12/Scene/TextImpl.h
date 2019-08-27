@@ -14,7 +14,10 @@ protected:
 
 public:
     TextImpl();
-    TextImpl(std::wstring text, D2D1_COLOR_F color, std::wstring fontFamilyName, IDWriteFontCollection *fontCollection,
+    TextImpl(std::wstring text, D2D1_COLOR_F color, std::wstring fontFamilyName,
+             DXDFontWeight fontWeight, DXDFontStyle fontStyle, DXDFontStretch fontStretch, FLOAT fontSize,
+             std::wstring localeName, DXDTextHorizontalAlignment textAlignment, DXDTextVerticalAlignment paragraphAlignment);
+	TextImpl(std::wstring text, D2D1_COLOR_F color, std::wstring fontFamilyName, IDWriteFontCollection *fontCollection,
              DXDFontWeight fontWeight, DXDFontStyle fontStyle, DXDFontStretch fontStretch, FLOAT fontSize,
              std::wstring localeName, DXDTextHorizontalAlignment textAlignment, DXDTextVerticalAlignment paragraphAlignment);
     ~TextImpl() = default;
@@ -27,7 +30,7 @@ public:
                     std::wstring localeName, DWRITE_TEXT_ALIGNMENT textAlignment, DWRITE_PARAGRAPH_ALIGNMENT paragraphAlignment);
 
     std::wstring getText() { return text; }
-    void setText(std::wstring text) { this->text = text; }
+    void setText(std::wstring text) override { this->text = text; }
 
 protected:
     std::wstring text;

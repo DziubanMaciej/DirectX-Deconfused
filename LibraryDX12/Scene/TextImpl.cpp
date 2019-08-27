@@ -3,9 +3,21 @@
 #include "Application/ApplicationImpl.h"
 #include "Utility/ThrowIfFailed.h"
 
+namespace DXD {
+std::unique_ptr<Text> Text::create() {
+    return std::make_unique<TextImpl>(L"", D2D1::ColorF(D2D1::ColorF::Green, 1.f), L"Comic Sans MS", DXDFontWeight::NORMAL, DXDFontStyle::NORMAL,
+                                      DXDFontStretch::NORMAL, 25., L"pl-PL", DXDTextHorizontalAlignment::LEFT, DXDTextVerticalAlignment::TOP);
+}
+} // namespace DXD
+
 TextImpl::TextImpl() {
     createText(D2D1::ColorF(D2D1::ColorF::Green, 1.f), L"Comic Sans MS", NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
                DWRITE_FONT_STRETCH_NORMAL, 25., L"pl-PL", DWRITE_TEXT_ALIGNMENT_LEADING, DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
+}
+TextImpl::TextImpl(std::wstring text, D2D1_COLOR_F color, std::wstring fontFamilyName,
+                   DXDFontWeight fontWeight, DXDFontStyle fontStyle, DXDFontStretch fontStretch, FLOAT fontSize,
+                   std::wstring localeName, DXDTextHorizontalAlignment textAlignment, DXDTextVerticalAlignment paragraphAlignment) : text(text) {
+    createText(color, fontFamilyName, NULL, (DWRITE_FONT_WEIGHT)fontWeight, (DWRITE_FONT_STYLE)fontStyle, (DWRITE_FONT_STRETCH)fontStretch, fontSize, localeName, (DWRITE_TEXT_ALIGNMENT)textAlignment, (DWRITE_PARAGRAPH_ALIGNMENT)paragraphAlignment);
 }
 
 TextImpl::TextImpl(std::wstring text, D2D1_COLOR_F color, std::wstring fontFamilyName, IDWriteFontCollection *fontCollection,

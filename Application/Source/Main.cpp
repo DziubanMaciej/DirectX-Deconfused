@@ -31,6 +31,7 @@ public:
         prepLights();
         prepCamera();
         prepPostProcesses();
+        prepText();
         prepScene();
         updateCamera();
 
@@ -183,7 +184,13 @@ private:
         postProcesses.back()->setBlackBars(0.0f, 0.0f, 0.05f, 0.05f);
     }
 	void prepText() {
-
+        DXD::log("Loading texts...\n");
+        std::vector<std::string> textNames = {
+            "fpsCounter",
+		};
+        for (auto text : textNames) {
+            texts.insert({text, DXD::Text::create()});
+        }
 	}
 	void prepScene() {
         DXD::log("Preparing scene...\n");
@@ -201,7 +208,9 @@ private:
         for (auto &postProcess : postProcesses) {
             scene->addPostProcess(*postProcess);
         }
-
+        for (auto &text : texts) {
+            scene->addText(*text.second);
+        }
         DXD::log("Preparing scene done.\n");
     }
 
@@ -306,6 +315,9 @@ private:
     }
     void onUpdate(unsigned int deltaTimeMicroseconds) override {
         fpsCounter.push(deltaTimeMicroseconds);
+        std::wstring txt = std::to_wstring(fpsCounter.getFps());
+        txt.append(L" FPS");
+        texts["fpsCounter"]->setText(txt);
         if (fpsCounter.getFrameIndex() % 512) {
             DXD::log("Frame time=%d us, FPS=%d\n", deltaTimeMicroseconds, fpsCounter.getFps());
         }

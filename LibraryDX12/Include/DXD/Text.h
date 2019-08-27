@@ -12,6 +12,7 @@ namespace DXD {
 class EXPORT Text : NonCopyableAndMovable {
 public:
     static std::unique_ptr<Text> create();
+    virtual void setText(std::wstring text) = 0;
     virtual ~Text() = default;
 
 protected:
