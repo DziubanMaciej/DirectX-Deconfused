@@ -29,6 +29,19 @@ struct PostProcessLinearColorCorrectionCB {
     float screenHeight;
 };
 
+struct PostProcessGaussianBlurCB {
+    float screenWidth;
+    float screenHeight;
+    UINT samplingRange;
+    bool horizontal;
+    bool padding[3];
+};
+
+struct PostProcessGaussianBlurData {
+    PostProcessGaussianBlurCB cb;
+    UINT passCount;
+};
+
 struct ObjectProperties {
     XMFLOAT3 objectColor;
     float objectSpecularity;

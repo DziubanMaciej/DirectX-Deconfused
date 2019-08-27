@@ -16,7 +16,8 @@ public:
         UNDEFINED,
         BLACK_BARS,
         CONVOLUTION,
-        LINEAR_COLOR_CORRECTION
+        LINEAR_COLOR_CORRECTION,
+        GAUSSIAN_BLUR
     };
 
     void setEnabled(bool enabled) override;
@@ -38,6 +39,8 @@ public:
                                   float a20, float a21, float a22) override;
     void setLinearColorCorrectionSepia() override;
 
+    void setGaussianBlur(UINT passCount, UINT samplingRange) override;
+
     auto isEnabled() const { return enabled; }
     auto getType() const { return type; }
     auto &getData() { return data; }
@@ -50,6 +53,7 @@ private:
         PostProcessBlackBarsCB blackBars;
         PostProcessConvolutionCB convolution;
         PostProcessLinearColorCorrectionCB linearColorCorrection;
+        PostProcessGaussianBlurData gaussianBlur;
     };
     Data data = {};
 };

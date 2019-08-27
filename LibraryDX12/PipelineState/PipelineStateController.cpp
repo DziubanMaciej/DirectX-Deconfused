@@ -68,6 +68,9 @@ void PipelineStateController::compile(Identifier identifier) {
     case Identifier::PIPELINE_STATE_POST_PROCESS_LINEAR_COLOR_CORRECTION:
         compilePipelineStatePostProcessLinearColorCorrection(rootSignature, pipelineState);
         break;
+    case Identifier::PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR:
+        compilePipelineStatePostProcessGaussianBlur(rootSignature, pipelineState);
+        break;
     default:
         UNREACHABLE_CODE();
     }
@@ -252,4 +255,8 @@ void PipelineStateController::compilePipelineStatePostProcessConvolution(RootSig
 
 void PipelineStateController::compilePipelineStatePostProcessLinearColorCorrection(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     compileBasicPipelineStatePostProcess<PostProcessLinearColorCorrectionCB>(device, rootSignature, pipelineState, L"pixel_post_process_linear_color_correction.hlsl");
+}
+
+void PipelineStateController::compilePipelineStatePostProcessGaussianBlur(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
+    compileBasicPipelineStatePostProcess<PostProcessGaussianBlurCB>(device, rootSignature, pipelineState, L"pixel_post_process_gaussian_blur.hlsl");
 }

@@ -82,8 +82,8 @@ void PostProcessImpl::setLinearColorCorrection(float a00, float a01, float a02,
     data.screenWidth = -1;
     data.screenHeight = -1;
     data.colorMatrix = XMFLOAT4X3(a00, a01, a02, 0.f,
-                                                              a10, a11, a12, 0.f,
-                                                              a20, a21, a22, 0.f);
+                                  a10, a11, a12, 0.f,
+                                  a20, a21, a22, 0.f);
 }
 
 void PostProcessImpl::setLinearColorCorrection(XMFLOAT3X3 matrix) {
@@ -97,4 +97,19 @@ void PostProcessImpl::setLinearColorCorrectionSepia() {
         0.393f, 0.769f, 0.189f,
         0.349f, 0.686f, 0.168f,
         0.272f, 0.534f, 0.131f);
+}
+
+void PostProcessImpl::setGaussianBlur(UINT passCount, UINT samplingRange) {
+    this->type = Type::GAUSSIAN_BLUR;
+    this->enabled = passCount > 0u;
+
+    constexpr static UINT maxPassCount = 10u;
+    constexpr static UINT maxSamplingRange = 5u;
+
+    auto &data = this->data.gaussianBlur;
+    data.cb.screenHeight = -1;
+    data.cb.screenWidth = -1;
+    data.cb.samplingRange = std::min(samplingRange, maxSamplingRange);
+    data.cb.horizontal = false;
+    data.passCount = std::min(passCount, maxPassCount);
 }

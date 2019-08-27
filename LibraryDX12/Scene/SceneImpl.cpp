@@ -344,6 +344,60 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
             // Render
             commandList.IASetVertexBuffer(*postProcessVB);
             commandList.draw(6u);
+        } else if (postProcess->getType() == PostProcessImpl::Type::GAUSSIAN_BLUR) {
+            // Constant buffer
+            auto &postProcessData = postProcess->getData().gaussianBlur;
+            postProcessData.cb.screenWidth = static_cast<float>(swapChain.getWidth());
+            postProcessData.cb.screenHeight = static_cast<float>(swapChain.getHeight());
+
+            // Pipeline state
+            commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR);
+     
+            commandList.IASetVertexBuffer(*postProcessVB);
+
+            // Render
+            for (auto passIndex = 0u; passIndex < postProcessData.passCount; passIndex++) {
+                RenderTarget &destination = renderTargets.getDestination();
+                RenderTarget &source = renderTargets.getSource();
+
+                // Resources states
+                commandList.transitionBarrier(source, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+                commandList.transitionBarrier(destination, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+                // Prepare render target
+                commandList.OMSetRenderTargetNoDepth(destination.getRtv(), destination.getResource());
+                commandList.clearRenderTargetView(destination.getRtv(), backgroundColor);
+                commandList.setCbvSrvUavDescriptorTable(1, 0, source.getSrv(), 1);
+
+
+                postProcessData.cb.horizontal = true;
+                commandList.setGraphicsRoot32BitConstant(0, postProcessData.cb);
+                commandList.draw(6u);
+
+                renderTargets.swapResources();
+
+
+                const bool lastPostProcess = (passIndex == postProcessData.passCount - 1);
+                RenderTarget &destination2 = lastPostProcess ? output : renderTargets.getDestination();
+                RenderTarget &source2 = renderTargets.getSource();
+
+                // Resources states
+                commandList.transitionBarrier(source2, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+                commandList.transitionBarrier(destination2, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+                // Prepare render target
+                commandList.OMSetRenderTargetNoDepth(destination2.getRtv(), destination2.getResource());
+                commandList.clearRenderTargetView(destination2.getRtv(), backgroundColor);
+                commandList.setCbvSrvUavDescriptorTable(1, 0, source2.getSrv(), 1);
+
+                postProcessData.cb.horizontal = false;
+                commandList.setGraphicsRoot32BitConstant(0, postProcessData.cb);
+                commandList.draw(6u);
+
+                if (!lastPostProcess) {
+                    renderTargets.swapResources();
+                }
+            }
         } else {
             UNREACHABLE_CODE();
         }
