@@ -12,6 +12,8 @@
 #include <algorithm>
 #include <cassert>
 
+// --------------------------------------------------------------------------- API
+
 namespace DXD {
 std::unique_ptr<Scene> Scene::create(DXD::Application &application) {
     return std::unique_ptr<Scene>{new SceneImpl(*static_cast<ApplicationImpl *>(&application))};
@@ -85,6 +87,8 @@ DXD::Camera *SceneImpl::getCamera() {
     return camera;
 }
 
+// ---------------------------------------------------------------------------  Helpers
+
 void SceneImpl::inspectObjectsNotReady() {
     for (auto it = objectsNotReady.begin(); it != objectsNotReady.end();) {
         ObjectImpl *object = *it;
@@ -107,6 +111,19 @@ size_t SceneImpl::getEnabledPostProcessesCount() const {
     }
     return count;
 }
+
+void SceneImpl::getAndPrepareSourceAndDestinationForPostProcess(CommandList &commandList, PostProcessRenderTargets &renderTargets, bool last,
+                                                                RenderTarget &finalOutput, RenderTarget *&outSource, RenderTarget *&outDestination) {
+    // Get resources
+    outSource = &renderTargets.getSource();
+    outDestination = last ? &finalOutput : &renderTargets.getDestination();
+
+    // Set states
+    commandList.transitionBarrier(*outSource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    commandList.transitionBarrier(*outDestination, D3D12_RESOURCE_STATE_RENDER_TARGET);
+}
+
+// --------------------------------------------------------------------------- Render methods
 
 void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, CommandList &commandList) {
     const auto shadowMapsUsed = std::min(size_t{8u}, lights.size());
@@ -283,115 +300,96 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
                                     size_t enablePostProcessesCount, RenderTarget &output) {
     // TODO skip disabled post processes
     size_t postProcessIndex = 0u;
+    RenderTarget *source{}, *destination{};
     for (PostProcessImpl *postProcess : postProcesses) {
         if (!postProcess->isEnabled()) {
             continue;
         }
 
-        // Get source and destination resources
+        // Get resources
         const bool lastPostProcess = (postProcessIndex == enablePostProcessesCount - 1);
-        RenderTarget &destination = lastPostProcess ? output : renderTargets.getDestination();
-        RenderTarget &source = renderTargets.getSource();
-
-        // Resources states
-        commandList.transitionBarrier(source, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        commandList.transitionBarrier(destination, D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-        // Prepare render target
-        commandList.OMSetRenderTargetNoDepth(destination.getRtv(), destination.getResource());
-        commandList.clearRenderTargetView(destination.getRtv(), backgroundColor);
+        getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, lastPostProcess, output, source, destination);
 
         // Render post process base on its type
         if (postProcess->getType() == PostProcessImpl::Type::CONVOLUTION) {
-            // Constant buffer
+            // Prepare constant buffer
             auto &postProcessData = postProcess->getData().convolution;
             postProcessData.screenWidth = static_cast<float>(swapChain.getWidth());
             postProcessData.screenHeight = static_cast<float>(swapChain.getHeight());
 
-            // Pipeline state
+            // Set state
             commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_CONVOLUTION);
             commandList.setGraphicsRoot32BitConstant(0, postProcessData);
-            commandList.setCbvSrvUavDescriptorTable(1, 0, source.getSrv(), 1);
+            commandList.setCbvSrvUavDescriptorTable(1, 0, source->getSrv(), 1);
+            commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
+            commandList.IASetVertexBuffer(*postProcessVB);
 
             // Render
-            commandList.IASetVertexBuffer(*postProcessVB);
             commandList.draw(6u);
         } else if (postProcess->getType() == PostProcessImpl::Type::BLACK_BARS) {
-            // Constant buffer
+            // Prepare constant buffer
             auto &postProcessData = postProcess->getData().blackBars;
             postProcessData.screenWidth = static_cast<float>(swapChain.getWidth());
             postProcessData.screenHeight = static_cast<float>(swapChain.getHeight());
 
-            // Pipeline state
+            // Set state
             commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_BLACK_BARS);
             commandList.setGraphicsRoot32BitConstant(0, postProcessData);
-            commandList.setCbvSrvUavDescriptorTable(1, 0, source.getSrv(), 1);
+            commandList.setCbvSrvUavDescriptorTable(1, 0, source->getSrv(), 1);
+            commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
+            commandList.IASetVertexBuffer(*postProcessVB);
+
+            source->getResource()->SetName(L"SOURCE");
+            destination->getResource()->SetName(L"DSTNATION");
 
             // Render
-            commandList.IASetVertexBuffer(*postProcessVB);
             commandList.draw(6u);
         } else if (postProcess->getType() == PostProcessImpl::Type::LINEAR_COLOR_CORRECTION) {
-            // Constant buffer
+            // Prepare onstant buffer
             auto &postProcessData = postProcess->getData().linearColorCorrection;
             postProcessData.screenWidth = static_cast<float>(swapChain.getWidth());
             postProcessData.screenHeight = static_cast<float>(swapChain.getHeight());
 
-            // Pipeline state
+            // Set state
             commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_LINEAR_COLOR_CORRECTION);
             commandList.setGraphicsRoot32BitConstant(0, postProcessData);
-            commandList.setCbvSrvUavDescriptorTable(1, 0, source.getSrv(), 1);
+            commandList.setCbvSrvUavDescriptorTable(1, 0, source->getSrv(), 1);
+            commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
+            commandList.IASetVertexBuffer(*postProcessVB);
 
             // Render
-            commandList.IASetVertexBuffer(*postProcessVB);
             commandList.draw(6u);
         } else if (postProcess->getType() == PostProcessImpl::Type::GAUSSIAN_BLUR) {
-            // Constant buffer
+            // Prepare constant buffer
             auto &postProcessData = postProcess->getData().gaussianBlur;
             postProcessData.cb.screenWidth = static_cast<float>(swapChain.getWidth());
             postProcessData.cb.screenHeight = static_cast<float>(swapChain.getHeight());
 
-            // Pipeline state
+            // Set cross-pass state
             commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR);
-     
             commandList.IASetVertexBuffer(*postProcessVB);
 
-            // Render
+            // Render all passes of the blur filter
             for (auto passIndex = 0u; passIndex < postProcessData.passCount; passIndex++) {
-                RenderTarget &destination = renderTargets.getDestination();
-                RenderTarget &source = renderTargets.getSource();
-
-                // Resources states
-                commandList.transitionBarrier(source, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-                commandList.transitionBarrier(destination, D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-                // Prepare render target
-                commandList.OMSetRenderTargetNoDepth(destination.getRtv(), destination.getResource());
-                commandList.clearRenderTargetView(destination.getRtv(), backgroundColor);
-                commandList.setCbvSrvUavDescriptorTable(1, 0, source.getSrv(), 1);
-
-
+                // Render horizontal pass
+                getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, false, output, source, destination);
                 postProcessData.cb.horizontal = true;
+                commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
+                commandList.clearRenderTargetView(destination->getRtv(), backgroundColor);
                 commandList.setGraphicsRoot32BitConstant(0, postProcessData.cb);
+                commandList.setCbvSrvUavDescriptorTable(1, 0, source->getSrv(), 1);
                 commandList.draw(6u);
 
                 renderTargets.swapResources();
 
-
-                const bool lastPostProcess = (passIndex == postProcessData.passCount - 1);
-                RenderTarget &destination2 = lastPostProcess ? output : renderTargets.getDestination();
-                RenderTarget &source2 = renderTargets.getSource();
-
-                // Resources states
-                commandList.transitionBarrier(source2, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-                commandList.transitionBarrier(destination2, D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-                // Prepare render target
-                commandList.OMSetRenderTargetNoDepth(destination2.getRtv(), destination2.getResource());
-                commandList.clearRenderTargetView(destination2.getRtv(), backgroundColor);
-                commandList.setCbvSrvUavDescriptorTable(1, 0, source2.getSrv(), 1);
-
+                // Render vertical pass
+                const bool lastPass = (passIndex == postProcessData.passCount - 1);
+                getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, lastPass, output, source, destination);
                 postProcessData.cb.horizontal = false;
+                commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
+                commandList.clearRenderTargetView(destination->getRtv(), backgroundColor);
                 commandList.setGraphicsRoot32BitConstant(0, postProcessData.cb);
+                commandList.setCbvSrvUavDescriptorTable(1, 0, source->getSrv(), 1);
                 commandList.draw(6u);
 
                 if (!lastPostProcess) {

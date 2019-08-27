@@ -41,9 +41,13 @@ public:
     void render(SwapChain &swapChain, RenderData &renderData);
 
 protected:
+    // Helpers
     void inspectObjectsNotReady();
     size_t getEnabledPostProcessesCount() const;
+    void getAndPrepareSourceAndDestinationForPostProcess(CommandList &commandList, PostProcessRenderTargets &renderTargets, bool last,
+                                                         RenderTarget &finalOutput, RenderTarget *&outSource, RenderTarget *&outDestination);
 
+    // Render methods
     void renderShadowMaps(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
     void renderForward(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, RenderTarget &output);
     void renderPostProcesses(SwapChain &swapChain, PostProcessRenderTargets &renderTargets, CommandList &commandList,
