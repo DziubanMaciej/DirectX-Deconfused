@@ -15,6 +15,8 @@ PostProcessRenderTargets::PostProcessRenderTargets(ID3D12DevicePtr &device, Desc
 }
 
 void RenderData::resize(int width, int height) {
+    width = std::max(static_cast<uint32_t>(width), 1u);
+    height = std::max(static_cast<uint32_t>(height), 1u);
     postProcessRenderTargets.resize(width, height);
 
     // Shadow maps

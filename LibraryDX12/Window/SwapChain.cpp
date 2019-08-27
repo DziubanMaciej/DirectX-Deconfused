@@ -70,7 +70,7 @@ void SwapChain::updateRenderTargetViews() {
 
         backBufferEntries[i].backBuffer.setResource(backBuffer);
         backBufferEntries[i].backBuffer.createRtv(nullptr);
-        D3D11_RESOURCE_FLAGS d3d11Flags = {D3D11_BIND_RENDER_TARGET};
+		D3D11_RESOURCE_FLAGS d3d11Flags = {D3D11_BIND_RENDER_TARGET};
         throwIfFailed(ApplicationImpl::getInstance().m_d3d11On12Device->CreateWrappedResource(
             backBuffer.Get(),
             &d3d11Flags,
@@ -112,9 +112,14 @@ void SwapChain::resize(int desiredWidth, int desiredHeight) {
 
 void SwapChain::resetRenderTargetViews() {
     for (auto &backBufferEntry : backBufferEntries) {
+        backBufferEntry.m_d2dRenderTargets.Reset();
+        backBufferEntry.m_wrappedBackBuffers.Reset();
         backBufferEntry.backBuffer.getResource().Reset();
         backBufferEntry.lastFence = currentBackBufferIndex;
     }
+    auto &application = ApplicationImpl::getInstance();
+    application.m_d2dDeviceContext->SetTarget(nullptr);
+    application.m_d3d11DeviceContext->Flush();
 }
 
 void SwapChain::resizeRenderTargets(uint32_t desiredWidth, uint32_t desiredHeight) {

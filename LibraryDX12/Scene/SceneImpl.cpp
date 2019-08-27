@@ -378,24 +378,24 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
         renderPostProcesses(swapChain, renderData.getPostProcessRenderTargets(), commandList, postProcessesCount, backBuffer);
     }
 
-    {
-        throwIfFailed(application.m_d2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Red, 0.3f), &application.m_textBrush));
-        throwIfFailed(application.m_dWriteFactory->CreateTextFormat(
-            L"Comic Sans MS",
-            NULL,
-            DWRITE_FONT_WEIGHT_NORMAL,
-            DWRITE_FONT_STYLE_NORMAL,
-            DWRITE_FONT_STRETCH_NORMAL,
-            50,
-            L"pl-PL",
-            &application.m_textFormat));
-        throwIfFailed(application.m_textFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER));
-        throwIfFailed(application.m_textFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER));
-    }
-    {
+    //// TEMP BEGIN
+    TextImpl upleft(L"up left test", D2D1::ColorF(D2D1::ColorF::Green, 1.f), L"Comic Sans MS", NULL, DXDFontWeight::NORMAL, DXDFontStyle::NORMAL,
+                    DXDFontStretch::NORMAL, 25., L"pl-PL", DXDTextHorizontalAlignment::LEFT, DXDTextVerticalAlignment::TOP);
+    TextImpl downleft(L"down left test", D2D1::ColorF(D2D1::ColorF::Green, 1.f), L"Comic Sans MS", NULL, DXDFontWeight::NORMAL, DXDFontStyle::NORMAL,
+                      DXDFontStretch::NORMAL, 25., L"pl-PL", DXDTextHorizontalAlignment::LEFT, DXDTextVerticalAlignment::BOTTOM);
+    TextImpl upright(L"up right test", D2D1::ColorF(D2D1::ColorF::Green, 1.f), L"Comic Sans MS", NULL, DXDFontWeight::NORMAL, DXDFontStyle::NORMAL,
+                     DXDFontStretch::NORMAL, 25., L"pl-PL", DXDTextHorizontalAlignment::RIGHT, DXDTextVerticalAlignment::TOP);
+    TextImpl downright(L"down right test", D2D1::ColorF(D2D1::ColorF::Green, 1.f), L"Comic Sans MS", NULL, DXDFontWeight::NORMAL, DXDFontStyle::NORMAL,
+                       DXDFontStretch::NORMAL, 25., L"pl-PL", DXDTextHorizontalAlignment::RIGHT, DXDTextVerticalAlignment::BOTTOM);
+    texts.insert(&upleft);
+    texts.insert(&downleft);
+    texts.insert(&upright);
+    texts.insert(&downright);
+    //// TEMP END
+
+    for (auto &txt : texts) {
         D2D1_SIZE_F rtSize = swapChain.getCurrentD2DBackBuffer()->GetSize();
         D2D1_RECT_F textRect = D2D1::RectF(0, 0, rtSize.width, rtSize.height);
-        static const WCHAR text[] = L"za¿ó³æ gêœl¹ jaŸñ";
 
         // Acquire our wrapped render target resource for the current back buffer.
         application.m_d3d11On12Device->AcquireWrappedResources(swapChain.getCurrentD11BackBuffer().GetAddressOf(), 1);
@@ -405,21 +405,24 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
         application.m_d2dDeviceContext->BeginDraw();
         application.m_d2dDeviceContext->SetTransform(D2D1::Matrix3x2F::Identity());
         application.m_d2dDeviceContext->DrawText(
-            text,
-            _countof(text) - 1,
-            application.m_textFormat.Get(),
+            txt->getText().c_str(),
+            txt->getText().size(),
+            txt->m_textFormat.Get(),
             &textRect,
-            application.m_textBrush.Get());
+            txt->m_textBrush.Get());
         throwIfFailed(application.m_d2dDeviceContext->EndDraw());
-
-        // Release our wrapped render target resource. Releasing
-        // transitions the back buffer resource to the state specified
-        // as the OutState when the wrapped resource was created.
-        application.m_d3d11On12Device->ReleaseWrappedResources(swapChain.getCurrentD11BackBuffer().GetAddressOf(), 1);
-        backBuffer.setState(D3D12_RESOURCE_STATE_PRESENT);
     }
+
+    texts.clear();
+
+    // Release our wrapped render target resource. Releasing
+    // transitions the back buffer resource to the state specified
+    // as the OutState when the wrapped resource was created.
+    application.m_d3d11On12Device->ReleaseWrappedResources(swapChain.getCurrentD11BackBuffer().GetAddressOf(), 1);
+    backBuffer.setState(D3D12_RESOURCE_STATE_PRESENT);
+
     // Transition to PRESENT
-    //  commandList.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_PRESENT);
+    commandList.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_PRESENT);
 
     // Close command list
     commandList.close();

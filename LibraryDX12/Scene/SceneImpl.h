@@ -5,6 +5,7 @@
 #include "Scene/LightImpl.h"
 #include "Scene/ObjectImpl.h"
 #include "Scene/PostProcessImpl.h"
+#include "Scene/TextImpl.h"
 
 #include "DXD/Scene.h"
 
@@ -62,6 +63,7 @@ protected:
     std::vector<LightImpl *> lights;
     std::set<ObjectImpl *> objects; // TODO might not be the best data structure for that
     std::set<ObjectImpl *> objectsNotReady;
+    std::set<TextImpl *> texts;
     std::vector<PostProcessImpl *> postProcesses = {};
     CameraImpl *camera;
 

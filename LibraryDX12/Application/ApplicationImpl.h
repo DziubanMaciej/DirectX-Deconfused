@@ -80,6 +80,5 @@ public:
     Microsoft::WRL::ComPtr<ID2D1Factory3> m_d2dFactory;
     Microsoft::WRL::ComPtr<ID2D1Device2> m_d2dDevice;
     Microsoft::WRL::ComPtr<ID2D1DeviceContext2> m_d2dDeviceContext;
-    Microsoft::WRL::ComPtr<IDWriteTextFormat> m_textFormat;
-    Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> m_textBrush;
+
 };

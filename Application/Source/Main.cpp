@@ -11,6 +11,7 @@
 #include "DXD/PostProcess.h"
 #include "DXD/Scene.h"
 #include "DXD/Settings.h"
+#include "DXD/Text.h"
 #include "DXD/Texture.h"
 #include "DXD/Window.h"
 
@@ -181,7 +182,10 @@ private:
         postProcesses.push_back(DXD::PostProcess::create());
         postProcesses.back()->setBlackBars(0.0f, 0.0f, 0.05f, 0.05f);
     }
-    void prepScene() {
+	void prepText() {
+
+	}
+	void prepScene() {
         DXD::log("Preparing scene...\n");
         scene = DXD::Scene::create(*application);
         scene->setBackgroundColor(0.3f, 0.8f, 1.0f);
@@ -329,6 +333,7 @@ private:
     std::unordered_map<std::string, std::unique_ptr<DXD::Mesh>> meshes;
     std::unordered_map<std::string, std::unique_ptr<DXD::Light>> lights;
     std::unordered_map<std::string, std::unique_ptr<DXD::Object>> objects;
+    std::unordered_map<std::string, std::unique_ptr<DXD::Text>> texts;
     std::vector<std::unique_ptr<DXD::PostProcess>> postProcesses;
 
     // TODO: unordered_map for three below
