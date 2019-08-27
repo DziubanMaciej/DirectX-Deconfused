@@ -4,22 +4,11 @@
 #include "Descriptor/DescriptorController.h"
 #include "Resource/ConstantBuffer.h"
 #include "Resource/RenderTarget.h"
+#include "Utility/AlternatingResources.h"
 
-struct PostProcessRenderTargets {
-    PostProcessRenderTargets(ID3D12DevicePtr &device, DescriptorController &descriptorController);
-    void resize(int width, int height);
-
-    RenderTarget &getSource() { return *resources[sourceResourceIndex]; }
-    RenderTarget &getDestination() { return *resources[1 - sourceResourceIndex]; }
-
-    void swapResources() {
-        sourceResourceIndex = 1 - sourceResourceIndex;
-    }
-
-private:
-    ID3D12DevicePtr device = {};
-    int sourceResourceIndex = 0;
-    std::unique_ptr<RenderTarget> resources[2] = {};
+struct PostProcessRenderTargets : AlternatingResources {
+    using AlternatingResources::AlternatingResources;
+    void resize(int width, int height) override;
 };
 
 class RenderData {
