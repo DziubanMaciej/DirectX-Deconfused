@@ -40,20 +40,16 @@ public:
 
     auto isEnabled() const { return enabled; }
     auto getType() const { return type; }
-    auto &getDataBlackBars() { return *dataBlackBars; }
-    auto &getDataConvolution() { return *dataConvolution; }
-    auto &getDataLinearColorCorrection() { return *dataLinearColorCorrection; }
+    auto &getData() { return data; }
 
 private:
     bool enabled = false;
     Type type = Type::UNDEFINED;
 
-    using DataBlackBars = PostProcessBlackBarsCB;
-    std::unique_ptr<DataBlackBars> dataBlackBars = {};
-
-    using DataConvolution = PostProcessConvolutionCB;
-    std::unique_ptr<DataConvolution> dataConvolution = {};
-
-    using DataLinearColorCorrection = PostProcessLinearColorCorrectionCB;
-    std::unique_ptr<DataLinearColorCorrection> dataLinearColorCorrection = {};
+    union Data {
+        PostProcessBlackBarsCB blackBars;
+        PostProcessConvolutionCB convolution;
+        PostProcessLinearColorCorrectionCB linearColorCorrection;
+    };
+    Data data = {};
 };

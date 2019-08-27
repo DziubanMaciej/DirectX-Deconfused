@@ -304,7 +304,7 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
         // Render post process base on its type
         if (postProcess->getType() == PostProcessImpl::Type::CONVOLUTION) {
             // Constant buffer
-            auto &postProcessData = postProcess->getDataConvolution();
+            auto &postProcessData = postProcess->getData().convolution;
             postProcessData.screenWidth = static_cast<float>(swapChain.getWidth());
             postProcessData.screenHeight = static_cast<float>(swapChain.getHeight());
 
@@ -318,7 +318,7 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
             commandList.draw(6u);
         } else if (postProcess->getType() == PostProcessImpl::Type::BLACK_BARS) {
             // Constant buffer
-            auto &postProcessData = postProcess->getDataBlackBars();
+            auto &postProcessData = postProcess->getData().blackBars;
             postProcessData.screenWidth = static_cast<float>(swapChain.getWidth());
             postProcessData.screenHeight = static_cast<float>(swapChain.getHeight());
 
@@ -332,7 +332,7 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
             commandList.draw(6u);
         } else if (postProcess->getType() == PostProcessImpl::Type::LINEAR_COLOR_CORRECTION) {
             // Constant buffer
-            auto &postProcessData = postProcess->getDataLinearColorCorrection();
+            auto &postProcessData = postProcess->getData().linearColorCorrection;
             postProcessData.screenWidth = static_cast<float>(swapChain.getWidth());
             postProcessData.screenHeight = static_cast<float>(swapChain.getHeight());
 
