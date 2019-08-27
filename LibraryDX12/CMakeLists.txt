@@ -17,5 +17,5 @@ set_working_directory_to_bin(${TARGET_NAME})
 set_shaders_properties(${TARGET_NAME} OFF)
 
 # Dependencies
-target_link_libraries(${TARGET_NAME} "DXGI.lib" "D3D12.lib" "D3Dcompiler.lib" "DirectXTex.lib")
+target_link_libraries(${TARGET_NAME} "DXGI.lib" "D3D12.lib" "D3Dcompiler.lib" "DirectXTex.lib" "d3d11.lib" "d2d1.lib" "dwrite.lib")
 add_dependencies(${TARGET_NAME} "DirectXTex")
