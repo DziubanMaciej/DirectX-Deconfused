@@ -186,8 +186,14 @@ private:
     void prepText() {
         DXD::log("Loading texts...\n");
         std::vector<std::string> textNames = {
-            "fpsCounter",
+            "fpsCounter"
         };
+        std::string test = "0";
+        for (int i = 0; i < 100; i++) {
+            test = test.append("0");
+            textNames.push_back(test);
+		}
+
         for (auto text : textNames) {
             texts.insert({text, DXD::Text::create()});
         }

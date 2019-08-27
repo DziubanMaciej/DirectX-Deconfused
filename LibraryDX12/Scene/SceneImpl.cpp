@@ -383,26 +383,25 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     }
 
     if (!texts.empty()) {
-        for (auto txt : texts) {
-            D2D1_SIZE_F rtSize = swapChain.getCurrentD2DBackBuffer()->GetSize();
-            D2D1_RECT_F textRect = D2D1::RectF(0, 0, rtSize.width, rtSize.height);
-
-            // Acquire our wrapped render target resource for the current back buffer.
-            application.m_d3d11On12Device->AcquireWrappedResources(swapChain.getCurrentD11BackBuffer().GetAddressOf(), 1);
-
-            // Render text directly to the back buffer.
-            application.m_d2dDeviceContext->SetTarget(swapChain.getCurrentD2DBackBuffer().Get());
-            application.m_d2dDeviceContext->BeginDraw();
-            application.m_d2dDeviceContext->SetTransform(D2D1::Matrix3x2F::Identity());
+        D2D1_SIZE_F rtSize = swapChain.getCurrentD2DBackBuffer()->GetSize();
+        D2D1_RECT_F textRect = D2D1::RectF(0, 0, rtSize.width, rtSize.height);
+        // Acquire our wrapped render target resource for the current back buffer.
+        application.m_d3d11On12Device->AcquireWrappedResources(swapChain.getCurrentD11BackBuffer().GetAddressOf(), 1);
+        // Render text directly to the back buffer.
+        application.m_d2dDeviceContext->SetTarget(swapChain.getCurrentD2DBackBuffer().Get());
+        application.m_d2dDeviceContext->BeginDraw();
+        application.m_d2dDeviceContext->SetTransform(D2D1::Matrix3x2F::Identity());
+		for (auto txt : texts) {
             application.m_d2dDeviceContext->DrawText(
                 txt->getText().c_str(),
                 txt->getText().size(),
                 txt->m_textFormat.Get(),
                 &textRect,
                 txt->m_textBrush.Get());
-            throwIfFailed(application.m_d2dDeviceContext->EndDraw());
         }
-        // Release our wrapped render target resource. Releasing
+        throwIfFailed(application.m_d2dDeviceContext->EndDraw());
+        
+		// Release our wrapped render target resource. Releasing
         // transitions the back buffer resource to the state specified
         // as the OutState when the wrapped resource was created.
         application.m_d3d11On12Device->ReleaseWrappedResources(swapChain.getCurrentD11BackBuffer().GetAddressOf(), 1);

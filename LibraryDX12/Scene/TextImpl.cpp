@@ -5,7 +5,7 @@
 
 namespace DXD {
 std::unique_ptr<Text> Text::create() {
-    return std::make_unique<TextImpl>(L"", D2D1::ColorF(D2D1::ColorF::Green, 1.f), L"Comic Sans MS", DXDFontWeight::NORMAL, DXDFontStyle::NORMAL,
+    return std::make_unique<TextImpl>(L"BLANK TEXT", D2D1::ColorF(D2D1::ColorF::Green, 1.f), L"Comic Sans MS", DXDFontWeight::NORMAL, DXDFontStyle::NORMAL,
                                       DXDFontStretch::NORMAL, 25., L"pl-PL", DXDTextHorizontalAlignment::LEFT, DXDTextVerticalAlignment::TOP);
 }
 } // namespace DXD
