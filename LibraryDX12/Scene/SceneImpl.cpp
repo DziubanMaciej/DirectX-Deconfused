@@ -379,53 +379,47 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     }
 
     {
-        //      commandList.transitionBarrier(swapChain.getCurrentBackBuffer(), D3D12_RESOURCE_STATE_RENDER_TARGET);
-        {
-            throwIfFailed(application.m_d2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Black), &application.m_textBrush));
-            throwIfFailed(application.m_dWriteFactory->CreateTextFormat(
-                L"Verdana",
-                NULL,
-                DWRITE_FONT_WEIGHT_NORMAL,
-                DWRITE_FONT_STYLE_NORMAL,
-                DWRITE_FONT_STRETCH_NORMAL,
-                50,
-                L"en-us",
-                &application.m_textFormat));
-            throwIfFailed(application.m_textFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER));
-            throwIfFailed(application.m_textFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER));
-        }
-        {
-            D2D1_SIZE_F rtSize = swapChain.getCurrentD2DBackBuffer()->GetSize();
-            D2D1_RECT_F textRect = D2D1::RectF(0, 0, rtSize.width, rtSize.height);
-            static const WCHAR text[] = L"d00psko";
-
-            // Acquire our wrapped render target resource for the current back buffer.
-            application.m_d3d11On12Device->AcquireWrappedResources(swapChain.getCurrentD11BackBuffer().GetAddressOf(), 1);
-
-            // Render text directly to the back buffer.
-            application.m_d2dDeviceContext->SetTarget(swapChain.getCurrentD2DBackBuffer().Get());
-            application.m_d2dDeviceContext->BeginDraw();
-            application.m_d2dDeviceContext->SetTransform(D2D1::Matrix3x2F::Identity());
-            application.m_d2dDeviceContext->DrawText(
-                text,
-                _countof(text) - 1,
-                application.m_textFormat.Get(),
-                &textRect,
-                application.m_textBrush.Get());
-            throwIfFailed(application.m_d2dDeviceContext->EndDraw());
-
-            // Release our wrapped render target resource. Releasing
-            // transitions the back buffer resource to the state specified
-            // as the OutState when the wrapped resource was created.
-            application.m_d3d11On12Device->ReleaseWrappedResources(swapChain.getCurrentD11BackBuffer().GetAddressOf(), 1);
-
-            // Flush to submit the 11 command list to the shared command queue.
-            application.m_d3d11DeviceContext->Flush();
-        }
+        throwIfFailed(application.m_d2dDeviceContext->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Red, 0.3f), &application.m_textBrush));
+        throwIfFailed(application.m_dWriteFactory->CreateTextFormat(
+            L"Comic Sans MS",
+            NULL,
+            DWRITE_FONT_WEIGHT_NORMAL,
+            DWRITE_FONT_STYLE_NORMAL,
+            DWRITE_FONT_STRETCH_NORMAL,
+            50,
+            L"pl-PL",
+            &application.m_textFormat));
+        throwIfFailed(application.m_textFormat->SetTextAlignment(DWRITE_TEXT_ALIGNMENT_CENTER));
+        throwIfFailed(application.m_textFormat->SetParagraphAlignment(DWRITE_PARAGRAPH_ALIGNMENT_CENTER));
     }
+    {
+        D2D1_SIZE_F rtSize = swapChain.getCurrentD2DBackBuffer()->GetSize();
+        D2D1_RECT_F textRect = D2D1::RectF(0, 0, rtSize.width, rtSize.height);
+        static const WCHAR text[] = L"za¿ó³æ gêœl¹ jaŸñ";
 
+        // Acquire our wrapped render target resource for the current back buffer.
+        application.m_d3d11On12Device->AcquireWrappedResources(swapChain.getCurrentD11BackBuffer().GetAddressOf(), 1);
+
+        // Render text directly to the back buffer.
+        application.m_d2dDeviceContext->SetTarget(swapChain.getCurrentD2DBackBuffer().Get());
+        application.m_d2dDeviceContext->BeginDraw();
+        application.m_d2dDeviceContext->SetTransform(D2D1::Matrix3x2F::Identity());
+        application.m_d2dDeviceContext->DrawText(
+            text,
+            _countof(text) - 1,
+            application.m_textFormat.Get(),
+            &textRect,
+            application.m_textBrush.Get());
+        throwIfFailed(application.m_d2dDeviceContext->EndDraw());
+
+        // Release our wrapped render target resource. Releasing
+        // transitions the back buffer resource to the state specified
+        // as the OutState when the wrapped resource was created.
+        application.m_d3d11On12Device->ReleaseWrappedResources(swapChain.getCurrentD11BackBuffer().GetAddressOf(), 1);
+        backBuffer.setState(D3D12_RESOURCE_STATE_PRESENT);
+    }
     // Transition to PRESENT
-    commandList.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_PRESENT);
+    //  commandList.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_PRESENT);
 
     // Close command list
     commandList.close();
@@ -435,6 +429,10 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     const uint64_t fenceValue = commandQueue.executeCommandListsAndSignal(commandLists);
 
     // Present (swap back buffers) and wait for next frame's fence
+
+    // Flush to submit the 11 command list to the shared command queue.
+    ApplicationImpl::getInstance().m_d3d11DeviceContext->Flush();
+
     swapChain.present(fenceValue);
     commandQueue.getFence().waitOnCpu(swapChain.getFenceValueForCurrentBackBuffer());
 }

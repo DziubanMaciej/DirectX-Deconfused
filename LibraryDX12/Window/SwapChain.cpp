@@ -75,7 +75,7 @@ void SwapChain::updateRenderTargetViews() {
             backBuffer.Get(),
             &d3d11Flags,
             D3D12_RESOURCE_STATE_RENDER_TARGET,
-            D3D12_RESOURCE_STATE_RENDER_TARGET,
+            D3D12_RESOURCE_STATE_PRESENT,
             IID_PPV_ARGS(&backBufferEntries[i].m_wrappedBackBuffers)));
         // Create a render target for D2D to draw directly to this back buffer.
         Microsoft::WRL::ComPtr<IDXGISurface> surface;
@@ -94,9 +94,11 @@ void SwapChain::present(uint64_t fenceValue) {
     // Present
     UINT syncInterval = ApplicationImpl::getInstance().getSettings().getVerticalSyncEnabled() ? 1u : 0u;
     //UINT presentFlags = g_TearingSupported && !g_VSync ? DXGI_PRESENT_ALLOW_TEARING : 0;
+
     throwIfFailed(swapChain->Present(syncInterval, 0)); // TODO
 
     // Move to next back buffer
+
     currentBackBufferIndex = swapChain->GetCurrentBackBufferIndex();
 }
 

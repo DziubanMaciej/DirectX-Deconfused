@@ -39,6 +39,7 @@ public:
     // Gpu upload functions
     virtual bool isUploadInProgress();
     void registerUpload(CommandQueue &uploadingQueue, uint64_t uploadFence);
+    void setState(D3D12_RESOURCE_STATES state) { this->state = state; }
 
 protected:
     static ID3D12ResourcePtr createResource(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeapProperties, D3D12_HEAP_FLAGS heapFlags,
@@ -56,7 +57,6 @@ protected:
 
     // state accessors, should be used only by CommandList
     D3D12_RESOURCE_STATES getState() const { return state; }
-    void setState(D3D12_RESOURCE_STATES state) { this->state = state; }
     friend class CommandList;
 
     // Data
