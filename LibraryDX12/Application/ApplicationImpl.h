@@ -10,6 +10,12 @@
 
 #include "DXD/ExternalHeadersWrappers/dxgi.h"
 
+
+#include <d3d11on12.h>
+#include <d3d11.h>
+#include <d2d1_3.h>
+#include <dwrite.h>
+
 class ApplicationImpl : public DXD::Application {
 protected:
     friend class DXD::Application;
@@ -65,4 +71,15 @@ protected:
     CommandQueue copyCommandQueue;
     CommandQueue directCommandQueue;
     BackgroundWorkerController backgroundWorkerController;
+
+public:
+    void createD3D11Device();
+    Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_d3d11DeviceContext;
+    Microsoft::WRL::ComPtr<ID3D11On12Device> m_d3d11On12Device;
+    Microsoft::WRL::ComPtr<IDWriteFactory> m_dWriteFactory;
+    Microsoft::WRL::ComPtr<ID2D1Factory3> m_d2dFactory;
+    Microsoft::WRL::ComPtr<ID2D1Device2> m_d2dDevice;
+    Microsoft::WRL::ComPtr<ID2D1DeviceContext2> m_d2dDeviceContext;
+    Microsoft::WRL::ComPtr<IDWriteTextFormat> m_textFormat;
+    Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> m_textBrush;
 };

@@ -13,6 +13,16 @@ SwapChain::SwapChain(HWND windowHandle, CommandQueue &commandQueue, uint32_t wid
       width(width),
       height(height),
       currentBackBufferIndex(swapChain->GetCurrentBackBufferIndex()) {
+    // Query the desktop's dpi settings, which will be used to create
+    // D2D's render targets.
+    float dpiX;
+    float dpiY;
+    dpiX = dpiY = (float)GetDpiForWindow(windowHandle);
+    this->bitmapProperties = D2D1::BitmapProperties1(
+        D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW,
+        D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED),
+        dpiX,
+        dpiY);
 }
 
 bool SwapChain::checkTearingSupport(IDXGIFactoryPtr &factory) {
@@ -60,6 +70,20 @@ void SwapChain::updateRenderTargetViews() {
 
         backBufferEntries[i].backBuffer.setResource(backBuffer);
         backBufferEntries[i].backBuffer.createRtv(nullptr);
+        D3D11_RESOURCE_FLAGS d3d11Flags = {D3D11_BIND_RENDER_TARGET};
+        throwIfFailed(ApplicationImpl::getInstance().m_d3d11On12Device->CreateWrappedResource(
+            backBuffer.Get(),
+            &d3d11Flags,
+            D3D12_RESOURCE_STATE_RENDER_TARGET,
+            D3D12_RESOURCE_STATE_RENDER_TARGET,
+            IID_PPV_ARGS(&backBufferEntries[i].m_wrappedBackBuffers)));
+        // Create a render target for D2D to draw directly to this back buffer.
+        Microsoft::WRL::ComPtr<IDXGISurface> surface;
+        throwIfFailed(backBufferEntries[i].m_wrappedBackBuffers.As(&surface));
+        throwIfFailed(ApplicationImpl::getInstance().m_d2dDeviceContext->CreateBitmapFromDxgiSurface(
+            surface.Get(),
+            &bitmapProperties,
+            &backBufferEntries[i].m_d2dRenderTargets));
     }
 }
 

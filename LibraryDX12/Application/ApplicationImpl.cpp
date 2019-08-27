@@ -26,6 +26,7 @@ ApplicationImpl::ApplicationImpl(bool debugLayer)
     instance = this;
     pipelineStateController.compileAll();
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
+    createD3D11Device();
 }
 
 ApplicationImpl::~ApplicationImpl() {
@@ -101,6 +102,38 @@ ID3D12DevicePtr ApplicationImpl::createDevice(IDXGIAdapterPtr &adapter, bool deb
         }
     }
     return device;
+}
+
+void ApplicationImpl::createD3D11Device() {
+    // Create an 11 device wrapped around the 12 device and share
+    // 12's command queue.
+    Microsoft::WRL::ComPtr<ID3D11Device> d3d11Device;
+    UINT d3d11DeviceFlags = D3D11_CREATE_DEVICE_BGRA_SUPPORT;
+    throwIfFailed(D3D11On12CreateDevice(
+        device.Get(),
+        d3d11DeviceFlags,
+        nullptr,
+        0,
+        reinterpret_cast<IUnknown **>(directCommandQueue.getCommandQueue().GetAddressOf()),
+        1,
+        0,
+        &d3d11Device,
+        &m_d3d11DeviceContext,
+        nullptr));
+    // Query the 11On12 device from the 11 device.
+    throwIfFailed(d3d11Device.As(&m_d3d11On12Device));
+
+    // Create D2D/DWrite components.
+    D2D1_FACTORY_OPTIONS d2dFactoryOptions = {};
+    {
+        D2D1_DEVICE_CONTEXT_OPTIONS deviceOptions = D2D1_DEVICE_CONTEXT_OPTIONS_NONE;
+        throwIfFailed(D2D1CreateFactory(D2D1_FACTORY_TYPE_SINGLE_THREADED, __uuidof(ID2D1Factory3), &d2dFactoryOptions, &m_d2dFactory));
+        Microsoft::WRL::ComPtr<IDXGIDevice> dxgiDevice;
+        throwIfFailed(m_d3d11On12Device.As(&dxgiDevice));
+        throwIfFailed(m_d2dFactory->CreateDevice(dxgiDevice.Get(), &m_d2dDevice));
+        throwIfFailed(m_d2dDevice->CreateDeviceContext(deviceOptions, &m_d2dDeviceContext));
+        throwIfFailed(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), &m_dWriteFactory));
+    }
 }
 
 void ApplicationImpl::flushAllQueues() {
