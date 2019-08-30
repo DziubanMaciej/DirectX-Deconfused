@@ -230,7 +230,7 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
 
     // Draw DEFAULT
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT);
-    commandList.setCbvSrvUavDescriptorTable(2, 0, lightConstantBuffer.getCbvHandle(), 1);
+    commandList.setCbvInDescriptorTable(2, 0, lightConstantBuffer);
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = object->getMesh();
         if (mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
@@ -251,9 +251,9 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
 
     //Draw NORMAL
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_NORMAL);
-    commandList.setCbvSrvUavDescriptorTable(2, 0, lightConstantBuffer.getCbvHandle(), 1);
+    commandList.setCbvInDescriptorTable(2, 0, lightConstantBuffer);
     for (auto shadowMapIndex = 0u; shadowMapIndex < 8; shadowMapIndex++) {
-        commandList.setCbvSrvUavDescriptorTable(2, shadowMapIndex + 1, renderData.getShadowMap(shadowMapIndex).getSrv(), 1);
+        commandList.setSrvInDescriptorTable(2, shadowMapIndex + 1, renderData.getShadowMap(shadowMapIndex));
     }
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = object->getMesh();
@@ -275,9 +275,9 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
 
     //Draw TEXTURE_NORMAL
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE_NORMAL);
-    commandList.setCbvSrvUavDescriptorTable(2, 0, lightConstantBuffer.getCbvHandle(), 1);
+    commandList.setCbvInDescriptorTable(2, 0, lightConstantBuffer);
     for (auto shadowMapIndex = 0u; shadowMapIndex < 8; shadowMapIndex++) {
-        commandList.setCbvSrvUavDescriptorTable(2, shadowMapIndex + 2, renderData.getShadowMap(shadowMapIndex).getSrv(), 1);
+        commandList.setSrvInDescriptorTable(2, shadowMapIndex + 2, renderData.getShadowMap(shadowMapIndex));
     }
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = object->getMesh();
@@ -294,7 +294,7 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
             commandList.setGraphicsRoot32BitConstant(1, op);
 
             commandList.IASetVertexAndIndexBuffer(mesh);
-            commandList.setCbvSrvUavDescriptorTable(2, 1, texture->getSrvDescriptor(), 1);
+            commandList.setSrvInDescriptorTable(2, 1, *texture);
             commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
         }
     }
@@ -324,7 +324,7 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
             // Set state
             commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_CONVOLUTION);
             commandList.setGraphicsRoot32BitConstant(0, postProcessData);
-            commandList.setCbvSrvUavDescriptorTable(1, 0, source->getSrv(), 1);
+            commandList.setSrvInDescriptorTable(1, 0, *source);
             commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
             commandList.IASetVertexBuffer(*postProcessVB);
 
@@ -339,7 +339,7 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
             // Set state
             commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_BLACK_BARS);
             commandList.setGraphicsRoot32BitConstant(0, postProcessData);
-            commandList.setCbvSrvUavDescriptorTable(1, 0, source->getSrv(), 1);
+            commandList.setSrvInDescriptorTable(1, 0, *source);
             commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
             commandList.IASetVertexBuffer(*postProcessVB);
 
@@ -357,7 +357,7 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
             // Set state
             commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_LINEAR_COLOR_CORRECTION);
             commandList.setGraphicsRoot32BitConstant(0, postProcessData);
-            commandList.setCbvSrvUavDescriptorTable(1, 0, source->getSrv(), 1);
+            commandList.setSrvInDescriptorTable(1, 0, *source);
             commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
             commandList.IASetVertexBuffer(*postProcessVB);
 
@@ -381,7 +381,7 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
                 commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
                 commandList.clearRenderTargetView(destination->getRtv(), backgroundColor);
                 commandList.setGraphicsRoot32BitConstant(0, postProcessData.cb);
-                commandList.setCbvSrvUavDescriptorTable(1, 0, source->getSrv(), 1);
+                commandList.setSrvInDescriptorTable(1, 0, *source);
                 commandList.draw(6u);
 
                 renderTargets.swapResources();
@@ -393,7 +393,7 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
                 commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
                 commandList.clearRenderTargetView(destination->getRtv(), backgroundColor);
                 commandList.setGraphicsRoot32BitConstant(0, postProcessData.cb);
-                commandList.setCbvSrvUavDescriptorTable(1, 0, source->getSrv(), 1);
+                commandList.setSrvInDescriptorTable(1, 0, *source);
                 commandList.draw(6u);
 
                 if (!lastPostProcess) {

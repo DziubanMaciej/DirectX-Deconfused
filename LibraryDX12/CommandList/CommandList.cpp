@@ -81,17 +81,14 @@ void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, ID3D12D
     addUsedResource(descriptorHeap);
 }
 
-void CommandList::setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, D3D12_CPU_DESCRIPTOR_HANDLE firstDescriptor, UINT descriptorCount) {
-    gpuDescriptorHeapControllerCbvSrvUav.stage(rootParameterIndexOfTable, offsetInTable, firstDescriptor, descriptorCount);
+void CommandList::setCbvInDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const Resource &resource) {
+    gpuDescriptorHeapControllerCbvSrvUav.stage(rootParameterIndexOfTable, offsetInTable, resource.getCbv(), 1u);
+    addUsedResource(resource.getResource());
 }
 
-void CommandList::setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const DescriptorAllocation &cpuDescriptorAllocation) {
-    setCbvSrvUavDescriptorTable(rootParameterIndexOfTable, offsetInTable, cpuDescriptorAllocation.getCpuHandle(), cpuDescriptorAllocation.getHandlesCount());
-}
-
-void CommandList::setCbvSrvUavDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const DescriptorAllocation &cpuDescriptorAllocation, UINT descriptorCount) {
-    assert(descriptorCount <= cpuDescriptorAllocation.getHandlesCount());
-    setCbvSrvUavDescriptorTable(rootParameterIndexOfTable, offsetInTable, cpuDescriptorAllocation.getCpuHandle(), descriptorCount);
+void CommandList::setSrvInDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const Resource &resource) {
+    gpuDescriptorHeapControllerCbvSrvUav.stage(rootParameterIndexOfTable, offsetInTable, resource.getSrv(), 1u);
+    addUsedResource(resource.getResource());
 }
 
 void CommandList::IASetVertexBuffers(UINT startSlot, UINT numBuffers, VertexBuffer *vertexBuffers) {

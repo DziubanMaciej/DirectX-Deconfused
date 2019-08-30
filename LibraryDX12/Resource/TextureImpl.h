@@ -19,7 +19,6 @@ protected:
     TextureImpl(ApplicationImpl &application, const std::wstring &filePath);
 
 public:
-    D3D12_CPU_DESCRIPTOR_HANDLE getSrvDescriptor() const { return cpuDescriptors.getCpuHandle(0); }
     bool isUploadInProgress() override;
 
 private:
@@ -27,7 +26,6 @@ private:
     static D3D12_RESOURCE_DESC createTextureDescription(const DirectX::TexMetadata &metadata);
     void loadAndUpload(ApplicationImpl &application, const std::wstring &filePath);
 
-    DescriptorAllocation cpuDescriptors = {};
     D3D12_RESOURCE_DESC description = {};
     std::wstring fileName = {};
     std::atomic_bool loadingComplete = false;
@@ -41,5 +39,5 @@ private:
     LoadResults loadOnCpu(ApplicationImpl &application, const std::wstring &filePath);
 
     // Setting all the data after loading and uploading to the GPU
-    void setData(DescriptorAllocation &&cpuDescriptors, D3D12_RESOURCE_DESC &&description, const std::wstring &fileName);
+    void setData(D3D12_RESOURCE_DESC &&description, const std::wstring &fileName);
 };

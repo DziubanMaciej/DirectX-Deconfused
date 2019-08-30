@@ -51,10 +51,10 @@ void TextureImpl::loadAndUpload(ApplicationImpl &application, const std::wstring
     srvDescription.Texture2D.MostDetailedMip = 0;
     srvDescription.Texture2D.PlaneSlice = 0;
     srvDescription.Texture2D.ResourceMinLODClamp = 0;
-    application.getDevice()->CreateShaderResourceView(this->resource.Get(), &srvDescription, cpuDescriptors.getCpuHandle(0));
+    this->createSrv(&srvDescription);
 
     // Set all the data to TextureImpl object
-    setData(std::move(cpuDescriptors), std::move(description), filePath);
+    setData(std::move(description), filePath);
 }
 
 TextureImpl::LoadResults TextureImpl::loadOnCpu(ApplicationImpl &application, const std::wstring &filePath) {
@@ -136,8 +136,7 @@ D3D12_RESOURCE_DESC TextureImpl::createTextureDescription(const DirectX::TexMeta
     return textureDesc;
 }
 
-void TextureImpl::setData(DescriptorAllocation &&cpuDescriptors, D3D12_RESOURCE_DESC &&description, const std::wstring &fileName) {
-    this->cpuDescriptors = std::move(cpuDescriptors);
+void TextureImpl::setData(D3D12_RESOURCE_DESC &&description, const std::wstring &fileName) {
     this->description = std::move(description);
     this->fileName = fileName;
 }
