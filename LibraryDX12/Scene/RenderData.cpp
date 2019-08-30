@@ -78,7 +78,7 @@ void PostProcessRenderTargets::resize(int width, int height) {
     renderTargetDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
 
     for (int i = 0; i <= 1; i++) { // Initialize resource0 and resource1 the same way
-        resources[i] = std::make_unique<RenderTarget>(
+        resources[i] = std::make_unique<Resource>(
             device,
             &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
             D3D12_HEAP_FLAG_NONE,

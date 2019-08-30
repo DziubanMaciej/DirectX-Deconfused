@@ -113,7 +113,7 @@ size_t SceneImpl::getEnabledPostProcessesCount() const {
 }
 
 void SceneImpl::getAndPrepareSourceAndDestinationForPostProcess(CommandList &commandList, PostProcessRenderTargets &renderTargets, bool last,
-                                                                RenderTarget &finalOutput, RenderTarget *&outSource, RenderTarget *&outDestination) {
+                                                                Resource &finalOutput, Resource *&outSource, Resource *&outDestination) {
     // Get resources
     outSource = &renderTargets.getSource();
     outDestination = last ? &finalOutput : &renderTargets.getDestination();
@@ -191,7 +191,7 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
     }
 }
 
-void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, RenderTarget &output) {
+void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output) {
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
 
     // Transition to RENDER_TARGET
@@ -297,10 +297,10 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
 }
 
 void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTargets &renderTargets, CommandList &commandList,
-                                    size_t enablePostProcessesCount, RenderTarget &output) {
+                                    size_t enablePostProcessesCount, Resource &output) {
     // TODO skip disabled post processes
     size_t postProcessIndex = 0u;
-    RenderTarget *source{}, *destination{};
+    Resource *source{}, *destination{};
     for (PostProcessImpl *postProcess : postProcesses) {
         if (!postProcess->isEnabled()) {
             continue;

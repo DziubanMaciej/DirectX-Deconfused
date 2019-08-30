@@ -3,7 +3,6 @@
 #include "Descriptor/DescriptorAllocation.h"
 #include "Descriptor/DescriptorController.h"
 #include "Resource/ConstantBuffer.h"
-#include "Resource/RenderTarget.h"
 #include "Utility/AlternatingResources.h"
 
 struct PostProcessRenderTargets : AlternatingResources {

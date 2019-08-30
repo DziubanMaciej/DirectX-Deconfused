@@ -2,7 +2,7 @@
 
 #include "Application/SettingsImpl.h"
 #include "Descriptor/DescriptorAllocation.h"
-#include "Resource/RenderTarget.h"
+#include "Resource/Resource.h"
 
 #include "DXD/NonCopyableAndMovable.h"
 
@@ -17,7 +17,7 @@ class DescriptorController;
 
 class SwapChain : DXD::NonCopyableAndMovable {
     struct BackBufferEntry {
-        RenderTarget backBuffer{nullptr, D3D12_RESOURCE_STATE_PRESENT};
+        Resource backBuffer{nullptr, D3D12_RESOURCE_STATE_PRESENT};
         uint64_t lastFence;
     };
 

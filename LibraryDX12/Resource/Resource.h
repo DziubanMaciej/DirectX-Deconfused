@@ -13,11 +13,12 @@ class CommandList;
 
 class Resource : DXD::NonCopyable {
 public:
-    /// Creates empty Resource object to be filled later, used by subclasses. Does not perform GPU allocation
-    explicit Resource() {}
-
-    /// Creates Resource object wrapping existing DX12 resource, used for back bufffers
+    /// Base constructor initializing every member. It is called by every other constructor. It can also be used
+    /// to wrap an existing ID3D12Resource, e.g. a back buffer allocated by SwapChain.
     explicit Resource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES state);
+
+    /// Creates empty Resource object to be filled later, used by subclasses. Does not perform GPU allocation
+    explicit Resource();
 
     /// Allocates new resource
     explicit Resource(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeapProperties, D3D12_HEAP_FLAGS heapFlags,
@@ -31,14 +32,25 @@ public:
     Resource(Resource &&other) = default;
     Resource &operator=(Resource &&other) = default;
 
+    // Accessors
     auto &getResource() { return resource; };
     const auto &getResource() const { return resource; }
     void setResource(ID3D12ResourcePtr resource) { this->resource = resource; };
-    D3D12_RESOURCE_STATES getState() { return state; }
+    D3D12_RESOURCE_STATES getState() const { return state; }
 
     // Gpu upload functions
     virtual bool isUploadInProgress();
     void registerUpload(CommandQueue &uploadingQueue, uint64_t uploadFence);
+
+    // Descriptors
+    void createCbv(D3D12_CONSTANT_BUFFER_VIEW_DESC *desc);
+    void createSrv(D3D12_SHADER_RESOURCE_VIEW_DESC *desc);
+    void createDsv(D3D12_DEPTH_STENCIL_VIEW_DESC *desc);
+    void createRtv(D3D12_RENDER_TARGET_VIEW_DESC *desc);
+    D3D12_CPU_DESCRIPTOR_HANDLE getCbv() const { return descriptorsCbvSrvUav.getCpuHandle(0); }
+    D3D12_CPU_DESCRIPTOR_HANDLE getSrv() const { return descriptorsCbvSrvUav.getCpuHandle(1); }
+    D3D12_CPU_DESCRIPTOR_HANDLE getDsv() const { return descriptorsDsv.getCpuHandle(); }
+    D3D12_CPU_DESCRIPTOR_HANDLE getRtv() const { return descriptorsRtv.getCpuHandle(); }
 
 protected:
     static ID3D12ResourcePtr createResource(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeapProperties, D3D12_HEAP_FLAGS heapFlags,
@@ -55,7 +67,6 @@ protected:
     void recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data, UINT rowPitch, UINT slicePitch);
 
     // state accessors, should be used only by CommandList
-    D3D12_RESOURCE_STATES getState() const { return state; }
     void setState(D3D12_RESOURCE_STATES state) { this->state = state; }
     friend class CommandList;
 
@@ -63,4 +74,7 @@ protected:
     D3D12_RESOURCE_STATES state = {};
     ID3D12ResourcePtr resource = {};
     std::unique_ptr<GpuUploadData> gpuUploadData = {};
+    DescriptorAllocation descriptorsCbvSrvUav;
+    DescriptorAllocation descriptorsDsv;
+    DescriptorAllocation descriptorsRtv;
 };
