@@ -17,27 +17,15 @@ public:
 
     // Getters
     PostProcessRenderTargets &getPostProcessRenderTargets() { return postProcessRenderTargets; }
-
     Resource &getShadowMap(int i) { return *shadowMap[i]; }
-    const DescriptorAllocation &getShadowMapDsvDescriptors() const { return shadowMapDsvDescriptors; }
-    const DescriptorAllocation &getShadowMapSrvDescriptors() const { return shadowMapSrvDescriptors; }
-
     Resource &getDepthStencilBuffer() { return *depthStencilBuffer; };
-    const DescriptorAllocation &getDepthStencilBufferDescriptor() const { return dsvDescriptor; }
 
 private:
     // Base objects
     ID3D12DevicePtr device = {};
 
-    // Post process render targets
+    // Resources
     PostProcessRenderTargets postProcessRenderTargets;
-
-    // Shadow maps
     std::unique_ptr<Resource> shadowMap[8] = {};
-    DescriptorAllocation shadowMapDsvDescriptors = {};
-    DescriptorAllocation shadowMapSrvDescriptors = {};
-
-    // Depth stencil buffer
     std::unique_ptr<Resource> depthStencilBuffer = {};
-    DescriptorAllocation dsvDescriptor = {};
 };

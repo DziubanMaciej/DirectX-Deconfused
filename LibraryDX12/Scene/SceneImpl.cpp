@@ -137,8 +137,8 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
     int lightIdx = 0;
 
     for (LightImpl *light : lights) {
-        commandList.OMSetRenderTargetDepthOnly(renderData.getShadowMapDsvDescriptors().getCpuHandle(lightIdx), renderData.getShadowMap(lightIdx).getResource());
-        commandList.clearDepthStencilView(renderData.getShadowMapDsvDescriptors().getCpuHandle(lightIdx), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
+        commandList.OMSetRenderTargetDepthOnly(renderData.getShadowMap(lightIdx).getDsv(), renderData.getShadowMap(lightIdx).getResource());
+        commandList.clearDepthStencilView(renderData.getShadowMap(lightIdx).getDsv(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
         // View projection matrix
         camera->setAspectRatio(1.0f);
@@ -198,11 +198,11 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
     commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     commandList.OMSetRenderTarget(output.getRtv(), output.getResource(),
-                                  renderData.getDepthStencilBufferDescriptor().getCpuHandle(), renderData.getDepthStencilBuffer().getResource());
+                                  renderData.getDepthStencilBuffer().getDsv(), renderData.getDepthStencilBuffer().getResource());
 
     // Render (clear color)
     commandList.clearRenderTargetView(output.getRtv(), backgroundColor);
-    commandList.clearDepthStencilView(renderData.getDepthStencilBufferDescriptor().getCpuHandle(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
+    commandList.clearDepthStencilView(renderData.getDepthStencilBuffer().getDsv(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
     // View projection matrix
     float aspectRatio = (float)swapChain.getWidth() / swapChain.getHeight();
@@ -252,7 +252,9 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
     //Draw NORMAL
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_NORMAL);
     commandList.setCbvSrvUavDescriptorTable(2, 0, lightConstantBuffer.getCbvHandle(), 1);
-    commandList.setCbvSrvUavDescriptorTable(2, 1, renderData.getShadowMapSrvDescriptors(), 8);
+    for (auto shadowMapIndex = 0u; shadowMapIndex < 8; shadowMapIndex++) {
+        commandList.setCbvSrvUavDescriptorTable(2, shadowMapIndex + 1, renderData.getShadowMap(shadowMapIndex).getSrv(), 1);
+    }
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = object->getMesh();
         if (mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
@@ -274,7 +276,9 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
     //Draw TEXTURE_NORMAL
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE_NORMAL);
     commandList.setCbvSrvUavDescriptorTable(2, 0, lightConstantBuffer.getCbvHandle(), 1);
-    commandList.setCbvSrvUavDescriptorTable(2, 2, renderData.getShadowMapSrvDescriptors(), 8);
+    for (auto shadowMapIndex = 0u; shadowMapIndex < 8; shadowMapIndex++) {
+        commandList.setCbvSrvUavDescriptorTable(2, shadowMapIndex + 2, renderData.getShadowMap(shadowMapIndex).getSrv(), 1);
+    }
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = object->getMesh();
         TextureImpl *texture = object->getTextureImpl();
