@@ -4,42 +4,47 @@
 #include "Utility/ThrowIfFailed.h"
 
 namespace DXD {
-std::unique_ptr<Text> Text::create() {
-    return std::make_unique<TextImpl>(L"", D2D1::ColorF(D2D1::ColorF::Green, 1.f), L"Comic Sans MS", DXDFontWeight::NORMAL, DXDFontStyle::NORMAL,
-                                      DXDFontStretch::NORMAL, 25., L"pl-PL", DXDTextHorizontalAlignment::LEFT, DXDTextVerticalAlignment::TOP);
+std::unique_ptr<Text> DXD::Text::create(std::wstring text,
+                                        D2D1_COLOR_F color,
+                                        std::wstring fontFamilyName,
+                                        DXDFontWeight fontWeight,
+                                        DXDFontStyle fontStyle,
+                                        DXDFontStretch fontStretch,
+                                        FLOAT fontSize,
+                                        std::wstring localeName,
+                                        DXDTextHorizontalAlignment horzAlignment,
+                                        DXDTextVerticalAlignment verticalAlignment) {
+    return std::make_unique<TextImpl>(text, color, fontFamilyName, fontWeight, fontStyle, fontStretch, fontSize, localeName, horzAlignment, verticalAlignment);
 }
 } // namespace DXD
-
-TextImpl::TextImpl() {
-    createText(D2D1::ColorF(D2D1::ColorF::Green, 1.f), L"Comic Sans MS", NULL, DWRITE_FONT_WEIGHT_NORMAL, DWRITE_FONT_STYLE_NORMAL,
-               DWRITE_FONT_STRETCH_NORMAL, 25., L"pl-PL", DWRITE_TEXT_ALIGNMENT_LEADING, DWRITE_PARAGRAPH_ALIGNMENT_NEAR);
-}
-TextImpl::TextImpl(std::wstring text, D2D1_COLOR_F color, std::wstring fontFamilyName,
-                   DXDFontWeight fontWeight, DXDFontStyle fontStyle, DXDFontStretch fontStretch, FLOAT fontSize,
-                   std::wstring localeName, DXDTextHorizontalAlignment textAlignment, DXDTextVerticalAlignment paragraphAlignment) : text(text) {
-    createText(color, fontFamilyName, NULL, (DWRITE_FONT_WEIGHT)fontWeight, (DWRITE_FONT_STYLE)fontStyle, (DWRITE_FONT_STRETCH)fontStretch, fontSize, localeName, (DWRITE_TEXT_ALIGNMENT)textAlignment, (DWRITE_PARAGRAPH_ALIGNMENT)paragraphAlignment);
-}
-
-TextImpl::TextImpl(std::wstring text, D2D1_COLOR_F color, std::wstring fontFamilyName, IDWriteFontCollection *fontCollection,
-                   DXDFontWeight fontWeight, DXDFontStyle fontStyle, DXDFontStretch fontStretch, FLOAT fontSize,
-                   std::wstring localeName, DXDTextHorizontalAlignment textAlignment, DXDTextVerticalAlignment paragraphAlignment) : text(text) {
-    createText(color, fontFamilyName, fontCollection, (DWRITE_FONT_WEIGHT)fontWeight, (DWRITE_FONT_STYLE)fontStyle, (DWRITE_FONT_STRETCH)fontStretch, fontSize, localeName, (DWRITE_TEXT_ALIGNMENT)textAlignment, (DWRITE_PARAGRAPH_ALIGNMENT)paragraphAlignment);
+TextImpl::TextImpl(std::wstring text,
+                   D2D1_COLOR_F color,
+                   std::wstring fontFamilyName,
+                   DXDFontWeight fontWeight,
+                   DXDFontStyle fontStyle,
+                   DXDFontStretch fontStretch,
+                   FLOAT fontSize,
+                   std::wstring localeName,
+                   DXDTextHorizontalAlignment horzAlignment,
+                   DXDTextVerticalAlignment verticalAlignment)
+    : text(text), color(color), fontFamilyName(fontFamilyName), fontWeight(fontWeight), fontStyle(fontStyle), fontStretch(fontStretch),
+      fontSize(fontSize), localeName(localeName), horzAlignment(horzAlignment), vertAlignment(verticalAlignment), dirty(true) {
 }
 
-void TextImpl::createText(const D2D1_COLOR_F color, std::wstring fontFamilyName, IDWriteFontCollection *fontCollection,
-                          DWRITE_FONT_WEIGHT fontWeight, DWRITE_FONT_STYLE fontStyle, DWRITE_FONT_STRETCH fontStretch, FLOAT fontSize,
-                          std::wstring localeName, DWRITE_TEXT_ALIGNMENT textAlignment, DWRITE_PARAGRAPH_ALIGNMENT paragraphAlignment) {
+void TextImpl::updateText() {
+    if (!dirty)
+        return;
     auto &application = ApplicationImpl::getInstance();
     throwIfFailed(application.m_d2dDeviceContext->CreateSolidColorBrush(color, &m_textBrush));
     throwIfFailed(application.m_dWriteFactory->CreateTextFormat(
         fontFamilyName.c_str(),
-        fontCollection,
-        fontWeight,
-        fontStyle,
-        fontStretch,
+        NULL,
+        (DWRITE_FONT_WEIGHT)fontWeight,
+        (DWRITE_FONT_STYLE)fontStyle,
+        (DWRITE_FONT_STRETCH)fontStretch,
         fontSize,
         localeName.c_str(),
         &m_textFormat));
-    throwIfFailed(m_textFormat->SetTextAlignment(textAlignment));
-    throwIfFailed(m_textFormat->SetParagraphAlignment(paragraphAlignment));
+    throwIfFailed(m_textFormat->SetTextAlignment((DWRITE_TEXT_ALIGNMENT)horzAlignment));
+    throwIfFailed(m_textFormat->SetParagraphAlignment((DWRITE_PARAGRAPH_ALIGNMENT)vertAlignment));
 }

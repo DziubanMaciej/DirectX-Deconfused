@@ -186,11 +186,21 @@ private:
     void prepText() {
         DXD::log("Loading texts...\n");
         std::vector<std::string> textNames = {
-            "fpsCounter"};
+            "fpsCounter", "meme"};
 
         for (auto text : textNames) {
             texts.insert({text, DXD::Text::create()});
         }
+
+        texts["fpsCounter"]->setAlignment(DXDTextHorizontalAlignment::LEFT, DXDTextVerticalAlignment::TOP);
+        texts["fpsCounter"]->setFontStyle(DXDFontStyle::ITALIC);
+        texts["fpsCounter"]->setFontWeight(DXDFontWeight::ULTRA_BLACK);
+        texts["fpsCounter"]->setFontSize(13.f);
+
+        texts["meme"]->setFontFamily(L"Impact");
+        //TODO: texts["meme"]->setColor(...);
+        texts["meme"]->setFontSize(90.f);
+        texts["meme"]->setText(L"MEME\n\n\n\nDOLNY TEKST");
     }
     void prepScene() {
         DXD::log("Preparing scene...\n");
@@ -316,8 +326,10 @@ private:
     void onUpdate(unsigned int deltaTimeMicroseconds) override {
         fpsCounter.push(deltaTimeMicroseconds);
         if (texts["fpsCounter"] != nullptr) {
-            std::wstring txt = std::to_wstring(fpsCounter.getFps());
-            txt.append(L" FPS");
+            std::wstring txt = L"FPS: ";
+            txt.append(std::to_wstring(fpsCounter.getFps()));
+            txt.append(L"\nFrame time [us]: ");
+            txt.append(std::to_wstring(deltaTimeMicroseconds));
             texts["fpsCounter"]->setText(txt);
         }
         if (fpsCounter.getFrameIndex() % 512) {

@@ -392,6 +392,8 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
         application.m_d2dDeviceContext->BeginDraw();
         application.m_d2dDeviceContext->SetTransform(D2D1::Matrix3x2F::Identity());
 		for (auto txt : texts) {
+            txt->updateText();
+            // TODO: this call as TextImpl method
             application.m_d2dDeviceContext->DrawText(
                 txt->getText().c_str(),
                 txt->getText().size(),
