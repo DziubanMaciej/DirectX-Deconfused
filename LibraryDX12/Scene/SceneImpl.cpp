@@ -304,9 +304,11 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
     }
 }
 
-void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTargets &renderTargets, CommandList &commandList,
-                                    size_t enablePostProcessesCount, Resource &output) {
-    // TODO skip disabled post processes
+void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList, PostProcessRenderTargets &renderTargets,
+                                    Resource &output, VertexBuffer &fullscreenVB, size_t enabledPostProcessesCount, float screenWidth, float screenHeight) {
+    auto &pipelineStateController = ApplicationImpl::getInstance().getPipelineStateController();
+    const FLOAT blackColor[] = {0.f, 0.f, 0.f, 1.f};
+
     size_t postProcessIndex = 0u;
     Resource *source{}, *destination{};
     for (PostProcessImpl *postProcess : postProcesses) {
@@ -315,37 +317,37 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
         }
 
         // Get resources
-        const bool lastPostProcess = (postProcessIndex == enablePostProcessesCount - 1);
+        const bool lastPostProcess = (postProcessIndex == enabledPostProcessesCount - 1);
         getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, lastPostProcess, output, source, destination);
 
         // Render post process base on its type
         if (postProcess->getType() == PostProcessImpl::Type::CONVOLUTION) {
             // Prepare constant buffer
             auto &postProcessData = postProcess->getData().convolution;
-            postProcessData.screenWidth = static_cast<float>(swapChain.getWidth());
-            postProcessData.screenHeight = static_cast<float>(swapChain.getHeight());
+            postProcessData.screenWidth = screenWidth;
+            postProcessData.screenHeight = screenHeight;
 
             // Set state
-            commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_CONVOLUTION);
+            commandList.setPipelineStateAndGraphicsRootSignature(pipelineStateController, PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_CONVOLUTION);
             commandList.setGraphicsRoot32BitConstant(0, postProcessData);
             commandList.setSrvInDescriptorTable(1, 0, *source);
             commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
-            commandList.IASetVertexBuffer(*postProcessVB);
+            commandList.IASetVertexBuffer(fullscreenVB);
 
             // Render
             commandList.draw(6u);
         } else if (postProcess->getType() == PostProcessImpl::Type::BLACK_BARS) {
             // Prepare constant buffer
             auto &postProcessData = postProcess->getData().blackBars;
-            postProcessData.screenWidth = static_cast<float>(swapChain.getWidth());
-            postProcessData.screenHeight = static_cast<float>(swapChain.getHeight());
+            postProcessData.screenWidth = screenWidth;
+            postProcessData.screenHeight = screenHeight;
 
             // Set state
-            commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_BLACK_BARS);
+            commandList.setPipelineStateAndGraphicsRootSignature(pipelineStateController, PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_BLACK_BARS);
             commandList.setGraphicsRoot32BitConstant(0, postProcessData);
             commandList.setSrvInDescriptorTable(1, 0, *source);
             commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
-            commandList.IASetVertexBuffer(*postProcessVB);
+            commandList.IASetVertexBuffer(fullscreenVB);
 
             source->getResource()->SetName(L"SOURCE");
             destination->getResource()->SetName(L"DSTNATION");
@@ -353,29 +355,29 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
             // Render
             commandList.draw(6u);
         } else if (postProcess->getType() == PostProcessImpl::Type::LINEAR_COLOR_CORRECTION) {
-            // Prepare onstant buffer
+            // Prepare constant buffer
             auto &postProcessData = postProcess->getData().linearColorCorrection;
-            postProcessData.screenWidth = static_cast<float>(swapChain.getWidth());
-            postProcessData.screenHeight = static_cast<float>(swapChain.getHeight());
+            postProcessData.screenWidth = screenWidth;
+            postProcessData.screenHeight = screenHeight;
 
             // Set state
-            commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_LINEAR_COLOR_CORRECTION);
+            commandList.setPipelineStateAndGraphicsRootSignature(pipelineStateController, PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_LINEAR_COLOR_CORRECTION);
             commandList.setGraphicsRoot32BitConstant(0, postProcessData);
             commandList.setSrvInDescriptorTable(1, 0, *source);
             commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
-            commandList.IASetVertexBuffer(*postProcessVB);
+            commandList.IASetVertexBuffer(fullscreenVB);
 
             // Render
             commandList.draw(6u);
         } else if (postProcess->getType() == PostProcessImpl::Type::GAUSSIAN_BLUR) {
             // Prepare constant buffer
             auto &postProcessData = postProcess->getData().gaussianBlur;
-            postProcessData.cb.screenWidth = static_cast<float>(swapChain.getWidth());
-            postProcessData.cb.screenHeight = static_cast<float>(swapChain.getHeight());
+            postProcessData.cb.screenWidth = screenWidth;
+            postProcessData.cb.screenHeight = screenHeight;
 
             // Set cross-pass state
-            commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR);
-            commandList.IASetVertexBuffer(*postProcessVB);
+            commandList.setPipelineStateAndGraphicsRootSignature(pipelineStateController, PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR);
+            commandList.IASetVertexBuffer(fullscreenVB);
 
             // Render all passes of the blur filter
             for (auto passIndex = 0u; passIndex < postProcessData.passCount; passIndex++) {
@@ -383,7 +385,7 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
                 getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, false, output, source, destination);
                 postProcessData.cb.horizontal = true;
                 commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
-                commandList.clearRenderTargetView(destination->getRtv(), backgroundColor);
+                commandList.clearRenderTargetView(destination->getRtv(), blackColor);
                 commandList.setGraphicsRoot32BitConstant(0, postProcessData.cb);
                 commandList.setSrvInDescriptorTable(1, 0, *source);
                 commandList.draw(6u);
@@ -395,7 +397,7 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
                 getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, lastPass, output, source, destination);
                 postProcessData.cb.horizontal = false;
                 commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
-                commandList.clearRenderTargetView(destination->getRtv(), backgroundColor);
+                commandList.clearRenderTargetView(destination->getRtv(), blackColor);
                 commandList.setGraphicsRoot32BitConstant(0, postProcessData.cb);
                 commandList.setSrvInDescriptorTable(1, 0, *source);
                 commandList.draw(6u);
@@ -463,7 +465,8 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
 
     // Render post processes
     if (postProcessesCount != 0) {
-        renderPostProcesses(swapChain, renderData.getPostProcessRenderTargets(), commandList, postProcessesCount, backBuffer);
+        renderPostProcesses(postProcesses, commandList, renderData.getPostProcessRenderTargets(), backBuffer, *postProcessVB,
+                            postProcessesCount, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     }
 
     // If there are no D2D content to render, there will be no implicit transition to present, hence the manual barrier
