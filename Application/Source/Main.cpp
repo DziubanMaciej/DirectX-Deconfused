@@ -57,9 +57,6 @@ private:
             {"teapot", {L"Resources/meshes/teapot_normals.obj", false}},
             {"cube", {L"Resources/meshes/cube.obj", false}},
             {"cubeNormal", {L"Resources/meshes/cube_normals.obj", false}},
-            {"smallCube", {L"Resources/meshes/small_cube.obj", false}},
-            {"flat", {L"Resources/meshes/flat_normals.obj", false}},
-            {"extraFlat", {L"Resources/meshes/extra_flat_normals.obj", false}},
             //{"actor", {L"Resources/meshes/dennis.obj", false}},
             {"dxd", {L"Resources/meshes/dxd_comicsans.obj", false}},
             {"car", {L"Resources/meshes/porshe.obj", true}}};
@@ -77,11 +74,11 @@ private:
                 {"teapotMesh3", "teapot"},
                 {"cubeNormalMesh1", "cubeNormal"},
                 {"cubeNormalMesh2", "cubeNormal"},
-                {"flatMesh1", "flat"},
-                {"extraFlatMesh1", "extraFlat"},
-                {"smallCubeMesh1", "smallCube"},
-                {"smallCubeMesh2", "smallCube"},
-                {"smallCubeMesh3", "smallCube"},
+                {"flatMesh1", "cubeNormal"},
+                {"extraFlatMesh1", "cubeNormal"},
+                {"smallCubeMesh1", "cube"},
+                {"smallCubeMesh2", "cube"},
+                {"smallCubeMesh3", "cube"},
                 {"carMesh1", "car"},
                 //{"actorMesh1", "actor"},
                 {"dxdMesh1", "dxd"}};
@@ -107,15 +104,20 @@ private:
 
             objects["flatMesh1"]->setPosition(0, -3, 0);
             objects["flatMesh1"]->setSpecularity(0.5f);
+            objects["flatMesh1"]->setScale(10, 1, 10);
 
             objects["extraFlatMesh1"]->setPosition(0, -5, 0);
             objects["extraFlatMesh1"]->setSpecularity(0);
+            objects["extraFlatMesh1"]->setScale(100, 1, 100);
 
             objects["smallCubeMesh1"]->setPosition(-12, 12, 6);
+            objects["smallCubeMesh1"]->setScale(0.25f, 0.25f, 0.25f);
 
             objects["smallCubeMesh2"]->setPosition(7, 4, 6);
+            objects["smallCubeMesh2"]->setScale(0.25f, 0.25f, 0.25f);
 
             objects["smallCubeMesh3"]->setPosition(12, 1, -12);
+            objects["smallCubeMesh3"]->setScale(0.25f, 0.25f, 0.25f);
 
             objects["carMesh1"]->setPosition(0, -1, -4); // y -2 for aventador
             objects["carMesh1"]->setColor(0.1f, 0, 0.1f);
