@@ -24,6 +24,11 @@ Resource::Resource(ID3D12DevicePtr device, D3D12_HEAP_TYPE heapType, D3D12_HEAP_
                    D3D12_RESOURCE_STATES initialResourceState, const D3D12_CLEAR_VALUE *pOptimizedClearValue)
     : Resource(createResource(device, &CD3DX12_HEAP_PROPERTIES(heapType), heapFlags, &CD3DX12_RESOURCE_DESC::Buffer(bufferSize), initialResourceState, pOptimizedClearValue), initialResourceState) {}
 
+void Resource::reset() {
+    gpuUploadData.reset();
+    resource.Reset();
+}
+
 bool Resource::isUploadInProgress() {
     if (gpuUploadData != nullptr && gpuUploadData->uploadingQueue.getFence().isComplete(gpuUploadData->uploadFence)) {
         gpuUploadData.reset();

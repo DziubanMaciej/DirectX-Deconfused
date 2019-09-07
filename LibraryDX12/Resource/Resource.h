@@ -33,8 +33,9 @@ public:
     Resource &operator=(Resource &&other) = default;
 
     // Accessors
-    auto &getResource() { return resource; };
-    const auto &getResource() const { return resource; }
+    auto getResource() { return resource; };
+    const auto getResource() const { return resource; }
+    void reset();
     void setResource(ID3D12ResourcePtr resource) { this->resource = resource; };
     D3D12_RESOURCE_STATES getState() const { return state; }
 

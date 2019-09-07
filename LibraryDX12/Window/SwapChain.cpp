@@ -104,7 +104,7 @@ void SwapChain::resize(int desiredWidth, int desiredHeight) {
 
 void SwapChain::resetRenderTargetViews() {
     for (auto &backBufferEntry : backBufferEntries) {
-        backBufferEntry.backBuffer.getResource().Reset();
+        backBufferEntry.backBuffer.reset();
         backBufferEntry.d11BackBuffer.Reset();
         backBufferEntry.d2dBackBuffer.Reset();
         backBufferEntry.lastFence = currentBackBufferIndex;
