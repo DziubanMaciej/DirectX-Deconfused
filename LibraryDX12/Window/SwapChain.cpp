@@ -12,17 +12,8 @@ SwapChain::SwapChain(HWND windowHandle, CommandQueue &commandQueue, uint32_t wid
       backBufferEntries(bufferCount),
       width(width),
       height(height),
-      currentBackBufferIndex(swapChain->GetCurrentBackBufferIndex()) {
-    // Query the desktop's dpi settings, which will be used to create
-    // D2D's render targets.
-    float dpiX;
-    float dpiY;
-    dpiX = dpiY = (float)GetDpiForWindow(windowHandle);
-    this->bitmapProperties = D2D1::BitmapProperties1(
-        D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW,
-        D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED),
-        dpiX,
-        dpiY);
+      currentBackBufferIndex(swapChain->GetCurrentBackBufferIndex()),
+      windowDpi(GetDpiForWindow(windowHandle)) {
 }
 
 bool SwapChain::checkTearingSupport(IDXGIFactoryPtr &factory) {
@@ -62,28 +53,29 @@ IDXGISwapChainPtr SwapChain::createSwapChain(HWND hwnd, IDXGIFactoryPtr &factory
 }
 
 void SwapChain::updateRenderTargetViews() {
-    auto device = ApplicationImpl::getInstance().getDevice();
+    auto &application = ApplicationImpl::getInstance();
+    auto &device = application.getDevice();
     const auto rtvDescriptorSize = device->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+
     for (auto i = 0u; i < backBufferEntries.size(); i++) {
+        BackBufferEntry &backBufferEntry = backBufferEntries[i];
+
+        // Get current back buffer
         ID3D12ResourcePtr backBuffer;
         throwIfFailed(swapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer)));
 
-        backBufferEntries[i].backBuffer.setResource(backBuffer);
-        backBufferEntries[i].backBuffer.createRtv(nullptr);
-		D3D11_RESOURCE_FLAGS d3d11Flags = {D3D11_BIND_RENDER_TARGET};
-        throwIfFailed(ApplicationImpl::getInstance().m_d3d11On12Device->CreateWrappedResource(
-            backBuffer.Get(),
-            &d3d11Flags,
+        // Update DX12 back buffer data
+        backBufferEntry.backBuffer.setResource(backBuffer);
+        backBufferEntry.backBuffer.createRtv(nullptr);
+
+        // Update DX11/D2D back buffer data
+        application.getD2DContext().wrapRenderTargetD11(
+            backBuffer,
+            backBufferEntry.d11BackBuffer,
             D3D12_RESOURCE_STATE_RENDER_TARGET,
-            D3D12_RESOURCE_STATE_PRESENT,
-            IID_PPV_ARGS(&backBufferEntries[i].m_wrappedBackBuffers)));
-        // Create a render target for D2D to draw directly to this back buffer.
-        Microsoft::WRL::ComPtr<IDXGISurface> surface;
-        throwIfFailed(backBufferEntries[i].m_wrappedBackBuffers.As(&surface));
-        throwIfFailed(ApplicationImpl::getInstance().m_d2dDeviceContext->CreateBitmapFromDxgiSurface(
-            surface.Get(),
-            &bitmapProperties,
-            &backBufferEntries[i].m_d2dRenderTargets));
+            D3D12_RESOURCE_STATE_PRESENT);
+        application.getD2DContext().wrapRenderTargetD2D(backBufferEntry.d11BackBuffer,
+                                                        backBufferEntry.d2dBackBuffer, windowDpi);
     }
 }
 
@@ -112,14 +104,12 @@ void SwapChain::resize(int desiredWidth, int desiredHeight) {
 
 void SwapChain::resetRenderTargetViews() {
     for (auto &backBufferEntry : backBufferEntries) {
-        backBufferEntry.m_d2dRenderTargets.Reset();
-        backBufferEntry.m_wrappedBackBuffers.Reset();
         backBufferEntry.backBuffer.getResource().Reset();
+        backBufferEntry.d11BackBuffer.Reset();
+        backBufferEntry.d2dBackBuffer.Reset();
         backBufferEntry.lastFence = currentBackBufferIndex;
     }
-    auto &application = ApplicationImpl::getInstance();
-    application.m_d2dDeviceContext->SetTarget(nullptr);
-    application.m_d3d11DeviceContext->Flush();
+    ApplicationImpl::getInstance().getD2DContext().flushAndResetTarget();
 }
 
 void SwapChain::resizeRenderTargets(uint32_t desiredWidth, uint32_t desiredHeight) {

@@ -34,14 +34,14 @@ TextImpl::TextImpl(std::wstring text,
 void TextImpl::updateText() {
     if (!dirty)
         return;
-    auto &application = ApplicationImpl::getInstance();
-    throwIfFailed(application.m_d2dDeviceContext->CreateSolidColorBrush(color, &m_textBrush));
-    throwIfFailed(application.m_dWriteFactory->CreateTextFormat(
+    auto &context = ApplicationImpl::getInstance().getD2DContext();
+    throwIfFailed(context.getD2DDeviceContext()->CreateSolidColorBrush(color, &m_textBrush));
+    throwIfFailed(context.getDWriteFactory()->CreateTextFormat(
         fontFamilyName.c_str(),
         NULL,
-        (DWRITE_FONT_WEIGHT)fontWeight,
-        (DWRITE_FONT_STYLE)fontStyle,
-        (DWRITE_FONT_STRETCH)fontStretch,
+        static_cast<DWRITE_FONT_WEIGHT>(fontWeight),
+        static_cast<DWRITE_FONT_STYLE>(fontStyle),
+        static_cast<DWRITE_FONT_STRETCH>(fontStretch),
         fontSize,
         localeName.c_str(),
         &m_textFormat));

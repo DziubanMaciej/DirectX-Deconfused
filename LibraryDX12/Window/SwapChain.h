@@ -22,9 +22,9 @@ class DescriptorController;
 class SwapChain : DXD::NonCopyableAndMovable {
     struct BackBufferEntry {
         RenderTarget backBuffer{nullptr, D3D12_RESOURCE_STATE_PRESENT};
+        Microsoft::WRL::ComPtr<ID3D11Resource> d11BackBuffer;
+        Microsoft::WRL::ComPtr<ID2D1Bitmap1> d2dBackBuffer;
         uint64_t lastFence;
-        Microsoft::WRL::ComPtr<ID3D11Resource> m_wrappedBackBuffers;
-        Microsoft::WRL::ComPtr<ID2D1Bitmap1> m_d2dRenderTargets;
     };
 
 public:
@@ -37,8 +37,8 @@ public:
 
     uint64_t getFenceValueForCurrentBackBuffer() const;
     auto &getCurrentBackBuffer() { return backBufferEntries[this->currentBackBufferIndex].backBuffer; };
-    auto &getCurrentD11BackBuffer() { return backBufferEntries[this->currentBackBufferIndex].m_wrappedBackBuffers; };
-    auto &getCurrentD2DBackBuffer() { return backBufferEntries[this->currentBackBufferIndex].m_d2dRenderTargets; };
+    auto &getCurrentD11BackBuffer() { return backBufferEntries[this->currentBackBufferIndex].d11BackBuffer; };
+    auto &getCurrentD2DBackBuffer() { return backBufferEntries[this->currentBackBufferIndex].d2dBackBuffer; };
 
 private:
     static bool checkTearingSupport(IDXGIFactoryPtr &factory);
@@ -56,6 +56,7 @@ private:
     D2D1_BITMAP_PROPERTIES1 bitmapProperties;
 
     // Numerical data
+    const UINT windowDpi;
     uint32_t width;
     uint32_t height;
     UINT currentBackBufferIndex;

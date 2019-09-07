@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Application/D2DContext.h"
 #include "Application/SettingsImpl.h"
 #include "CommandList/CommandQueue.h"
 #include "Descriptor/DescriptorController.h"
@@ -9,12 +10,6 @@
 #include "DXD/Application.h"
 
 #include "DXD/ExternalHeadersWrappers/dxgi.h"
-
-
-#include <d3d11on12.h>
-#include <d3d11.h>
-#include <d2d1_3.h>
-#include <dwrite.h>
 
 class ApplicationImpl : public DXD::Application {
 protected:
@@ -39,6 +34,7 @@ public:
     auto getFactory() { return factory; }
     auto getAdapter() { return adapter; }
     auto getDevice() { return device; }
+    auto &getD2DContext() { return d2dContext; }
     auto &getPipelineStateController() { return pipelineStateController; }
     auto &getDescriptorController() { return descriptorController; }
     auto &getBackgroundWorkerController() { return backgroundWorkerController; }
@@ -72,13 +68,6 @@ protected:
     CommandQueue directCommandQueue;
     BackgroundWorkerController backgroundWorkerController;
 
-public:
-    void createD3D11Device();
-    Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_d3d11DeviceContext;
-    Microsoft::WRL::ComPtr<ID3D11On12Device> m_d3d11On12Device;
-    Microsoft::WRL::ComPtr<IDWriteFactory> m_dWriteFactory;
-    Microsoft::WRL::ComPtr<ID2D1Factory3> m_d2dFactory;
-    Microsoft::WRL::ComPtr<ID2D1Device2> m_d2dDevice;
-    Microsoft::WRL::ComPtr<ID2D1DeviceContext2> m_d2dDeviceContext;
-
+    // DX11 context
+    D2DContext d2dContext;
 };
