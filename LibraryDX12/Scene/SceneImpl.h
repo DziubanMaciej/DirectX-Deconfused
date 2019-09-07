@@ -50,6 +50,7 @@ protected:
     void renderForward(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, RenderTarget &output);
     void renderPostProcesses(SwapChain &swapChain, PostProcessRenderTargets &renderTargets, CommandList &commandList,
                              size_t enablePostProcessesCount, RenderTarget &output);
+    void renderD2DTexts(SwapChain &swapChain);
 
     // Context
     ApplicationImpl &application;

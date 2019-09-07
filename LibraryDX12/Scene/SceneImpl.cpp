@@ -357,6 +357,41 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
     }
 }
 
+void SceneImpl::renderD2DTexts(SwapChain &swapChain) {
+
+    auto &d2dDeviceContext = ApplicationImpl::getInstance().getD2DContext().getD2DDeviceContext();
+    auto &d3d11DeviceContext = ApplicationImpl::getInstance().getD2DContext().getD3D11DeviceContext();
+    auto &d3d11on12Device = ApplicationImpl::getInstance().getD2DContext().getD3D11On12Device();
+
+    // Acquire our wrapped render target resource for the current back buffer.
+    d3d11on12Device->AcquireWrappedResources(swapChain.getCurrentD11BackBuffer().GetAddressOf(), 1);
+
+    // Render text directly to the back buffer.
+    const D2D1_SIZE_F rtSize = swapChain.getCurrentD2DBackBuffer()->GetSize();
+    const D2D1_RECT_F textRect = D2D1::RectF(0, 0, rtSize.width, rtSize.height);
+    d2dDeviceContext->SetTarget(swapChain.getCurrentD2DBackBuffer().Get());
+    d2dDeviceContext->BeginDraw();
+    d2dDeviceContext->SetTransform(D2D1::Matrix3x2F::Identity());
+    for (auto txt : texts) {
+        txt->updateText();
+        // TODO: this call as TextImpl method
+        d2dDeviceContext->DrawText(
+            txt->getText().c_str(),
+            txt->getText().size(),
+            txt->m_textFormat.Get(),
+            &textRect,
+            txt->m_textBrush.Get());
+    }
+    throwIfFailed(d2dDeviceContext->EndDraw());
+
+    // Release our wrapped resource. This makes implicit state transition
+    d3d11on12Device->ReleaseWrappedResources(swapChain.getCurrentD11BackBuffer().GetAddressOf(), 1);
+    swapChain.getCurrentBackBuffer().setState(D3D12_RESOURCE_STATE_PRESENT);
+
+    // Flush to submit the 11 command list to the shared command queue.
+    d3d11DeviceContext->Flush();
+}
+
 void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     auto &commandQueue = application.getDirectCommandQueue();
     CommandList commandList{application.getDescriptorController(), commandQueue.getCommandAllocatorController(), nullptr};
@@ -389,42 +424,12 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
 
     // Close command list and submit it to the GPU
     commandList.close();
-    std::vector<CommandList *> commandLists{ &commandList };
+    std::vector<CommandList *> commandLists{&commandList};
     const uint64_t fenceValue = commandQueue.executeCommandListsAndSignal(commandLists);
 
     // D2D
     if (!texts.empty()) {
-        auto &d2dDeviceContext = ApplicationImpl::getInstance().getD2DContext().getD2DDeviceContext();
-        auto &d3d11DeviceContext = ApplicationImpl::getInstance().getD2DContext().getD3D11DeviceContext();
-        auto &d3d11on12Device = ApplicationImpl::getInstance().getD2DContext().getD3D11On12Device();
-
-        // Acquire our wrapped render target resource for the current back buffer.
-        d3d11on12Device->AcquireWrappedResources(swapChain.getCurrentD11BackBuffer().GetAddressOf(), 1);
-
-        // Render text directly to the back buffer.
-        const D2D1_SIZE_F rtSize = swapChain.getCurrentD2DBackBuffer()->GetSize();
-        const D2D1_RECT_F textRect = D2D1::RectF(0, 0, rtSize.width, rtSize.height);
-        d2dDeviceContext->SetTarget(swapChain.getCurrentD2DBackBuffer().Get());
-        d2dDeviceContext->BeginDraw();
-        d2dDeviceContext->SetTransform(D2D1::Matrix3x2F::Identity());
-        for (auto txt : texts) {
-            txt->updateText();
-            // TODO: this call as TextImpl method
-            d2dDeviceContext->DrawText(
-                txt->getText().c_str(),
-                txt->getText().size(),
-                txt->m_textFormat.Get(),
-                &textRect,
-                txt->m_textBrush.Get());
-        }
-        throwIfFailed(d2dDeviceContext->EndDraw());
-
-        // Release our wrapped resource. This makes implicit state transition
-        d3d11on12Device->ReleaseWrappedResources(swapChain.getCurrentD11BackBuffer().GetAddressOf(), 1);
-        backBuffer.setState(D3D12_RESOURCE_STATE_PRESENT);
-
-        // Flush to submit the 11 command list to the shared command queue.
-        d3d11DeviceContext->Flush();
+        renderD2DTexts(swapChain);
     }
 
     // Present (swap back buffers) and wait for next frame's fence
