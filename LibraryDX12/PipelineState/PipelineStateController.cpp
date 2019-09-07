@@ -71,6 +71,9 @@ void PipelineStateController::compile(Identifier identifier) {
     case Identifier::PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR:
         compilePipelineStatePostProcessGaussianBlur(rootSignature, pipelineState);
         break;
+    case Identifier::PIPELINE_STATE_POST_PROCESS_APPLY_BLOOM:
+        compilePipelineStatePostProcessApplyBloom(rootSignature, pipelineState);
+        break;
     default:
         UNREACHABLE_CODE();
     }
@@ -97,6 +100,7 @@ void PipelineStateController::compilePipelineStateDefault(RootSignature &rootSig
     PipelineState{inputLayout, rootSignature}
         .VS(L"vertex.hlsl")
         .PS(L"pixel.hlsl")
+        .setRenderTargetsCount(2)
         .compile(device, pipelineState);
 }
 
@@ -238,7 +242,7 @@ static void compileBasicPipelineStatePostProcess(ID3D12DevicePtr device, RootSig
     };
 
     // Pipeline state object
-    PipelineState{inputLayout, rootSignature}
+    return PipelineState{inputLayout, rootSignature}
         .VS(L"vertex_post_process.hlsl")
         .PS(psPath)
         .disableDepthStencil()
@@ -259,4 +263,51 @@ void PipelineStateController::compilePipelineStatePostProcessLinearColorCorrecti
 
 void PipelineStateController::compilePipelineStatePostProcessGaussianBlur(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     compileBasicPipelineStatePostProcess<PostProcessGaussianBlurCB>(device, rootSignature, pipelineState, L"pixel_post_process_gaussian_blur.hlsl");
+}
+
+void PipelineStateController::compilePipelineStatePostProcessApplyBloom(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
+    // Root signature - crossthread data
+    D3D12_STATIC_SAMPLER_DESC sampler = {};
+    sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+    sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+    sampler.MaxLOD = D3D12_FLOAT32_MAX;
+    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+    DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
+    table.appendSrvRange(t(0), 1);
+
+    rootSignature
+        .appendStaticSampler(s(0), sampler)
+        .append32bitConstant<PostProcessApplyBloomCB>(b(0), D3D12_SHADER_VISIBILITY_PIXEL)
+        .appendDescriptorTable(std::move(table))
+        .compile(device);
+
+    // Input layout - per vertex data
+    const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+    };
+
+    // Blend state
+    D3D12_BLEND_DESC blendDesc = {};
+    blendDesc.RenderTarget[0].BlendEnable = TRUE;
+    blendDesc.RenderTarget[0].LogicOpEnable = FALSE;
+    blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_ONE;
+    blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_ONE;
+    blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ONE;
+    blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ONE;
+    blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].LogicOp = D3D12_LOGIC_OP_NOOP;
+    blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+    // Pipeline state object
+    return PipelineState{inputLayout, rootSignature}
+        .VS(L"vertex_post_process.hlsl")
+        .PS(L"pixel_post_process_apply_bloom.hlsl")
+        .disableDepthStencil()
+        .setBlendDesc(blendDesc)
+        .compile(device, pipelineState);
 }

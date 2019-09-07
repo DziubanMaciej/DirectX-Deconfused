@@ -2,6 +2,7 @@ add_shaders_and_cmake_file(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/pixel.hlsl                 Pixel
     ${CMAKE_CURRENT_SOURCE_DIR}/pixel_normal.hlsl          Pixel
     ${CMAKE_CURRENT_SOURCE_DIR}/pixel_normal_texture.hlsl  Pixel
+    ${CMAKE_CURRENT_SOURCE_DIR}/pixel_post_process_apply_bloom.hlsl  Pixel
     ${CMAKE_CURRENT_SOURCE_DIR}/pixel_post_process_black_bars.hlsl Pixel
     ${CMAKE_CURRENT_SOURCE_DIR}/pixel_post_process_convolution.hlsl   Pixel
     ${CMAKE_CURRENT_SOURCE_DIR}/pixel_post_process_gaussian_blur.hlsl   Pixel

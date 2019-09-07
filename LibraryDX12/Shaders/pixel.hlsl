@@ -21,7 +21,12 @@ struct PixelShaderInput {
     float4 Position : SV_Position;
 };
 
-float4 main(PixelShaderInput IN) : SV_Target {
+struct PS_OUT {
+    float4 scene;
+    float4 bloomMap;
+};
+
+PS_OUT main(PixelShaderInput IN) : SV_Target {
     float4 OUT_Color = float4(0, 0, 0, 1);
     OUT_Color.xyz = OUT_Color.xyz + ambientLight.xyz;
 
@@ -29,7 +34,7 @@ float4 main(PixelShaderInput IN) : SV_Target {
         float3 tempLightColor = lightColor[i].xyz * 0.01;
         float tempLightPower = (2000 / (distance(IN.WorldPosition.xyz, lightPosition[i]) * distance(IN.WorldPosition.xyz, lightPosition[i].xyz))) * lightColor[1].w;
 
-		//Direction
+        //Direction
         float3 lightPositionNorm = normalize(lightPosition[i].xyz - IN.WorldPosition.xyz);
         float3 lightDirNorm = normalize(lightDirection[i].xyz);
         float directionPower = max(dot(-lightPositionNorm.xyz, lightDirNorm.xyz), 0.0);
@@ -37,5 +42,15 @@ float4 main(PixelShaderInput IN) : SV_Target {
         OUT_Color.xyz = OUT_Color.xyz + (tempLightColor.xyz + op.objectColor.xyz) * tempLightPower * directionPower;
     }
 
-    return OUT_Color;
+    PS_OUT result;
+    result.scene = OUT_Color;
+
+    float brightness = dot(OUT_Color.rgb, float3(0.2126, 0.7152, 0.0722));
+    if (brightness > 0.5) {
+        result.bloomMap = result.scene;
+    } else {
+        result.bloomMap = float4(0, 0, 0, 1);
+    }
+
+    return result;
 }

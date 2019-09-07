@@ -63,6 +63,7 @@ void SwapChain::updateRenderTargetViews() {
         // Get current back buffer
         ID3D12ResourcePtr backBuffer;
         throwIfFailed(swapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer)));
+        backBuffer->SetName(L"Back buffer");
 
         // Update DX12 back buffer data
         backBufferEntry.backBuffer.setResource(backBuffer);

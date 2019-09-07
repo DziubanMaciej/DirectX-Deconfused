@@ -132,6 +132,8 @@ void SceneImpl::getAndPrepareSourceAndDestinationForPostProcess(CommandList &com
 
 // --------------------------------------------------------------------------- Render methods
 
+const static FLOAT blackColor[] = { 0.f, 0.f, 0.f, 1.f };
+
 void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, CommandList &commandList) {
     const auto shadowMapsUsed = std::min(size_t{8u}, lights.size());
 
@@ -203,12 +205,14 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
 
     // Transition to RENDER_TARGET
     commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    commandList.transitionBarrier(renderData.getBloomMap(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     commandList.OMSetRenderTarget(output.getRtv(), output.getResource(),
                                   renderData.getDepthStencilBuffer().getDsv(), renderData.getDepthStencilBuffer().getResource());
 
     // Render (clear color)
     commandList.clearRenderTargetView(output.getRtv(), backgroundColor);
+    commandList.clearRenderTargetView(renderData.getBloomMap().getRtv(), blackColor);
     commandList.clearDepthStencilView(renderData.getDepthStencilBuffer().getDsv(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
     // View projection matrix
@@ -238,6 +242,10 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
     // Draw DEFAULT
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT);
     commandList.setCbvInDescriptorTable(2, 0, lightConstantBuffer);
+    const D3D12_CPU_DESCRIPTOR_HANDLE rts[2] = {
+        output.getRtv(), renderData.getBloomMap().getRtv()};
+
+    commandList.getCommandList()->OMSetRenderTargets(2, rts, FALSE, &renderData.getDepthStencilBuffer().getDsv());
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = object->getMesh();
         if (mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
@@ -255,6 +263,9 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
             commandList.drawIndexed(static_cast<UINT>(mesh.getIndicesCount()));
         }
     }
+
+    commandList.OMSetRenderTarget(output.getRtv(), output.getResource(),
+                                  renderData.getDepthStencilBuffer().getDsv(), renderData.getDepthStencilBuffer().getResource());
 
     //Draw NORMAL
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_NORMAL);
@@ -311,7 +322,6 @@ void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesse
                                     Resource &input, PostProcessRenderTargets &renderTargets, Resource &output,
                                     size_t enabledPostProcessesCount, float screenWidth, float screenHeight) {
     auto &pipelineStateController = ApplicationImpl::getInstance().getPipelineStateController();
-    const FLOAT blackColor[] = {0.f, 0.f, 0.f, 1.f};
 
     size_t postProcessIndex = 0u;
     Resource *source{}, *destination{};
@@ -320,13 +330,14 @@ void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesse
             continue;
         }
 
-        // Get resources
+        // Constants
         const bool firstPostProcess = (postProcessIndex == 0);
         const bool lastPostProcess = (postProcessIndex == enabledPostProcessesCount - 1);
-        getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, firstPostProcess, lastPostProcess, input, output, source, destination);
 
         // Render post process base on its type
         if (postProcess->getType() == PostProcessImpl::Type::CONVOLUTION) {
+            getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, firstPostProcess, lastPostProcess, input, output, source, destination);
+
             // Prepare constant buffer
             auto &postProcessData = postProcess->getData().convolution;
             postProcessData.screenWidth = screenWidth;
@@ -342,6 +353,8 @@ void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesse
             // Render
             commandList.draw(6u);
         } else if (postProcess->getType() == PostProcessImpl::Type::BLACK_BARS) {
+            getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, firstPostProcess, lastPostProcess, input, output, source, destination);
+
             // Prepare constant buffer
             auto &postProcessData = postProcess->getData().blackBars;
             postProcessData.screenWidth = screenWidth;
@@ -354,12 +367,11 @@ void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesse
             commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
             commandList.IASetVertexBuffer(fullscreenVB);
 
-            source->getResource()->SetName(L"SOURCE");
-            destination->getResource()->SetName(L"DSTNATION");
-
             // Render
             commandList.draw(6u);
         } else if (postProcess->getType() == PostProcessImpl::Type::LINEAR_COLOR_CORRECTION) {
+            getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, firstPostProcess, lastPostProcess, input, output, source, destination);
+
             // Prepare constant buffer
             auto &postProcessData = postProcess->getData().linearColorCorrection;
             postProcessData.screenWidth = screenWidth;
@@ -387,7 +399,8 @@ void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesse
             // Render all passes of the blur filter
             for (auto passIndex = 0u; passIndex < postProcessData.passCount; passIndex++) {
                 // Render horizontal pass
-                getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, true, false, renderTargets.getSource(), output, source, destination);
+                const bool firstPass = firstPostProcess && (passIndex == 0);
+                getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, firstPass, false, input, output, source, destination);
                 postProcessData.cb.horizontal = true;
                 commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
                 commandList.clearRenderTargetView(destination->getRtv(), blackColor);
@@ -398,8 +411,8 @@ void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesse
                 renderTargets.swapResources();
 
                 // Render vertical pass
-                const bool lastPass = (passIndex == postProcessData.passCount - 1);
-                getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, true, lastPass, renderTargets.getSource(), output, source, destination);
+                const bool lastPass = lastPostProcess && (passIndex == postProcessData.passCount - 1);
+                getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, false, lastPass, input, output, source, destination);
                 postProcessData.cb.horizontal = false;
                 commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
                 commandList.clearRenderTargetView(destination->getRtv(), blackColor);
@@ -474,6 +487,23 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
                             renderData.getPostProcessRenderTargets().getSource(), renderData.getPostProcessRenderTargets(), backBuffer,
                             postProcessesCount, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     }
+
+    // Bloom blur
+    renderPostProcesses(renderData.getPostProcessesForBloom(), commandList, *postProcessVB,
+                        renderData.getBloomMap(), renderData.getPostProcessRenderTargets(), renderData.getBloomMap(),
+                        1, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+
+    // Apply bloom
+    PostProcessApplyBloomCB cb = {};
+    cb.screenWidth = static_cast<float>(swapChain.getWidth());
+    cb.screenHeight = static_cast<float>(swapChain.getHeight());
+    commandList.transitionBarrier(renderData.getBloomMap(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    commandList.setPipelineStateAndGraphicsRootSignature(ApplicationImpl::getInstance().getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_APPLY_BLOOM);
+    commandList.setGraphicsRoot32BitConstant(0, cb);
+    commandList.setSrvInDescriptorTable(1, 0, renderData.getBloomMap());
+    commandList.OMSetRenderTargetNoDepth(backBuffer.getRtv(), backBuffer.getResource());
+    commandList.IASetVertexBuffer(*postProcessVB);
+    commandList.draw(6u);
 
     // If there are no D2D content to render, there will be no implicit transition to present, hence the manual barrier
     if (texts.empty()) {

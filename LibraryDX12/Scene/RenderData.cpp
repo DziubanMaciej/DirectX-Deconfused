@@ -4,13 +4,41 @@
 
 RenderData::RenderData(ID3D12DevicePtr &device, DescriptorController &descriptorController, int width, int height)
     : device(device),
-      postProcessRenderTargets(device) {
+      postProcessRenderTargets(device),
+      postProcessForBloom(DXD::PostProcess::create()) {
+    postProcessForBloom->setGaussianBlur(3, 5);
+    postProcessesForBloom.push_back(static_cast<PostProcessImpl *>(postProcessForBloom.get()));
 }
 
 void RenderData::resize(int width, int height) {
     width = std::max(static_cast<uint32_t>(width), 1u);
     height = std::max(static_cast<uint32_t>(height), 1u);
     postProcessRenderTargets.resize(width, height);
+
+    // Bloom map
+    D3D12_RESOURCE_DESC renderTargetDesc = {};
+    renderTargetDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    renderTargetDesc.Alignment = 0;
+    renderTargetDesc.Width = width;
+    renderTargetDesc.Height = height;
+    renderTargetDesc.DepthOrArraySize = 1;
+    renderTargetDesc.MipLevels = 0;
+    renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    renderTargetDesc.SampleDesc.Count = 1;
+    renderTargetDesc.SampleDesc.Quality = 0;
+    renderTargetDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    renderTargetDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+    bloomMap = std::make_unique<Resource>(
+        device,
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &renderTargetDesc,
+        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        nullptr);
+    bloomMap->createSrv(nullptr);
+    bloomMap->createRtv(nullptr);
+    bloomMap->getResource()->SetName(L"Bloom map");
 
     // Shadow maps
     D3D12_DEPTH_STENCIL_VIEW_DESC shadowMapDsvDesc = {};

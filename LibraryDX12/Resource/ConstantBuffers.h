@@ -37,6 +37,11 @@ struct PostProcessGaussianBlurCB {
     bool padding[3];
 };
 
+struct PostProcessApplyBloomCB {
+    float screenWidth;
+    float screenHeight;
+};
+
 struct PostProcessGaussianBlurData {
     PostProcessGaussianBlurCB cb;
     UINT passCount;

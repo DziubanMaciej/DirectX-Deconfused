@@ -19,7 +19,6 @@ public:
         description.SampleMask = UINT_MAX;
         description.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
         description.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
-        description.RasterizerState = CD3DX12_RASTERIZER_DESC(D3D12_DEFAULT);
         description.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC(D3D12_DEFAULT);
         description.DSVFormat = DXGI_FORMAT_D32_FLOAT;
         description.NumRenderTargets = 1;
@@ -34,6 +33,7 @@ public:
     PipelineState &GS(const std::wstring &path);
     PipelineState &disableDepthStencil();
     PipelineState &setRenderTargetsCount(UINT count);
+    PipelineState &setBlendDesc(const D3D12_BLEND_DESC &blendDesc);
 
     void compile(ID3D12DevicePtr device, ID3D12PipelineStatePtr &pipelineState);
 

@@ -38,6 +38,11 @@ PipelineState &PipelineState::setRenderTargetsCount(UINT count) {
     return *this;
 }
 
+PipelineState &PipelineState::setBlendDesc(const D3D12_BLEND_DESC &blendDesc) {
+    description.BlendState = blendDesc;
+    return *this;
+}
+
 void PipelineState::compile(ID3D12DevicePtr device, ID3D12PipelineStatePtr &pipelineState) {
     throwIfFailed(device->CreateGraphicsPipelineState(&description, IID_PPV_ARGS(&pipelineState)));
 }
