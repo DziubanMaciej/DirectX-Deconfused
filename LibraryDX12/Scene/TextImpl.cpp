@@ -47,4 +47,5 @@ void TextImpl::updateText() {
         &m_textFormat));
     throwIfFailed(m_textFormat->SetTextAlignment((DWRITE_TEXT_ALIGNMENT)horzAlignment));
     throwIfFailed(m_textFormat->SetParagraphAlignment((DWRITE_PARAGRAPH_ALIGNMENT)vertAlignment));
+    dirty = false;
 }

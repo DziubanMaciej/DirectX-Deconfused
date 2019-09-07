@@ -8,14 +8,13 @@
 
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
 #include "DXD/ExternalHeadersWrappers/dxgi.h"
+#include <d2d1_3.h>
+#include <d3d11.h>
+#include <d3d11on12.h>
+#include <dwrite.h>
 #include <memory>
 #include <stdint.h>
 #include <vector>
-
-#include <d3d11on12.h>
-#include <d3d11.h>
-#include <d2d1_3.h>
-#include <dwrite.h>
 
 class CommandQueue;
 class DescriptorController;
@@ -40,7 +39,6 @@ public:
     auto &getCurrentBackBuffer() { return backBufferEntries[this->currentBackBufferIndex].backBuffer; };
     auto &getCurrentD11BackBuffer() { return backBufferEntries[this->currentBackBufferIndex].m_wrappedBackBuffers; };
     auto &getCurrentD2DBackBuffer() { return backBufferEntries[this->currentBackBufferIndex].m_d2dRenderTargets; };
-    IDXGISwapChainPtr swapChain;
 
 private:
     static bool checkTearingSupport(IDXGIFactoryPtr &factory);
@@ -52,6 +50,7 @@ private:
 
     // DX12 data
     std::vector<BackBufferEntry> backBufferEntries;
+    IDXGISwapChainPtr swapChain;
 
     //DX11 data
     D2D1_BITMAP_PROPERTIES1 bitmapProperties;

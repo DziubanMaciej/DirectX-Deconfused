@@ -186,7 +186,7 @@ private:
     void prepText() {
         DXD::log("Loading texts...\n");
         std::vector<std::string> textNames = {
-            "fpsCounter", "meme"};
+            "fpsCounter"};
 
         for (auto text : textNames) {
             texts.insert({text, DXD::Text::create()});
@@ -196,11 +196,6 @@ private:
         texts["fpsCounter"]->setFontStyle(DXDFontStyle::ITALIC);
         texts["fpsCounter"]->setFontWeight(DXDFontWeight::ULTRA_BLACK);
         texts["fpsCounter"]->setFontSize(13.f);
-
-        texts["meme"]->setFontFamily(L"Impact");
-        //TODO: texts["meme"]->setColor(...);
-        texts["meme"]->setFontSize(90.f);
-        texts["meme"]->setText(L"MEME\n\n\n\nDOLNY TEKST");
     }
     void prepScene() {
         DXD::log("Preparing scene...\n");
@@ -325,20 +320,22 @@ private:
     }
     void onUpdate(unsigned int deltaTimeMicroseconds) override {
         fpsCounter.push(deltaTimeMicroseconds);
-        if (texts["fpsCounter"] != nullptr) {
-            std::wstring txt = L"FPS: ";
-            txt.append(std::to_wstring(fpsCounter.getFps()));
-            txt.append(L"\nFrame time [us]: ");
-            txt.append(std::to_wstring(deltaTimeMicroseconds));
-            texts["fpsCounter"]->setText(txt);
-        }
-        if (fpsCounter.getFrameIndex() % 512) {
-            DXD::log("Frame time=%d us, FPS=%d\n", deltaTimeMicroseconds, fpsCounter.getFps());
+        const bool useD2DForFpsCounter = true;
+        if ((fpsCounter.getFrameIndex() % 60) == 0) {
+            if (useD2DForFpsCounter) {
+                std::wstring txt = L"FPS: ";
+                txt.append(std::to_wstring(fpsCounter.getFps()));
+                txt.append(L"\nFrame time [us]: ");
+                txt.append(std::to_wstring(deltaTimeMicroseconds));
+                texts["fpsCounter"]->setText(txt);
+            } else {
+                DXD::log("Frame time=%d us, FPS=%d\n", deltaTimeMicroseconds, fpsCounter.getFps());
+            }
         }
 
-        if (!toggleSceneMovement)
-            return;
-        sceneMoveTick(deltaTimeMicroseconds);
+        if (toggleSceneMovement) {
+            sceneMoveTick(deltaTimeMicroseconds);
+        }
     }
 
     constexpr static float movementSpeed = 0.7f;
