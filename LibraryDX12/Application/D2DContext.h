@@ -7,13 +7,6 @@ class D2DContext {
 public:
     D2DContext(ID3D12DevicePtr device, ID3D12CommandQueuePtr queue);
 
-    void wrapRenderTargetD11(ID3D12ResourcePtr &dx12Resource,
-                             ID3D11ResourcePtr &dx11Resource,
-                             D3D12_RESOURCE_STATES inState, D3D12_RESOURCE_STATES outState);
-    void wrapRenderTargetD2D(ID3D11ResourcePtr &dx11Resource,
-                             ID2D1BitmapPtr &d2dResource, UINT dpi);
-    void flushAndResetTarget();
-
     auto &getD3D11DeviceContext() { return d3d11DeviceContext; }
     auto &getD2DDeviceContext() { return d2dDeviceContext; }
     auto &getD3D11On12Device() { return d3d11On12Device; }

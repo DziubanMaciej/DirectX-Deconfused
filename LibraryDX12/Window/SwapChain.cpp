@@ -69,13 +69,7 @@ void SwapChain::updateRenderTargetViews() {
         backBufferEntry.backBuffer.createRtv(nullptr);
 
         // Update DX11/D2D back buffer data
-        application.getD2DContext().wrapRenderTargetD11(
-            backBuffer,
-            backBufferEntry.d11BackBuffer,
-            D3D12_RESOURCE_STATE_RENDER_TARGET,
-            D3D12_RESOURCE_STATE_PRESENT);
-        application.getD2DContext().wrapRenderTargetD2D(backBufferEntry.d11BackBuffer,
-                                                        backBufferEntry.d2dBackBuffer, windowDpi);
+        backBufferEntry.d2dWrappedBackBuffer.wrap(static_cast<float>(windowDpi));
     }
 }
 
@@ -105,11 +99,12 @@ void SwapChain::resize(int desiredWidth, int desiredHeight) {
 void SwapChain::resetRenderTargetViews() {
     for (auto &backBufferEntry : backBufferEntries) {
         backBufferEntry.backBuffer.reset();
-        backBufferEntry.d11BackBuffer.Reset();
-        backBufferEntry.d2dBackBuffer.Reset();
+        backBufferEntry.d2dWrappedBackBuffer.reset();
         backBufferEntry.lastFence = currentBackBufferIndex;
     }
-    ApplicationImpl::getInstance().getD2DContext().flushAndResetTarget();
+    auto d2dContext = ApplicationImpl::getInstance().getD2DContext();
+    d2dContext.getD2DDeviceContext()->SetTarget(nullptr);
+    d2dContext.getD3D11DeviceContext()->Flush();
 }
 
 void SwapChain::resizeRenderTargets(uint32_t desiredWidth, uint32_t desiredHeight) {

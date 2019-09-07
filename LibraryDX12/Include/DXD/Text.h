@@ -4,6 +4,7 @@
 #include "DXD/NonCopyableAndMovable.h"
 
 #include "DXD/ExternalHeadersWrappers/TextEnums.h"
+#include "DXD/ExternalHeadersWrappers/d2d.h"
 #include <memory>
 #include <string>
 

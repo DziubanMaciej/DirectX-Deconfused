@@ -2,6 +2,7 @@
 
 #include "Application/SettingsImpl.h"
 #include "Descriptor/DescriptorAllocation.h"
+#include "Resource/D2DWrappedResource.h"
 #include "Resource/Resource.h"
 
 #include "DXD/NonCopyableAndMovable.h"
@@ -19,8 +20,7 @@ class DescriptorController;
 class SwapChain : DXD::NonCopyableAndMovable {
     struct BackBufferEntry {
         Resource backBuffer{nullptr, D3D12_RESOURCE_STATE_PRESENT};
-        ID3D11ResourcePtr d11BackBuffer;
-        ID2D1BitmapPtr d2dBackBuffer;
+        D2DWrappedResource d2dWrappedBackBuffer{backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PRESENT};
         uint64_t lastFence;
     };
 
@@ -34,8 +34,7 @@ public:
 
     uint64_t getFenceValueForCurrentBackBuffer() const;
     auto &getCurrentBackBuffer() { return backBufferEntries[this->currentBackBufferIndex].backBuffer; };
-    auto &getCurrentD11BackBuffer() { return backBufferEntries[this->currentBackBufferIndex].d11BackBuffer; };
-    auto &getCurrentD2DBackBuffer() { return backBufferEntries[this->currentBackBufferIndex].d2dBackBuffer; };
+    auto &getCurrentD2DWrappedBackBuffer() { return backBufferEntries[this->currentBackBufferIndex].d2dWrappedBackBuffer; }
 
 private:
     static bool checkTearingSupport(IDXGIFactoryPtr &factory);

@@ -10,6 +10,7 @@
 
 class ApplicationImpl;
 class CommandList;
+class AcquiredD2DWrappedResource;
 
 class Resource : DXD::NonCopyable {
 public:
@@ -42,7 +43,6 @@ public:
     // Gpu upload functions
     virtual bool isUploadInProgress();
     void registerUpload(CommandQueue &uploadingQueue, uint64_t uploadFence);
-    void setState(D3D12_RESOURCE_STATES state) { this->state = state; }
 
     // Descriptors
     void createCbv(D3D12_CONSTANT_BUFFER_VIEW_DESC *desc);
@@ -68,8 +68,10 @@ protected:
     void uploadToGPU(ApplicationImpl &application, const void *data, UINT rowPitch, UINT slicePitch);
     void recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data, UINT rowPitch, UINT slicePitch);
 
-    // state accessors, should be used only by CommandList
+    // state setter, should be used only by classes making transitions, hence the friend declarations
+    void setState(D3D12_RESOURCE_STATES state) { this->state = state; }
     friend class CommandList;
+    friend class AcquiredD2DWrappedResource;
 
     // Data
     D3D12_RESOURCE_STATES state = {};

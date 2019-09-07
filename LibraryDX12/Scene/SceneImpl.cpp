@@ -414,18 +414,18 @@ void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTarge
 }
 
 void SceneImpl::renderD2DTexts(SwapChain &swapChain) {
-
+    // Get the contexts
     auto &d2dDeviceContext = ApplicationImpl::getInstance().getD2DContext().getD2DDeviceContext();
     auto &d3d11DeviceContext = ApplicationImpl::getInstance().getD2DContext().getD3D11DeviceContext();
-    auto &d3d11on12Device = ApplicationImpl::getInstance().getD2DContext().getD3D11On12Device();
 
-    // Acquire our wrapped render target resource for the current back buffer.
-    d3d11on12Device->AcquireWrappedResources(swapChain.getCurrentD11BackBuffer().GetAddressOf(), 1);
+    // Acquire D2D back buffer. Acquired buffer is automatically released by the destructor and flush is made
+    AcquiredD2DWrappedResource backBuffer = swapChain.getCurrentD2DWrappedBackBuffer().acquire();
+    auto &d2dBackBuffer = backBuffer.getD2DResource();
 
     // Render text directly to the back buffer.
-    const D2D1_SIZE_F rtSize = swapChain.getCurrentD2DBackBuffer()->GetSize();
+    const D2D1_SIZE_F rtSize = d2dBackBuffer->GetSize();
     const D2D1_RECT_F textRect = D2D1::RectF(0, 0, rtSize.width, rtSize.height);
-    d2dDeviceContext->SetTarget(swapChain.getCurrentD2DBackBuffer().Get());
+    d2dDeviceContext->SetTarget(d2dBackBuffer.Get());
     d2dDeviceContext->BeginDraw();
     d2dDeviceContext->SetTransform(D2D1::Matrix3x2F::Identity());
     for (auto txt : texts) {
@@ -439,13 +439,6 @@ void SceneImpl::renderD2DTexts(SwapChain &swapChain) {
             txt->m_textBrush.Get());
     }
     throwIfFailed(d2dDeviceContext->EndDraw());
-
-    // Release our wrapped resource. This makes implicit state transition
-    d3d11on12Device->ReleaseWrappedResources(swapChain.getCurrentD11BackBuffer().GetAddressOf(), 1);
-    swapChain.getCurrentBackBuffer().setState(D3D12_RESOURCE_STATE_PRESENT);
-
-    // Flush to submit the 11 command list to the shared command queue.
-    d3d11DeviceContext->Flush();
 }
 
 void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {

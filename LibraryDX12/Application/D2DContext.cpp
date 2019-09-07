@@ -37,32 +37,3 @@ D2DContext::D2DContext(ID3D12DevicePtr device, ID3D12CommandQueuePtr queue) {
     // Create DWrite Factory
     throwIfFailed(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), &dWriteFactory));
 }
-
-void D2DContext::wrapRenderTargetD11(ID3D12ResourcePtr &dx12Resource, ID3D11ResourcePtr &dx11Resource, D3D12_RESOURCE_STATES inState, D3D12_RESOURCE_STATES outState) {
-    const D3D11_RESOURCE_FLAGS d3d11Flags = {D3D11_BIND_RENDER_TARGET};
-    throwIfFailed(d3d11On12Device->CreateWrappedResource(
-        dx12Resource.Get(), &d3d11Flags,
-        inState, outState,
-        IID_PPV_ARGS(&dx11Resource)));
-}
-
-void D2DContext::wrapRenderTargetD2D(ID3D11ResourcePtr &dx11Resource, ID2D1BitmapPtr &d2dResource, UINT dpi) {
-    // Convert to DXGI surface
-    IDXGISurfacePtr surface = {};
-    throwIfFailed(dx11Resource.As(&surface));
-
-    // Wrap the buffer
-    const auto bitmapProperties = D2D1::BitmapProperties1(
-        D2D1_BITMAP_OPTIONS_TARGET | D2D1_BITMAP_OPTIONS_CANNOT_DRAW,
-        D2D1::PixelFormat(DXGI_FORMAT_UNKNOWN, D2D1_ALPHA_MODE_PREMULTIPLIED),
-        static_cast<float>(dpi), static_cast<float>(dpi));
-    throwIfFailed(d2dDeviceContext->CreateBitmapFromDxgiSurface(
-        surface.Get(),
-        &bitmapProperties,
-        &d2dResource));
-}
-
-void D2DContext::flushAndResetTarget() {
-    d2dDeviceContext->SetTarget(nullptr);
-    d3d11DeviceContext->Flush();
-}
