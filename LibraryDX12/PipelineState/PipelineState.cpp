@@ -32,6 +32,12 @@ PipelineState &PipelineState::disableDepthStencil() {
     return *this;
 }
 
+PipelineState &PipelineState::setRenderTargetsCount(UINT count) {
+    description.NumRenderTargets = count;
+    std::fill_n(description.RTVFormats, count, DXGI_FORMAT_R8G8B8A8_UNORM);
+    return *this;
+}
+
 void PipelineState::compile(ID3D12DevicePtr device, ID3D12PipelineStatePtr &pipelineState) {
     throwIfFailed(device->CreateGraphicsPipelineState(&description, IID_PPV_ARGS(&pipelineState)));
 }

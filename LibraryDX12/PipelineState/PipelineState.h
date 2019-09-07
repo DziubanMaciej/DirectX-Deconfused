@@ -33,6 +33,7 @@ public:
     PipelineState &HS(const std::wstring &path);
     PipelineState &GS(const std::wstring &path);
     PipelineState &disableDepthStencil();
+    PipelineState &setRenderTargetsCount(UINT count);
 
     void compile(ID3D12DevicePtr device, ID3D12PipelineStatePtr &pipelineState);
 
