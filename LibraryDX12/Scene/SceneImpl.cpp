@@ -116,10 +116,13 @@ size_t SceneImpl::getEnabledPostProcessesCount() const {
     return count;
 }
 
-void SceneImpl::getAndPrepareSourceAndDestinationForPostProcess(CommandList &commandList, PostProcessRenderTargets &renderTargets, bool last,
-                                                                Resource &finalOutput, Resource *&outSource, Resource *&outDestination) {
+void SceneImpl::getAndPrepareSourceAndDestinationForPostProcess(CommandList &commandList,
+                                                                PostProcessRenderTargets &renderTargets,
+                                                                bool first, bool last,
+                                                                Resource &initialInput, Resource &finalOutput,
+                                                                Resource *&outSource, Resource *&outDestination) {
     // Get resources
-    outSource = &renderTargets.getSource();
+    outSource = first ? &initialInput : &renderTargets.getSource();
     outDestination = last ? &finalOutput : &renderTargets.getDestination();
 
     // Set states
@@ -304,8 +307,9 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
     }
 }
 
-void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList, PostProcessRenderTargets &renderTargets,
-                                    Resource &output, VertexBuffer &fullscreenVB, size_t enabledPostProcessesCount, float screenWidth, float screenHeight) {
+void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList, VertexBuffer &fullscreenVB,
+                                    Resource &input, PostProcessRenderTargets &renderTargets, Resource &output,
+                                    size_t enabledPostProcessesCount, float screenWidth, float screenHeight) {
     auto &pipelineStateController = ApplicationImpl::getInstance().getPipelineStateController();
     const FLOAT blackColor[] = {0.f, 0.f, 0.f, 1.f};
 
@@ -317,8 +321,9 @@ void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesse
         }
 
         // Get resources
+        const bool firstPostProcess = (postProcessIndex == 0);
         const bool lastPostProcess = (postProcessIndex == enabledPostProcessesCount - 1);
-        getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, lastPostProcess, output, source, destination);
+        getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, firstPostProcess, lastPostProcess, input, output, source, destination);
 
         // Render post process base on its type
         if (postProcess->getType() == PostProcessImpl::Type::CONVOLUTION) {
@@ -382,7 +387,7 @@ void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesse
             // Render all passes of the blur filter
             for (auto passIndex = 0u; passIndex < postProcessData.passCount; passIndex++) {
                 // Render horizontal pass
-                getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, false, output, source, destination);
+                getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, true, false, renderTargets.getSource(), output, source, destination);
                 postProcessData.cb.horizontal = true;
                 commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
                 commandList.clearRenderTargetView(destination->getRtv(), blackColor);
@@ -394,7 +399,7 @@ void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesse
 
                 // Render vertical pass
                 const bool lastPass = (passIndex == postProcessData.passCount - 1);
-                getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, lastPass, output, source, destination);
+                getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, true, lastPass, renderTargets.getSource(), output, source, destination);
                 postProcessData.cb.horizontal = false;
                 commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
                 commandList.clearRenderTargetView(destination->getRtv(), blackColor);
@@ -465,7 +470,8 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
 
     // Render post processes
     if (postProcessesCount != 0) {
-        renderPostProcesses(postProcesses, commandList, renderData.getPostProcessRenderTargets(), backBuffer, *postProcessVB,
+        renderPostProcesses(postProcesses, commandList, *postProcessVB,
+                            renderData.getPostProcessRenderTargets().getSource(), renderData.getPostProcessRenderTargets(), backBuffer,
                             postProcessesCount, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     }
 

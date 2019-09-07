@@ -45,14 +45,15 @@ protected:
     // Helpers
     void inspectObjectsNotReady();
     size_t getEnabledPostProcessesCount() const;
-    static void getAndPrepareSourceAndDestinationForPostProcess(CommandList &commandList, PostProcessRenderTargets &renderTargets, bool last,
-                                                                Resource &finalOutput, Resource *&outSource, Resource *&outDestination);
+    static void getAndPrepareSourceAndDestinationForPostProcess(CommandList &commandList, PostProcessRenderTargets &renderTargets, bool first, bool last,
+                                                                Resource &initialInput, Resource &finalOutput, Resource *&outSource, Resource *&outDestination);
 
     // Render methods
     void renderShadowMaps(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
     void renderForward(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output);
-    static void renderPostProcesses(std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList, PostProcessRenderTargets &renderTargets,
-                                    Resource &output, VertexBuffer &fullscreenVB, size_t enabledPostProcessesCount, float screenWidth, float screenHeight);
+    static void renderPostProcesses(std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList, VertexBuffer &fullscreenVB,
+                                    Resource &input, PostProcessRenderTargets &renderTargets, Resource &output,
+                                    size_t enabledPostProcessesCount, float screenWidth, float screenHeight);
     void renderD2DTexts(SwapChain &swapChain);
 
     // Context
