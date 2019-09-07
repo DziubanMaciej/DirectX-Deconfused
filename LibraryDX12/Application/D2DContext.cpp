@@ -2,9 +2,11 @@
 
 #include "Utility/ThrowIfFailed.h"
 
+#include "DXD/ExternalHeadersWrappers/dxgi.h"
+
 D2DContext::D2DContext(ID3D12DevicePtr device, ID3D12CommandQueuePtr queue) {
     // Create DX11 device wrapped around the DX12 device with shared CommandQueue
-    Microsoft::WRL::ComPtr<ID3D11Device> d3d11Device = {};
+    ID3D11DevicePtr d3d11Device = {};
     throwIfFailed(D3D11On12CreateDevice(
         device.Get(),
         D3D11_CREATE_DEVICE_BGRA_SUPPORT,
@@ -24,7 +26,7 @@ D2DContext::D2DContext(ID3D12DevicePtr device, ID3D12CommandQueuePtr queue) {
                                     __uuidof(ID2D1Factory3), &d2dFactoryOptions, &d2dFactory));
 
     // Create D2D Device
-    Microsoft::WRL::ComPtr<IDXGIDevice> dxgiDevice = {};
+    IDXGIDevicePtr dxgiDevice = {};
     throwIfFailed(d3d11On12Device.As(&dxgiDevice));
     throwIfFailed(d2dFactory->CreateDevice(dxgiDevice.Get(), &d2dDevice));
 
@@ -36,7 +38,7 @@ D2DContext::D2DContext(ID3D12DevicePtr device, ID3D12CommandQueuePtr queue) {
     throwIfFailed(DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), &dWriteFactory));
 }
 
-void D2DContext::wrapRenderTargetD11(ID3D12ResourcePtr &dx12Resource, Microsoft::WRL::ComPtr<ID3D11Resource> &dx11Resource, D3D12_RESOURCE_STATES inState, D3D12_RESOURCE_STATES outState) {
+void D2DContext::wrapRenderTargetD11(ID3D12ResourcePtr &dx12Resource, ID3D11ResourcePtr &dx11Resource, D3D12_RESOURCE_STATES inState, D3D12_RESOURCE_STATES outState) {
     const D3D11_RESOURCE_FLAGS d3d11Flags = {D3D11_BIND_RENDER_TARGET};
     throwIfFailed(d3d11On12Device->CreateWrappedResource(
         dx12Resource.Get(), &d3d11Flags,
@@ -44,9 +46,9 @@ void D2DContext::wrapRenderTargetD11(ID3D12ResourcePtr &dx12Resource, Microsoft:
         IID_PPV_ARGS(&dx11Resource)));
 }
 
-void D2DContext::wrapRenderTargetD2D(Microsoft::WRL::ComPtr<ID3D11Resource> &dx11Resource, Microsoft::WRL::ComPtr<ID2D1Bitmap1> &d2dResource, UINT dpi) {
+void D2DContext::wrapRenderTargetD2D(ID3D11ResourcePtr &dx11Resource, ID2D1BitmapPtr &d2dResource, UINT dpi) {
     // Convert to DXGI surface
-    Microsoft::WRL::ComPtr<IDXGISurface> surface = {};
+    IDXGISurfacePtr surface = {};
     throwIfFailed(dx11Resource.As(&surface));
 
     // Wrap the buffer

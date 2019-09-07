@@ -6,12 +6,9 @@
 
 #include "DXD/NonCopyableAndMovable.h"
 
+#include "DXD/ExternalHeadersWrappers/d2d.h"
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
 #include "DXD/ExternalHeadersWrappers/dxgi.h"
-#include <d2d1_3.h>
-#include <d3d11.h>
-#include <d3d11on12.h>
-#include <dwrite.h>
 #include <memory>
 #include <stdint.h>
 #include <vector>
@@ -22,8 +19,8 @@ class DescriptorController;
 class SwapChain : DXD::NonCopyableAndMovable {
     struct BackBufferEntry {
         Resource backBuffer{nullptr, D3D12_RESOURCE_STATE_PRESENT};
-        Microsoft::WRL::ComPtr<ID3D11Resource> d11BackBuffer;
-        Microsoft::WRL::ComPtr<ID2D1Bitmap1> d2dBackBuffer;
+        ID3D11ResourcePtr d11BackBuffer;
+        ID2D1BitmapPtr d2dBackBuffer;
         uint64_t lastFence;
     };
 

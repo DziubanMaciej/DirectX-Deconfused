@@ -2,11 +2,8 @@
 
 #include "DXD/Text.h"
 
+#include "DXD/ExternalHeadersWrappers/d2d.h"
 #include "DXD/ExternalHeadersWrappers/d3dx12.h"
-#include <d2d1_3.h>
-#include <d3d11.h>
-#include <d3d11on12.h>
-#include <dwrite.h>
 
 class TextImpl : public DXD::Text {
 protected:
@@ -18,8 +15,8 @@ public:
              std::wstring localeName, DXDTextHorizontalAlignment textAlignment, DXDTextVerticalAlignment paragraphAlignment);
     ~TextImpl() = default;
 
-    Microsoft::WRL::ComPtr<IDWriteTextFormat> m_textFormat;
-    Microsoft::WRL::ComPtr<ID2D1SolidColorBrush> m_textBrush;
+    IDWriteTextFormatPtr m_textFormat;
+    ID2D1SolidColorBrushPtr m_textBrush;
 
     void createText(const D2D1_COLOR_F color, std::wstring fontFamilyName, IDWriteFontCollection *fontCollection,
                     DWRITE_FONT_WEIGHT fontWeight, DWRITE_FONT_STYLE fontStyle, DWRITE_FONT_STRETCH fontStretch, FLOAT fontSize,
@@ -27,7 +24,7 @@ public:
 
     std::wstring getText() { return text; }
 
-    // TODO: move overrides to cpp file 
+    // TODO: move overrides to cpp file
     void setText(std::wstring text) override {
         //TODO: dirty = true;
         this->text = text;

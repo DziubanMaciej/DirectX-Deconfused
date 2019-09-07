@@ -7,3 +7,5 @@
 using IDXGIFactoryPtr = Microsoft::WRL::ComPtr<IDXGIFactory5>;
 using IDXGIAdapterPtr = Microsoft::WRL::ComPtr<IDXGIAdapter4>;
 using IDXGISwapChainPtr = Microsoft::WRL::ComPtr<IDXGISwapChain4>;
+using IDXGIDevicePtr = Microsoft::WRL::ComPtr<IDXGIDevice>;
+using IDXGISurfacePtr = Microsoft::WRL::ComPtr<IDXGISurface>;
