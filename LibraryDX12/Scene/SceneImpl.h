@@ -21,7 +21,6 @@ class ObjectImpl;
 class CameraImpl;
 class RenderData;
 struct PostProcessRenderTargets;
-class RenderTarget;
 
 class SceneImpl : public DXD::Scene {
 protected:
@@ -43,13 +42,17 @@ public:
     void render(SwapChain &swapChain, RenderData &renderData);
 
 protected:
+    // Helpers
     void inspectObjectsNotReady();
     size_t getEnabledPostProcessesCount() const;
+    void getAndPrepareSourceAndDestinationForPostProcess(CommandList &commandList, PostProcessRenderTargets &renderTargets, bool last,
+                                                         Resource &finalOutput, Resource *&outSource, Resource *&outDestination);
 
+    // Render methods
     void renderShadowMaps(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
-    void renderForward(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, RenderTarget &output);
+    void renderForward(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output);
     void renderPostProcesses(SwapChain &swapChain, PostProcessRenderTargets &renderTargets, CommandList &commandList,
-                             size_t enablePostProcessesCount, RenderTarget &output);
+                             size_t enablePostProcessesCount, Resource &output);
     void renderD2DTexts(SwapChain &swapChain);
 
     // Context

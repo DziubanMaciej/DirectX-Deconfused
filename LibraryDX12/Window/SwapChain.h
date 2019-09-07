@@ -2,7 +2,7 @@
 
 #include "Application/SettingsImpl.h"
 #include "Descriptor/DescriptorAllocation.h"
-#include "Resource/RenderTarget.h"
+#include "Resource/Resource.h"
 
 #include "DXD/NonCopyableAndMovable.h"
 
@@ -21,7 +21,7 @@ class DescriptorController;
 
 class SwapChain : DXD::NonCopyableAndMovable {
     struct BackBufferEntry {
-        RenderTarget backBuffer{nullptr, D3D12_RESOURCE_STATE_PRESENT};
+        Resource backBuffer{nullptr, D3D12_RESOURCE_STATE_PRESENT};
         Microsoft::WRL::ComPtr<ID3D11Resource> d11BackBuffer;
         Microsoft::WRL::ComPtr<ID2D1Bitmap1> d2dBackBuffer;
         uint64_t lastFence;

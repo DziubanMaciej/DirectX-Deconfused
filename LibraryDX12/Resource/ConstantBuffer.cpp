@@ -5,7 +5,6 @@
 
 ConstantBuffer::ConstantBuffer(ID3D12DevicePtr device, DescriptorController &descriptorController, UINT size)
     : Resource(device, D3D12_HEAP_TYPE_UPLOAD, D3D12_HEAP_FLAG_NONE, BitHelper::alignUp<64 * 1024>(size), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr),
-      descriptor(descriptorController.allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1)),
       size(size),
       mappedConstantBuffer(map(this->resource)),
       data(std::make_unique<uint8_t[]>(size)) {
@@ -32,5 +31,5 @@ void ConstantBuffer::createDescriptor(ID3D12DevicePtr &device) {
     D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDescription = {};
     cbvDescription.BufferLocation = this->resource->GetGPUVirtualAddress();
     cbvDescription.SizeInBytes = BitHelper::alignUp<256>(size);
-    device->CreateConstantBufferView(&cbvDescription, descriptor.getCpuHandle());
+    createCbv(&cbvDescription);
 }

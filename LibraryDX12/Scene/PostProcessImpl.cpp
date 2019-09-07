@@ -19,13 +19,13 @@ void PostProcessImpl::setBlackBars(float leftMarginPercent, float rightMarginPer
     this->type = Type::BLACK_BARS;
     this->enabled = true;
 
-    this->dataBlackBars = std::make_unique<DataBlackBars>();
-    this->dataBlackBars->screenHeight = -1;
-    this->dataBlackBars->screenWidth = -1;
-    this->dataBlackBars->leftMarginPercent = leftMarginPercent;
-    this->dataBlackBars->rightMarginPercent = rightMarginPercent;
-    this->dataBlackBars->topMarginPercent = topMarginPercent;
-    this->dataBlackBars->bottomMarginPercent = bottomMarginPercent;
+    auto &data = this->data.blackBars;
+    data.screenHeight = -1;
+    data.screenWidth = -1;
+    data.leftMarginPercent = leftMarginPercent;
+    data.rightMarginPercent = rightMarginPercent;
+    data.topMarginPercent = topMarginPercent;
+    data.bottomMarginPercent = bottomMarginPercent;
 }
 
 void PostProcessImpl::setConvolution(float divider, XMFLOAT3X3 matrix) {
@@ -42,13 +42,13 @@ void PostProcessImpl::setConvolution(float divider,
     this->type = Type::CONVOLUTION;
     this->enabled = true;
 
-    this->dataConvolution = std::make_unique<DataConvolution>();
-    this->dataConvolution->screenHeight = -1;
-    this->dataConvolution->screenWidth = -1;
-    this->dataConvolution->divider = divider;
-    this->dataConvolution->kernel = XMFLOAT4X3(a00, a01, a02, 0.f,
-                                               a10, a11, a12, 0.f,
-                                               a20, a21, a22, 0.f);
+    auto &data = this->data.convolution;
+    data.screenHeight = -1;
+    data.screenWidth = -1;
+    data.divider = divider;
+    data.kernel = XMFLOAT4X3(a00, a01, a02, 0.f,
+                             a10, a11, a12, 0.f,
+                             a20, a21, a22, 0.f);
 }
 
 void PostProcessImpl::setConvolutionSharpen() {
@@ -78,18 +78,18 @@ void PostProcessImpl::setLinearColorCorrection(float a00, float a01, float a02,
     this->type = Type::LINEAR_COLOR_CORRECTION;
     this->enabled = true;
 
-    this->dataLinearColorCorrection = std::make_unique<PostProcessLinearColorCorrectionCB>();
-    this->dataLinearColorCorrection->screenWidth = -1;
-    this->dataLinearColorCorrection->screenHeight = -1;
-    this->dataLinearColorCorrection->colorMatrix = XMFLOAT4X3(a00, a01, a02, 0.f,
-                                                              a10, a11, a12, 0.f,
-                                                              a20, a21, a22, 0.f);
+    auto &data = this->data.linearColorCorrection;
+    data.screenWidth = -1;
+    data.screenHeight = -1;
+    data.colorMatrix = XMFLOAT4X3(a00, a01, a02, 0.f,
+                                  a10, a11, a12, 0.f,
+                                  a20, a21, a22, 0.f);
 }
 
 void PostProcessImpl::setLinearColorCorrection(XMFLOAT3X3 matrix) {
     setLinearColorCorrection(matrix._11, matrix._12, matrix._13,
-                                  matrix._21, matrix._22, matrix._23,
-                                  matrix._31, matrix._32, matrix._33);
+                             matrix._21, matrix._22, matrix._23,
+                             matrix._31, matrix._32, matrix._33);
 }
 
 void PostProcessImpl::setLinearColorCorrectionSepia() {
@@ -97,4 +97,19 @@ void PostProcessImpl::setLinearColorCorrectionSepia() {
         0.393f, 0.769f, 0.189f,
         0.349f, 0.686f, 0.168f,
         0.272f, 0.534f, 0.131f);
+}
+
+void PostProcessImpl::setGaussianBlur(UINT passCount, UINT samplingRange) {
+    this->type = Type::GAUSSIAN_BLUR;
+    this->enabled = passCount > 0u;
+
+    constexpr static UINT maxPassCount = 10u;
+    constexpr static UINT maxSamplingRange = 5u;
+
+    auto &data = this->data.gaussianBlur;
+    data.cb.screenHeight = -1;
+    data.cb.screenWidth = -1;
+    data.cb.samplingRange = std::min(samplingRange, maxSamplingRange);
+    data.cb.horizontal = false;
+    data.passCount = std::min(passCount, maxPassCount);
 }

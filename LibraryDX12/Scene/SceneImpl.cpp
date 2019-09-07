@@ -12,6 +12,8 @@
 #include <algorithm>
 #include <cassert>
 
+// --------------------------------------------------------------------------- API
+
 namespace DXD {
 std::unique_ptr<Scene> Scene::create(DXD::Application &application) {
     return std::unique_ptr<Scene>{new SceneImpl(*static_cast<ApplicationImpl *>(&application))};
@@ -89,6 +91,8 @@ DXD::Camera *SceneImpl::getCamera() {
     return camera;
 }
 
+// ---------------------------------------------------------------------------  Helpers
+
 void SceneImpl::inspectObjectsNotReady() {
     for (auto it = objectsNotReady.begin(); it != objectsNotReady.end();) {
         ObjectImpl *object = *it;
@@ -112,6 +116,19 @@ size_t SceneImpl::getEnabledPostProcessesCount() const {
     return count;
 }
 
+void SceneImpl::getAndPrepareSourceAndDestinationForPostProcess(CommandList &commandList, PostProcessRenderTargets &renderTargets, bool last,
+                                                                Resource &finalOutput, Resource *&outSource, Resource *&outDestination) {
+    // Get resources
+    outSource = &renderTargets.getSource();
+    outDestination = last ? &finalOutput : &renderTargets.getDestination();
+
+    // Set states
+    commandList.transitionBarrier(*outSource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    commandList.transitionBarrier(*outDestination, D3D12_RESOURCE_STATE_RENDER_TARGET);
+}
+
+// --------------------------------------------------------------------------- Render methods
+
 void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, CommandList &commandList) {
     const auto shadowMapsUsed = std::min(size_t{8u}, lights.size());
 
@@ -124,8 +141,8 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
     int lightIdx = 0;
 
     for (LightImpl *light : lights) {
-        commandList.OMSetRenderTargetDepthOnly(renderData.getShadowMapDsvDescriptors().getCpuHandle(lightIdx), renderData.getShadowMap(lightIdx).getResource());
-        commandList.clearDepthStencilView(renderData.getShadowMapDsvDescriptors().getCpuHandle(lightIdx), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
+        commandList.OMSetRenderTargetDepthOnly(renderData.getShadowMap(lightIdx).getDsv(), renderData.getShadowMap(lightIdx).getResource());
+        commandList.clearDepthStencilView(renderData.getShadowMap(lightIdx).getDsv(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
         // View projection matrix
         camera->setAspectRatio(1.0f);
@@ -178,18 +195,18 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
     }
 }
 
-void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, RenderTarget &output) {
+void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output) {
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
 
     // Transition to RENDER_TARGET
     commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     commandList.OMSetRenderTarget(output.getRtv(), output.getResource(),
-                                  renderData.getDepthStencilBufferDescriptor().getCpuHandle(), renderData.getDepthStencilBuffer().getResource());
+                                  renderData.getDepthStencilBuffer().getDsv(), renderData.getDepthStencilBuffer().getResource());
 
     // Render (clear color)
     commandList.clearRenderTargetView(output.getRtv(), backgroundColor);
-    commandList.clearDepthStencilView(renderData.getDepthStencilBufferDescriptor().getCpuHandle(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
+    commandList.clearDepthStencilView(renderData.getDepthStencilBuffer().getDsv(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
     // View projection matrix
     float aspectRatio = (float)swapChain.getWidth() / swapChain.getHeight();
@@ -217,7 +234,7 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
 
     // Draw DEFAULT
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT);
-    commandList.setCbvSrvUavDescriptorTable(2, 0, lightConstantBuffer.getCbvHandle(), 1);
+    commandList.setCbvInDescriptorTable(2, 0, lightConstantBuffer);
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = object->getMesh();
         if (mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
@@ -238,8 +255,10 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
 
     //Draw NORMAL
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_NORMAL);
-    commandList.setCbvSrvUavDescriptorTable(2, 0, lightConstantBuffer.getCbvHandle(), 1);
-    commandList.setCbvSrvUavDescriptorTable(2, 1, renderData.getShadowMapSrvDescriptors(), 8);
+    commandList.setCbvInDescriptorTable(2, 0, lightConstantBuffer);
+    for (auto shadowMapIndex = 0u; shadowMapIndex < 8; shadowMapIndex++) {
+        commandList.setSrvInDescriptorTable(2, shadowMapIndex + 1, renderData.getShadowMap(shadowMapIndex));
+    }
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = object->getMesh();
         if (mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
@@ -260,8 +279,10 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
 
     //Draw TEXTURE_NORMAL
     commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE_NORMAL);
-    commandList.setCbvSrvUavDescriptorTable(2, 0, lightConstantBuffer.getCbvHandle(), 1);
-    commandList.setCbvSrvUavDescriptorTable(2, 2, renderData.getShadowMapSrvDescriptors(), 8);
+    commandList.setCbvInDescriptorTable(2, 0, lightConstantBuffer);
+    for (auto shadowMapIndex = 0u; shadowMapIndex < 8; shadowMapIndex++) {
+        commandList.setSrvInDescriptorTable(2, shadowMapIndex + 2, renderData.getShadowMap(shadowMapIndex));
+    }
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = object->getMesh();
         TextureImpl *texture = object->getTextureImpl();
@@ -277,77 +298,112 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
             commandList.setGraphicsRoot32BitConstant(1, op);
 
             commandList.IASetVertexAndIndexBuffer(mesh);
-            commandList.setCbvSrvUavDescriptorTable(2, 1, texture->getSrvDescriptor(), 1);
+            commandList.setSrvInDescriptorTable(2, 1, *texture);
             commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
         }
     }
 }
 
 void SceneImpl::renderPostProcesses(SwapChain &swapChain, PostProcessRenderTargets &renderTargets, CommandList &commandList,
-                                    size_t enablePostProcessesCount, RenderTarget &output) {
+                                    size_t enablePostProcessesCount, Resource &output) {
     // TODO skip disabled post processes
     size_t postProcessIndex = 0u;
+    Resource *source{}, *destination{};
     for (PostProcessImpl *postProcess : postProcesses) {
         if (!postProcess->isEnabled()) {
             continue;
         }
 
-        // Get source and destination resources
+        // Get resources
         const bool lastPostProcess = (postProcessIndex == enablePostProcessesCount - 1);
-        RenderTarget &destination = lastPostProcess ? output : renderTargets.getDestination();
-        RenderTarget &source = renderTargets.getSource();
-
-        // Resources states
-        commandList.transitionBarrier(source, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        commandList.transitionBarrier(destination, D3D12_RESOURCE_STATE_RENDER_TARGET);
-
-        // Prepare render target
-        commandList.OMSetRenderTargetNoDepth(destination.getRtv(), destination.getResource());
-        commandList.clearRenderTargetView(destination.getRtv(), backgroundColor);
+        getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, lastPostProcess, output, source, destination);
 
         // Render post process base on its type
         if (postProcess->getType() == PostProcessImpl::Type::CONVOLUTION) {
-            // Constant buffer
-            auto &postProcessData = postProcess->getDataConvolution();
+            // Prepare constant buffer
+            auto &postProcessData = postProcess->getData().convolution;
             postProcessData.screenWidth = static_cast<float>(swapChain.getWidth());
             postProcessData.screenHeight = static_cast<float>(swapChain.getHeight());
 
-            // Pipeline state
+            // Set state
             commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_CONVOLUTION);
             commandList.setGraphicsRoot32BitConstant(0, postProcessData);
-            commandList.setCbvSrvUavDescriptorTable(1, 0, source.getSrv(), 1);
+            commandList.setSrvInDescriptorTable(1, 0, *source);
+            commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
+            commandList.IASetVertexBuffer(*postProcessVB);
 
             // Render
-            commandList.IASetVertexBuffer(*postProcessVB);
             commandList.draw(6u);
         } else if (postProcess->getType() == PostProcessImpl::Type::BLACK_BARS) {
-            // Constant buffer
-            auto &postProcessData = postProcess->getDataBlackBars();
+            // Prepare constant buffer
+            auto &postProcessData = postProcess->getData().blackBars;
             postProcessData.screenWidth = static_cast<float>(swapChain.getWidth());
             postProcessData.screenHeight = static_cast<float>(swapChain.getHeight());
 
-            // Pipeline state
+            // Set state
             commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_BLACK_BARS);
             commandList.setGraphicsRoot32BitConstant(0, postProcessData);
-            commandList.setCbvSrvUavDescriptorTable(1, 0, source.getSrv(), 1);
+            commandList.setSrvInDescriptorTable(1, 0, *source);
+            commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
+            commandList.IASetVertexBuffer(*postProcessVB);
+
+            source->getResource()->SetName(L"SOURCE");
+            destination->getResource()->SetName(L"DSTNATION");
 
             // Render
-            commandList.IASetVertexBuffer(*postProcessVB);
             commandList.draw(6u);
         } else if (postProcess->getType() == PostProcessImpl::Type::LINEAR_COLOR_CORRECTION) {
-            // Constant buffer
-            auto &postProcessData = postProcess->getDataLinearColorCorrection();
+            // Prepare onstant buffer
+            auto &postProcessData = postProcess->getData().linearColorCorrection;
             postProcessData.screenWidth = static_cast<float>(swapChain.getWidth());
             postProcessData.screenHeight = static_cast<float>(swapChain.getHeight());
 
-            // Pipeline state
+            // Set state
             commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_LINEAR_COLOR_CORRECTION);
             commandList.setGraphicsRoot32BitConstant(0, postProcessData);
-            commandList.setCbvSrvUavDescriptorTable(1, 0, source.getSrv(), 1);
+            commandList.setSrvInDescriptorTable(1, 0, *source);
+            commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
+            commandList.IASetVertexBuffer(*postProcessVB);
 
             // Render
-            commandList.IASetVertexBuffer(*postProcessVB);
             commandList.draw(6u);
+        } else if (postProcess->getType() == PostProcessImpl::Type::GAUSSIAN_BLUR) {
+            // Prepare constant buffer
+            auto &postProcessData = postProcess->getData().gaussianBlur;
+            postProcessData.cb.screenWidth = static_cast<float>(swapChain.getWidth());
+            postProcessData.cb.screenHeight = static_cast<float>(swapChain.getHeight());
+
+            // Set cross-pass state
+            commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR);
+            commandList.IASetVertexBuffer(*postProcessVB);
+
+            // Render all passes of the blur filter
+            for (auto passIndex = 0u; passIndex < postProcessData.passCount; passIndex++) {
+                // Render horizontal pass
+                getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, false, output, source, destination);
+                postProcessData.cb.horizontal = true;
+                commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
+                commandList.clearRenderTargetView(destination->getRtv(), backgroundColor);
+                commandList.setGraphicsRoot32BitConstant(0, postProcessData.cb);
+                commandList.setSrvInDescriptorTable(1, 0, *source);
+                commandList.draw(6u);
+
+                renderTargets.swapResources();
+
+                // Render vertical pass
+                const bool lastPass = (passIndex == postProcessData.passCount - 1);
+                getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, lastPass, output, source, destination);
+                postProcessData.cb.horizontal = false;
+                commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
+                commandList.clearRenderTargetView(destination->getRtv(), backgroundColor);
+                commandList.setGraphicsRoot32BitConstant(0, postProcessData.cb);
+                commandList.setSrvInDescriptorTable(1, 0, *source);
+                commandList.draw(6u);
+
+                if (!lastPostProcess) {
+                    renderTargets.swapResources();
+                }
+            }
         } else {
             UNREACHABLE_CODE();
         }

@@ -182,7 +182,12 @@ private:
     void prepPostProcesses() {
         postProcesses.push_back(DXD::PostProcess::create());
         postProcesses.back()->setBlackBars(0.0f, 0.0f, 0.05f, 0.05f);
+
+        postProcesses.push_back(DXD::PostProcess::create());
+        gaussianBlurPostProcess = postProcesses.back().get();
+        gaussianBlurPostProcess->setGaussianBlur(gaussianBlurPassCount, 5);
     }
+
     void prepText() {
         DXD::log("Loading texts...\n");
         std::vector<std::string> textNames = {
@@ -197,6 +202,7 @@ private:
         texts["fpsCounter"]->setFontWeight(DXDFontWeight::ULTRA_BLACK);
         texts["fpsCounter"]->setFontSize(13.f);
     }
+
     void prepScene() {
         DXD::log("Preparing scene...\n");
         scene = DXD::Scene::create(*application);
@@ -316,6 +322,14 @@ private:
         case 'V':
             application->getSettings().setVerticalSyncEnabled(!application->getSettings().getVerticalSyncEnabled());
             break;
+        case '0':
+            gaussianBlurPassCount++;
+            gaussianBlurPostProcess->setGaussianBlur(gaussianBlurPassCount, 5);
+            break;
+        case '9':
+            gaussianBlurPassCount--;
+            gaussianBlurPostProcess->setGaussianBlur(gaussianBlurPassCount, 5);
+            break;
         }
     }
     void onUpdate(unsigned int deltaTimeMicroseconds) override {
@@ -350,6 +364,8 @@ private:
     XMFLOAT3 cameraPosition{0, 4, -20};
     XMFLOAT3 focusDirection{0, -0.2f, 1};
     FpsCounter<180> fpsCounter;
+    DXD::PostProcess *gaussianBlurPostProcess = nullptr;
+    UINT gaussianBlurPassCount = 0u;
 
     std::unique_ptr<DXD::Application> application;
     std::unique_ptr<DXD::Window> window;

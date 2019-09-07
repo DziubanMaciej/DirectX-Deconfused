@@ -8,18 +8,21 @@
 
 Resource::Resource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES state)
     : resource(resource),
-      state(state) {}
+      state(state),
+      descriptorsCbvSrvUav(ApplicationImpl::getInstance().getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 2)),
+      descriptorsDsv(ApplicationImpl::getInstance().getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1)),
+      descriptorsRtv(ApplicationImpl::getInstance().getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1)) {}
+
+Resource::Resource() : Resource(nullptr, D3D12_RESOURCE_STATE_COMMON) {}
 
 Resource::Resource(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeapProperties, D3D12_HEAP_FLAGS heapFlags,
                    const D3D12_RESOURCE_DESC *pDesc, D3D12_RESOURCE_STATES initialResourceState,
                    const D3D12_CLEAR_VALUE *pOptimizedClearValue)
-    : resource(createResource(device, pHeapProperties, heapFlags, pDesc, state, pOptimizedClearValue)),
-      state(initialResourceState) {}
+    : Resource(createResource(device, pHeapProperties, heapFlags, pDesc, initialResourceState, pOptimizedClearValue), initialResourceState) {}
 
 Resource::Resource(ID3D12DevicePtr device, D3D12_HEAP_TYPE heapType, D3D12_HEAP_FLAGS heapFlags, UINT64 bufferSize,
                    D3D12_RESOURCE_STATES initialResourceState, const D3D12_CLEAR_VALUE *pOptimizedClearValue)
-    : resource(createResource(device, &CD3DX12_HEAP_PROPERTIES(heapType), heapFlags, &CD3DX12_RESOURCE_DESC::Buffer(bufferSize), state, pOptimizedClearValue)),
-      state(initialResourceState) {}
+    : Resource(createResource(device, &CD3DX12_HEAP_PROPERTIES(heapType), heapFlags, &CD3DX12_RESOURCE_DESC::Buffer(bufferSize), initialResourceState, pOptimizedClearValue), initialResourceState) {}
 
 bool Resource::isUploadInProgress() {
     if (gpuUploadData != nullptr && gpuUploadData->uploadingQueue.getFence().isComplete(gpuUploadData->uploadFence)) {
@@ -31,6 +34,30 @@ bool Resource::isUploadInProgress() {
 void Resource::registerUpload(CommandQueue &uploadingQueue, uint64_t uploadFence) {
     assert(!isUploadInProgress());
     this->gpuUploadData = std::make_unique<GpuUploadData>(uploadingQueue, uploadFence);
+}
+
+void Resource::createCbv(D3D12_CONSTANT_BUFFER_VIEW_DESC *desc) {
+    ID3D12DevicePtr device = {};
+    throwIfFailed(resource->GetDevice(IID_PPV_ARGS(&device)));
+    device->CreateConstantBufferView(desc, descriptorsCbvSrvUav.getCpuHandle(0));
+}
+
+void Resource::createSrv(D3D12_SHADER_RESOURCE_VIEW_DESC *desc) {
+    ID3D12DevicePtr device = {};
+    throwIfFailed(resource->GetDevice(IID_PPV_ARGS(&device)));
+    device->CreateShaderResourceView(resource.Get(), desc, descriptorsCbvSrvUav.getCpuHandle(1));
+}
+
+void Resource::createDsv(D3D12_DEPTH_STENCIL_VIEW_DESC *desc) {
+    ID3D12DevicePtr device = {};
+    throwIfFailed(resource->GetDevice(IID_PPV_ARGS(&device)));
+    device->CreateDepthStencilView(resource.Get(), desc, descriptorsDsv.getCpuHandle());
+}
+
+void Resource::createRtv(D3D12_RENDER_TARGET_VIEW_DESC *desc) {
+    ID3D12DevicePtr device = {};
+    throwIfFailed(resource->GetDevice(IID_PPV_ARGS(&device)));
+    device->CreateRenderTargetView(resource.Get(), desc, descriptorsRtv.getCpuHandle());
 }
 
 ID3D12ResourcePtr Resource::createResource(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeapProperties, D3D12_HEAP_FLAGS heapFlags,

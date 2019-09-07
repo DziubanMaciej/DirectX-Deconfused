@@ -23,6 +23,7 @@ public:
         PIPELINE_STATE_POST_PROCESS_BLACK_BARS,
         PIPELINE_STATE_POST_PROCESS_CONVOLUTION,
         PIPELINE_STATE_POST_PROCESS_LINEAR_COLOR_CORRECTION,
+        PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR,
         // This hould be the last entry
         COUNT
     };
@@ -47,6 +48,7 @@ private:
     void compilePipelineStatePostProcessBlackBars(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStatePostProcessConvolution(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStatePostProcessLinearColorCorrection(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    void compilePipelineStatePostProcessGaussianBlur(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
 
     ID3D12DevicePtr device;
     ID3D12PipelineStatePtr pipelineStates[static_cast<int>(Identifier::COUNT)] = {};

@@ -36,6 +36,8 @@ public:
                                           float a20, float a21, float a22) = 0;
     virtual void setLinearColorCorrectionSepia() = 0;
 
+    virtual void setGaussianBlur(UINT passCount, UINT samplingRange) = 0;
+
 protected:
     PostProcess() = default;
 };
