@@ -166,7 +166,7 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
         }
 
         // Draw NORMAL
-        commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_SM_NORMAL);
+        commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SM_NORMAL);
         for (ObjectImpl *object : objects) {
             MeshImpl &mesh = object->getMesh();
             if (mesh.getShadowMapPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
@@ -180,7 +180,7 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
         }
 
         // Draw TEXTURE NORMAL
-        commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_SM_TEXTURE_NORMAL);
+        commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SM_TEXTURE_NORMAL);
         for (ObjectImpl *object : objects) {
             MeshImpl &mesh = object->getMesh();
             if (mesh.getShadowMapPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
@@ -241,7 +241,7 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
     lightConstantBuffer.upload();
 
     // Draw DEFAULT
-    commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT);
+    commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT);
     commandList.setCbvInDescriptorTable(2, 0, lightConstantBuffer);
     const D3D12_CPU_DESCRIPTOR_HANDLE rts[2] = {
         output.getRtv(), renderData.getBloomMap().getRtv()};
@@ -269,7 +269,7 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
                                   renderData.getDepthStencilBuffer().getDsv(), renderData.getDepthStencilBuffer().getResource());
 
     //Draw NORMAL
-    commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_NORMAL);
+    commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_NORMAL);
     commandList.setCbvInDescriptorTable(2, 0, lightConstantBuffer);
     for (auto shadowMapIndex = 0u; shadowMapIndex < 8; shadowMapIndex++) {
         commandList.setSrvInDescriptorTable(2, shadowMapIndex + 1, renderData.getShadowMap(shadowMapIndex));
@@ -293,7 +293,7 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
     }
 
     //Draw TEXTURE_NORMAL
-    commandList.setPipelineStateAndGraphicsRootSignature(application.getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE_NORMAL);
+    commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE_NORMAL);
     commandList.setCbvInDescriptorTable(2, 0, lightConstantBuffer);
     for (auto shadowMapIndex = 0u; shadowMapIndex < 8; shadowMapIndex++) {
         commandList.setSrvInDescriptorTable(2, shadowMapIndex + 2, renderData.getShadowMap(shadowMapIndex));
@@ -322,8 +322,6 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
 void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList, VertexBuffer &fullscreenVB,
                                     Resource &input, PostProcessRenderTargets &renderTargets, Resource &output,
                                     size_t enabledPostProcessesCount, float screenWidth, float screenHeight) {
-    auto &pipelineStateController = ApplicationImpl::getInstance().getPipelineStateController();
-
     size_t postProcessIndex = 0u;
     Resource *source{}, *destination{};
     for (PostProcessImpl *postProcess : postProcesses) {
@@ -345,7 +343,7 @@ void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesse
             postProcessData.screenHeight = screenHeight;
 
             // Set state
-            commandList.setPipelineStateAndGraphicsRootSignature(pipelineStateController, PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_CONVOLUTION);
+            commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_CONVOLUTION);
             commandList.setGraphicsRoot32BitConstant(0, postProcessData);
             commandList.setSrvInDescriptorTable(1, 0, *source);
             commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
@@ -362,7 +360,7 @@ void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesse
             postProcessData.screenHeight = screenHeight;
 
             // Set state
-            commandList.setPipelineStateAndGraphicsRootSignature(pipelineStateController, PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_BLACK_BARS);
+            commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_BLACK_BARS);
             commandList.setGraphicsRoot32BitConstant(0, postProcessData);
             commandList.setSrvInDescriptorTable(1, 0, *source);
             commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
@@ -379,7 +377,7 @@ void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesse
             postProcessData.screenHeight = screenHeight;
 
             // Set state
-            commandList.setPipelineStateAndGraphicsRootSignature(pipelineStateController, PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_LINEAR_COLOR_CORRECTION);
+            commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_LINEAR_COLOR_CORRECTION);
             commandList.setGraphicsRoot32BitConstant(0, postProcessData);
             commandList.setSrvInDescriptorTable(1, 0, *source);
             commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
@@ -394,7 +392,7 @@ void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesse
             postProcessData.cb.screenHeight = screenHeight;
 
             // Set cross-pass state
-            commandList.setPipelineStateAndGraphicsRootSignature(pipelineStateController, PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR);
+            commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR);
             commandList.IASetVertexBuffer(fullscreenVB);
 
             // Render all passes of the blur filter
@@ -499,7 +497,7 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     cb.screenWidth = static_cast<float>(swapChain.getWidth());
     cb.screenHeight = static_cast<float>(swapChain.getHeight());
     commandList.transitionBarrier(renderData.getBloomMap(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    commandList.setPipelineStateAndGraphicsRootSignature(ApplicationImpl::getInstance().getPipelineStateController(), PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_APPLY_BLOOM);
+    commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_APPLY_BLOOM);
     commandList.setGraphicsRoot32BitConstant(0, cb);
     commandList.setSrvInDescriptorTable(1, 0, renderData.getBloomMap());
     commandList.OMSetRenderTargetNoDepth(backBuffer.getRtv(), backBuffer.getResource());

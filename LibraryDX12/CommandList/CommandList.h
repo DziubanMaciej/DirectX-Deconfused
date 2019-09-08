@@ -32,9 +32,7 @@ public:
     void clearRenderTargetView(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT colorRGBA[4]);
     void clearDepthStencilView(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags, FLOAT depth, UINT8 stencil);
 
-    void setGraphicsRootSignature(ID3D12RootSignaturePtr rootSignature);
-    void setPipelineState(ID3D12PipelineStatePtr pipelineState);
-    void setPipelineStateAndGraphicsRootSignature(PipelineStateController &pipelineStateController, PipelineStateController::Identifier identifier);
+    void setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier identifier);
 
     void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, ID3D12DescriptorHeapPtr descriptorHeap);
 

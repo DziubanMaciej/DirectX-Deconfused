@@ -38,23 +38,17 @@ void CommandList::clearDepthStencilView(D3D12_CPU_DESCRIPTOR_HANDLE depthStencil
     commandList->ClearDepthStencilView(depthStencilView, clearFlags, depth, stencil, 0, nullptr);
 }
 
-void CommandList::setPipelineState(ID3D12PipelineStatePtr pipelineState) {
-    commandList->SetPipelineState(pipelineState.Get());
-}
-
-void CommandList::setGraphicsRootSignature(ID3D12RootSignaturePtr rootSignature) {
-    commandList->SetGraphicsRootSignature(rootSignature.Get());
-}
-
-void CommandList::setPipelineStateAndGraphicsRootSignature(PipelineStateController &pipelineStateController, PipelineStateController::Identifier identifier) {
-    this->pipelineStateIdentifier = identifier;
-
-    setPipelineState(pipelineStateController.getPipelineState(identifier));
-
+void CommandList::setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier identifier) {
+    auto &pipelineStateController = ApplicationImpl::getInstance().getPipelineStateController();
+    auto &pipelineState = pipelineStateController.getPipelineState(identifier);
     auto &rootSignature = pipelineStateController.getRootSignature(identifier);
-    setGraphicsRootSignature(rootSignature.getRootSignature());
+
+    commandList->SetPipelineState(pipelineState.Get());
+    commandList->SetGraphicsRootSignature(rootSignature.getRootSignature().Get());
+
     gpuDescriptorHeapControllerCbvSrvUav.setRootSignature(rootSignature);
     gpuDescriptorHeapControllerSampler.setRootSignature(rootSignature);
+    this->pipelineStateIdentifier = identifier;
 }
 
 void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, ID3D12DescriptorHeapPtr descriptorHeap) {
