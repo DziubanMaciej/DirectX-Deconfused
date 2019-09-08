@@ -54,10 +54,9 @@ public:
     void RSSetScissorRect(const D3D12_RECT &rect);
     void RSSetScissorRectNoScissor();
 
-    void OMSetRenderTarget(const D3D12_CPU_DESCRIPTOR_HANDLE &renderTargetDescriptor, const ID3D12ResourcePtr &renderTarget,
-                           const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor, const ID3D12ResourcePtr &depthStencilBuffer);
-    void OMSetRenderTargetDepthOnly(const D3D12_CPU_DESCRIPTOR_HANDLE &depthStencilDescriptor, const ID3D12ResourcePtr &depthStencilBuffer);
-    void OMSetRenderTargetNoDepth(const D3D12_CPU_DESCRIPTOR_HANDLE &renderTargetDescriptor, const ID3D12ResourcePtr &renderTarget);
+    void OMSetRenderTarget(const Resource &renderTarget, const Resource &depthStencilBuffer);
+    void OMSetRenderTargetDepthOnly(const Resource &depthStencilBuffer);
+    void OMSetRenderTargetNoDepth(const Resource &renderTarget);
 
     template <typename ConstantType>
     void setGraphicsRoot32BitConstant(UINT rootParameterIndex, const ConstantType &constant);

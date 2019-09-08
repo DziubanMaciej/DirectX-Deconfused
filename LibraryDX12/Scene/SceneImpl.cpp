@@ -147,7 +147,7 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
     int lightIdx = 0;
 
     for (LightImpl *light : lights) {
-        commandList.OMSetRenderTargetDepthOnly(renderData.getShadowMap(lightIdx).getDsv(), renderData.getShadowMap(lightIdx).getResource());
+        commandList.OMSetRenderTargetDepthOnly(renderData.getShadowMap(lightIdx));
         commandList.clearDepthStencilView(renderData.getShadowMap(lightIdx).getDsv(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
         // View projection matrix
@@ -208,8 +208,7 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
     commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.transitionBarrier(renderData.getBloomMap(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-    commandList.OMSetRenderTarget(output.getRtv(), output.getResource(),
-                                  renderData.getDepthStencilBuffer().getDsv(), renderData.getDepthStencilBuffer().getResource());
+    commandList.OMSetRenderTarget(output, renderData.getDepthStencilBuffer());
 
     // Render (clear color)
     commandList.clearRenderTargetView(output.getRtv(), backgroundColor);
@@ -265,8 +264,7 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
         }
     }
 
-    commandList.OMSetRenderTarget(output.getRtv(), output.getResource(),
-                                  renderData.getDepthStencilBuffer().getDsv(), renderData.getDepthStencilBuffer().getResource());
+    commandList.OMSetRenderTarget(output, renderData.getDepthStencilBuffer());
 
     //Draw NORMAL
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_NORMAL);
@@ -346,7 +344,7 @@ void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesse
             commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_CONVOLUTION);
             commandList.setGraphicsRoot32BitConstant(0, postProcessData);
             commandList.setSrvInDescriptorTable(1, 0, *source);
-            commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
+            commandList.OMSetRenderTargetNoDepth(*destination);
             commandList.IASetVertexBuffer(fullscreenVB);
 
             // Render
@@ -363,7 +361,7 @@ void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesse
             commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_BLACK_BARS);
             commandList.setGraphicsRoot32BitConstant(0, postProcessData);
             commandList.setSrvInDescriptorTable(1, 0, *source);
-            commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
+            commandList.OMSetRenderTargetNoDepth(*destination);
             commandList.IASetVertexBuffer(fullscreenVB);
 
             // Render
@@ -380,7 +378,7 @@ void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesse
             commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_LINEAR_COLOR_CORRECTION);
             commandList.setGraphicsRoot32BitConstant(0, postProcessData);
             commandList.setSrvInDescriptorTable(1, 0, *source);
-            commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
+            commandList.OMSetRenderTargetNoDepth(*destination);
             commandList.IASetVertexBuffer(fullscreenVB);
 
             // Render
@@ -401,7 +399,7 @@ void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesse
                 const bool firstPass = firstPostProcess && (passIndex == 0);
                 getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, firstPass, false, input, output, source, destination);
                 postProcessData.cb.horizontal = true;
-                commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
+                commandList.OMSetRenderTargetNoDepth(*destination);
                 commandList.clearRenderTargetView(destination->getRtv(), blackColor);
                 commandList.setGraphicsRoot32BitConstant(0, postProcessData.cb);
                 commandList.setSrvInDescriptorTable(1, 0, *source);
@@ -413,7 +411,7 @@ void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesse
                 const bool lastPass = lastPostProcess && (passIndex == postProcessData.passCount - 1);
                 getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, false, lastPass, input, output, source, destination);
                 postProcessData.cb.horizontal = false;
-                commandList.OMSetRenderTargetNoDepth(destination->getRtv(), destination->getResource());
+                commandList.OMSetRenderTargetNoDepth(*destination);
                 commandList.clearRenderTargetView(destination->getRtv(), blackColor);
                 commandList.setGraphicsRoot32BitConstant(0, postProcessData.cb);
                 commandList.setSrvInDescriptorTable(1, 0, *source);
@@ -500,7 +498,7 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_APPLY_BLOOM);
     commandList.setGraphicsRoot32BitConstant(0, cb);
     commandList.setSrvInDescriptorTable(1, 0, renderData.getBloomMap());
-    commandList.OMSetRenderTargetNoDepth(backBuffer.getRtv(), backBuffer.getResource());
+    commandList.OMSetRenderTargetNoDepth(backBuffer);
     commandList.IASetVertexBuffer(*postProcessVB);
     commandList.draw(6u);
 
