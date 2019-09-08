@@ -242,10 +242,8 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
     // Draw DEFAULT
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT);
     commandList.setCbvInDescriptorTable(2, 0, lightConstantBuffer);
-    const D3D12_CPU_DESCRIPTOR_HANDLE rts[2] = {
-        output.getRtv(), renderData.getBloomMap().getRtv()};
-
-    commandList.getCommandList()->OMSetRenderTargets(2, rts, FALSE, &renderData.getDepthStencilBuffer().getDsv());
+    const Resource *rts[2] = {&output, &renderData.getBloomMap()};
+    commandList.OMSetRenderTargets(rts, renderData.getDepthStencilBuffer());
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = object->getMesh();
         if (mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {

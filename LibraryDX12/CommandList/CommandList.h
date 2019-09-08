@@ -54,6 +54,8 @@ public:
     void RSSetScissorRect(const D3D12_RECT &rect);
     void RSSetScissorRectNoScissor();
 
+    template <UINT renderTargetsCount>
+    void OMSetRenderTargets(const Resource *(&renderTargets)[renderTargetsCount], const Resource &depthStencilBuffer);
     void OMSetRenderTarget(const Resource &renderTarget, const Resource &depthStencilBuffer);
     void OMSetRenderTargetDepthOnly(const Resource &depthStencilBuffer);
     void OMSetRenderTargetNoDepth(const Resource &renderTarget);
@@ -101,6 +103,18 @@ private:
     // Data cached to be flushed when needed
     std::vector<D3D12_RESOURCE_BARRIER> cachedResourceBarriers = {};
 };
+
+template <UINT renderTargetsCount>
+inline void CommandList::OMSetRenderTargets(const Resource *(&renderTargets)[renderTargetsCount], const Resource &depthStencilBuffer) {
+    ID3D12ResourcePtr resources[renderTargetsCount];
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvs[renderTargetsCount];
+    for (auto rtIndex = 0u; rtIndex < renderTargetsCount; rtIndex++) {
+        resources[rtIndex] = renderTargets[rtIndex]->getResource();
+        rtvs[rtIndex] = renderTargets[rtIndex]->getRtv();
+    }
+    commandList->OMSetRenderTargets(renderTargetsCount, rtvs, FALSE, &depthStencilBuffer.getDsv());
+    addUsedResources(resources, renderTargetsCount);
+}
 
 template <typename ConstantType>
 inline void CommandList::setGraphicsRoot32BitConstant(UINT rootParameterIndex, const ConstantType &constant) {
