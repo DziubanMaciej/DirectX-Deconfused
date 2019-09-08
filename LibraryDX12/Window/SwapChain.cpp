@@ -2,6 +2,7 @@
 
 #include "Application/ApplicationImpl.h"
 #include "CommandList/CommandQueue.h"
+#include "Utility/DxObjectNaming.h"
 #include "Utility/ThrowIfFailed.h"
 
 #include "DXD/ExternalHeadersWrappers/d3dx12.h"
@@ -63,7 +64,7 @@ void SwapChain::updateRenderTargetViews() {
         // Get current back buffer
         ID3D12ResourcePtr backBuffer;
         throwIfFailed(swapChain->GetBuffer(i, IID_PPV_ARGS(&backBuffer)));
-        backBuffer->SetName(L"Back buffer");
+        SET_OBJECT_NAME(backBuffer, L"BackBuffer%d", i);
 
         // Update DX12 back buffer data
         backBufferEntry.backBuffer.setResource(backBuffer);

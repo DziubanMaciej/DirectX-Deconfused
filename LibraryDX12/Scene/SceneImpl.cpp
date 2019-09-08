@@ -5,6 +5,7 @@
 #include "CommandList/CommandQueue.h"
 #include "Resource/ConstantBuffers.h"
 #include "Scene/RenderData.h"
+#include "Utility/DxObjectNaming.h"
 #include "Utility/ThrowIfFailed.h"
 #include "Window/WindowImpl.h"
 
@@ -30,7 +31,7 @@ SceneImpl::SceneImpl(ApplicationImpl &application)
     // Record command list for GPU upload
     CommandList commandList{application.getDescriptorController(), commandQueue.getCommandAllocatorController(), nullptr};
     postProcessVB = std::make_unique<VertexBuffer>(device, commandList, postProcessSquare, 6, 12);
-
+    SET_OBJECT_NAME(*postProcessVB, L"PostProcessVB");
     commandList.close();
 
     // Execute and register obtained allocator and lists to the manager
@@ -132,7 +133,7 @@ void SceneImpl::getAndPrepareSourceAndDestinationForPostProcess(CommandList &com
 
 // --------------------------------------------------------------------------- Render methods
 
-const static FLOAT blackColor[] = { 0.f, 0.f, 0.f, 1.f };
+const static FLOAT blackColor[] = {0.f, 0.f, 0.f, 1.f};
 
 void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, CommandList &commandList) {
     const auto shadowMapsUsed = std::min(size_t{8u}, lights.size());

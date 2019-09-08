@@ -1,6 +1,7 @@
 #include "RenderData.h"
 
 #include "Resource/ConstantBuffers.h"
+#include "Utility/DxObjectNaming.h"
 
 RenderData::RenderData(ID3D12DevicePtr &device, DescriptorController &descriptorController, int width, int height)
     : device(device),
@@ -39,6 +40,7 @@ void RenderData::resize(int width, int height) {
     bloomMap->createSrv(nullptr);
     bloomMap->createRtv(nullptr);
     bloomMap->getResource()->SetName(L"Bloom map");
+    SET_OBJECT_NAME(*bloomMap, L"BloomMap");
 
     // Shadow maps
     D3D12_DEPTH_STENCIL_VIEW_DESC shadowMapDsvDesc = {};
@@ -64,6 +66,7 @@ void RenderData::resize(int width, int height) {
                                                   &CD3DX12_CLEAR_VALUE{DXGI_FORMAT_D32_FLOAT, 1.0f, 0});
         shadowMap[i]->createDsv(&shadowMapDsvDesc);
         shadowMap[i]->createSrv(&shadowMapSrvDesc);
+        SET_OBJECT_NAME(*shadowMap[i], L"ShadowMap%d", i);
     }
 
     // Depth stencil buffer
@@ -79,6 +82,7 @@ void RenderData::resize(int width, int height) {
     depthStencilBufferDesc.Flags = D3D12_DSV_FLAG_NONE;
     depthStencilBufferDesc.Texture2D = D3D12_TEX2D_DSV{0};
     depthStencilBuffer->createDsv(&depthStencilBufferDesc);
+    SET_OBJECT_NAME(*depthStencilBuffer, L"DepthStencilBuffer");
 }
 
 void PostProcessRenderTargets::resize(int width, int height) {
@@ -106,5 +110,6 @@ void PostProcessRenderTargets::resize(int width, int height) {
             nullptr);
         resources[i]->createSrv(nullptr);
         resources[i]->createRtv(nullptr);
+        SET_OBJECT_NAME(*resources[i], L"PostProcessRT%d", i);
     }
 }
