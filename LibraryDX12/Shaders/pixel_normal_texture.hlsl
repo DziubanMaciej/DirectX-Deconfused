@@ -27,7 +27,14 @@ struct PixelShaderInput {
     float2 UV : TEXCOORD;
 };
 
-float4 main(PixelShaderInput IN) : SV_Target {
+struct PS_OUT {
+    float4 scene;
+    float4 gBufferAlbedo;
+    float4 gBufferNormal;
+    float4 gBufferSpecular;
+};
+
+PS_OUT main(PixelShaderInput IN) : SV_Target {
     float4 OUT_Color = float4(0, 0, 0, 1);
     OUT_Color.xyz = OUT_Color.xyz + ambientLight.xyz;
 
@@ -88,5 +95,12 @@ float4 main(PixelShaderInput IN) : SV_Target {
         OUT_Color.xyz = OUT_Color.xyz + (tempLightColor.xyz + objectTextureColor) * tempLightPower * (normalPower + specularPower) * directionPower * shadowFactor;
     }
 
-    return OUT_Color;
+    PS_OUT result;
+
+    result.scene = OUT_Color;
+    result.gBufferAlbedo = objectTextureColor;
+    result.gBufferNormal = normalize(IN.Normal);
+    result.gBufferSpecular = float4(op.objectSpecularity, op.objectSpecularity, op.objectSpecularity, 1);
+
+    return result;
 }

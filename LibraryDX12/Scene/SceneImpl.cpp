@@ -213,6 +213,9 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
     // Render (clear color)
     commandList.clearRenderTargetView(output.getRtv(), backgroundColor);
     commandList.clearRenderTargetView(renderData.getBloomMap().getRtv(), blackColor);
+    commandList.clearRenderTargetView(renderData.getGBufferAlbedo().getRtv(), blackColor);
+    commandList.clearRenderTargetView(renderData.getGBufferNormal().getRtv(), blackColor);
+    commandList.clearRenderTargetView(renderData.getGBufferSpecular().getRtv(), blackColor);
     commandList.clearDepthStencilView(renderData.getDepthStencilBuffer().getDsv(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
     // View projection matrix
@@ -240,7 +243,7 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
     lightConstantBuffer.upload();
 
     // Draw DEFAULT
-    commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT);
+    /*commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT);
     commandList.setCbvInDescriptorTable(2, 0, lightConstantBuffer);
     const Resource *rts[2] = {&output, &renderData.getBloomMap()};
     commandList.OMSetRenderTargets(rts, renderData.getDepthStencilBuffer());
@@ -260,11 +263,14 @@ void SceneImpl::renderForward(SwapChain &swapChain, RenderData &renderData, Comm
             commandList.IASetVertexAndIndexBuffer(mesh);
             commandList.drawIndexed(static_cast<UINT>(mesh.getIndicesCount()));
         }
-    }
+    }*/
 
-    commandList.OMSetRenderTarget(output, renderData.getDepthStencilBuffer());
+    const D3D12_CPU_DESCRIPTOR_HANDLE rts[4] = {
+        output.getRtv(), renderData.getGBufferAlbedo().getRtv(), renderData.getGBufferNormal().getRtv(), renderData.getGBufferSpecular().getRtv()};
+    
+    commandList.getCommandList()->OMSetRenderTargets(4, rts, FALSE, &renderData.getDepthStencilBuffer().getDsv());
 
-    //Draw NORMAL
+	//Draw NORMAL
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_NORMAL);
     commandList.setCbvInDescriptorTable(2, 0, lightConstantBuffer);
     for (auto shadowMapIndex = 0u; shadowMapIndex < 8; shadowMapIndex++) {

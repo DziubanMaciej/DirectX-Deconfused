@@ -16,6 +16,81 @@ void RenderData::resize(int width, int height) {
     height = std::max(static_cast<uint32_t>(height), 1u);
     postProcessRenderTargets.resize(width, height);
 
+	// GBuffer Albedo
+    D3D12_RESOURCE_DESC gBufferAlbedoDesc = {};
+    gBufferAlbedoDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    gBufferAlbedoDesc.Alignment = 0;
+    gBufferAlbedoDesc.Width = width;
+    gBufferAlbedoDesc.Height = height;
+    gBufferAlbedoDesc.DepthOrArraySize = 1;
+    gBufferAlbedoDesc.MipLevels = 0;
+    gBufferAlbedoDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    gBufferAlbedoDesc.SampleDesc.Count = 1;
+    gBufferAlbedoDesc.SampleDesc.Quality = 0;
+    gBufferAlbedoDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    gBufferAlbedoDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+    gBufferAlbedo = std::make_unique<Resource>(
+        device,
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &gBufferAlbedoDesc,
+        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        nullptr);
+    gBufferAlbedo->createSrv(nullptr);
+    gBufferAlbedo->createRtv(nullptr);
+    gBufferAlbedo->getResource()->SetName(L"GBuffer Albedo");
+
+    // GBuffer Normal
+            D3D12_RESOURCE_DESC gBufferNormalDesc = {};
+    gBufferNormalDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    gBufferNormalDesc.Alignment = 0;
+    gBufferNormalDesc.Width = width;
+    gBufferNormalDesc.Height = height;
+    gBufferNormalDesc.DepthOrArraySize = 1;
+    gBufferNormalDesc.MipLevels = 0;
+    gBufferNormalDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    gBufferNormalDesc.SampleDesc.Count = 1;
+    gBufferNormalDesc.SampleDesc.Quality = 0;
+    gBufferNormalDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    gBufferNormalDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+    gBufferNormal = std::make_unique<Resource>(
+        device,
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &gBufferNormalDesc,
+        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        nullptr);
+    gBufferNormal->createSrv(nullptr);
+    gBufferNormal->createRtv(nullptr);
+    gBufferNormal->getResource()->SetName(L"GBuffer Normal");
+
+    //GBuffer Specular
+            D3D12_RESOURCE_DESC gBufferSpecularDesc = {};
+    gBufferSpecularDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    gBufferSpecularDesc.Alignment = 0;
+    gBufferSpecularDesc.Width = width;
+    gBufferSpecularDesc.Height = height;
+    gBufferSpecularDesc.DepthOrArraySize = 1;
+    gBufferSpecularDesc.MipLevels = 0;
+    gBufferSpecularDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    gBufferSpecularDesc.SampleDesc.Count = 1;
+    gBufferSpecularDesc.SampleDesc.Quality = 0;
+    gBufferSpecularDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    gBufferSpecularDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+    gBufferSpecular = std::make_unique<Resource>(
+        device,
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &gBufferSpecularDesc,
+        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        nullptr);
+    gBufferSpecular->createSrv(nullptr);
+    gBufferSpecular->createRtv(nullptr);
+    gBufferSpecular->getResource()->SetName(L"GBuffer Specular");
+
     // Bloom map
     D3D12_RESOURCE_DESC renderTargetDesc = {};
     renderTargetDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;

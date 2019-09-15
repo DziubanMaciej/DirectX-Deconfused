@@ -135,6 +135,7 @@ void PipelineStateController::compilePipelineStateNormal(RootSignature &rootSign
     PipelineState{inputLayout, rootSignature}
         .VS(L"vertex_normal.hlsl")
         .PS(L"pixel_normal.hlsl")
+        .setRenderTargetsCount(4)
         .compile(device, pipelineState);
 }
 
@@ -171,6 +172,7 @@ void PipelineStateController::compilePipelineStateTextureNormal(RootSignature &r
     PipelineState{inputLayout, rootSignature}
         .VS(L"vertex_normal_texture.hlsl")
         .PS(L"pixel_normal_texture.hlsl")
+        .setRenderTargetsCount(4)
         .compile(device, pipelineState);
 }
 
