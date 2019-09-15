@@ -53,6 +53,9 @@ void PipelineStateController::compile(Identifier identifier) {
     case Identifier::PIPELINE_STATE_NORMAL:
         compilePipelineStateNormal(rootSignature, pipelineState);
         break;
+    case Identifier::PIPELINE_STATE_LIGHTING:
+        compilePipelineStateLighting(rootSignature, pipelineState);
+        break;
     case Identifier::PIPELINE_STATE_POST_PROCESS_BLACK_BARS:
         compilePipelineStatePostProcessBlackBars(rootSignature, pipelineState);
         break;
@@ -115,14 +118,9 @@ void PipelineStateController::compilePipelineStateNormal(RootSignature &rootSign
     sampler.MaxLOD = D3D12_FLOAT32_MAX;
     sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
-    DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
-    table.appendCbvRange(b(1), 1);
-    table.appendSrvRange(t(0), 8); // shadow maps
     rootSignature
         .append32bitConstant<ModelMvp>(b(0), D3D12_SHADER_VISIBILITY_VERTEX)
         .append32bitConstant<ObjectProperties>(b(2), D3D12_SHADER_VISIBILITY_PIXEL)
-        .appendDescriptorTable(std::move(table))
-        .appendStaticSampler(s(0), sampler)
         .compile(device);
 
     // Input layout - per vertex data
@@ -136,6 +134,8 @@ void PipelineStateController::compilePipelineStateNormal(RootSignature &rootSign
         .VS(L"vertex_normal.hlsl")
         .PS(L"pixel_normal.hlsl")
         .setRenderTargetsCount(4)
+        .setRenderTargetFormat(0, DXGI_FORMAT_R32G32B32A32_FLOAT)
+        .setRenderTargetFormat(2, DXGI_FORMAT_R32G32B32A32_FLOAT)
         .compile(device, pipelineState);
 }
 
@@ -151,9 +151,7 @@ void PipelineStateController::compilePipelineStateTextureNormal(RootSignature &r
     sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
     DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
-    table.appendCbvRange(b(1), 1);
     table.appendSrvRange(t(0), 1); // diffuse texture
-    table.appendSrvRange(t(1), 8); // shadow maps
     rootSignature
         .append32bitConstant<ModelMvp>(b(0), D3D12_SHADER_VISIBILITY_VERTEX)
         .append32bitConstant<ObjectProperties>(b(2), D3D12_SHADER_VISIBILITY_PIXEL)
@@ -173,6 +171,8 @@ void PipelineStateController::compilePipelineStateTextureNormal(RootSignature &r
         .VS(L"vertex_normal_texture.hlsl")
         .PS(L"pixel_normal_texture.hlsl")
         .setRenderTargetsCount(4)
+        .setRenderTargetFormat(0, DXGI_FORMAT_R32G32B32A32_FLOAT)
+        .setRenderTargetFormat(2, DXGI_FORMAT_R32G32B32A32_FLOAT)
         .compile(device, pipelineState);
 }
 
@@ -311,5 +311,43 @@ void PipelineStateController::compilePipelineStatePostProcessApplyBloom(RootSign
         .PS(L"pixel_post_process_apply_bloom.hlsl")
         .disableDepthStencil()
         .setBlendDesc(blendDesc)
+        .compile(device, pipelineState);
+}
+
+void PipelineStateController::compilePipelineStateLighting(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
+    // Root signature - crossthread data
+    D3D12_STATIC_SAMPLER_DESC sampler = {};
+    sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+    sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+    sampler.MaxLOD = D3D12_FLOAT32_MAX;
+    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+
+    DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
+    table.appendCbvRange(b(1), 1); // light constant buffer
+    table.appendSrvRange(t(0), 1); // gbuffer position
+    table.appendSrvRange(t(1), 1); // gbuffer albedo
+    table.appendSrvRange(t(2), 1); // gbuffer normal
+    table.appendSrvRange(t(3), 1); // gbuffer specular
+    table.appendSrvRange(t(4), 8); // shadow maps
+
+    rootSignature
+        .appendStaticSampler(s(0), sampler)
+        .appendDescriptorTable(std::move(table))
+        .compile(device);
+
+    // Input layout - per vertex data
+    const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+    };
+
+    // Pipeline state object
+    return PipelineState{inputLayout, rootSignature}
+        .VS(L"vertex_post_process.hlsl")
+        .PS(L"pixel_lighting.hlsl")
+        .disableDepthStencil()
+        .setRenderTargetsCount(2)
         .compile(device, pipelineState);
 }

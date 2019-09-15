@@ -52,7 +52,7 @@ struct ObjectProperties {
     float objectSpecularity;
 };
 
-struct SimpleConstantBuffer { //must be 128bit padded
+struct LightingConstantBuffer { //must be 128bit padded
     XMFLOAT4 cameraPosition;
     int lightsSize;
     XMFLOAT3 ambientLight;
@@ -60,6 +60,8 @@ struct SimpleConstantBuffer { //must be 128bit padded
     XMFLOAT4 lightColor[8];
     XMFLOAT4 lightDirection[8];
     XMMATRIX smViewProjectionMatrix[8];
+    float screenWidth;
+    float screenHeight;
 };
 
 struct SMmvp {

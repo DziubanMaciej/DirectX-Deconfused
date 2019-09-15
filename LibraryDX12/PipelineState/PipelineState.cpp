@@ -38,6 +38,11 @@ PipelineState &PipelineState::setRenderTargetsCount(UINT count) {
     return *this;
 }
 
+PipelineState &PipelineState::setRenderTargetFormat(UINT idx, DXGI_FORMAT format) {
+    description.RTVFormats[idx] = format;
+    return *this;
+}
+
 PipelineState &PipelineState::setBlendDesc(const D3D12_BLEND_DESC &blendDesc) {
     description.BlendState = blendDesc;
     return *this;

@@ -209,7 +209,7 @@ private:
         DXD::log("Preparing scene...\n");
         scene = DXD::Scene::create(*application);
         scene->setBackgroundColor(0.3f, 0.8f, 1.0f);
-        scene->setAmbientLight(0.1f, 0.1f, 0.1f);
+        scene->setAmbientLight(0.01f, 0.01f, 0.01f);
         scene->setCamera(*camera);
 
         for (auto &object : objects) {

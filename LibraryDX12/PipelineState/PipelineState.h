@@ -33,6 +33,7 @@ public:
     PipelineState &GS(const std::wstring &path);
     PipelineState &disableDepthStencil();
     PipelineState &setRenderTargetsCount(UINT count);
+    PipelineState &setRenderTargetFormat(UINT count, DXGI_FORMAT format);
     PipelineState &setBlendDesc(const D3D12_BLEND_DESC &blendDesc);
 
     void compile(ID3D12DevicePtr device, ID3D12PipelineStatePtr &pipelineState);

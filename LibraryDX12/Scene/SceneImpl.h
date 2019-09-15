@@ -50,7 +50,7 @@ protected:
 
     // Render methods
     void renderShadowMaps(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
-    void renderForward(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output);
+    void renderDeferred(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output, VertexBuffer &fullscreenVB);
     static void renderPostProcesses(std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList, VertexBuffer &fullscreenVB,
                                     Resource &input, PostProcessRenderTargets &renderTargets, Resource &output,
                                     size_t enabledPostProcessesCount, float screenWidth, float screenHeight);

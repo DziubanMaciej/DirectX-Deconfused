@@ -19,6 +19,8 @@ public:
         // Shadow maps
         PIPELINE_STATE_SM_NORMAL,
         PIPELINE_STATE_SM_TEXTURE_NORMAL,
+        // Lighting
+        PIPELINE_STATE_LIGHTING,
         // Post Processes
         PIPELINE_STATE_POST_PROCESS_BLACK_BARS,
         PIPELINE_STATE_POST_PROCESS_CONVOLUTION,
@@ -42,6 +44,8 @@ private:
     void compilePipelineStateDefault(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateTextureNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+	// Lighting
+    void compilePipelineStateLighting(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     // Shadow maps
     void compilePipelineStateShadowMapNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateShadowMapTextureNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
