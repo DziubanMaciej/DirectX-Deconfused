@@ -173,15 +173,24 @@ void RenderData::resize(int width, int height) {
     depthStencilBuffer = std::make_unique<Resource>(device,
                                                     &CD3DX12_HEAP_PROPERTIES{D3D12_HEAP_TYPE_DEFAULT},
                                                     D3D12_HEAP_FLAG_NONE, // TODO D3D12_HEAP_FLAG_DENY_NON_RT_DS_TEXTURES good?
-                                                    &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT, width, height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
-                                                    D3D12_RESOURCE_STATE_DEPTH_WRITE,
+                                                    &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32_TYPELESS, width, height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+                                                    D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
                                                     &CD3DX12_CLEAR_VALUE{DXGI_FORMAT_D32_FLOAT, 1.0f, 0});
     D3D12_DEPTH_STENCIL_VIEW_DESC depthStencilBufferDesc = {};
     depthStencilBufferDesc.Format = DXGI_FORMAT_D32_FLOAT;
     depthStencilBufferDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
     depthStencilBufferDesc.Flags = D3D12_DSV_FLAG_NONE;
     depthStencilBufferDesc.Texture2D = D3D12_TEX2D_DSV{0};
+    D3D12_SHADER_RESOURCE_VIEW_DESC depthStencilBufferSrvDesc = {};
+    depthStencilBufferSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    depthStencilBufferSrvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+    depthStencilBufferSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    depthStencilBufferSrvDesc.Texture2D.MipLevels = 1;
+    depthStencilBufferSrvDesc.Texture2D.MostDetailedMip = 0;
+    depthStencilBufferSrvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+    depthStencilBufferSrvDesc.Texture2D.PlaneSlice = 0;
     depthStencilBuffer->createDsv(&depthStencilBufferDesc);
+    depthStencilBuffer->createSrv(&depthStencilBufferSrvDesc);
     SET_OBJECT_NAME(*depthStencilBuffer, L"DepthStencilBuffer");
 }
 

@@ -211,6 +211,7 @@ void SceneImpl::renderDeferred(SwapChain &swapChain, RenderData &renderData, Com
     commandList.transitionBarrier(renderData.getGBufferAlbedo(), D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.transitionBarrier(renderData.getGBufferNormal(), D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.transitionBarrier(renderData.getGBufferSpecular(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+    commandList.transitionBarrier(renderData.getDepthStencilBuffer(), D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
     //commandList.OMSetRenderTarget(output, renderData.getDepthStencilBuffer());
 
@@ -327,21 +328,26 @@ void SceneImpl::renderDeferred(SwapChain &swapChain, RenderData &renderData, Com
 	commandList.transitionBarrier(renderData.getGBufferAlbedo(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getGBufferNormal(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getGBufferSpecular(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    commandList.transitionBarrier(renderData.getDepthStencilBuffer(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
 	
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_LIGHTING);
 
+
 	
-    const Resource *lightingRts[2] = {&output, &renderData.getBloomMap()};
-    commandList.OMSetRenderTargets(lightingRts, renderData.getDepthStencilBuffer());
+    const D3D12_CPU_DESCRIPTOR_HANDLE lightingRts[2] = {
+        output.getRtv(), renderData.getBloomMap().getRtv()};
+
+    commandList.getCommandList()->OMSetRenderTargets(2, lightingRts, FALSE, nullptr);
 
     commandList.setCbvInDescriptorTable(0, 0, lightConstantBuffer);
     commandList.setSrvInDescriptorTable(0, 1, renderData.getGBufferPosition());
     commandList.setSrvInDescriptorTable(0, 2, renderData.getGBufferAlbedo());
     commandList.setSrvInDescriptorTable(0, 3, renderData.getGBufferNormal());
     commandList.setSrvInDescriptorTable(0, 4, renderData.getGBufferSpecular());
+    commandList.setSrvInDescriptorTable(0, 5, renderData.getDepthStencilBuffer());
     for (auto shadowMapIndex = 0u; shadowMapIndex < 8; shadowMapIndex++) {
-        commandList.setSrvInDescriptorTable(0, shadowMapIndex + 5, renderData.getShadowMap(shadowMapIndex));
+        commandList.setSrvInDescriptorTable(0, shadowMapIndex + 6, renderData.getShadowMap(shadowMapIndex));
     }
 
 	commandList.IASetVertexBuffer(fullscreenVB);

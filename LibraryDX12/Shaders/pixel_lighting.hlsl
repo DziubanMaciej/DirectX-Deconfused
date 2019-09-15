@@ -15,7 +15,8 @@ Texture2D gBufferPosition : register(t0);
 Texture2D gBufferAlbedo : register(t1);
 Texture2D gBufferNormal : register(t2);
 Texture2D gBufferSpecular : register(t3);
-Texture2D shadowMaps[8] : register(t4);
+Texture2D gBufferDepth : register(t4);
+Texture2D shadowMaps[8] : register(t5);
 
 SamplerState g_sampler : register(s0);
 
@@ -33,6 +34,12 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
 
 	const float uBase = IN.Position.x / screenWidth;
     const float vBase = IN.Position.y / screenHeight;
+
+	float INdepth = gBufferDepth.Sample(g_sampler, float2(uBase, vBase)).r;
+
+	if (INdepth >= 1) {
+            discard;    
+	}
 
 	float4 INworldPosition = gBufferPosition.Sample(g_sampler, float2(uBase, vBase));
     float4 INnormal = gBufferNormal.Sample(g_sampler, float2(uBase, vBase));
@@ -80,7 +87,7 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
 
         //Normal
         float3 lightPositionNorm = normalize(lightPosition[i].xyz - INworldPosition.xyz);
-        float3 normalNorm = normalize(INnormal.xyz);
+        float3 normalNorm = INnormal.xyz;
         float normalPower = max(dot(normalNorm, lightPositionNorm), 0);
 
         //Specular

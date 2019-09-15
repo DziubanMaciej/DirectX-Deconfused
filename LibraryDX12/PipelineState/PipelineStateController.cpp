@@ -331,7 +331,8 @@ void PipelineStateController::compilePipelineStateLighting(RootSignature &rootSi
     table.appendSrvRange(t(1), 1); // gbuffer albedo
     table.appendSrvRange(t(2), 1); // gbuffer normal
     table.appendSrvRange(t(3), 1); // gbuffer specular
-    table.appendSrvRange(t(4), 8); // shadow maps
+    table.appendSrvRange(t(4), 1); // gbuffer depth
+    table.appendSrvRange(t(5), 8); // shadow maps
 
     rootSignature
         .appendStaticSampler(s(0), sampler)
