@@ -53,5 +53,3 @@ set_target_properties(${TARGET_NAME} PROPERTIES FOLDER ExternalLibraries)
 target_include_directories( ${TARGET_NAME} PUBLIC DirectXTex )
 target_compile_options( ${TARGET_NAME} PRIVATE /fp:fast /Wall /permissive- /Zc:__cplusplus )
 
-# Windows 10 is used here to build the DirectX 12 code paths as well as 11
-add_compile_definitions(_UNICODE UNICODE _WIN32_WINNT=0x0A00)
