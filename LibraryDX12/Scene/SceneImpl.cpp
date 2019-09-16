@@ -232,20 +232,20 @@ void SceneImpl::renderDeferred(SwapChain &swapChain, RenderData &renderData, Com
     XMMATRIX viewMatrixInverse = XMMatrixInverse(nullptr, viewMatrix);
     XMMATRIX projMatrixInverse = XMMatrixInverse(nullptr, projectionMatrix);
 
-    //SimpleConstantBuffer
-    auto smplCbv = lightConstantBuffer.getData<LightingConstantBuffer>();
-    smplCbv->cameraPosition = XMFLOAT4(camera->getEyePosition().x, camera->getEyePosition().y, camera->getEyePosition().z, 1);
-    smplCbv->lightsSize = 0;
-    smplCbv->ambientLight = XMFLOAT3(ambientLight[0], ambientLight[1], ambientLight[2]);
-    smplCbv->screenWidth = swapChain.getWidth();
-    smplCbv->screenHeight = swapChain.getHeight();
+    // LightingConstantBuffer
+    auto lightCb = lightConstantBuffer.getData<LightingConstantBuffer>();
+    lightCb->cameraPosition = XMFLOAT4(camera->getEyePosition().x, camera->getEyePosition().y, camera->getEyePosition().z, 1);
+    lightCb->lightsSize = 0;
+    lightCb->ambientLight = XMFLOAT3(ambientLight[0], ambientLight[1], ambientLight[2]);
+    lightCb->screenWidth = static_cast<float>(swapChain.getWidth());
+    lightCb->screenHeight = static_cast<float>(swapChain.getHeight());
     for (LightImpl *light : lights) {
-        smplCbv->lightColor[smplCbv->lightsSize] = XMFLOAT4(light->getColor().x, light->getColor().y, light->getColor().z, light->getPower());
-        smplCbv->lightPosition[smplCbv->lightsSize] = XMFLOAT4(light->getPosition().x, light->getPosition().y, light->getPosition().z, 0);
-        smplCbv->lightDirection[smplCbv->lightsSize] = XMFLOAT4(light->getDirection().x, light->getDirection().y, light->getDirection().z, 0);
-        smplCbv->smViewProjectionMatrix[smplCbv->lightsSize] = light->smViewProjectionMatrix;
-        smplCbv->lightsSize++;
-        if (smplCbv->lightsSize >= 8) {
+        lightCb->lightColor[lightCb->lightsSize] = XMFLOAT4(light->getColor().x, light->getColor().y, light->getColor().z, light->getPower());
+        lightCb->lightPosition[lightCb->lightsSize] = XMFLOAT4(light->getPosition().x, light->getPosition().y, light->getPosition().z, 0);
+        lightCb->lightDirection[lightCb->lightsSize] = XMFLOAT4(light->getDirection().x, light->getDirection().y, light->getDirection().z, 0);
+        lightCb->smViewProjectionMatrix[lightCb->lightsSize] = light->smViewProjectionMatrix;
+        lightCb->lightsSize++;
+        if (lightCb->lightsSize >= 8) {
             break;
         }
     }
@@ -485,7 +485,7 @@ void SceneImpl::renderD2DTexts(SwapChain &swapChain) {
         // TODO: this call as TextImpl method
         d2dDeviceContext->DrawText(
             txt->getText().c_str(),
-            txt->getText().size(),
+            static_cast<UINT>(txt->getText().size()),
             txt->m_textFormat.Get(),
             &textRect,
             txt->m_textBrush.Get());
