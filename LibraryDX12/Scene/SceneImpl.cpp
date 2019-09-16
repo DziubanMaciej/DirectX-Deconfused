@@ -274,15 +274,13 @@ void SceneImpl::renderDeferred(SwapChain &swapChain, RenderData &renderData, Com
         }
     }*/
 
-    const D3D12_CPU_DESCRIPTOR_HANDLE rts[3] = {
-        renderData.getGBufferAlbedo().getRtv(), renderData.getGBufferNormal().getRtv(), renderData.getGBufferSpecular().getRtv()};
-    
-    commandList.getCommandList()->OMSetRenderTargets(3, rts, FALSE, &renderData.getDepthStencilBuffer().getDsv());
+    const Resource *rts[] = {&renderData.getGBufferAlbedo(), &renderData.getGBufferNormal(), &renderData.getGBufferSpecular()};
+    commandList.OMSetRenderTargets(rts, renderData.getDepthStencilBuffer());
 
-	//Draw NORMAL
+    //Draw NORMAL
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_NORMAL);
     //commandList.setCbvInDescriptorTable(2, 0, lightConstantBuffer);
-    
+
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = object->getMesh();
         if (mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
@@ -324,18 +322,16 @@ void SceneImpl::renderDeferred(SwapChain &swapChain, RenderData &renderData, Com
         }
     }
 
-	// Lighting
-	commandList.transitionBarrier(renderData.getGBufferAlbedo(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    // Lighting
+    commandList.transitionBarrier(renderData.getGBufferAlbedo(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getGBufferNormal(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getGBufferSpecular(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getDepthStencilBuffer(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_LIGHTING);
-	
-    const D3D12_CPU_DESCRIPTOR_HANDLE lightingRts[2] = {
-        output.getRtv(), renderData.getBloomMap().getRtv()};
 
-    commandList.getCommandList()->OMSetRenderTargets(2, lightingRts, FALSE, nullptr);
+    const Resource *lightingRts[] = {&output, &renderData.getBloomMap()};
+    commandList.OMSetRenderTargetsNoDepth(lightingRts);
 
     commandList.setCbvInDescriptorTable(0, 0, lightConstantBuffer);
     commandList.setSrvInDescriptorTable(0, 1, renderData.getGBufferAlbedo());
@@ -351,10 +347,9 @@ void SceneImpl::renderDeferred(SwapChain &swapChain, RenderData &renderData, Com
     invVP.projMatrixInverse = projMatrixInverse;
     commandList.setGraphicsRoot32BitConstant(1, invVP);
 
-	commandList.IASetVertexBuffer(fullscreenVB);
+    commandList.IASetVertexBuffer(fullscreenVB);
 
-	commandList.draw(6u);
-
+    commandList.draw(6u);
 }
 
 void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList, VertexBuffer &fullscreenVB,
