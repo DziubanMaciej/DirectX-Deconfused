@@ -16,31 +16,6 @@ void RenderData::resize(int width, int height) {
     height = std::max(static_cast<uint32_t>(height), 1u);
     postProcessRenderTargets.resize(width, height);
 
-	// GBuffer Position
-    D3D12_RESOURCE_DESC gBufferPositionDesc = {};
-    gBufferPositionDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    gBufferPositionDesc.Alignment = 0;
-    gBufferPositionDesc.Width = width;
-    gBufferPositionDesc.Height = height;
-    gBufferPositionDesc.DepthOrArraySize = 1;
-    gBufferPositionDesc.MipLevels = 0;
-    gBufferPositionDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
-    gBufferPositionDesc.SampleDesc.Count = 1;
-    gBufferPositionDesc.SampleDesc.Quality = 0;
-    gBufferPositionDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    gBufferPositionDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-
-    gBufferPosition = std::make_unique<Resource>(
-        device,
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-        D3D12_HEAP_FLAG_NONE,
-        &gBufferPositionDesc,
-        D3D12_RESOURCE_STATE_RENDER_TARGET,
-        nullptr);
-    gBufferPosition->createSrv(nullptr);
-    gBufferPosition->createRtv(nullptr);
-    gBufferPosition->getResource()->SetName(L"GBuffer Position");
-
 	// GBuffer Albedo
     D3D12_RESOURCE_DESC gBufferAlbedoDesc = {};
     gBufferAlbedoDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -74,7 +49,7 @@ void RenderData::resize(int width, int height) {
     gBufferNormalDesc.Height = height;
     gBufferNormalDesc.DepthOrArraySize = 1;
     gBufferNormalDesc.MipLevels = 0;
-    gBufferNormalDesc.Format = DXGI_FORMAT_R32G32B32A32_FLOAT;
+    gBufferNormalDesc.Format = DXGI_FORMAT_R8G8B8A8_SNORM;
     gBufferNormalDesc.SampleDesc.Count = 1;
     gBufferNormalDesc.SampleDesc.Quality = 0;
     gBufferNormalDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;

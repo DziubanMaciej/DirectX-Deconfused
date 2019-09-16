@@ -52,7 +52,7 @@ struct ObjectProperties {
     float objectSpecularity;
 };
 
-struct LightingConstantBuffer { //must be 128bit padded
+struct LightingConstantBuffer {
     XMFLOAT4 cameraPosition;
     int lightsSize;
     XMFLOAT3 ambientLight;
@@ -66,4 +66,9 @@ struct LightingConstantBuffer { //must be 128bit padded
 
 struct SMmvp {
     XMMATRIX modelViewProjectionMatrix;
+};
+
+struct InverseViewProj {
+    XMMATRIX viewMatrixInverse;
+    XMMATRIX projMatrixInverse;
 };

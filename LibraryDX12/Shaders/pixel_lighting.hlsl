@@ -1,4 +1,4 @@
-cbuffer SimpleConstantBuffer : register(b1) {
+cbuffer SimpleConstantBuffer : register(b0) {
     float4 cameraPosition;
     int lightsSize;
     float3 ambientLight;
@@ -10,13 +10,18 @@ cbuffer SimpleConstantBuffer : register(b1) {
     float screenHeight;
 };
 
+struct InverseViewProj {
+    matrix viewMatrixInverse;
+    matrix projMatrixInverse;
+};
 
-Texture2D gBufferPosition : register(t0);
-Texture2D gBufferAlbedo : register(t1);
-Texture2D gBufferNormal : register(t2);
-Texture2D gBufferSpecular : register(t3);
-Texture2D gBufferDepth : register(t4);
-Texture2D shadowMaps[8] : register(t5);
+ConstantBuffer<InverseViewProj> invVP : register(b1);
+
+Texture2D gBufferAlbedo : register(t0);
+Texture2D gBufferNormal : register(t1);
+Texture2D gBufferSpecular : register(t2);
+Texture2D gBufferDepth : register(t3);
+Texture2D shadowMaps[8] : register(t4);
 
 SamplerState g_sampler : register(s0);
 
@@ -30,7 +35,6 @@ struct PS_OUT {
 };
 
 PS_OUT main(PixelShaderInput IN) : SV_Target {
-    float4 OUT_Color = float4(0, 0, 0, 1);
 
 	const float uBase = IN.Position.x / screenWidth;
     const float vBase = IN.Position.y / screenHeight;
@@ -41,12 +45,15 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
             discard;    
 	}
 
-	float4 INworldPosition = gBufferPosition.Sample(g_sampler, float2(uBase, vBase));
+	float4 H = float4((uBase)*2 - 1, (1 - vBase)*2 - 1, INdepth, 1.0);
+    float4 D = mul(invVP.projMatrixInverse, H);
+    float4 INworldPosition = mul(invVP.viewMatrixInverse, (D / D.w));
+
     float4 INnormal = gBufferNormal.Sample(g_sampler, float2(uBase, vBase));
     float4 INspecularity = gBufferSpecular.Sample(g_sampler, float2(uBase, vBase));
     float4 INalbedo = gBufferAlbedo.Sample(g_sampler, float2(uBase, vBase));
 
-    OUT_Color.xyz = OUT_Color.xyz + ambientLight.xyz;
+    float4 OUT_Color = float4(ambientLight.xyz, 1);
 
     for (int i = 0; i < lightsSize; i++) {
 
@@ -66,7 +73,7 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
                         float2 offset = float2(float(ox) / 2048.0f, float(oy) / 2048.0f);
                         smDepth = shadowMaps[i].Sample(g_sampler, smCoords.xy + offset).r;
 
-                        if (((smCoords.z / smCoords.w) - 0.0005f) > smDepth) {
+                        if (((smCoords.z / smCoords.w) - 0.001f) > smDepth) {
                             shadowFactor = shadowFactor - 1;
                         }
                     }
@@ -83,16 +90,16 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
         float3 tempLightColor = lightColor[i].xyz / 3;
 
         //Diffuse
-        float tempLightPower = (30 / (distance(INworldPosition.xyz, lightPosition[i].xyz) * distance(INworldPosition.xyz, lightPosition[i].xyz))) * lightColor[i].w;
+        float lightDistance = distance(INworldPosition.xyz, lightPosition[i].xyz);
+        float tempLightPower = (30 / (lightDistance * lightDistance)) * lightColor[i].w;
 
         //Normal
         float3 lightPositionNorm = normalize(lightPosition[i].xyz - INworldPosition.xyz);
-        float3 normalNorm = INnormal.xyz;
-        float normalPower = max(dot(normalNorm, lightPositionNorm), 0);
+        float normalPower = max(dot(INnormal.xyz, lightPositionNorm), 0);
 
         //Specular
         float3 viewDir = normalize(cameraPosition.xyz - INworldPosition.xyz);
-        float3 reflectDir = reflect(-lightPositionNorm, normalNorm);
+        float3 reflectDir = reflect(-lightPositionNorm, INnormal.xyz);
         float specularPower = pow(max(dot(viewDir, reflectDir), 0.0), 32) * INspecularity.x;
 
         //Direction

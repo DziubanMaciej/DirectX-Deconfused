@@ -23,7 +23,6 @@ public:
     Resource &getShadowMap(int i) { return *shadowMap[i]; }
     Resource &getDepthStencilBuffer() { return *depthStencilBuffer; };
     Resource &getBloomMap() { return *bloomMap; }
-    Resource &getGBufferPosition() { return *gBufferPosition; }
     Resource &getGBufferAlbedo() { return *gBufferAlbedo; }
     Resource &getGBufferNormal() { return *gBufferNormal; }
     Resource &getGBufferSpecular() { return *gBufferSpecular; }
@@ -35,7 +34,6 @@ private:
 
     // Resources
     PostProcessRenderTargets postProcessRenderTargets;
-    std::unique_ptr<Resource> gBufferPosition;
     std::unique_ptr<Resource> gBufferAlbedo;
     std::unique_ptr<Resource> gBufferNormal;
     std::unique_ptr<Resource> gBufferSpecular;

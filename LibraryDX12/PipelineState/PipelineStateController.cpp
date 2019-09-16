@@ -133,9 +133,8 @@ void PipelineStateController::compilePipelineStateNormal(RootSignature &rootSign
     PipelineState{inputLayout, rootSignature}
         .VS(L"vertex_normal.hlsl")
         .PS(L"pixel_normal.hlsl")
-        .setRenderTargetsCount(4)
-        .setRenderTargetFormat(0, DXGI_FORMAT_R32G32B32A32_FLOAT)
-        .setRenderTargetFormat(2, DXGI_FORMAT_R32G32B32A32_FLOAT)
+        .setRenderTargetsCount(3)
+        .setRenderTargetFormat(1, DXGI_FORMAT_R8G8B8A8_SNORM)
         .compile(device, pipelineState);
 }
 
@@ -170,9 +169,8 @@ void PipelineStateController::compilePipelineStateTextureNormal(RootSignature &r
     PipelineState{inputLayout, rootSignature}
         .VS(L"vertex_normal_texture.hlsl")
         .PS(L"pixel_normal_texture.hlsl")
-        .setRenderTargetsCount(4)
-        .setRenderTargetFormat(0, DXGI_FORMAT_R32G32B32A32_FLOAT)
-        .setRenderTargetFormat(2, DXGI_FORMAT_R32G32B32A32_FLOAT)
+        .setRenderTargetsCount(3)
+        .setRenderTargetFormat(1, DXGI_FORMAT_R8G8B8A8_SNORM)
         .compile(device, pipelineState);
 }
 
@@ -326,17 +324,17 @@ void PipelineStateController::compilePipelineStateLighting(RootSignature &rootSi
     sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
 
     DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
-    table.appendCbvRange(b(1), 1); // light constant buffer
-    table.appendSrvRange(t(0), 1); // gbuffer position
-    table.appendSrvRange(t(1), 1); // gbuffer albedo
-    table.appendSrvRange(t(2), 1); // gbuffer normal
-    table.appendSrvRange(t(3), 1); // gbuffer specular
-    table.appendSrvRange(t(4), 1); // gbuffer depth
-    table.appendSrvRange(t(5), 8); // shadow maps
+    table.appendCbvRange(b(0), 1); // light constant buffer
+    table.appendSrvRange(t(0), 1); // gbuffer albedo
+    table.appendSrvRange(t(1), 1); // gbuffer normal
+    table.appendSrvRange(t(2), 1); // gbuffer specular
+    table.appendSrvRange(t(3), 1); // gbuffer depth
+    table.appendSrvRange(t(4), 8); // shadow maps
 
     rootSignature
         .appendStaticSampler(s(0), sampler)
         .appendDescriptorTable(std::move(table))
+        .append32bitConstant<InverseViewProj>(b(1), D3D12_SHADER_VISIBILITY_PIXEL)
         .compile(device);
 
     // Input layout - per vertex data

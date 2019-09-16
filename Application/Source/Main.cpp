@@ -55,7 +55,7 @@ private:
 
         std::unordered_map<std::string, MeshCreationData> meshMap = {
             {"teapot", {L"Resources/meshes/teapot_normals.obj", false}},
-            {"cube", {L"Resources/meshes/cube.obj", false}},
+            //{"cube", {L"Resources/meshes/cube.obj", false}},
             {"cubeNormal", {L"Resources/meshes/cube_normals.obj", false}},
             //{"actor", {L"Resources/meshes/dennis.obj", false}},
             {"dxd", {L"Resources/meshes/dxd_comicsans.obj", false}},
@@ -76,12 +76,9 @@ private:
                 {"cubeNormalMesh2", "cubeNormal"},
                 {"flatMesh1", "cubeNormal"},
                 {"extraFlatMesh1", "cubeNormal"},
-                {"smallCubeMesh1", "cube"},
-                {"smallCubeMesh2", "cube"},
-                {"smallCubeMesh3", "cube"},
-                {"carMesh1", "car"},
+                {"carMesh1", "car"} };
                 //{"actorMesh1", "actor"},
-                {"dxdMesh1", "dxd"}};
+                //{"dxdMesh1", "dxd"}};
 
             for (auto object : meshObjectMap) {
                 objects.insert({object.first, DXD::Object::create(*meshes[object.second])});
@@ -103,21 +100,12 @@ private:
             objects["cubeNormalMesh2"]->setPosition(9, -1, -9);
 
             objects["flatMesh1"]->setPosition(0, -3, 0);
-            objects["flatMesh1"]->setSpecularity(0.5f);
+            objects["flatMesh1"]->setSpecularity(0.2f);
             objects["flatMesh1"]->setScale(10, 1, 10);
 
             objects["extraFlatMesh1"]->setPosition(0, -5, 0);
             objects["extraFlatMesh1"]->setSpecularity(0);
             objects["extraFlatMesh1"]->setScale(100, 1, 100);
-
-            objects["smallCubeMesh1"]->setPosition(-12, 12, 6);
-            objects["smallCubeMesh1"]->setScale(0.25f, 0.25f, 0.25f);
-
-            objects["smallCubeMesh2"]->setPosition(7, 4, 6);
-            objects["smallCubeMesh2"]->setScale(0.25f, 0.25f, 0.25f);
-
-            objects["smallCubeMesh3"]->setPosition(12, 1, -12);
-            objects["smallCubeMesh3"]->setScale(0.25f, 0.25f, 0.25f);
 
             objects["carMesh1"]->setPosition(0, -1, -4); // y -2 for aventador
             objects["carMesh1"]->setColor(0.1f, 0, 0.1f);
@@ -128,9 +116,9 @@ private:
             //objects["actorMesh1"]->setPosition(-2, -2, -8);
             //objects["actorMesh1"]->setScale(0.01f, 0.01f, 0.01f);
 
-            objects["dxdMesh1"]->setPosition(0, 2, 15);
-            objects["dxdMesh1"]->setScale(20.f, 20.f, 20.f);
-            objects["dxdMesh1"]->setRotation({0, 1, 0}, static_cast<float>(M_PI));
+            //objects["dxdMesh1"]->setPosition(0, 2, 15);
+            //objects["dxdMesh1"]->setScale(20.f, 20.f, 20.f);
+            //objects["dxdMesh1"]->setRotation({0, 1, 0}, static_cast<float>(M_PI));
         }
         DXD::log("Done!\n");
     }
@@ -149,7 +137,7 @@ private:
             lights["sunLight"]->setColor(1.0f, 1.0f, 1.0f);
             lights["sunLight"]->setPosition(-12, 12, 6);
             lights["sunLight"]->setDirection(1, -1, -0.5);
-            lights["sunLight"]->setPower(12);
+            lights["sunLight"]->setPower(16);
             lights["sunLight"]->setType(DXD::LightType::DIRECTIONAL_LIGHT);
 
             lights["moonLight"]->setColor(0.0f, 1.0f, 1.0f);
@@ -182,8 +170,8 @@ private:
         DXD::log("Done!\n");
     }
     void prepPostProcesses() {
-        postProcesses.push_back(DXD::PostProcess::create());
-        postProcesses.back()->setBlackBars(0.0f, 0.0f, 0.05f, 0.05f);
+        //postProcesses.push_back(DXD::PostProcess::create());
+        //postProcesses.back()->setBlackBars(0.0f, 0.0f, 0.05f, 0.05f);
 
         postProcesses.push_back(DXD::PostProcess::create());
         gaussianBlurPostProcess = postProcesses.back().get();
@@ -208,8 +196,8 @@ private:
     void prepScene() {
         DXD::log("Preparing scene...\n");
         scene = DXD::Scene::create(*application);
-        scene->setBackgroundColor(0.3f, 0.8f, 1.0f);
-        scene->setAmbientLight(0.1f, 0.1f, 0.1f);
+        scene->setBackgroundColor(0.0f, 0.0f, 0.0f);
+        scene->setAmbientLight(0.0f, 0.0f, 0.0f);
         scene->setCamera(*camera);
 
         for (auto &object : objects) {
@@ -364,7 +352,7 @@ private:
     float angleX = 0.f;
     float angleY = 0.f;
     XMFLOAT3 cameraPosition{0, 4, -20};
-    XMFLOAT3 focusDirection{0, -0.2f, 1};
+    XMFLOAT3 focusDirection{0, -0.4f, 1};
     FpsCounter<180> fpsCounter;
     DXD::PostProcess *gaussianBlurPostProcess = nullptr;
     UINT gaussianBlurPassCount = 0u;

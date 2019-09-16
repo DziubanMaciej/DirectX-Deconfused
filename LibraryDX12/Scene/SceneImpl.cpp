@@ -207,7 +207,6 @@ void SceneImpl::renderDeferred(SwapChain &swapChain, RenderData &renderData, Com
     // Transition to RENDER_TARGET
     commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.transitionBarrier(renderData.getBloomMap(), D3D12_RESOURCE_STATE_RENDER_TARGET);
-    commandList.transitionBarrier(renderData.getGBufferPosition(), D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.transitionBarrier(renderData.getGBufferAlbedo(), D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.transitionBarrier(renderData.getGBufferNormal(), D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.transitionBarrier(renderData.getGBufferSpecular(), D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -218,18 +217,20 @@ void SceneImpl::renderDeferred(SwapChain &swapChain, RenderData &renderData, Com
     // Render (clear color)
     commandList.clearRenderTargetView(output.getRtv(), backgroundColor);
     commandList.clearRenderTargetView(renderData.getBloomMap().getRtv(), blackColor);
-    commandList.clearRenderTargetView(renderData.getGBufferPosition().getRtv(), blackColor);
-    commandList.clearRenderTargetView(renderData.getGBufferAlbedo().getRtv(), blackColor);
-    commandList.clearRenderTargetView(renderData.getGBufferNormal().getRtv(), blackColor);
-    commandList.clearRenderTargetView(renderData.getGBufferSpecular().getRtv(), blackColor);
+    //commandList.clearRenderTargetView(renderData.getGBufferAlbedo().getRtv(), blackColor);
+    //commandList.clearRenderTargetView(renderData.getGBufferNormal().getRtv(), blackColor);
+    //commandList.clearRenderTargetView(renderData.getGBufferSpecular().getRtv(), blackColor);
     commandList.clearDepthStencilView(renderData.getDepthStencilBuffer().getDsv(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
     // View projection matrix
     float aspectRatio = (float)swapChain.getWidth() / swapChain.getHeight();
     camera->setAspectRatio(aspectRatio);
-    const XMMATRIX viewMatrix = camera->getViewMatrix();
-    const XMMATRIX projectionMatrix = camera->getProjectionMatrix();
-    const XMMATRIX vpMatrix = XMMatrixMultiply(viewMatrix, projectionMatrix);
+    XMMATRIX viewMatrix = camera->getViewMatrix();
+    XMMATRIX projectionMatrix = camera->getProjectionMatrix();
+    XMMATRIX vpMatrix = XMMatrixMultiply(viewMatrix, projectionMatrix);
+
+    XMMATRIX viewMatrixInverse = XMMatrixInverse(nullptr, viewMatrix);
+    XMMATRIX projMatrixInverse = XMMatrixInverse(nullptr, projectionMatrix);
 
     //SimpleConstantBuffer
     auto smplCbv = lightConstantBuffer.getData<LightingConstantBuffer>();
@@ -273,10 +274,10 @@ void SceneImpl::renderDeferred(SwapChain &swapChain, RenderData &renderData, Com
         }
     }*/
 
-    const D3D12_CPU_DESCRIPTOR_HANDLE rts[4] = {
-        renderData.getGBufferPosition().getRtv(), renderData.getGBufferAlbedo().getRtv(), renderData.getGBufferNormal().getRtv(), renderData.getGBufferSpecular().getRtv()};
+    const D3D12_CPU_DESCRIPTOR_HANDLE rts[3] = {
+        renderData.getGBufferAlbedo().getRtv(), renderData.getGBufferNormal().getRtv(), renderData.getGBufferSpecular().getRtv()};
     
-    commandList.getCommandList()->OMSetRenderTargets(4, rts, FALSE, &renderData.getDepthStencilBuffer().getDsv());
+    commandList.getCommandList()->OMSetRenderTargets(3, rts, FALSE, &renderData.getDepthStencilBuffer().getDsv());
 
 	//Draw NORMAL
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_NORMAL);
@@ -324,16 +325,12 @@ void SceneImpl::renderDeferred(SwapChain &swapChain, RenderData &renderData, Com
     }
 
 	// Lighting
-    commandList.transitionBarrier(renderData.getGBufferPosition(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	commandList.transitionBarrier(renderData.getGBufferAlbedo(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getGBufferNormal(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getGBufferSpecular(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getDepthStencilBuffer(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
-	
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_LIGHTING);
-
-
 	
     const D3D12_CPU_DESCRIPTOR_HANDLE lightingRts[2] = {
         output.getRtv(), renderData.getBloomMap().getRtv()};
@@ -341,14 +338,18 @@ void SceneImpl::renderDeferred(SwapChain &swapChain, RenderData &renderData, Com
     commandList.getCommandList()->OMSetRenderTargets(2, lightingRts, FALSE, nullptr);
 
     commandList.setCbvInDescriptorTable(0, 0, lightConstantBuffer);
-    commandList.setSrvInDescriptorTable(0, 1, renderData.getGBufferPosition());
-    commandList.setSrvInDescriptorTable(0, 2, renderData.getGBufferAlbedo());
-    commandList.setSrvInDescriptorTable(0, 3, renderData.getGBufferNormal());
-    commandList.setSrvInDescriptorTable(0, 4, renderData.getGBufferSpecular());
-    commandList.setSrvInDescriptorTable(0, 5, renderData.getDepthStencilBuffer());
+    commandList.setSrvInDescriptorTable(0, 1, renderData.getGBufferAlbedo());
+    commandList.setSrvInDescriptorTable(0, 2, renderData.getGBufferNormal());
+    commandList.setSrvInDescriptorTable(0, 3, renderData.getGBufferSpecular());
+    commandList.setSrvInDescriptorTable(0, 4, renderData.getDepthStencilBuffer());
     for (auto shadowMapIndex = 0u; shadowMapIndex < 8; shadowMapIndex++) {
-        commandList.setSrvInDescriptorTable(0, shadowMapIndex + 6, renderData.getShadowMap(shadowMapIndex));
+        commandList.setSrvInDescriptorTable(0, shadowMapIndex + 5, renderData.getShadowMap(shadowMapIndex));
     }
+
+    InverseViewProj invVP;
+    invVP.viewMatrixInverse = viewMatrixInverse;
+    invVP.projMatrixInverse = projMatrixInverse;
+    commandList.setGraphicsRoot32BitConstant(1, invVP);
 
 	commandList.IASetVertexBuffer(fullscreenVB);
 
