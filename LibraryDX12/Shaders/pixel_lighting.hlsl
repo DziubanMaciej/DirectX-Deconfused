@@ -36,16 +36,16 @@ struct PS_OUT {
 
 PS_OUT main(PixelShaderInput IN) : SV_Target {
 
-	const float uBase = IN.Position.x / screenWidth;
+    const float uBase = IN.Position.x / screenWidth;
     const float vBase = IN.Position.y / screenHeight;
 
-	float INdepth = gBufferDepth.Sample(g_sampler, float2(uBase, vBase)).r;
+    float INdepth = gBufferDepth.Sample(g_sampler, float2(uBase, vBase)).r;
 
-	if (INdepth >= 1) {
-            discard;    
-	}
+    if (INdepth >= 1) {
+        discard;
+    }
 
-	float4 H = float4((uBase)*2 - 1, (1 - vBase)*2 - 1, INdepth, 1.0);
+    float4 H = float4((uBase)*2 - 1, (1 - vBase) * 2 - 1, INdepth, 1.0);
     float4 D = mul(invVP.projMatrixInverse, H);
     float4 INworldPosition = mul(invVP.viewMatrixInverse, (D / D.w));
 
@@ -109,15 +109,15 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
         OUT_Color.xyz = OUT_Color.xyz + (tempLightColor.xyz + INalbedo) * tempLightPower * (normalPower + specularPower) * directionPower * shadowFactor;
     }
 
-	PS_OUT result;
+    PS_OUT result;
 
-	result.scene = OUT_Color;
+    result.scene = OUT_Color;
 
     //float brightness = dot(OUT_Color.rgb, float3(0.2126, 0.7152, 0.0722));
     //if (brightness > 0.5) {
     //    result.bloomMap = result.scene;
     //} else {
-        result.bloomMap = float4(0, 0, 0, 1); // TO-DO bloom
+    result.bloomMap = float4(0, 0, 0, 1); // TO-DO bloom
     //}
 
     return result;

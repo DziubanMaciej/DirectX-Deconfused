@@ -16,7 +16,7 @@ void RenderData::resize(int width, int height) {
     height = std::max(static_cast<uint32_t>(height), 1u);
     postProcessRenderTargets.resize(width, height);
 
-	// GBuffer Albedo
+    // GBuffer Albedo
     D3D12_RESOURCE_DESC gBufferAlbedoDesc = {};
     gBufferAlbedoDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     gBufferAlbedoDesc.Alignment = 0;
@@ -42,7 +42,7 @@ void RenderData::resize(int width, int height) {
     gBufferAlbedo->getResource()->SetName(L"GBuffer Albedo");
 
     // GBuffer Normal
-            D3D12_RESOURCE_DESC gBufferNormalDesc = {};
+    D3D12_RESOURCE_DESC gBufferNormalDesc = {};
     gBufferNormalDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     gBufferNormalDesc.Alignment = 0;
     gBufferNormalDesc.Width = width;
@@ -67,7 +67,7 @@ void RenderData::resize(int width, int height) {
     gBufferNormal->getResource()->SetName(L"GBuffer Normal");
 
     //GBuffer Specular
-            D3D12_RESOURCE_DESC gBufferSpecularDesc = {};
+    D3D12_RESOURCE_DESC gBufferSpecularDesc = {};
     gBufferSpecularDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     gBufferSpecularDesc.Alignment = 0;
     gBufferSpecularDesc.Width = width;
