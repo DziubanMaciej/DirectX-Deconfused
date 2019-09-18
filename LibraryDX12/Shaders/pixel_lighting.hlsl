@@ -113,10 +113,15 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
     }
 
     PS_OUT result;
+<<<<<<< HEAD
 
     OUT_Color.xyz = OUT_Color.xyz + INspecularity.x * ambientLight.xyz;
 
     result.scene = OUT_Color * INssao;
+=======
+
+    result.scene = OUT_Color;
+>>>>>>> 72a77543e1b5aa14aa8a36db472348f95f6c7bd6
 
     //float brightness = dot(OUT_Color.rgb, float3(0.2126, 0.7152, 0.0722));
     //if (brightness > 0.5) {

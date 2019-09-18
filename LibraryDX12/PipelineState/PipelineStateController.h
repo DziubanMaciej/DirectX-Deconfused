@@ -46,8 +46,11 @@ private:
     void compilePipelineStateDefault(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateTextureNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+<<<<<<< HEAD
     // SSAO
     void compilePipelineStateSSAO(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+=======
+>>>>>>> 72a77543e1b5aa14aa8a36db472348f95f6c7bd6
     // Lighting
     void compilePipelineStateLighting(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     // Shadow maps

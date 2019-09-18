@@ -322,8 +322,12 @@ void SceneImpl::renderDeferred(SwapChain &swapChain, RenderData &renderData, Com
         }
     }
 
+<<<<<<< HEAD
 
 
+=======
+    // Lighting
+>>>>>>> 72a77543e1b5aa14aa8a36db472348f95f6c7bd6
     commandList.transitionBarrier(renderData.getGBufferAlbedo(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getGBufferNormal(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getGBufferSpecular(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
@@ -375,11 +379,15 @@ void SceneImpl::renderDeferred(SwapChain &swapChain, RenderData &renderData, Com
     commandList.setGraphicsRoot32BitConstant(1, invVP);
 
     commandList.IASetVertexBuffer(fullscreenVB);
+<<<<<<< HEAD
 
     commandList.draw(6u);
 
 
+=======
+>>>>>>> 72a77543e1b5aa14aa8a36db472348f95f6c7bd6
 
+    commandList.draw(6u);
 }
 
 void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList, VertexBuffer &fullscreenVB,
