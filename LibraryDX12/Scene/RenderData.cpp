@@ -16,7 +16,7 @@ void RenderData::resize(int width, int height) {
     height = std::max(static_cast<uint32_t>(height), 1u);
     postProcessRenderTargets.resize(width, height);
 
-	// GBuffer Albedo
+    // GBuffer Albedo
     D3D12_RESOURCE_DESC gBufferAlbedoDesc = {};
     gBufferAlbedoDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     gBufferAlbedoDesc.Alignment = 0;
@@ -42,7 +42,7 @@ void RenderData::resize(int width, int height) {
     gBufferAlbedo->getResource()->SetName(L"GBuffer Albedo");
 
     // GBuffer Normal
-            D3D12_RESOURCE_DESC gBufferNormalDesc = {};
+    D3D12_RESOURCE_DESC gBufferNormalDesc = {};
     gBufferNormalDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     gBufferNormalDesc.Alignment = 0;
     gBufferNormalDesc.Width = width;
@@ -67,7 +67,7 @@ void RenderData::resize(int width, int height) {
     gBufferNormal->getResource()->SetName(L"GBuffer Normal");
 
     //GBuffer Specular
-            D3D12_RESOURCE_DESC gBufferSpecularDesc = {};
+    D3D12_RESOURCE_DESC gBufferSpecularDesc = {};
     gBufferSpecularDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     gBufferSpecularDesc.Alignment = 0;
     gBufferSpecularDesc.Width = width;
@@ -116,6 +116,32 @@ void RenderData::resize(int width, int height) {
     bloomMap->createRtv(nullptr);
     bloomMap->getResource()->SetName(L"Bloom map");
     SET_OBJECT_NAME(*bloomMap, L"BloomMap");
+
+    // SSAO map
+    D3D12_RESOURCE_DESC ssaoMapDesc = {};
+    ssaoMapDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    ssaoMapDesc.Alignment = 0;
+    ssaoMapDesc.Width = width;
+    ssaoMapDesc.Height = height;
+    ssaoMapDesc.DepthOrArraySize = 1;
+    ssaoMapDesc.MipLevels = 0;
+    ssaoMapDesc.Format = DXGI_FORMAT_R32_FLOAT;
+    ssaoMapDesc.SampleDesc.Count = 1;
+    ssaoMapDesc.SampleDesc.Quality = 0;
+    ssaoMapDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    ssaoMapDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+    ssaoMap = std::make_unique<Resource>(
+        device,
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &ssaoMapDesc,
+        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        nullptr);
+    ssaoMap->createSrv(nullptr);
+    ssaoMap->createRtv(nullptr);
+    ssaoMap->getResource()->SetName(L"SSAO map");
+    SET_OBJECT_NAME(*ssaoMap, L"SsaoMap");
 
     // Shadow maps
     D3D12_DEPTH_STENCIL_VIEW_DESC shadowMapDsvDesc = {};

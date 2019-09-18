@@ -57,7 +57,7 @@ private:
             {"teapot", {L"Resources/meshes/teapot_normals.obj", false}},
             //{"cube", {L"Resources/meshes/cube.obj", false}},
             {"cubeNormal", {L"Resources/meshes/cube_normals.obj", false}},
-            //{"actor", {L"Resources/meshes/dennis.obj", false}},
+            {"actor", {L"Resources/meshes/dennis.obj", false}},
             {"dxd", {L"Resources/meshes/dxd_comicsans.obj", false}},
             {"car", {L"Resources/meshes/porshe.obj", true}}};
         for (auto mesh : meshMap) {
@@ -76,8 +76,8 @@ private:
                 {"cubeNormalMesh2", "cubeNormal"},
                 {"flatMesh1", "cubeNormal"},
                 {"extraFlatMesh1", "cubeNormal"},
-                {"carMesh1", "car"} };
-                //{"actorMesh1", "actor"},
+                {"carMesh1", "car"},
+                {"actorMesh1", "actor"} };
                 //{"dxdMesh1", "dxd"}};
 
             for (auto object : meshObjectMap) {
@@ -113,8 +113,9 @@ private:
             objects["carMesh1"]->setScale(0.9f, 0.9f, 0.9f);
             objects["carMesh1"]->setTexture(porsheTexture.get());
 
-            //objects["actorMesh1"]->setPosition(-2, -2, -8);
-            //objects["actorMesh1"]->setScale(0.01f, 0.01f, 0.01f);
+            objects["actorMesh1"]->setPosition(-2, -2, -8);
+            objects["actorMesh1"]->setScale(0.01f, 0.01f, 0.01f);
+            objects["actorMesh1"]->setRotation(XMFLOAT3(0, 1, 0), -90);
 
             //objects["dxdMesh1"]->setPosition(0, 2, 15);
             //objects["dxdMesh1"]->setScale(20.f, 20.f, 20.f);
@@ -196,8 +197,8 @@ private:
     void prepScene() {
         DXD::log("Preparing scene...\n");
         scene = DXD::Scene::create(*application);
-        scene->setBackgroundColor(0.0f, 0.0f, 0.0f);
-        scene->setAmbientLight(0.0f, 0.0f, 0.0f);
+        scene->setBackgroundColor(0.2f, 0.8f, 1.0f);
+        scene->setAmbientLight(0.2f, 0.2f, 0.2f);
         scene->setCamera(*camera);
 
         for (auto &object : objects) {

@@ -232,20 +232,20 @@ void SceneImpl::renderDeferred(SwapChain &swapChain, RenderData &renderData, Com
     XMMATRIX viewMatrixInverse = XMMatrixInverse(nullptr, viewMatrix);
     XMMATRIX projMatrixInverse = XMMatrixInverse(nullptr, projectionMatrix);
 
-    //SimpleConstantBuffer
-    auto smplCbv = lightConstantBuffer.getData<LightingConstantBuffer>();
-    smplCbv->cameraPosition = XMFLOAT4(camera->getEyePosition().x, camera->getEyePosition().y, camera->getEyePosition().z, 1);
-    smplCbv->lightsSize = 0;
-    smplCbv->ambientLight = XMFLOAT3(ambientLight[0], ambientLight[1], ambientLight[2]);
-    smplCbv->screenWidth = swapChain.getWidth();
-    smplCbv->screenHeight = swapChain.getHeight();
+    // LightingConstantBuffer
+    auto lightCb = lightConstantBuffer.getData<LightingConstantBuffer>();
+    lightCb->cameraPosition = XMFLOAT4(camera->getEyePosition().x, camera->getEyePosition().y, camera->getEyePosition().z, 1);
+    lightCb->lightsSize = 0;
+    lightCb->ambientLight = XMFLOAT3(ambientLight[0], ambientLight[1], ambientLight[2]);
+    lightCb->screenWidth = static_cast<float>(swapChain.getWidth());
+    lightCb->screenHeight = static_cast<float>(swapChain.getHeight());
     for (LightImpl *light : lights) {
-        smplCbv->lightColor[smplCbv->lightsSize] = XMFLOAT4(light->getColor().x, light->getColor().y, light->getColor().z, light->getPower());
-        smplCbv->lightPosition[smplCbv->lightsSize] = XMFLOAT4(light->getPosition().x, light->getPosition().y, light->getPosition().z, 0);
-        smplCbv->lightDirection[smplCbv->lightsSize] = XMFLOAT4(light->getDirection().x, light->getDirection().y, light->getDirection().z, 0);
-        smplCbv->smViewProjectionMatrix[smplCbv->lightsSize] = light->smViewProjectionMatrix;
-        smplCbv->lightsSize++;
-        if (smplCbv->lightsSize >= 8) {
+        lightCb->lightColor[lightCb->lightsSize] = XMFLOAT4(light->getColor().x, light->getColor().y, light->getColor().z, light->getPower());
+        lightCb->lightPosition[lightCb->lightsSize] = XMFLOAT4(light->getPosition().x, light->getPosition().y, light->getPosition().z, 0);
+        lightCb->lightDirection[lightCb->lightsSize] = XMFLOAT4(light->getDirection().x, light->getDirection().y, light->getDirection().z, 0);
+        lightCb->smViewProjectionMatrix[lightCb->lightsSize] = light->smViewProjectionMatrix;
+        lightCb->lightsSize++;
+        if (lightCb->lightsSize >= 8) {
             break;
         }
     }
@@ -274,15 +274,13 @@ void SceneImpl::renderDeferred(SwapChain &swapChain, RenderData &renderData, Com
         }
     }*/
 
-    const D3D12_CPU_DESCRIPTOR_HANDLE rts[3] = {
-        renderData.getGBufferAlbedo().getRtv(), renderData.getGBufferNormal().getRtv(), renderData.getGBufferSpecular().getRtv()};
-    
-    commandList.getCommandList()->OMSetRenderTargets(3, rts, FALSE, &renderData.getDepthStencilBuffer().getDsv());
+    const Resource *rts[] = {&renderData.getGBufferAlbedo(), &renderData.getGBufferNormal(), &renderData.getGBufferSpecular()};
+    commandList.OMSetRenderTargets(rts, renderData.getDepthStencilBuffer());
 
-	//Draw NORMAL
+    //Draw NORMAL
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_NORMAL);
     //commandList.setCbvInDescriptorTable(2, 0, lightConstantBuffer);
-    
+
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = object->getMesh();
         if (mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
@@ -324,26 +322,51 @@ void SceneImpl::renderDeferred(SwapChain &swapChain, RenderData &renderData, Com
         }
     }
 
-	// Lighting
-	commandList.transitionBarrier(renderData.getGBufferAlbedo(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+
+    commandList.transitionBarrier(renderData.getGBufferAlbedo(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getGBufferNormal(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getGBufferSpecular(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getDepthStencilBuffer(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 
-    commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_LIGHTING);
-	
-    const D3D12_CPU_DESCRIPTOR_HANDLE lightingRts[2] = {
-        output.getRtv(), renderData.getBloomMap().getRtv()};
 
-    commandList.getCommandList()->OMSetRenderTargets(2, lightingRts, FALSE, nullptr);
+    // SSAO
+    commandList.transitionBarrier(renderData.getSsaoMap(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+    commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SSAO);
+
+    const Resource *ssaoRts[] = { &renderData.getSsaoMap() };
+    commandList.OMSetRenderTargetsNoDepth(ssaoRts);
+
+    commandList.setSrvInDescriptorTable(0, 0, renderData.getGBufferNormal());
+    commandList.setSrvInDescriptorTable(0, 1, renderData.getDepthStencilBuffer());
+
+    SsaoCB ssaoCB;
+    ssaoCB.screenWidth = static_cast<float>(swapChain.getWidth());
+    ssaoCB.screenHeight = static_cast<float>(swapChain.getHeight());
+    ssaoCB.viewMatrixInverse = viewMatrixInverse;
+    ssaoCB.projMatrixInverse = projMatrixInverse;
+    commandList.setGraphicsRoot32BitConstant(1, ssaoCB);
+
+    commandList.IASetVertexBuffer(fullscreenVB);
+
+    commandList.draw(6u);
+
+    commandList.transitionBarrier(renderData.getSsaoMap(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    // Lighting
+
+    commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_LIGHTING);
+
+    const Resource *lightingRts[] = {&output, &renderData.getBloomMap()};
+    commandList.OMSetRenderTargetsNoDepth(lightingRts);
 
     commandList.setCbvInDescriptorTable(0, 0, lightConstantBuffer);
     commandList.setSrvInDescriptorTable(0, 1, renderData.getGBufferAlbedo());
     commandList.setSrvInDescriptorTable(0, 2, renderData.getGBufferNormal());
     commandList.setSrvInDescriptorTable(0, 3, renderData.getGBufferSpecular());
     commandList.setSrvInDescriptorTable(0, 4, renderData.getDepthStencilBuffer());
+    commandList.setSrvInDescriptorTable(0, 5, renderData.getSsaoMap());
     for (auto shadowMapIndex = 0u; shadowMapIndex < 8; shadowMapIndex++) {
-        commandList.setSrvInDescriptorTable(0, shadowMapIndex + 5, renderData.getShadowMap(shadowMapIndex));
+        commandList.setSrvInDescriptorTable(0, shadowMapIndex + 6, renderData.getShadowMap(shadowMapIndex));
     }
 
     InverseViewProj invVP;
@@ -351,9 +374,11 @@ void SceneImpl::renderDeferred(SwapChain &swapChain, RenderData &renderData, Com
     invVP.projMatrixInverse = projMatrixInverse;
     commandList.setGraphicsRoot32BitConstant(1, invVP);
 
-	commandList.IASetVertexBuffer(fullscreenVB);
+    commandList.IASetVertexBuffer(fullscreenVB);
 
-	commandList.draw(6u);
+    commandList.draw(6u);
+
+
 
 }
 
@@ -490,7 +515,7 @@ void SceneImpl::renderD2DTexts(SwapChain &swapChain) {
         // TODO: this call as TextImpl method
         d2dDeviceContext->DrawText(
             txt->getText().c_str(),
-            txt->getText().size(),
+            static_cast<UINT>(txt->getText().size()),
             txt->m_textFormat.Get(),
             &textRect,
             txt->m_textBrush.Get());

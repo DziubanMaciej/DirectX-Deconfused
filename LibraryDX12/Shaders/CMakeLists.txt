@@ -1,5 +1,6 @@
 add_shaders_and_cmake_file(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/pixel.hlsl                 Pixel
+    ${CMAKE_CURRENT_SOURCE_DIR}/pixel_ssao.hlsl        Pixel
     ${CMAKE_CURRENT_SOURCE_DIR}/pixel_lighting.hlsl        Pixel
     ${CMAKE_CURRENT_SOURCE_DIR}/pixel_normal.hlsl          Pixel
     ${CMAKE_CURRENT_SOURCE_DIR}/pixel_normal_texture.hlsl  Pixel

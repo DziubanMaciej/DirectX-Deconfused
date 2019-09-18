@@ -21,7 +21,8 @@ Texture2D gBufferAlbedo : register(t0);
 Texture2D gBufferNormal : register(t1);
 Texture2D gBufferSpecular : register(t2);
 Texture2D gBufferDepth : register(t3);
-Texture2D shadowMaps[8] : register(t4);
+Texture2D ssaoMap : register(t4);
+Texture2D shadowMaps[8] : register(t5);
 
 SamplerState g_sampler : register(s0);
 
@@ -36,24 +37,26 @@ struct PS_OUT {
 
 PS_OUT main(PixelShaderInput IN) : SV_Target {
 
-	const float uBase = IN.Position.x / screenWidth;
+    const float uBase = IN.Position.x / screenWidth;
     const float vBase = IN.Position.y / screenHeight;
 
-	float INdepth = gBufferDepth.Sample(g_sampler, float2(uBase, vBase)).r;
+    float INdepth = gBufferDepth.Sample(g_sampler, float2(uBase, vBase)).r;
 
-	if (INdepth >= 1) {
-            discard;    
-	}
+    if (INdepth >= 1) {
+        discard;
+    }
 
-	float4 H = float4((uBase)*2 - 1, (1 - vBase)*2 - 1, INdepth, 1.0);
+    float4 H = float4((uBase)*2 - 1, (1 - vBase) * 2 - 1, INdepth, 1.0);
     float4 D = mul(invVP.projMatrixInverse, H);
     float4 INworldPosition = mul(invVP.viewMatrixInverse, (D / D.w));
 
     float4 INnormal = gBufferNormal.Sample(g_sampler, float2(uBase, vBase));
     float4 INspecularity = gBufferSpecular.Sample(g_sampler, float2(uBase, vBase));
     float4 INalbedo = gBufferAlbedo.Sample(g_sampler, float2(uBase, vBase));
+    float INssao = ssaoMap.Sample(g_sampler, float2(uBase, vBase)).r;
 
-    float4 OUT_Color = float4(ambientLight.xyz, 1);
+    //float4 OUT_Color = float4(ambientLight.xyz, 1);
+    float4 OUT_Color = float4(0, 0, 0, 1);
 
     for (int i = 0; i < lightsSize; i++) {
 
@@ -109,15 +112,17 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
         OUT_Color.xyz = OUT_Color.xyz + (tempLightColor.xyz + INalbedo) * tempLightPower * (normalPower + specularPower) * directionPower * shadowFactor;
     }
 
-	PS_OUT result;
+    PS_OUT result;
 
-	result.scene = OUT_Color;
+    OUT_Color.xyz = OUT_Color.xyz + INspecularity.x * ambientLight.xyz;
+
+    result.scene = OUT_Color * INssao;
 
     //float brightness = dot(OUT_Color.rgb, float3(0.2126, 0.7152, 0.0722));
     //if (brightness > 0.5) {
     //    result.bloomMap = result.scene;
     //} else {
-        result.bloomMap = float4(0, 0, 0, 1); // TO-DO bloom
+    result.bloomMap = float4(0, 0, 0, 1); // TO-DO bloom
     //}
 
     return result;

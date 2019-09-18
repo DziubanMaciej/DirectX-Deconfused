@@ -18,7 +18,7 @@ struct PS_OUT {
 
 PS_OUT main(PixelShaderInput IN) : SV_Target {
 
-	PS_OUT result;
+    PS_OUT result;
 
     result.gBufferAlbedo = float4(op.objectColor, 1);
     result.gBufferNormal = normalize(IN.Normal);

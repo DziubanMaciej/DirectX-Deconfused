@@ -42,6 +42,13 @@ struct PostProcessApplyBloomCB {
     float screenHeight;
 };
 
+struct SsaoCB {
+    float screenWidth;
+    float screenHeight;
+    XMMATRIX viewMatrixInverse;
+    XMMATRIX projMatrixInverse;
+};
+
 struct PostProcessGaussianBlurData {
     PostProcessGaussianBlurCB cb;
     UINT passCount;

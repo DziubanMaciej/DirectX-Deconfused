@@ -56,6 +56,8 @@ public:
 
     template <UINT renderTargetsCount>
     void OMSetRenderTargets(const Resource *(&renderTargets)[renderTargetsCount], const Resource &depthStencilBuffer);
+    template <UINT renderTargetsCount>
+    void OMSetRenderTargetsNoDepth(const Resource *(&renderTargets)[renderTargetsCount]);
     void OMSetRenderTarget(const Resource &renderTarget, const Resource &depthStencilBuffer);
     void OMSetRenderTargetDepthOnly(const Resource &depthStencilBuffer);
     void OMSetRenderTargetNoDepth(const Resource &renderTarget);
@@ -113,6 +115,20 @@ inline void CommandList::OMSetRenderTargets(const Resource *(&renderTargets)[ren
         rtvs[rtIndex] = renderTargets[rtIndex]->getRtv();
     }
     commandList->OMSetRenderTargets(renderTargetsCount, rtvs, FALSE, &depthStencilBuffer.getDsv());
+    addUsedResources(resources, renderTargetsCount);
+    addUsedResource(depthStencilBuffer.getResource());
+}
+
+template<UINT renderTargetsCount>
+inline void CommandList::OMSetRenderTargetsNoDepth(const Resource *(&renderTargets)[renderTargetsCount])
+{
+    ID3D12ResourcePtr resources[renderTargetsCount];
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvs[renderTargetsCount];
+    for (auto rtIndex = 0u; rtIndex < renderTargetsCount; rtIndex++) {
+        resources[rtIndex] = renderTargets[rtIndex]->getResource();
+        rtvs[rtIndex] = renderTargets[rtIndex]->getRtv();
+    }
+    commandList->OMSetRenderTargets(renderTargetsCount, rtvs, FALSE, nullptr);
     addUsedResources(resources, renderTargetsCount);
 }
 
