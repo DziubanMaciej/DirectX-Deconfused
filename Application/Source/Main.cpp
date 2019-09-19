@@ -55,12 +55,12 @@ private:
 
         std::unordered_map<std::string, MeshCreationData> meshMap = {
             {"teapot", {L"Resources/meshes/teapot_normals.obj", false}},
-            //{"cube", {L"Resources/meshes/cube.obj", false}},
             {"cubeNormal", {L"Resources/meshes/cube_normals.obj", false}},
             {"actor", {L"Resources/meshes/dennis.obj", true}},
             {"dxd", {L"Resources/meshes/dxd_comicsans.obj", false}},
             {"intelMesh", {L"Resources/meshes/corei7.obj", false}},
-            {"car", {L"Resources/meshes/porshe.obj", true}}};
+            {"aventadorMesh", {L"Resources/meshes/aventador.obj", false}},
+            {"porsheMesh", {L"Resources/meshes/porshe.obj", true}}};
         for (auto mesh : meshMap) {
             const auto creationData = mesh.second;
             meshes.insert({mesh.first, DXD::Mesh::createFromObj(*application, creationData.filePath, creationData.useTextures, true)});
@@ -79,9 +79,9 @@ private:
                 {"flatMesh1", "cubeNormal"},
                 {"intel", "intelMesh"},
                 {"extraFlatMesh1", "cubeNormal"},
-                {"carMesh1", "car"},
+                {"aventador", "aventadorMesh"},
+                {"porshe", "porsheMesh"},
                 {"actorMesh1", "actor"}};
-            //{"dxdMesh1", "dxd"}};
 
             for (auto object : meshObjectMap) {
                 objects.insert({object.first, DXD::Object::create(*meshes[object.second])});
@@ -117,18 +117,23 @@ private:
 
             objects["flatMesh1"]->setPosition(0, -2.5, 0);
             objects["flatMesh1"]->setSpecularity(0.2f);
-            objects["flatMesh1"]->setScale(10, 0.5, 10);
+            objects["flatMesh1"]->setScale(20, 0.5, 10);
 
             objects["extraFlatMesh1"]->setPosition(0, -4.0, 0);
             objects["extraFlatMesh1"]->setSpecularity(0.2f);
             objects["extraFlatMesh1"]->setScale(100, 1.0f, 100);
             objects["extraFlatMesh1"]->setColor(126.0f / 255.0f, 200.0f / 255.0f, 90.0f / 255.0f);
 
-            objects["carMesh1"]->setPosition(0, -1, -4); // y -2 for aventador
-            objects["carMesh1"]->setColor(0.1f, 0, 0.1f);
-            objects["carMesh1"]->setSpecularity(0.8f);
-            objects["carMesh1"]->setScale(0.9f, 0.9f, 0.9f);
-            objects["carMesh1"]->setTexture(porsheTexture.get());
+            objects["porshe"]->setPosition(0, -1, -4);
+            objects["porshe"]->setSpecularity(0.8f);
+            objects["porshe"]->setScale(0.9f, 0.9f, 0.9f);
+            objects["porshe"]->setTexture(porsheTexture.get());
+
+            objects["aventador"]->setPosition(-14, -2, 0);
+            objects["aventador"]->setColor(0.0f, 113.0f / 255.0f, 197.0f/255.0f);
+            objects["aventador"]->setSpecularity(0.8f);
+            objects["aventador"]->setScale(0.9f, 0.9f, 0.9f);
+            objects["aventador"]->setRotation(XMFLOAT3(0, 1, 0), -90);
 
             objects["actorMesh1"]->setPosition(-2, -2, -8);
             objects["actorMesh1"]->setScale(0.01f, 0.01f, 0.01f);
@@ -136,10 +141,6 @@ private:
             objects["actorMesh1"]->setSpecularity(0.02f);
             objects["actorMesh1"]->setColor(1, 224.0f / 255.0f, 189.0f / 255.0f);
             objects["actorMesh1"]->setTexture(dennisTexture.get());
-
-            //objects["dxdMesh1"]->setPosition(0, 2, 15);
-            //objects["dxdMesh1"]->setScale(20.f, 20.f, 20.f);
-            //objects["dxdMesh1"]->setRotation({0, 1, 0}, static_cast<float>(M_PI));
         }
         DXD::log("Done!\n");
     }
@@ -254,8 +255,8 @@ private:
         static float rotation = 0.f;
         rotation += 0.000001f * deltaTimeMicroseconds;
 
-        objects["carMesh1"]->setRotation(XMFLOAT3(0, 1, 0), rotation - 45); // +180 for aventador
-        objects["carMesh1"]->setPosition(7 * sinf(rotation) * 0.6f, -1.475f, 7 * cosf(rotation) * 0.6f);
+        objects["porshe"]->setRotation(XMFLOAT3(0, 1, 0), rotation - 45); // +180 for aventador
+        objects["porshe"]->setPosition(7 * sinf(rotation) * 0.6f, -1.475f, 7 * cosf(rotation) * 0.6f);
         objects["teapotMesh2"]->setRotation(rotation, rotation, rotation);
     }
 

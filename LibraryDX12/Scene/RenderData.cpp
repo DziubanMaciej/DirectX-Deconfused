@@ -49,7 +49,7 @@ void RenderData::resize(int width, int height) {
     gBufferNormalDesc.Height = height;
     gBufferNormalDesc.DepthOrArraySize = 1;
     gBufferNormalDesc.MipLevels = 0;
-    gBufferNormalDesc.Format = DXGI_FORMAT_R8G8B8A8_SNORM;
+    gBufferNormalDesc.Format = DXGI_FORMAT_R16G16B16A16_SNORM;
     gBufferNormalDesc.SampleDesc.Count = 1;
     gBufferNormalDesc.SampleDesc.Quality = 0;
     gBufferNormalDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;

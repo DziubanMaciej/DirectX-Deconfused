@@ -137,7 +137,7 @@ void PipelineStateController::compilePipelineStateNormal(RootSignature &rootSign
         .VS(L"vertex_normal.hlsl")
         .PS(L"pixel_normal.hlsl")
         .setRenderTargetsCount(3)
-        .setRenderTargetFormat(1, DXGI_FORMAT_R8G8B8A8_SNORM)
+        .setRenderTargetFormat(1, DXGI_FORMAT_R16G16B16A16_SNORM)
         .compile(device, pipelineState);
 }
 
@@ -173,7 +173,7 @@ void PipelineStateController::compilePipelineStateTextureNormal(RootSignature &r
         .VS(L"vertex_normal_texture.hlsl")
         .PS(L"pixel_normal_texture.hlsl")
         .setRenderTargetsCount(3)
-        .setRenderTargetFormat(1, DXGI_FORMAT_R8G8B8A8_SNORM)
+        .setRenderTargetFormat(1, DXGI_FORMAT_R16G16B16A16_SNORM)
         .compile(device, pipelineState);
 }
 
