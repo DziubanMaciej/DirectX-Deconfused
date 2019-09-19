@@ -137,7 +137,7 @@ private:
 
             objects["actorMesh1"]->setPosition(-2, -2, -8);
             objects["actorMesh1"]->setScale(0.01f, 0.01f, 0.01f);
-            objects["actorMesh1"]->setRotation(XMFLOAT3(0, 1, 0), -90);
+            objects["actorMesh1"]->setRotation(XMFLOAT3(0, 1, 0), 90);
             objects["actorMesh1"]->setSpecularity(0.02f);
             objects["actorMesh1"]->setColor(1, 224.0f / 255.0f, 189.0f / 255.0f);
             objects["actorMesh1"]->setTexture(dennisTexture.get());
