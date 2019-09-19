@@ -82,6 +82,7 @@ void CameraImpl::setFarZ(float val) {
     this->dirtyProj = true;
     this->farZ = val;
 }
+
 XMMATRIX CameraImpl::getViewMatrix() {
     if (dirtyView) {
         dirtyView = false;
@@ -96,4 +97,20 @@ XMMATRIX CameraImpl::getProjectionMatrix() {
         projectionMatrix = XMMatrixPerspectiveFovLH(fovAngleY, aspectRatio, nearZ, farZ);
     }
     return projectionMatrix;
+}
+
+XMMATRIX CameraImpl::getInvViewMatrix() {
+    if (dirtyView) {
+        dirtyView = false;
+        viewMatrix = XMMatrixLookAtLH(eyePosition, focusPoint, upDirection);
+    }
+    return XMMatrixInverse(nullptr, viewMatrix);
+}
+
+XMMATRIX CameraImpl::getInvProjectionMatrix() {
+    if (dirtyProj) {
+        dirtyProj = false;
+        projectionMatrix = XMMatrixPerspectiveFovLH(fovAngleY, aspectRatio, nearZ, farZ);
+    }
+    return XMMatrixInverse(nullptr, projectionMatrix);
 }

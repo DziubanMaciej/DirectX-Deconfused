@@ -136,7 +136,7 @@ void RenderData::resize(int width, int height) {
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
         &ssaoMapDesc,
-        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
         nullptr);
     ssaoMap->createSrv(nullptr);
     ssaoMap->createRtv(nullptr);

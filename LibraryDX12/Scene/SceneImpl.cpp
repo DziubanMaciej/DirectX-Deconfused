@@ -220,9 +220,6 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
     XMMATRIX projectionMatrix = camera->getProjectionMatrix();
     XMMATRIX vpMatrix = XMMatrixMultiply(viewMatrix, projectionMatrix);
 
-    XMMATRIX viewMatrixInverse = XMMatrixInverse(nullptr, viewMatrix);
-    XMMATRIX projMatrixInverse = XMMatrixInverse(nullptr, projectionMatrix);
-
     // LightingConstantBuffer
     auto lightCb = lightConstantBuffer.getData<LightingConstantBuffer>();
     lightCb->cameraPosition = XMFLOAT4(camera->getEyePosition().x, camera->getEyePosition().y, camera->getEyePosition().z, 1);
@@ -321,12 +318,6 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
 void SceneImpl::renderSSAO(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, VertexBuffer &fullscreenVB) {
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
 
-    XMMATRIX viewMatrix = camera->getViewMatrix();
-    XMMATRIX projectionMatrix = camera->getProjectionMatrix();
-
-    XMMATRIX viewMatrixInverse = XMMatrixInverse(nullptr, viewMatrix);
-    XMMATRIX projMatrixInverse = XMMatrixInverse(nullptr, projectionMatrix);
-
     commandList.transitionBarrier(renderData.getSsaoMap(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SSAO);
@@ -340,8 +331,8 @@ void SceneImpl::renderSSAO(SwapChain &swapChain, RenderData &renderData, Command
     SsaoCB ssaoCB;
     ssaoCB.screenWidth = static_cast<float>(swapChain.getWidth());
     ssaoCB.screenHeight = static_cast<float>(swapChain.getHeight());
-    ssaoCB.viewMatrixInverse = viewMatrixInverse;
-    ssaoCB.projMatrixInverse = projMatrixInverse;
+    ssaoCB.viewMatrixInverse = camera->getInvViewMatrix();
+    ssaoCB.projMatrixInverse = camera->getInvProjectionMatrix();
     commandList.setGraphicsRoot32BitConstant(1, ssaoCB);
 
     commandList.IASetVertexBuffer(fullscreenVB);
@@ -353,12 +344,6 @@ void SceneImpl::renderSSAO(SwapChain &swapChain, RenderData &renderData, Command
 
 void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output, VertexBuffer &fullscreenVB) {
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
-
-    XMMATRIX viewMatrix = camera->getViewMatrix();
-    XMMATRIX projectionMatrix = camera->getProjectionMatrix();
-
-    XMMATRIX viewMatrixInverse = XMMatrixInverse(nullptr, viewMatrix);
-    XMMATRIX projMatrixInverse = XMMatrixInverse(nullptr, projectionMatrix);
 
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_LIGHTING);
 
@@ -382,8 +367,8 @@ void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, Com
     }
 
     InverseViewProj invVP;
-    invVP.viewMatrixInverse = viewMatrixInverse;
-    invVP.projMatrixInverse = projMatrixInverse;
+    invVP.viewMatrixInverse = camera->getInvViewMatrix();
+    invVP.projMatrixInverse = camera->getInvProjectionMatrix();
     commandList.setGraphicsRoot32BitConstant(1, invVP);
 
     commandList.IASetVertexBuffer(fullscreenVB);
@@ -551,6 +536,9 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
 
     // SSAO
     renderSSAO(swapChain, renderData, commandList, *postProcessVB);
+
+    // SSR
+    // to do
 
     // Lighting
     const auto postProcessesCount = getEnabledPostProcessesCount();

@@ -37,6 +37,8 @@ public:
 
     XMMATRIX getViewMatrix();
     XMMATRIX getProjectionMatrix();
+    XMMATRIX getInvViewMatrix();
+    XMMATRIX getInvProjectionMatrix();
 
 protected:
     XMVECTOR eyePosition;
