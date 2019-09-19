@@ -55,7 +55,6 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
     float4 INalbedo = gBufferAlbedo.Sample(g_sampler, float2(uBase, vBase));
     float INssao = ssaoMap.Sample(g_sampler, float2(uBase, vBase)).r;
 
-    //float4 OUT_Color = float4(ambientLight.xyz, 1);
     float4 OUT_Color = float4(0, 0, 0, 1);
 
     for (int i = 0; i < lightsSize; i++) {
@@ -65,14 +64,14 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
         smCoords.x = smCoords.x / smCoords.w / 2.0f + 0.5f;
         smCoords.y = -smCoords.y / smCoords.w / 2.0f + 0.5f;
 
-        float shadowFactor = 9;
+        float shadowFactor = 25;
         float smDepth = 0;
 
         if (smCoords.x >= 0 && smCoords.x <= 1) {
             if (smCoords.y >= 0 && smCoords.y <= 1) {
 
-                for (int ox = -1; ox < 2; ox++) {
-                    for (int oy = -1; oy < 2; oy++) {
+                for (int ox = -2; ox < 3; ox++) {
+                    for (int oy = -2; oy < 3; oy++) {
                         float2 offset = float2(float(ox) / 2048.0f, float(oy) / 2048.0f);
                         smDepth = shadowMaps[i].Sample(g_sampler, smCoords.xy + offset).r;
 
@@ -87,7 +86,7 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
             }
         }
 
-        shadowFactor = shadowFactor / 9;
+        shadowFactor = shadowFactor / 25;
 
         //Light color
         float3 tempLightColor = lightColor[i].xyz / 3;
@@ -109,12 +108,16 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
         float3 lightDirNorm = normalize(lightDirection[i].xyz);
         float directionPower = pow(max((dot(-lightPositionNorm.xyz, lightDirNorm.xyz)), 0.0), 4);
 
-        OUT_Color.xyz = OUT_Color.xyz + (tempLightColor.xyz + INalbedo) * tempLightPower * (normalPower + specularPower) * directionPower * shadowFactor;
+        OUT_Color.xyz = OUT_Color.xyz + (tempLightColor.xyz + INalbedo.xyz) * tempLightPower * (normalPower + specularPower) * directionPower * shadowFactor;
     }
 
-    PS_OUT result;
 
-    OUT_Color.xyz = OUT_Color.xyz + INspecularity.x * ambientLight.xyz;
+    float3 ambientLightColor = ambientLight.xyz / 4;
+    float ambientLightPower = distance(float3(0,0,0), ambientLight.xyz) * 0.25f;
+
+    OUT_Color.xyz = OUT_Color.xyz + ((INalbedo + ambientLightColor) * ambientLightPower * ( INspecularity.x / 10.0f + 1.0f));
+
+    PS_OUT result;
 
     result.scene = OUT_Color * INssao;
 

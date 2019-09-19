@@ -57,8 +57,9 @@ private:
             {"teapot", {L"Resources/meshes/teapot_normals.obj", false}},
             //{"cube", {L"Resources/meshes/cube.obj", false}},
             {"cubeNormal", {L"Resources/meshes/cube_normals.obj", false}},
-            {"actor", {L"Resources/meshes/dennis.obj", false}},
+            {"actor", {L"Resources/meshes/dennis.obj", true}},
             {"dxd", {L"Resources/meshes/dxd_comicsans.obj", false}},
+            {"intelMesh", {L"Resources/meshes/corei7.obj", false}},
             {"car", {L"Resources/meshes/porshe.obj", true}}};
         for (auto mesh : meshMap) {
             const auto creationData = mesh.second;
@@ -74,7 +75,9 @@ private:
                 {"teapotMesh3", "teapot"},
                 {"cubeNormalMesh1", "cubeNormal"},
                 {"cubeNormalMesh2", "cubeNormal"},
+                {"cubeNormalMesh3", "cubeNormal"},
                 {"flatMesh1", "cubeNormal"},
+                {"intel", "intelMesh"},
                 {"extraFlatMesh1", "cubeNormal"},
                 {"carMesh1", "car"},
                 {"actorMesh1", "actor"} };
@@ -86,36 +89,53 @@ private:
 
             objects["teapotMesh1"]->setPosition(8, -1, 0);
             objects["teapotMesh1"]->setScale(0.1f, 0.1f, 0.1f);
-            objects["teapotMesh1"]->setColor(0.0f, 1.0f, 0.0f);
+            objects["teapotMesh1"]->setColor(0.0f, 0.8f, 0.0f);
+            objects["teapotMesh1"]->setSpecularity(0.7f);
 
             objects["teapotMesh2"]->setPosition(0, 1, 0);
             objects["teapotMesh2"]->setScale(0.1f, 0.1f, 0.1f);
+            objects["teapotMesh2"]->setColor(0.5f, 0.5f, 0.0f);
+            objects["teapotMesh2"]->setSpecularity(0.7f);
 
             objects["teapotMesh3"]->setPosition(-8, -1, 0);
             objects["teapotMesh3"]->setScale(0.1f, 0.1f, 0.1f);
-            objects["teapotMesh3"]->setColor(0.0f, 0.0f, 1.0f);
+            objects["teapotMesh3"]->setColor(0.0f, 0.0f, 0.8f);
+            objects["teapotMesh3"]->setSpecularity(0.7f);
 
-            objects["cubeNormalMesh1"]->setPosition(-8, -1, -6);
+            objects["cubeNormalMesh1"]->setPosition(-8, -1, -5.5);
+            objects["cubeNormalMesh1"]->setScale(1, 1, 2);
+            objects["cubeNormalMesh1"]->setSpecularity(1);
 
             objects["cubeNormalMesh2"]->setPosition(9, -1, -9);
 
-            objects["flatMesh1"]->setPosition(0, -3, 0);
-            objects["flatMesh1"]->setSpecularity(0.2f);
-            objects["flatMesh1"]->setScale(10, 1, 10);
+            objects["cubeNormalMesh3"]->setPosition(0, -1.9, 0);
+            objects["cubeNormalMesh3"]->setScale(2, 0.1f, 2);
+            objects["cubeNormalMesh3"]->setSpecularity(1);
 
-            objects["extraFlatMesh1"]->setPosition(0, -5, 0);
-            objects["extraFlatMesh1"]->setSpecularity(0);
-            objects["extraFlatMesh1"]->setScale(100, 1, 100);
+            objects["intel"]->setPosition(0, -1.9, -8);
+            objects["intel"]->setScale(0.1f, 0.1f, 0.1f);
+
+            objects["flatMesh1"]->setPosition(0, -2.5, 0);
+            objects["flatMesh1"]->setSpecularity(0.2f);
+            objects["flatMesh1"]->setScale(10, 0.5, 10);
+
+            objects["extraFlatMesh1"]->setPosition(0, -4.0, 0);
+            objects["extraFlatMesh1"]->setSpecularity(0.2f);
+            objects["extraFlatMesh1"]->setScale(100, 1.0f, 100);
+            objects["extraFlatMesh1"]->setColor(126.0f/255.0f, 200.0f/255.0f, 90.0f/255.0f);
 
             objects["carMesh1"]->setPosition(0, -1, -4); // y -2 for aventador
             objects["carMesh1"]->setColor(0.1f, 0, 0.1f);
-            objects["carMesh1"]->setSpecularity(3);
+            objects["carMesh1"]->setSpecularity(0.8f);
             objects["carMesh1"]->setScale(0.9f, 0.9f, 0.9f);
             objects["carMesh1"]->setTexture(porsheTexture.get());
 
             objects["actorMesh1"]->setPosition(-2, -2, -8);
             objects["actorMesh1"]->setScale(0.01f, 0.01f, 0.01f);
             objects["actorMesh1"]->setRotation(XMFLOAT3(0, 1, 0), -90);
+            objects["actorMesh1"]->setSpecularity(0.02f);
+            objects["actorMesh1"]->setColor(1, 224.0f/255.0f, 189.0f/255.0f);
+            objects["actorMesh1"]->setTexture(dennisTexture.get());
 
             //objects["dxdMesh1"]->setPosition(0, 2, 15);
             //objects["dxdMesh1"]->setScale(20.f, 20.f, 20.f);
@@ -138,7 +158,7 @@ private:
             lights["sunLight"]->setColor(1.0f, 1.0f, 1.0f);
             lights["sunLight"]->setPosition(-12, 12, 6);
             lights["sunLight"]->setDirection(1, -1, -0.5);
-            lights["sunLight"]->setPower(16);
+            lights["sunLight"]->setPower(12);
             lights["sunLight"]->setType(DXD::LightType::DIRECTIONAL_LIGHT);
 
             lights["moonLight"]->setColor(0.0f, 1.0f, 1.0f);
@@ -160,6 +180,9 @@ private:
     void prepTextures() {
         porsheTexture = DXD::Texture::createFromFile(*application, L"Resources/textures/porsche.bmp");
         assert(porsheTexture);
+
+        dennisTexture = DXD::Texture::createFromFile(*application, L"Resources/textures/dennis.jpg");
+        assert(dennisTexture);
     }
     void prepCamera() {
         DXD::log("Preparing camera...\n");
@@ -197,8 +220,8 @@ private:
     void prepScene() {
         DXD::log("Preparing scene...\n");
         scene = DXD::Scene::create(*application);
-        scene->setBackgroundColor(0.2f, 0.8f, 1.0f);
-        scene->setAmbientLight(0.2f, 0.2f, 0.2f);
+        scene->setBackgroundColor(0.7f, 1.0f, 1.0f);
+        scene->setAmbientLight(1.0f, 1.0f, 250.0f/255.0f);
         scene->setCamera(*camera);
 
         for (auto &object : objects) {
@@ -368,6 +391,7 @@ private:
 
     // TODO: unordered_map for three below
     std::unique_ptr<DXD::Texture> porsheTexture;
+    std::unique_ptr<DXD::Texture> dennisTexture;
     std::unique_ptr<DXD::Scene> scene;
     std::unique_ptr<DXD::Camera> camera;
 };

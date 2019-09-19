@@ -40,7 +40,7 @@ float doAmbientOcclusion(float2 tcoord, float2 uv, float3 pos, float3 norm)
     float3 diff = getPositionFromDepth(tcoord.x + uv.x, tcoord.y + uv.y, depth).xyz - pos;
     const float3 v = normalize(diff);
     const float d = length(diff) * 2.0f;
-    return max(0.0, dot(norm, v) - 0.01f)*(1.0f / (1.0f + d)) * 4.0f;
+    return max(0.0, dot(norm, v) - 0.01f)*(1.0f / (1.0f + d)) * 3.0f;
 }
 
 float4 main(PixelShaderInput IN) : SV_Target {
