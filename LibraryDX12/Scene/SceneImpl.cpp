@@ -201,25 +201,16 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
     }
 }
 
-void SceneImpl::renderDeferred(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output, VertexBuffer &fullscreenVB) {
+void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, VertexBuffer &fullscreenVB) {
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
 
     // Transition to RENDER_TARGET
-    commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    commandList.transitionBarrier(renderData.getBloomMap(), D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.transitionBarrier(renderData.getGBufferAlbedo(), D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.transitionBarrier(renderData.getGBufferNormal(), D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.transitionBarrier(renderData.getGBufferSpecular(), D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.transitionBarrier(renderData.getDepthStencilBuffer(), D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
-    //commandList.OMSetRenderTarget(output, renderData.getDepthStencilBuffer());
-
-    // Render (clear color)
-    commandList.clearRenderTargetView(output.getRtv(), backgroundColor);
-    commandList.clearRenderTargetView(renderData.getBloomMap().getRtv(), blackColor);
-    //commandList.clearRenderTargetView(renderData.getGBufferAlbedo().getRtv(), blackColor);
-    //commandList.clearRenderTargetView(renderData.getGBufferNormal().getRtv(), blackColor);
-    //commandList.clearRenderTargetView(renderData.getGBufferSpecular().getRtv(), blackColor);
+    // Clear Depth
     commandList.clearDepthStencilView(renderData.getDepthStencilBuffer().getDsv(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
     // View projection matrix
@@ -279,7 +270,6 @@ void SceneImpl::renderDeferred(SwapChain &swapChain, RenderData &renderData, Com
 
     //Draw NORMAL
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_NORMAL);
-    //commandList.setCbvInDescriptorTable(2, 0, lightConstantBuffer);
 
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = object->getMesh();
@@ -322,18 +312,26 @@ void SceneImpl::renderDeferred(SwapChain &swapChain, RenderData &renderData, Com
         }
     }
 
-    // Lighting
     commandList.transitionBarrier(renderData.getGBufferAlbedo(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getGBufferNormal(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getGBufferSpecular(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getDepthStencilBuffer(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+}
 
+void SceneImpl::renderSSAO(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, VertexBuffer &fullscreenVB) {
+    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
 
-    // SSAO
+    XMMATRIX viewMatrix = camera->getViewMatrix();
+    XMMATRIX projectionMatrix = camera->getProjectionMatrix();
+
+    XMMATRIX viewMatrixInverse = XMMatrixInverse(nullptr, viewMatrix);
+    XMMATRIX projMatrixInverse = XMMatrixInverse(nullptr, projectionMatrix);
+
     commandList.transitionBarrier(renderData.getSsaoMap(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SSAO);
 
-    const Resource *ssaoRts[] = { &renderData.getSsaoMap() };
+    const Resource *ssaoRts[] = {&renderData.getSsaoMap()};
     commandList.OMSetRenderTargetsNoDepth(ssaoRts);
 
     commandList.setSrvInDescriptorTable(0, 0, renderData.getGBufferNormal());
@@ -351,9 +349,24 @@ void SceneImpl::renderDeferred(SwapChain &swapChain, RenderData &renderData, Com
     commandList.draw(6u);
 
     commandList.transitionBarrier(renderData.getSsaoMap(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    // Lighting
+}
+
+void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output, VertexBuffer &fullscreenVB) {
+    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+
+    XMMATRIX viewMatrix = camera->getViewMatrix();
+    XMMATRIX projectionMatrix = camera->getProjectionMatrix();
+
+    XMMATRIX viewMatrixInverse = XMMatrixInverse(nullptr, viewMatrix);
+    XMMATRIX projMatrixInverse = XMMatrixInverse(nullptr, projectionMatrix);
 
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_LIGHTING);
+
+    commandList.transitionBarrier(renderData.getBloomMap(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+    commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+    commandList.clearRenderTargetView(renderData.getBloomMap().getRtv(), blackColor);
+    commandList.clearRenderTargetView(output.getRtv(), backgroundColor);
 
     const Resource *lightingRts[] = {&output, &renderData.getBloomMap()};
     commandList.OMSetRenderTargetsNoDepth(lightingRts);
@@ -533,10 +546,16 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     // Render shadow maps
     renderShadowMaps(swapChain, renderData, commandList);
 
-    // Render 3D
+    // GBuffer
+    renderGBuffer(swapChain, renderData, commandList, *postProcessVB);
+
+    // SSAO
+    renderSSAO(swapChain, renderData, commandList, *postProcessVB);
+
+    // Lighting
     const auto postProcessesCount = getEnabledPostProcessesCount();
     auto &renderDeferredOutput = postProcessesCount == 0 ? backBuffer : renderData.getPostProcessRenderTargets().getDestination();
-    renderDeferred(swapChain, renderData, commandList, renderDeferredOutput, *postProcessVB);
+    renderLighting(swapChain, renderData, commandList, renderDeferredOutput, *postProcessVB);
     renderData.getPostProcessRenderTargets().swapResources();
 
     // Render post processes
