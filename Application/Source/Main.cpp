@@ -63,7 +63,7 @@ private:
             {"car", {L"Resources/meshes/porshe.obj", true}}};
         for (auto mesh : meshMap) {
             const auto creationData = mesh.second;
-            meshes.insert({mesh.first, DXD::Mesh::createFromObj(*application, creationData.filePath, creationData.useTextures)});
+            meshes.insert({mesh.first, DXD::Mesh::createFromObj(*application, creationData.filePath, creationData.useTextures, true)});
             assert(meshes[mesh.first]);
         }
 
@@ -80,8 +80,8 @@ private:
                 {"intel", "intelMesh"},
                 {"extraFlatMesh1", "cubeNormal"},
                 {"carMesh1", "car"},
-                {"actorMesh1", "actor"} };
-                //{"dxdMesh1", "dxd"}};
+                {"actorMesh1", "actor"}};
+            //{"dxdMesh1", "dxd"}};
 
             for (auto object : meshObjectMap) {
                 objects.insert({object.first, DXD::Object::create(*meshes[object.second])});
@@ -122,7 +122,7 @@ private:
             objects["extraFlatMesh1"]->setPosition(0, -4.0, 0);
             objects["extraFlatMesh1"]->setSpecularity(0.2f);
             objects["extraFlatMesh1"]->setScale(100, 1.0f, 100);
-            objects["extraFlatMesh1"]->setColor(126.0f/255.0f, 200.0f/255.0f, 90.0f/255.0f);
+            objects["extraFlatMesh1"]->setColor(126.0f / 255.0f, 200.0f / 255.0f, 90.0f / 255.0f);
 
             objects["carMesh1"]->setPosition(0, -1, -4); // y -2 for aventador
             objects["carMesh1"]->setColor(0.1f, 0, 0.1f);
@@ -134,7 +134,7 @@ private:
             objects["actorMesh1"]->setScale(0.01f, 0.01f, 0.01f);
             objects["actorMesh1"]->setRotation(XMFLOAT3(0, 1, 0), -90);
             objects["actorMesh1"]->setSpecularity(0.02f);
-            objects["actorMesh1"]->setColor(1, 224.0f/255.0f, 189.0f/255.0f);
+            objects["actorMesh1"]->setColor(1, 224.0f / 255.0f, 189.0f / 255.0f);
             objects["actorMesh1"]->setTexture(dennisTexture.get());
 
             //objects["dxdMesh1"]->setPosition(0, 2, 15);
@@ -178,10 +178,10 @@ private:
         DXD::log("Done!\n");
     }
     void prepTextures() {
-        porsheTexture = DXD::Texture::createFromFile(*application, L"Resources/textures/porsche.bmp");
+        porsheTexture = DXD::Texture::createFromFile(*application, L"Resources/textures/porsche.bmp", true);
         assert(porsheTexture);
 
-        dennisTexture = DXD::Texture::createFromFile(*application, L"Resources/textures/dennis.jpg");
+        dennisTexture = DXD::Texture::createFromFile(*application, L"Resources/textures/dennis.jpg", true);
         assert(dennisTexture);
     }
     void prepCamera() {
@@ -221,7 +221,7 @@ private:
         DXD::log("Preparing scene...\n");
         scene = DXD::Scene::create(*application);
         scene->setBackgroundColor(0.7f, 1.0f, 1.0f);
-        scene->setAmbientLight(1.0f, 1.0f, 250.0f/255.0f);
+        scene->setAmbientLight(1.0f, 1.0f, 250.0f / 255.0f);
         scene->setCamera(*camera);
 
         for (auto &object : objects) {

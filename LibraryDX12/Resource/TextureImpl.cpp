@@ -12,16 +12,21 @@
 #include <cstdlib>
 
 namespace DXD {
-std::unique_ptr<Texture> Texture::createFromFile(Application &application, const std::wstring &filePath) {
-    return std::unique_ptr<Texture>(new TextureImpl(*static_cast<ApplicationImpl *>(&application), filePath));
+std::unique_ptr<Texture> Texture::createFromFile(Application &application, const std::wstring &filePath, bool asynchronousLoading) {
+    return std::unique_ptr<Texture>(new TextureImpl(*static_cast<ApplicationImpl *>(&application), filePath, asynchronousLoading));
 }
 } // namespace DXD
 
-TextureImpl::TextureImpl(ApplicationImpl &application, const std::wstring &filePath) {
-    auto task = [this, &application, filePath]() {
+TextureImpl::TextureImpl(ApplicationImpl &application, const std::wstring &filePath, bool asynchronousLoading) {
+    if (asynchronousLoading) {
+        auto task = [this, &application, filePath]() {
+            loadAndUpload(application, filePath);
+        };
+        application.getBackgroundWorkerController().pushTask(task, this->loadingComplete);
+    } else {
         loadAndUpload(application, filePath);
-    };
-    application.getBackgroundWorkerController().pushTask(task, this->loadingComplete);
+        this->loadingComplete = true;
+    }
 }
 
 void TextureImpl::loadAndUpload(ApplicationImpl &application, const std::wstring &filePath) {

@@ -12,7 +12,7 @@ class Application;
 
 class EXPORT Texture : NonCopyableAndMovable {
 public:
-    static std::unique_ptr<Texture> createFromFile(Application &application, const std::wstring &filePath);
+    static std::unique_ptr<Texture> createFromFile(Application &application, const std::wstring &filePath, bool asynchronousLoading);
     virtual ~Texture() = default;
 
 protected:

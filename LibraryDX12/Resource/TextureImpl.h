@@ -16,7 +16,7 @@ class ApplicationImpl;
 class TextureImpl : public DXD::Texture, public Resource {
 protected:
     friend class DXD::Texture;
-    TextureImpl(ApplicationImpl &application, const std::wstring &filePath);
+    TextureImpl(ApplicationImpl &application, const std::wstring &filePath, bool asynchronousLoading);
 
 public:
     bool isUploadInProgress() override;

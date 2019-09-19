@@ -21,7 +21,7 @@ public:
 
 protected:
     friend class DXD::Mesh;
-    MeshImpl(ApplicationImpl &application, const std::wstring &filePath, bool useTextures);
+    MeshImpl(ApplicationImpl &application, const std::wstring &filePath, bool useTextures, bool asynchronousLoading);
     ~MeshImpl() {
         // TODO busy waiting, so the object is not deallocated while reference on a worker thread
         while (!loadingComplete.load())

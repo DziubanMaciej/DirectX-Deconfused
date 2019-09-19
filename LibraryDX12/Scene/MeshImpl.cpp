@@ -12,18 +12,24 @@
 
 namespace DXD {
 
-std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const std::wstring &filePath, bool useTextures) {
-    return std::unique_ptr<Mesh>(new MeshImpl(*static_cast<ApplicationImpl *>(&application), filePath, useTextures));
+std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const std::wstring &filePath,
+                                          bool useTextures, bool asynchronousLoading) {
+    return std::unique_ptr<Mesh>(new MeshImpl(*static_cast<ApplicationImpl *>(&application),
+                                              filePath, useTextures, asynchronousLoading));
 }
 } // namespace DXD
 
-MeshImpl::MeshImpl(ApplicationImpl &application, const std::wstring &filePath, bool useTextures)
+MeshImpl::MeshImpl(ApplicationImpl &application, const std::wstring &filePath, bool useTextures, bool asynchronousLoading)
     : application(application) {
-
-    auto task = [this, &application, filePath, useTextures]() {
+    if (asynchronousLoading) {
+        auto task = [this, &application, filePath, useTextures]() {
+            loadAndUploadObj(application, filePath, useTextures);
+        };
+        application.getBackgroundWorkerController().pushTask(task, this->loadingComplete);
+    } else {
         loadAndUploadObj(application, filePath, useTextures);
-    };
-    application.getBackgroundWorkerController().pushTask(task, this->loadingComplete);
+        this->loadingComplete = true;
+    }
 }
 
 void MeshImpl::loadAndUploadObj(ApplicationImpl &application, const std::wstring &filePath, bool useTextures) {
