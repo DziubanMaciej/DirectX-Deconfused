@@ -188,7 +188,7 @@ MeshImpl::LoadResults MeshImpl::loadObj(const std::wstring &filePath, bool useTe
 
 bool MeshImpl::isUploadInProgress() {
     if (!loadingComplete.load()) {
-        return false;
+        return true;
     }
 
     const bool vertexInProgress = this->vertexBuffer->isUploadInProgress();
