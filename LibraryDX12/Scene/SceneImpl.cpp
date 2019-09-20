@@ -242,29 +242,6 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
     }
     lightConstantBuffer.upload();
 
-    // Draw DEFAULT
-    /*commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT);
-    commandList.setCbvInDescriptorTable(2, 0, lightConstantBuffer);
-    const Resource *rts[2] = {&output, &renderData.getBloomMap()};
-    commandList.OMSetRenderTargets(rts, renderData.getDepthStencilBuffer());
-    for (ObjectImpl *object : objects) {
-        MeshImpl &mesh = object->getMesh();
-        if (mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
-            ModelMvp mmvp;
-            mmvp.modelMatrix = object->getModelMatrix();
-            mmvp.modelViewProjectionMatrix = XMMatrixMultiply(mmvp.modelMatrix, vpMatrix);
-            commandList.setGraphicsRoot32BitConstant(0, mmvp);
-
-            ObjectProperties op;
-            op.objectColor = object->getColor();
-            op.objectSpecularity = object->getSpecularity(); //Not supported in objects without normals
-            commandList.setGraphicsRoot32BitConstant(1, op);
-
-            commandList.IASetVertexAndIndexBuffer(mesh);
-            commandList.drawIndexed(static_cast<UINT>(mesh.getIndicesCount()));
-        }
-    }*/
-
     const Resource *rts[] = {&renderData.getGBufferAlbedo(), &renderData.getGBufferNormal(), &renderData.getGBufferSpecular()};
     commandList.OMSetRenderTargets(rts, renderData.getDepthStencilBuffer());
 
