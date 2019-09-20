@@ -22,12 +22,12 @@ public:
     auto &getCommandAllocatorController() { return commandAllocatorController; }
 
     uint64_t executeCommandListsAndSignal(std::vector<CommandList *> &commandLists);
+    uint64_t executeCommandListAndSignal(CommandList &commandList);
     void performResourcesDeletion();
 
     void flush();
 
 private:
-    uint64_t executeCommandListsAndSignal(std::vector<ID3D12CommandList *> &commandListsPtrs);
     static ID3D12CommandQueuePtr createCommandQueue(ID3D12DevicePtr &device, D3D12_COMMAND_LIST_TYPE type);
 
     std::mutex lock;

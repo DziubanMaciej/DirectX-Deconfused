@@ -276,8 +276,7 @@ MeshImpl::UploadResults MeshImpl::uploadToGPU(ApplicationImpl &application, cons
     commandList.close();
 
     // Execute and register obtained allocator and lists to the manager
-    std::vector<CommandList *> commandLists{&commandList};
-    const uint64_t fenceValue = commandQueue.executeCommandListsAndSignal(commandLists);
+    const uint64_t fenceValue = commandQueue.executeCommandListAndSignal(commandList);
 
     // Register upload status for buffers
     results.vertexBuffer->registerUpload(commandQueue, fenceValue);

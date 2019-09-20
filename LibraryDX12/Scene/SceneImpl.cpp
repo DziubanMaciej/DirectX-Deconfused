@@ -35,8 +35,7 @@ SceneImpl::SceneImpl(ApplicationImpl &application)
     commandList.close();
 
     // Execute and register obtained allocator and lists to the manager
-    std::vector<CommandList *> commandLists{&commandList};
-    const uint64_t fenceValue = commandQueue.executeCommandListsAndSignal(commandLists);
+    const uint64_t fenceValue = commandQueue.executeCommandListAndSignal(commandList);
 }
 
 void SceneImpl::setBackgroundColor(float r, float g, float b) {
@@ -577,8 +576,7 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
 
     // Close command list and submit it to the GPU
     commandList.close();
-    std::vector<CommandList *> commandLists{&commandList};
-    const uint64_t fenceValue = commandQueue.executeCommandListsAndSignal(commandLists);
+    const uint64_t fenceValue = commandQueue.executeCommandListAndSignal(commandList);
 
     // D2D
     if (!texts.empty()) {

@@ -89,8 +89,7 @@ void Resource::uploadToGPU(ApplicationImpl &application, const void *data, UINT 
     commandList.close();
 
     // Execute on GPU
-    std::vector<CommandList *> commandLists{&commandList};
-    const auto fence = commandQueue.executeCommandListsAndSignal(commandLists);
+    const auto fence = commandQueue.executeCommandListAndSignal(commandList);
     registerUpload(commandQueue, fence);
 }
 

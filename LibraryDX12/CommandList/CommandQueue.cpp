@@ -33,24 +33,40 @@ ID3D12CommandQueuePtr CommandQueue::createCommandQueue(ID3D12DevicePtr &device, 
 
 // ------------------------------------------------------------------------------ Execute
 
-uint64_t CommandQueue::executeCommandListsAndSignal(std::vector<ID3D12CommandList *> &commandListPtrs) {
-    commandQueue->ExecuteCommandLists(static_cast<UINT>(commandListPtrs.size()), commandListPtrs.data());
-    return fence.signal(commandQueue);
-}
-
 uint64_t CommandQueue::executeCommandListsAndSignal(std::vector<CommandList *> &commandLists) {
     std::unique_lock<std::mutex> lock{this->lock};
 
+    // Convert to vector of pointers to D3D command list objects
     std::vector<ID3D12CommandList *> commandListPtrs;
     for (auto &commandList : commandLists) {
         commandListPtrs.push_back(commandList->getCommandList().Get());
     }
-    const uint64_t fenceValue = executeCommandListsAndSignal(commandListPtrs);
 
+    // Submit work to GPU and signal fence
+    commandQueue->ExecuteCommandLists(static_cast<UINT>(commandListPtrs.size()), commandListPtrs.data());
+    const uint64_t fenceValue = fence.signal(commandQueue);
+
+    // Cleanup the CommandList objects, register child objects to GPU usage tracker
     for (auto &commandList : commandLists) {
         commandList->registerAllData(resourceUsageTracker, fenceValue);
     }
 
+    // Return fence value used for waiting on this command list batch
+    return fenceValue;
+}
+
+uint64_t CommandQueue::executeCommandListAndSignal(CommandList &commandList) {
+    std::unique_lock<std::mutex> lock{this->lock};
+
+    // Submit work to GPU and signal fence
+    ID3D12CommandList *commandListPtr = commandList.getCommandList().Get();
+    commandQueue->ExecuteCommandLists(1u, &commandListPtr);
+    const uint64_t fenceValue = fence.signal(commandQueue);
+
+    // Cleanup the CommandList object, register child objects to GPU usage tracker
+    commandList.registerAllData(resourceUsageTracker, fenceValue);
+
+    // Return fence value used for waiting on this command list batch
     return fenceValue;
 }
 
