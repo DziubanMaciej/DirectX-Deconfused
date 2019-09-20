@@ -207,13 +207,16 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
-    // Transition to RENDER_TARGET
+    // Transition output buffers to correct states
     commandList.transitionBarrier(renderData.getGBufferAlbedo(), D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.transitionBarrier(renderData.getGBufferNormal(), D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.transitionBarrier(renderData.getGBufferSpecular(), D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.transitionBarrier(renderData.getDepthStencilBuffer(), D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
-    // Clear Depth
+    // Clear output buffers
+    commandList.clearRenderTargetView(renderData.getGBufferAlbedo().getRtv(), blackColor);
+    commandList.clearRenderTargetView(renderData.getGBufferNormal().getRtv(), blackColor);
+    commandList.clearRenderTargetView(renderData.getGBufferSpecular().getRtv(), blackColor);
     commandList.clearDepthStencilView(renderData.getDepthStencilBuffer().getDsv(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
     // View projection matrix
