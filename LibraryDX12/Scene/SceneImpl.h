@@ -53,6 +53,9 @@ protected:
     void renderGBuffer(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, VertexBuffer &fullscreenVB);
     void renderSSAO(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, VertexBuffer &fullscreenVB);
     void renderLighting(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output, VertexBuffer &fullscreenVB);
+    static void renderPostProcess(PostProcessImpl &postProcess, CommandList &commandList, VertexBuffer &fullscreenVB,
+                                  Resource *input, PostProcessRenderTargets &renderTargets, Resource *output,
+                                  float screenWidth, float screenHeight);
     static void renderPostProcesses(std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList, VertexBuffer &fullscreenVB,
                                     Resource *input, PostProcessRenderTargets &renderTargets, Resource *output,
                                     size_t enabledPostProcessesCount, float screenWidth, float screenHeight);

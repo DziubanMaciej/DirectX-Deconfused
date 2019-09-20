@@ -8,7 +8,6 @@ RenderData::RenderData(ID3D12DevicePtr &device, DescriptorController &descriptor
       postProcessRenderTargets(device),
       postProcessForBloom(DXD::PostProcess::create()) {
     postProcessForBloom->setGaussianBlur(3, 5);
-    postProcessesForBloom.push_back(static_cast<PostProcessImpl *>(postProcessForBloom.get()));
 }
 
 void RenderData::resize(int width, int height) {

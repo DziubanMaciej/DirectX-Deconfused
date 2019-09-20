@@ -29,7 +29,7 @@ public:
     Resource &getGBufferAlbedo() { return *gBufferAlbedo; }
     Resource &getGBufferNormal() { return *gBufferNormal; }
     Resource &getGBufferSpecular() { return *gBufferSpecular; }
-    auto &getPostProcessesForBloom() { return postProcessesForBloom; }
+    PostProcessImpl &getPostProcessForBloom() { return *static_cast<PostProcessImpl*>(postProcessForBloom.get()); }
 
 private:
     // Base objects
@@ -49,5 +49,4 @@ private:
 
     // Misc
     std::unique_ptr<DXD::PostProcess> postProcessForBloom;
-    std::vector<PostProcessImpl *> postProcessesForBloom = {};
 };
