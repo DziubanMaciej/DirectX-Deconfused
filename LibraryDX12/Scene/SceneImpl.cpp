@@ -443,6 +443,26 @@ void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesse
     }
 }
 
+void SceneImpl::renderBloom(SwapChain &swapChain, CommandList &commandList, PostProcessImpl &bloomBlurEffect, VertexBuffer &fullscreenVB,
+                            Resource &bloomMap, PostProcessRenderTargets &renderTargets, Resource &output) {
+    // Blur the bloom map
+    renderPostProcess(bloomBlurEffect, commandList, fullscreenVB,
+                      &bloomMap, renderTargets, &bloomMap,
+                      static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+
+    // Apply bloom on output buffer
+    PostProcessApplyBloomCB cb = {};
+    cb.screenWidth = static_cast<float>(swapChain.getWidth());
+    cb.screenHeight = static_cast<float>(swapChain.getHeight());
+    commandList.transitionBarrier(bloomMap, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_APPLY_BLOOM);
+    commandList.setGraphicsRoot32BitConstant(0, cb);
+    commandList.setSrvInDescriptorTable(1, 0, bloomMap);
+    commandList.OMSetRenderTargetNoDepth(output);
+    commandList.IASetVertexBuffer(fullscreenVB);
+    commandList.draw(6u);
+}
+
 void SceneImpl::renderPostProcess(PostProcessImpl &postProcess, CommandList &commandList, VertexBuffer &fullscreenVB,
                                   Resource *input, PostProcessRenderTargets &renderTargets, Resource *output,
                                   float screenWidth, float screenHeight) {
@@ -627,23 +647,8 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
                             &renderData.getPostProcessRenderTargets().getSource(), renderData.getPostProcessRenderTargets(), &backBuffer,
                             postProcessesCount, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     }
-
-    // Bloom blur
-    renderPostProcess(renderData.getPostProcessForBloom(), commandListPostProcess, *postProcessVB,
-                      &renderData.getBloomMap(), renderData.getPostProcessRenderTargets(), &renderData.getBloomMap(),
-                      static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
-
-    // Apply bloom
-    PostProcessApplyBloomCB cb = {};
-    cb.screenWidth = static_cast<float>(swapChain.getWidth());
-    cb.screenHeight = static_cast<float>(swapChain.getHeight());
-    commandListPostProcess.transitionBarrier(renderData.getBloomMap(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    commandListPostProcess.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_APPLY_BLOOM);
-    commandListPostProcess.setGraphicsRoot32BitConstant(0, cb);
-    commandListPostProcess.setSrvInDescriptorTable(1, 0, renderData.getBloomMap());
-    commandListPostProcess.OMSetRenderTargetNoDepth(backBuffer);
-    commandListPostProcess.IASetVertexBuffer(*postProcessVB);
-    commandListPostProcess.draw(6u);
+    renderBloom(swapChain, commandListPostProcess, renderData.getPostProcessForBloom(), *postProcessVB,
+                renderData.getBloomMap(), renderData.getPostProcessRenderTargets(), backBuffer);
 
     // If there are no D2D content to render, there will be no implicit transition to present, hence the manual barrier
     if (texts.empty()) {

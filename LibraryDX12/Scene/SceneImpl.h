@@ -59,6 +59,8 @@ protected:
     static void renderPostProcesses(std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList, VertexBuffer &fullscreenVB,
                                     Resource *input, PostProcessRenderTargets &renderTargets, Resource *output,
                                     size_t enabledPostProcessesCount, float screenWidth, float screenHeight);
+    static void renderBloom(SwapChain &swapChain, CommandList &commandList, PostProcessImpl &bloomBlurEffect, VertexBuffer &fullscreenVB,
+                            Resource &bloomMap, PostProcessRenderTargets &renderTargets, Resource &output);
     void renderD2DTexts(SwapChain &swapChain);
 
     // Context
