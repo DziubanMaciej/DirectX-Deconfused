@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Resource/Resource.h"
+#include "CommandList/CommandList.h"
 
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
 #include <string>
@@ -21,6 +22,11 @@ inline void setObjectName(const Microsoft::WRL::ComPtr<T> &object, const wchar_t
 template <typename... Args>
 inline void setObjectName(const Resource &resource, Args &&... args) {
     setObjectName(resource.getResource(), std::forward<Args>(args)...);
+}
+
+template <typename... Args>
+inline void setObjectName(CommandList &commandList, Args &&... args) {
+    setObjectName(commandList.getCommandList(), std::forward<Args>(args)...);
 }
 
 #define SET_OBJECT_NAME(...) setObjectName(__VA_ARGS__);
