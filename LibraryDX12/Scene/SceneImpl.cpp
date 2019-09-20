@@ -119,11 +119,11 @@ size_t SceneImpl::getEnabledPostProcessesCount() const {
 void SceneImpl::getAndPrepareSourceAndDestinationForPostProcess(CommandList &commandList,
                                                                 PostProcessRenderTargets &renderTargets,
                                                                 bool first, bool last,
-                                                                Resource &initialInput, Resource &finalOutput,
+                                                                Resource *initialInput, Resource *finalOutput,
                                                                 Resource *&outSource, Resource *&outDestination) {
     // Get resources
-    outSource = first ? &initialInput : &renderTargets.getSource();
-    outDestination = last ? &finalOutput : &renderTargets.getDestination();
+    outSource = (first && initialInput) ? initialInput : &renderTargets.getSource();
+    outDestination = (last && finalOutput) ? finalOutput : &renderTargets.getDestination();
 
     // Set states
     commandList.transitionBarrier(*outSource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
@@ -418,7 +418,7 @@ void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, Com
 }
 
 void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList, VertexBuffer &fullscreenVB,
-                                    Resource &input, PostProcessRenderTargets &renderTargets, Resource &output,
+                                    Resource *input, PostProcessRenderTargets &renderTargets, Resource *output,
                                     size_t enabledPostProcessesCount, float screenWidth, float screenHeight) {
     commandList.RSSetViewport(0.f, 0.f, screenWidth, screenHeight);
     commandList.IASetPrimitiveTopologyTriangleList();
@@ -500,7 +500,7 @@ void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesse
             for (auto passIndex = 0u; passIndex < postProcessData.passCount; passIndex++) {
                 // Render horizontal pass
                 const bool firstPass = firstPostProcess && (passIndex == 0);
-                getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, firstPass, false, input, output, source, destination);
+                getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, firstPass, false, input, nullptr, source, destination);
                 postProcessData.cb.horizontal = true;
                 commandList.OMSetRenderTargetNoDepth(*destination);
                 commandList.clearRenderTargetView(destination->getRtv(), blackColor);
@@ -512,7 +512,7 @@ void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesse
 
                 // Render vertical pass
                 const bool lastPass = lastPostProcess && (passIndex == postProcessData.passCount - 1);
-                getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, false, lastPass, input, output, source, destination);
+                getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, false, lastPass, nullptr, output, source, destination);
                 postProcessData.cb.horizontal = false;
                 commandList.OMSetRenderTargetNoDepth(*destination);
                 commandList.clearRenderTargetView(destination->getRtv(), blackColor);
@@ -612,13 +612,13 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     if (shouldRenderPostProcesses) {
         renderData.getPostProcessRenderTargets().swapResources();
         renderPostProcesses(postProcesses, commandListPostProcess, *postProcessVB,
-                            renderData.getPostProcessRenderTargets().getSource(), renderData.getPostProcessRenderTargets(), backBuffer,
+                            &renderData.getPostProcessRenderTargets().getSource(), renderData.getPostProcessRenderTargets(), &backBuffer,
                             postProcessesCount, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     }
 
     // Bloom blur
     renderPostProcesses(renderData.getPostProcessesForBloom(), commandListPostProcess, *postProcessVB,
-                        renderData.getBloomMap(), renderData.getPostProcessRenderTargets(), renderData.getBloomMap(),
+                        &renderData.getBloomMap(), renderData.getPostProcessRenderTargets(), &renderData.getBloomMap(),
                         1, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
 
     // Apply bloom

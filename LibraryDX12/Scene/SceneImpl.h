@@ -46,7 +46,7 @@ protected:
     void inspectObjectsNotReady();
     size_t getEnabledPostProcessesCount() const;
     static void getAndPrepareSourceAndDestinationForPostProcess(CommandList &commandList, PostProcessRenderTargets &renderTargets, bool first, bool last,
-                                                                Resource &initialInput, Resource &finalOutput, Resource *&outSource, Resource *&outDestination);
+                                                                Resource *initialInput, Resource *finalOutput, Resource *&outSource, Resource *&outDestination);
 
     // Render methods
     void renderShadowMaps(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
@@ -54,7 +54,7 @@ protected:
     void renderSSAO(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, VertexBuffer &fullscreenVB);
     void renderLighting(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output, VertexBuffer &fullscreenVB);
     static void renderPostProcesses(std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList, VertexBuffer &fullscreenVB,
-                                    Resource &input, PostProcessRenderTargets &renderTargets, Resource &output,
+                                    Resource *input, PostProcessRenderTargets &renderTargets, Resource *output,
                                     size_t enabledPostProcessesCount, float screenWidth, float screenHeight);
     void renderD2DTexts(SwapChain &swapChain);
 
