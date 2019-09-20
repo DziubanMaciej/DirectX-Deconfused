@@ -18,12 +18,13 @@ class IndexBuffer;
 class DescriptorAllocation;
 class MeshImpl;
 class Resource;
+class CommandQueue;
 
 /// Class encapsulating DX12 command list
 class CommandList : DXD::NonCopyableAndMovable {
 public:
     /// Retrieves command list and allocator from the CommandAllocatorController's pool
-    CommandList(DescriptorController &descriptorController, CommandAllocatorController &commandAllocatorController, ID3D12PipelineState *initialPipelineState);
+    explicit CommandList(CommandQueue &commandQueue, ID3D12PipelineState *initialPipelineState = nullptr);
     /// Registers the command list and allocator back to the commandAllocatorController for later reuse
     ~CommandList();
 
@@ -119,9 +120,8 @@ inline void CommandList::OMSetRenderTargets(const Resource *(&renderTargets)[ren
     addUsedResource(depthStencilBuffer.getResource());
 }
 
-template<UINT renderTargetsCount>
-inline void CommandList::OMSetRenderTargetsNoDepth(const Resource *(&renderTargets)[renderTargetsCount])
-{
+template <UINT renderTargetsCount>
+inline void CommandList::OMSetRenderTargetsNoDepth(const Resource *(&renderTargets)[renderTargetsCount]) {
     ID3D12ResourcePtr resources[renderTargetsCount];
     D3D12_CPU_DESCRIPTOR_HANDLE rtvs[renderTargetsCount];
     for (auto rtIndex = 0u; rtIndex < renderTargetsCount; rtIndex++) {

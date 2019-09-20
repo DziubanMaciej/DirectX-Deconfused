@@ -84,7 +84,7 @@ void Resource::uploadToGPU(ApplicationImpl &application, const void *data, UINT 
     CommandQueue &commandQueue = application.getCopyCommandQueue();
 
     // Record command list for GPU upload
-    CommandList commandList{application.getDescriptorController(), commandQueue.getCommandAllocatorController(), nullptr};
+    CommandList commandList{commandQueue};
     recordGpuUploadCommands(application.getDevice(), commandList, data, rowPitch, slicePitch);
     commandList.close();
 

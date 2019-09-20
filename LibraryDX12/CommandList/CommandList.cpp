@@ -1,6 +1,7 @@
 #include "CommandList.h"
 
 #include "CommandList/CommandAllocatorController.h"
+#include "CommandList/CommandQueue.h"
 #include "Descriptor/DescriptorAllocation.h"
 #include "Resource/VertexOrIndexBuffer.h"
 #include "Scene/MeshImpl.h"
@@ -8,9 +9,9 @@
 
 #include <cassert>
 
-CommandList::CommandList(DescriptorController &descriptorController, CommandAllocatorController &commandAllocatorController, ID3D12PipelineState *initialPipelineState)
-    : descriptorController(descriptorController),
-      commandAllocatorController(commandAllocatorController),
+CommandList::CommandList(CommandQueue &commandQueue, ID3D12PipelineState *initialPipelineState)
+    : descriptorController(ApplicationImpl::getInstance().getDescriptorController()),
+      commandAllocatorController(commandQueue.getCommandAllocatorController()),
       commandAllocator(commandAllocatorController.retieveCommandAllocator()),
       commandList(commandAllocatorController.retrieveCommandList(commandAllocator, initialPipelineState)),
       gpuDescriptorHeapControllerCbvSrvUav(*this, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV),

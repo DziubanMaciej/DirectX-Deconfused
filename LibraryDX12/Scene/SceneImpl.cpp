@@ -29,7 +29,7 @@ SceneImpl::SceneImpl(ApplicationImpl &application)
     auto &commandQueue = application.getDirectCommandQueue();
 
     // Record command list for GPU upload
-    CommandList commandList{application.getDescriptorController(), commandQueue.getCommandAllocatorController(), nullptr};
+    CommandList commandList{commandQueue};
     postProcessVB = std::make_unique<VertexBuffer>(device, commandList, postProcessSquare, 6, 12);
     SET_OBJECT_NAME(*postProcessVB, L"PostProcessVB");
     commandList.close();
@@ -519,7 +519,7 @@ void SceneImpl::renderD2DTexts(SwapChain &swapChain) {
 
 void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     auto &commandQueue = application.getDirectCommandQueue();
-    CommandList commandList{application.getDescriptorController(), commandQueue.getCommandAllocatorController(), nullptr};
+    CommandList commandList{commandQueue};
     auto &backBuffer = swapChain.getCurrentBackBuffer();
     commandQueue.performResourcesDeletion();
     inspectObjectsNotReady();
