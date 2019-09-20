@@ -1,6 +1,7 @@
 struct ObjectProperties {
-    float3 objectColor;
-    float objectSpecularity;
+    float3 albedoColor;
+    float specularity;
+    float bloomFactor;
 };
 
 ConstantBuffer<ObjectProperties> op : register(b2);
@@ -20,9 +21,9 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
 
     PS_OUT result;
 
-    result.gBufferAlbedo = float4(op.objectColor, 1);
+    result.gBufferAlbedo = float4(op.albedoColor, 1);
     result.gBufferNormal = normalize(IN.Normal);
-    result.gBufferSpecular = float4(op.objectSpecularity, 0, 0, 1);
+    result.gBufferSpecular = float4(op.specularity, op.bloomFactor, 0, 1);
 
     return result;
 }

@@ -62,8 +62,9 @@ struct PostProcessGaussianBlurData {
 };
 
 struct ObjectProperties {
-    XMFLOAT3 objectColor;
-    float objectSpecularity;
+    XMFLOAT3 albedoColor;
+    float specularity;
+    float bloomFactor;
 };
 
 struct LightingConstantBuffer {

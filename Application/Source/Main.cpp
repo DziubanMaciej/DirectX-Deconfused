@@ -76,6 +76,7 @@ private:
                 {"cubeNormalMesh1", "cubeNormal"},
                 {"cubeNormalMesh2", "cubeNormal"},
                 {"cubeNormalMesh3", "cubeNormal"},
+                {"glowingCube", "cubeNormal"},
                 {"flatMesh1", "cubeNormal"},
                 {"intel", "intelMesh"},
                 {"extraFlatMesh1", "cubeNormal"},
@@ -112,6 +113,11 @@ private:
             objects["cubeNormalMesh3"]->setScale(2, 0.1f, 2);
             objects["cubeNormalMesh3"]->setSpecularity(1);
 
+            objects["glowingCube"]->setPosition(-2.f, -1.f, 7.f);
+            objects["glowingCube"]->setRotation(45, 45, 45);
+            objects["glowingCube"]->setBloomFactor(1.f);
+            objects["glowingCube"]->setColor(0.9f, 0.9f, 0.9f);
+
             objects["intel"]->setPosition(0, -1.9, -8);
             objects["intel"]->setScale(0.1f, 0.1f, 0.1f);
 
@@ -130,7 +136,7 @@ private:
             objects["porshe"]->setTexture(porsheTexture.get());
 
             objects["aventador"]->setPosition(-14, -2, 0);
-            objects["aventador"]->setColor(0.0f, 113.0f / 255.0f, 197.0f/255.0f);
+            objects["aventador"]->setColor(0.0f, 113.0f / 255.0f, 197.0f / 255.0f);
             objects["aventador"]->setSpecularity(0.8f);
             objects["aventador"]->setScale(0.9f, 0.9f, 0.9f);
             objects["aventador"]->setRotation(XMFLOAT3(0, 1, 0), -90);

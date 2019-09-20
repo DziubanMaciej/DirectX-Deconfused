@@ -38,7 +38,10 @@ public:
     void setSpecularity(float s) override;
     float getSpecularity() const override;
 
-    void setTexture( DXD::Texture *texture) override { this->texture = static_cast<TextureImpl *>(texture); }
+    void setBloomFactor(float bloomFactor) override;
+    float getBloomFactor() const override;
+
+    void setTexture(DXD::Texture *texture) override { this->texture = static_cast<TextureImpl *>(texture); }
     DXD::Texture *getTexture() override { return texture; }
     TextureImpl *getTextureImpl() { return texture; }
 
@@ -55,6 +58,7 @@ protected:
 
     XMFLOAT3 color = {0, 0, 0};
     float specularity = 0.4f;
+    float bloomFactor = 0.f;
 
     XMMATRIX modelMatrix;
     bool modelMatrixDirty = true;

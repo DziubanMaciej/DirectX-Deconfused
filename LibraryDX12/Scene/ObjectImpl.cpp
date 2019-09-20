@@ -94,6 +94,14 @@ float ObjectImpl::getSpecularity() const {
     return specularity;
 }
 
+void ObjectImpl::setBloomFactor(float bloomFactor) {
+    this->bloomFactor = bloomFactor;
+}
+
+float ObjectImpl::getBloomFactor() const {
+    return bloomFactor;
+}
+
 bool ObjectImpl::isUploadInProgress() {
     return mesh.isUploadInProgress() || (texture != nullptr && texture->isUploadInProgress());
 }

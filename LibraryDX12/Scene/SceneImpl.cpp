@@ -256,9 +256,10 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
             mmvp.modelViewProjectionMatrix = XMMatrixMultiply(mmvp.modelMatrix, vpMatrix);
             commandList.setGraphicsRoot32BitConstant(0, mmvp);
 
-            ObjectProperties op;
-            op.objectColor = object->getColor();
-            op.objectSpecularity = object->getSpecularity();
+            ObjectProperties op = {};
+            op.albedoColor = object->getColor();
+            op.specularity = object->getSpecularity();
+            op.bloomFactor = object->getBloomFactor();
             commandList.setGraphicsRoot32BitConstant(1, op);
 
             commandList.IASetVertexAndIndexBuffer(mesh);
@@ -278,9 +279,10 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
             mmvp.modelViewProjectionMatrix = XMMatrixMultiply(mmvp.modelMatrix, vpMatrix);
             commandList.setGraphicsRoot32BitConstant(0, mmvp);
 
-            ObjectProperties op;
-            op.objectColor = object->getColor();
-            op.objectSpecularity = object->getSpecularity();
+            ObjectProperties op = {};
+            op.albedoColor = object->getColor();
+            op.specularity = object->getSpecularity();
+            op.bloomFactor = object->getBloomFactor();
             commandList.setGraphicsRoot32BitConstant(1, op);
 
             commandList.IASetVertexAndIndexBuffer(mesh);

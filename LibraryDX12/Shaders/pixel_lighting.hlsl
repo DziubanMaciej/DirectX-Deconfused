@@ -113,23 +113,22 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
         OUT_Color.xyz = OUT_Color.xyz + (tempLightColor.xyz + INalbedo.xyz) * tempLightPower * (normalPower + specularPower) * directionPower * shadowFactor;
     }
 
-
     float3 ambientLightColor = ambientLight.xyz / 4;
-    float ambientLightPower = distance(float3(0,0,0), ambientLight.xyz) * 0.25f;
+    float ambientLightPower = distance(float3(0, 0, 0), ambientLight.xyz) * 0.25f;
 
-    OUT_Color.xyz = OUT_Color.xyz + ((INalbedo + ambientLightColor) * ambientLightPower * ( INspecularity.x / 10.0f + 1.0f));
+    OUT_Color.xyz = OUT_Color.xyz + ((INalbedo + ambientLightColor) * ambientLightPower * (INspecularity.x / 10.0f + 1.0f));
 
     PS_OUT result;
 
     result.scene = OUT_Color * INssao;
     result.lightingOutput = OUT_Color * INssao;
 
-    //float brightness = dot(OUT_Color.rgb, float3(0.2126, 0.7152, 0.0722));
-    //if (brightness > 0.5) {
-    //    result.bloomMap = result.scene;
-    //} else {
-    result.bloomMap = float4(0, 0, 0, 1); // TO-DO bloom
-    //}
+    const float brightness = dot(OUT_Color.rgb, float3(0.2126, 0.7152, 0.0722));
+    if (brightness > 0.5) {
+        result.bloomMap = float4(result.scene.rgb * INspecularity.g, INspecularity.g);
+    } else {
+        result.bloomMap = float4(0, 0, 0, 0);
+    }
 
     return result;
 }
