@@ -37,7 +37,7 @@ bool Resource::isUploadInProgress() {
 }
 
 void Resource::registerUpload(CommandQueue &uploadingQueue, uint64_t uploadFence) {
-    assert(!isUploadInProgress());
+    assert(!Resource::isUploadInProgress()); // only check GPU upload, not CPU loading
     this->gpuUploadData = std::make_unique<GpuUploadData>(uploadingQueue, uploadFence);
 }
 
