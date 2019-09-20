@@ -56,6 +56,9 @@ void PipelineStateController::compile(Identifier identifier) {
     case Identifier::PIPELINE_STATE_SSAO:
         compilePipelineStateSSAO(rootSignature, pipelineState);
         break;
+    case Identifier::PIPELINE_STATE_SSR:
+        compilePipelineStateSSR(rootSignature, pipelineState);
+        break;
     case Identifier::PIPELINE_STATE_LIGHTING:
         compilePipelineStateLighting(rootSignature, pipelineState);
         break;
@@ -119,7 +122,7 @@ void PipelineStateController::compilePipelineStateNormal(RootSignature &rootSign
     sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
     sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
     sampler.MaxLOD = D3D12_FLOAT32_MAX;
-    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
     rootSignature
         .append32bitConstant<ModelMvp>(b(0), D3D12_SHADER_VISIBILITY_VERTEX)
@@ -228,7 +231,7 @@ static void compileBasicPipelineStatePostProcess(ID3D12DevicePtr device, RootSig
     sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
     sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
     sampler.MaxLOD = D3D12_FLOAT32_MAX;
-    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
     DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
     table.appendSrvRange(t(0), 1);
@@ -277,7 +280,7 @@ void PipelineStateController::compilePipelineStatePostProcessApplyBloom(RootSign
     sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
     sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
     sampler.MaxLOD = D3D12_FLOAT32_MAX;
-    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
     DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
     table.appendSrvRange(t(0), 1);
@@ -324,7 +327,7 @@ void PipelineStateController::compilePipelineStateLighting(RootSignature &rootSi
     sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
     sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
     sampler.MaxLOD = D3D12_FLOAT32_MAX;
-    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
     DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
     table.appendCbvRange(b(0), 1); // light constant buffer
@@ -333,7 +336,8 @@ void PipelineStateController::compilePipelineStateLighting(RootSignature &rootSi
     table.appendSrvRange(t(2), 1); // gbuffer specular
     table.appendSrvRange(t(3), 1); // gbuffer depth
     table.appendSrvRange(t(4), 1); // SSAO
-    table.appendSrvRange(t(5), 8); // shadow maps
+    table.appendSrvRange(t(5), 1); // SSR
+    table.appendSrvRange(t(6), 8); // shadow maps
 
     rootSignature
         .appendStaticSampler(s(0), sampler)
@@ -351,7 +355,7 @@ void PipelineStateController::compilePipelineStateLighting(RootSignature &rootSi
         .VS(L"vertex_post_process.hlsl")
         .PS(L"pixel_lighting.hlsl")
         .disableDepthStencil()
-        .setRenderTargetsCount(2)
+        .setRenderTargetsCount(3)
         .compile(device, pipelineState);
 }
 
@@ -364,7 +368,7 @@ void PipelineStateController::compilePipelineStateSSAO(RootSignature &rootSignat
     sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
     sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
     sampler.MaxLOD = D3D12_FLOAT32_MAX;
-    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_ALL;
+    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
 
     DescriptorTable table{ D3D12_SHADER_VISIBILITY_PIXEL };
     table.appendSrvRange(t(0), 1); // gbuffer normal
@@ -388,5 +392,42 @@ void PipelineStateController::compilePipelineStateSSAO(RootSignature &rootSignat
         .disableDepthStencil()
         .setRenderTargetsCount(1)
         .setRenderTargetFormat(0, DXGI_FORMAT_R8_UNORM)
+        .compile(device, pipelineState);
+}
+
+void PipelineStateController::compilePipelineStateSSR(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
+    // Root signature - crossthread data
+    D3D12_STATIC_SAMPLER_DESC sampler = {};
+    sampler.Filter = D3D12_FILTER_MIN_MAG_MIP_POINT;
+    sampler.AddressU = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    sampler.AddressV = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    sampler.AddressW = D3D12_TEXTURE_ADDRESS_MODE_BORDER;
+    sampler.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
+    sampler.MaxLOD = D3D12_FLOAT32_MAX;
+    sampler.ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
+    DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
+    table.appendSrvRange(t(0), 1); // gbuffer normal
+    table.appendSrvRange(t(1), 1); // gbuffer depth
+    table.appendSrvRange(t(2), 1); // gbuffer specular
+    table.appendSrvRange(t(3), 1); // previous frame
+
+    rootSignature
+        .appendStaticSampler(s(0), sampler)
+        .appendDescriptorTable(std::move(table))
+        .append32bitConstant<SsrCB>(b(1), D3D12_SHADER_VISIBILITY_PIXEL)
+        .compile(device);
+
+    // Input layout - per vertex data
+    const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+    };
+
+    // Pipeline state object
+    return PipelineState{inputLayout, rootSignature}
+        .VS(L"vertex_post_process.hlsl")
+        .PS(L"pixel_ssr.hlsl")
+        .disableDepthStencil()
+        .setRenderTargetsCount(1)
         .compile(device, pipelineState);
 }

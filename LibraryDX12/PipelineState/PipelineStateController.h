@@ -21,6 +21,8 @@ public:
         PIPELINE_STATE_SM_TEXTURE_NORMAL,
         // SSAO
         PIPELINE_STATE_SSAO,
+        // SSR
+        PIPELINE_STATE_SSR,
         // Lighting
         PIPELINE_STATE_LIGHTING,
         // Post Processes
@@ -48,6 +50,8 @@ private:
     void compilePipelineStateTextureNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     // SSAO
     void compilePipelineStateSSAO(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    // SSR
+    void compilePipelineStateSSR(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     // Lighting
     void compilePipelineStateLighting(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     // Shadow maps

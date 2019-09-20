@@ -22,7 +22,8 @@ Texture2D gBufferNormal : register(t1);
 Texture2D gBufferSpecular : register(t2);
 Texture2D gBufferDepth : register(t3);
 Texture2D ssaoMap : register(t4);
-Texture2D shadowMaps[8] : register(t5);
+Texture2D ssrMap : register(t5);
+Texture2D shadowMaps[8] : register(t6);
 
 SamplerState g_sampler : register(s0);
 
@@ -33,6 +34,7 @@ struct PixelShaderInput {
 struct PS_OUT {
     float4 scene;
     float4 bloomMap;
+    float4 lightingOutput;
 };
 
 PS_OUT main(PixelShaderInput IN) : SV_Target {
@@ -120,6 +122,7 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
     PS_OUT result;
 
     result.scene = OUT_Color * INssao;
+    result.lightingOutput = OUT_Color * INssao;
 
     //float brightness = dot(OUT_Color.rgb, float3(0.2126, 0.7152, 0.0722));
     //if (brightness > 0.5) {

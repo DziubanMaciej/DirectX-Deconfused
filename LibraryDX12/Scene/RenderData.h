@@ -22,6 +22,8 @@ public:
     PostProcessRenderTargets &getPostProcessRenderTargets() { return postProcessRenderTargets; }
     Resource &getShadowMap(int i) { return *shadowMap[i]; }
     Resource &getDepthStencilBuffer() { return *depthStencilBuffer; };
+    Resource &getLightingOutput() { return *lightingOutput; }
+    Resource &getSsrMap() { return *ssrMap; }
     Resource &getSsaoMap() { return *ssaoMap; }
     Resource &getBloomMap() { return *bloomMap; }
     Resource &getGBufferAlbedo() { return *gBufferAlbedo; }
@@ -40,6 +42,8 @@ private:
     std::unique_ptr<Resource> gBufferNormal;
     std::unique_ptr<Resource> gBufferSpecular;
     std::unique_ptr<Resource> bloomMap;
+    std::unique_ptr<Resource> ssrMap;
+    std::unique_ptr<Resource> lightingOutput;
     std::unique_ptr<Resource> shadowMap[8] = {};
     std::unique_ptr<Resource> depthStencilBuffer = {};
 

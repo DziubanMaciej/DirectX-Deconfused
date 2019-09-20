@@ -143,6 +143,58 @@ void RenderData::resize(int width, int height) {
     ssaoMap->getResource()->SetName(L"SSAO map");
     SET_OBJECT_NAME(*ssaoMap, L"SsaoMap");
 
+    // SSR map
+    D3D12_RESOURCE_DESC ssrMapDesc = {};
+    ssrMapDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    ssrMapDesc.Alignment = 0;
+    ssrMapDesc.Width = width;
+    ssrMapDesc.Height = height;
+    ssrMapDesc.DepthOrArraySize = 1;
+    ssrMapDesc.MipLevels = 0;
+    ssrMapDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    ssrMapDesc.SampleDesc.Count = 1;
+    ssrMapDesc.SampleDesc.Quality = 0;
+    ssrMapDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    ssrMapDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+    ssrMap = std::make_unique<Resource>(
+        device,
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &ssrMapDesc,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        nullptr);
+    ssrMap->createSrv(nullptr);
+    ssrMap->createRtv(nullptr);
+    ssrMap->getResource()->SetName(L"SSR map");
+    SET_OBJECT_NAME(*ssrMap, L"SsrMap");
+
+    // SSR map
+    D3D12_RESOURCE_DESC loDesc = {};
+    loDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    loDesc.Alignment = 0;
+    loDesc.Width = width;
+    loDesc.Height = height;
+    loDesc.DepthOrArraySize = 1;
+    loDesc.MipLevels = 0;
+    loDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    loDesc.SampleDesc.Count = 1;
+    loDesc.SampleDesc.Quality = 0;
+    loDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    loDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+    lightingOutput = std::make_unique<Resource>(
+        device,
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &loDesc,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        nullptr);
+    lightingOutput->createSrv(nullptr);
+    lightingOutput->createRtv(nullptr);
+    lightingOutput->getResource()->SetName(L"LO");
+    SET_OBJECT_NAME(*lightingOutput, L"LO");
+
     // Shadow maps
     D3D12_DEPTH_STENCIL_VIEW_DESC shadowMapDsvDesc = {};
     shadowMapDsvDesc.Format = DXGI_FORMAT_D32_FLOAT;

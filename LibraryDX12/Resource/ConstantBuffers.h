@@ -49,6 +49,13 @@ struct SsaoCB {
     XMMATRIX projMatrixInverse;
 };
 
+struct SsrCB {
+    float screenWidth;
+    float screenHeight;
+    XMMATRIX viewMatrixInverse;
+    XMMATRIX projMatrixInverse;
+};
+
 struct PostProcessGaussianBlurData {
     PostProcessGaussianBlurCB cb;
     UINT passCount;

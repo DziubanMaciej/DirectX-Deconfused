@@ -342,17 +342,52 @@ void SceneImpl::renderSSAO(SwapChain &swapChain, RenderData &renderData, Command
 }
 
 void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output, VertexBuffer &fullscreenVB) {
+    
+
+    // SSR
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
 
+    commandList.transitionBarrier(renderData.getSsrMap(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+    commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SSR);
+
+    const Resource *ssrRts[] = {&renderData.getSsrMap()};
+    commandList.OMSetRenderTargetsNoDepth(ssrRts);
+
+    commandList.setSrvInDescriptorTable(0, 0, renderData.getGBufferNormal());
+    commandList.setSrvInDescriptorTable(0, 1, renderData.getDepthStencilBuffer());
+    commandList.setSrvInDescriptorTable(0, 2, renderData.getGBufferSpecular());
+    commandList.setSrvInDescriptorTable(0, 3, renderData.getLightingOutput());
+
+    SsaoCB ssrCB;
+    ssrCB.screenWidth = static_cast<float>(swapChain.getWidth());
+    ssrCB.screenHeight = static_cast<float>(swapChain.getHeight());
+    ssrCB.viewMatrixInverse = camera->getInvViewMatrix();
+    ssrCB.projMatrixInverse = camera->getInvProjectionMatrix();
+    commandList.setGraphicsRoot32BitConstant(1, ssrCB);
+
+    commandList.IASetVertexBuffer(fullscreenVB);
+
+    commandList.draw(6u);
+
+    commandList.transitionBarrier(renderData.getSsrMap(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+
+
+
+    // Lighting
+    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_LIGHTING);
 
+    commandList.transitionBarrier(renderData.getLightingOutput(), D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.transitionBarrier(renderData.getBloomMap(), D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     commandList.clearRenderTargetView(renderData.getBloomMap().getRtv(), blackColor);
+    commandList.clearRenderTargetView(renderData.getLightingOutput().getRtv(), backgroundColor);
     commandList.clearRenderTargetView(output.getRtv(), backgroundColor);
 
-    const Resource *lightingRts[] = {&output, &renderData.getBloomMap()};
+    const Resource *lightingRts[] = {&output, &renderData.getBloomMap(), &renderData.getLightingOutput()};
     commandList.OMSetRenderTargetsNoDepth(lightingRts);
 
     commandList.setCbvInDescriptorTable(0, 0, lightConstantBuffer);
@@ -361,8 +396,9 @@ void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, Com
     commandList.setSrvInDescriptorTable(0, 3, renderData.getGBufferSpecular());
     commandList.setSrvInDescriptorTable(0, 4, renderData.getDepthStencilBuffer());
     commandList.setSrvInDescriptorTable(0, 5, renderData.getSsaoMap());
+    commandList.setSrvInDescriptorTable(0, 6, renderData.getSsrMap());
     for (auto shadowMapIndex = 0u; shadowMapIndex < 8; shadowMapIndex++) {
-        commandList.setSrvInDescriptorTable(0, shadowMapIndex + 6, renderData.getShadowMap(shadowMapIndex));
+        commandList.setSrvInDescriptorTable(0, shadowMapIndex + 7, renderData.getShadowMap(shadowMapIndex));
     }
 
     InverseViewProj invVP;
@@ -373,6 +409,8 @@ void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, Com
     commandList.IASetVertexBuffer(fullscreenVB);
 
     commandList.draw(6u);
+
+    commandList.transitionBarrier(renderData.getLightingOutput(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 }
 
 void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList, VertexBuffer &fullscreenVB,
