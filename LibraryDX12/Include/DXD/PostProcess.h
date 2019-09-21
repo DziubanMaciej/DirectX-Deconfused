@@ -18,6 +18,7 @@ public:
     static std::unique_ptr<PostProcess> create();
 
     virtual void setEnabled(bool enabled) = 0;
+    virtual bool isEnabled() const = 0;
 
     virtual void setBlackBars(float leftMarginPercent, float rightMarginPercent, float topMarginPercent, float bottomMarginPercent) = 0;
 

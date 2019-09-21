@@ -20,6 +20,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <algorithm>
 
 class Game : DXD::CallbackHandler {
 public:
@@ -206,12 +207,17 @@ private:
         DXD::log("Done!\n");
     }
     void prepPostProcesses() {
-        //postProcesses.push_back(DXD::PostProcess::create());
-        //postProcesses.back()->setBlackBars(0.0f, 0.0f, 0.05f, 0.05f);
+        postProcesses["blackBars"] = DXD::PostProcess::create();
+        postProcesses["blackBars"]->setBlackBars(0.0f, 0.0f, 0.05f, 0.05f);
+        postProcesses["blackBars"]->setEnabled(false);
 
-        postProcesses.push_back(DXD::PostProcess::create());
-        gaussianBlurPostProcess = postProcesses.back().get();
-        gaussianBlurPostProcess->setGaussianBlur(gaussianBlurPassCount, 5);
+        postProcesses["gaussianBlur"] = DXD::PostProcess::create();
+        postProcesses["gaussianBlur"]->setGaussianBlur(gaussianBlurPassCount, 5);
+        postProcesses["gaussianBlur"]->setEnabled(false);
+
+        postProcesses["sepia"] = DXD::PostProcess::create();
+        postProcesses["sepia"]->setLinearColorCorrectionSepia();
+        postProcesses["sepia"]->setEnabled(false);
     }
 
     void prepText() {
@@ -243,7 +249,7 @@ private:
             scene->addLight(*light.second);
         }
         for (auto &postProcess : postProcesses) {
-            scene->addPostProcess(*postProcess);
+            scene->addPostProcess(*postProcess.second);
         }
         for (auto &text : texts) {
             scene->addText(*text.second);
@@ -348,13 +354,21 @@ private:
         case 'V':
             application->getSettings().setVerticalSyncEnabled(!application->getSettings().getVerticalSyncEnabled());
             break;
+        case '7':
+            postProcesses["blackBars"]->setEnabled(!postProcesses["blackBars"]->isEnabled());
+            break;
+        case '8':
+            postProcesses["sepia"]->setEnabled(!postProcesses["sepia"]->isEnabled());
+            break;
         case '0':
-            gaussianBlurPassCount++;
-            gaussianBlurPostProcess->setGaussianBlur(gaussianBlurPassCount, 5);
+            gaussianBlurPassCount = std::min(gaussianBlurPassCount + 1, 5u);
+            postProcesses["gaussianBlur"]->setGaussianBlur(gaussianBlurPassCount, 5);
             break;
         case '9':
-            gaussianBlurPassCount--;
-            gaussianBlurPostProcess->setGaussianBlur(gaussianBlurPassCount, 5);
+            if (gaussianBlurPassCount > 0u) {
+                gaussianBlurPassCount--;
+            }
+            postProcesses["gaussianBlur"]->setGaussianBlur(gaussianBlurPassCount, 5);
             break;
         }
     }
@@ -390,7 +404,6 @@ private:
     XMFLOAT3 cameraPosition{0, 4, -20};
     XMFLOAT3 focusDirection{0, -0.4f, 1};
     FpsCounter<180> fpsCounter;
-    DXD::PostProcess *gaussianBlurPostProcess = nullptr;
     UINT gaussianBlurPassCount = 0u;
 
     std::unique_ptr<DXD::Application> application;
@@ -399,7 +412,7 @@ private:
     std::unordered_map<std::string, std::unique_ptr<DXD::Light>> lights;
     std::unordered_map<std::string, std::unique_ptr<DXD::Object>> objects;
     std::unordered_map<std::string, std::unique_ptr<DXD::Text>> texts;
-    std::vector<std::unique_ptr<DXD::PostProcess>> postProcesses;
+    std::unordered_map<std::string, std::unique_ptr<DXD::PostProcess>> postProcesses;
 
     // TODO: unordered_map for three below
     std::unique_ptr<DXD::Texture> porsheTexture;

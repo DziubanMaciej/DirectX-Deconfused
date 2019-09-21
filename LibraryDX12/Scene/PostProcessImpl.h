@@ -21,6 +21,7 @@ public:
     };
 
     void setEnabled(bool enabled) override;
+    bool isEnabled() const override { return enabled; }
 
     void setBlackBars(float leftMarginPercent, float rightMarginPercent, float topMarginPercent, float bottomMarginPercent) override;
 
@@ -41,7 +42,6 @@ public:
 
     void setGaussianBlur(UINT passCount, UINT samplingRange) override;
 
-    auto isEnabled() const { return enabled; }
     auto getType() const { return type; }
     auto &getData() { return data; }
 
