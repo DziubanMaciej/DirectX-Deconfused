@@ -213,10 +213,7 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
     commandList.transitionBarrier(renderData.getGBufferSpecular(), D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.transitionBarrier(renderData.getDepthStencilBuffer(), D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
-    // Clear output buffers
-    commandList.clearRenderTargetView(renderData.getGBufferAlbedo().getRtv(), blackColor);
-    commandList.clearRenderTargetView(renderData.getGBufferNormal().getRtv(), blackColor);
-    commandList.clearRenderTargetView(renderData.getGBufferSpecular().getRtv(), blackColor);
+    // Clear depth buffer, gbuffers don't have to be cleared, all unwanted data from previous frame will be discarded by lighting shader
     commandList.clearDepthStencilView(renderData.getDepthStencilBuffer().getDsv(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
     // View projection matrix
