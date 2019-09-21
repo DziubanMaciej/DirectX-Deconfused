@@ -1,5 +1,6 @@
 #include "RootSignature.h"
 
+#include "PipelineState/StaticSampler.h"
 #include "Utility/ThrowIfFailed.h"
 
 #include <cassert>
@@ -25,8 +26,8 @@ RootSignature &RootSignature::appendUnorderedAccessView(UavShaderRegister reg, D
     return *this;
 }
 
-RootSignature &RootSignature::appendStaticSampler(SamplerShaderRegister reg, const D3D12_STATIC_SAMPLER_DESC &samplerDescription) {
-    samplerDescriptions.push_back(samplerDescription);
+RootSignature &RootSignature::appendStaticSampler(SamplerShaderRegister reg, const StaticSampler &staticSampler) {
+    samplerDescriptions.push_back(staticSampler.get());
     return *this;
 }
 

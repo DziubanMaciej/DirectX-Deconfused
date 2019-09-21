@@ -9,6 +9,8 @@
 #include <map>
 #include <vector>
 
+class StaticSampler;
+
 class RootSignature : DXD::NonCopyableAndMovable {
 public:
     template <typename ConstantType>
@@ -16,7 +18,7 @@ public:
     RootSignature &appendShaderResourceView(SrvShaderRegister reg, D3D12_ROOT_DESCRIPTOR_FLAGS flags, D3D12_SHADER_VISIBILITY visibility);
     RootSignature &appendConstantBufferView(CbvShaderRegister reg, D3D12_ROOT_DESCRIPTOR_FLAGS flags, D3D12_SHADER_VISIBILITY visibility);
     RootSignature &appendUnorderedAccessView(UavShaderRegister reg, D3D12_ROOT_DESCRIPTOR_FLAGS flags, D3D12_SHADER_VISIBILITY visibility);
-    RootSignature &appendStaticSampler(SamplerShaderRegister reg, const D3D12_STATIC_SAMPLER_DESC &samplerDescription);
+    RootSignature &appendStaticSampler(SamplerShaderRegister reg, const StaticSampler &staticSampler);
     RootSignature &appendDescriptorTable(DescriptorTable &&table);
 
     RootSignature &compile(ID3D12DevicePtr device);
