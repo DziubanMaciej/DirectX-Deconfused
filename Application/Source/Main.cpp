@@ -29,12 +29,14 @@ public:
         window = DXD::Window::create(*application, L"myClass", L"myWindow", hInstance, 1240, 720);
         prepTextures();
         prepMeshes();
+        prepObjects();
         prepLights();
         prepCamera();
         prepPostProcesses();
         prepText();
         prepScene();
         updateCamera();
+        DXD::log("Preparing done! Some resources may still be loaded asynchronously\n");
 
         window->setScene(*scene);
         application->setCallbackHandler(this);
@@ -45,113 +47,112 @@ public:
     }
 
 private:
-    // preparing resources for the game
     void prepMeshes() {
         DXD::log("Loading meshes...\n");
 
         struct MeshCreationData {
+            std::string name;
             std::wstring filePath;
             bool useTextures;
         };
 
-        std::unordered_map<std::string, MeshCreationData> meshMap = {
-            {"teapot", {L"Resources/meshes/teapot_normals.obj", false}},
-            {"cubeNormal", {L"Resources/meshes/cube_normals.obj", false}},
-            {"cubeNormalUv", {L"Resources/meshes/cube_normals_uvs.obj", true}},
-            {"actor", {L"Resources/meshes/dennis.obj", true}},
-            {"dxd", {L"Resources/meshes/dxd_comicsans.obj", false}},
-            {"intelMesh", {L"Resources/meshes/corei7.obj", false}},
-            {"aventadorMesh", {L"Resources/meshes/aventador.obj", false}},
-            {"porsheMesh", {L"Resources/meshes/porshe.obj", true}}};
-        for (auto mesh : meshMap) {
-            const auto creationData = mesh.second;
-            meshes.insert({mesh.first, DXD::Mesh::createFromObj(*application, creationData.filePath, creationData.useTextures, true)});
-            assert(meshes[mesh.first]);
+        MeshCreationData meshesCreationData[] = {
+            {"teapot", L"Resources/meshes/teapot_normals.obj", false},
+            {"cubeNormal", L"Resources/meshes/cube_normals.obj", false},
+            {"cubeNormalUv", L"Resources/meshes/cube_normals_uvs.obj", true},
+            {"actor", L"Resources/meshes/dennis.obj", true},
+            {"dxd", L"Resources/meshes/dxd_comicsans.obj", false},
+            {"intelMesh", L"Resources/meshes/corei7.obj", false},
+            {"aventadorMesh", L"Resources/meshes/aventador.obj", false},
+            {"porsheMesh", L"Resources/meshes/porshe.obj", true}};
+
+        for (const auto &data : meshesCreationData) {
+            meshes[data.name] = DXD::Mesh::createFromObj(*application, data.filePath, data.useTextures, true);
+            assert(meshes[data.name]);
+        }
+    }
+    void prepObjects() {
+        DXD::log("Configuring objects...\n");
+
+        std::unordered_map<std::string, std::string> meshObjectMap = {
+            {"teapotMesh1", "teapot"},
+            {"teapotMesh2", "teapot"},
+            {"teapotMesh3", "teapot"},
+            {"cubeNormalMesh1", "cubeNormal"},
+            {"cubeNormalMesh2", "cubeNormal"},
+            {"cubeNormalMesh3", "cubeNormal"},
+            {"glowingCube", "cubeNormal"},
+            {"flatMesh1", "cubeNormal"},
+            {"intel", "intelMesh"},
+            {"extraFlatMesh1", "cubeNormalUv"},
+            {"aventador", "aventadorMesh"},
+            {"porshe", "porsheMesh"},
+            {"actorMesh1", "actor"}};
+
+        for (auto object : meshObjectMap) {
+            objects.insert({object.first, DXD::Object::create(*meshes[object.second])});
         }
 
-        // MESH OBJECTS
-        {
-            std::unordered_map<std::string, std::string> meshObjectMap = {
-                {"teapotMesh1", "teapot"},
-                {"teapotMesh2", "teapot"},
-                {"teapotMesh3", "teapot"},
-                {"cubeNormalMesh1", "cubeNormal"},
-                {"cubeNormalMesh2", "cubeNormal"},
-                {"cubeNormalMesh3", "cubeNormal"},
-                {"glowingCube", "cubeNormal"},
-                {"flatMesh1", "cubeNormal"},
-                {"intel", "intelMesh"},
-                {"extraFlatMesh1", "cubeNormalUv"},
-                {"aventador", "aventadorMesh"},
-                {"porshe", "porsheMesh"},
-                {"actorMesh1", "actor"}};
+        objects["teapotMesh1"]->setPosition(8, -1, 0);
+        objects["teapotMesh1"]->setScale(0.1f, 0.1f, 0.1f);
+        objects["teapotMesh1"]->setColor(0.0f, 0.8f, 0.0f);
+        objects["teapotMesh1"]->setSpecularity(0.7f);
 
-            for (auto object : meshObjectMap) {
-                objects.insert({object.first, DXD::Object::create(*meshes[object.second])});
-            }
+        objects["teapotMesh2"]->setPosition(0, 1, 0);
+        objects["teapotMesh2"]->setScale(0.1f, 0.1f, 0.1f);
+        objects["teapotMesh2"]->setColor(0.5f, 0.5f, 0.0f);
+        objects["teapotMesh2"]->setSpecularity(0.7f);
 
-            objects["teapotMesh1"]->setPosition(8, -1, 0);
-            objects["teapotMesh1"]->setScale(0.1f, 0.1f, 0.1f);
-            objects["teapotMesh1"]->setColor(0.0f, 0.8f, 0.0f);
-            objects["teapotMesh1"]->setSpecularity(0.7f);
+        objects["teapotMesh3"]->setPosition(-8, -1, 0);
+        objects["teapotMesh3"]->setScale(0.1f, 0.1f, 0.1f);
+        objects["teapotMesh3"]->setColor(0.0f, 0.0f, 0.8f);
+        objects["teapotMesh3"]->setSpecularity(0.7f);
 
-            objects["teapotMesh2"]->setPosition(0, 1, 0);
-            objects["teapotMesh2"]->setScale(0.1f, 0.1f, 0.1f);
-            objects["teapotMesh2"]->setColor(0.5f, 0.5f, 0.0f);
-            objects["teapotMesh2"]->setSpecularity(0.7f);
+        objects["cubeNormalMesh1"]->setPosition(-8, -1, -5.5);
+        objects["cubeNormalMesh1"]->setScale(1, 1, 2);
+        objects["cubeNormalMesh1"]->setSpecularity(1);
 
-            objects["teapotMesh3"]->setPosition(-8, -1, 0);
-            objects["teapotMesh3"]->setScale(0.1f, 0.1f, 0.1f);
-            objects["teapotMesh3"]->setColor(0.0f, 0.0f, 0.8f);
-            objects["teapotMesh3"]->setSpecularity(0.7f);
+        objects["cubeNormalMesh2"]->setPosition(9, -1, -9);
 
-            objects["cubeNormalMesh1"]->setPosition(-8, -1, -5.5);
-            objects["cubeNormalMesh1"]->setScale(1, 1, 2);
-            objects["cubeNormalMesh1"]->setSpecularity(1);
+        objects["cubeNormalMesh3"]->setPosition(0, -1.9, 0);
+        objects["cubeNormalMesh3"]->setScale(2, 0.1f, 2);
+        objects["cubeNormalMesh3"]->setSpecularity(1);
 
-            objects["cubeNormalMesh2"]->setPosition(9, -1, -9);
+        objects["glowingCube"]->setPosition(-2.f, -1.f, 7.f);
+        objects["glowingCube"]->setRotation(45, 45, 45);
+        objects["glowingCube"]->setBloomFactor(1.f);
+        objects["glowingCube"]->setColor(0.9f, 0.9f, 0.9f);
 
-            objects["cubeNormalMesh3"]->setPosition(0, -1.9, 0);
-            objects["cubeNormalMesh3"]->setScale(2, 0.1f, 2);
-            objects["cubeNormalMesh3"]->setSpecularity(1);
+        objects["intel"]->setPosition(0, -1.9, -8);
+        objects["intel"]->setScale(0.1f, 0.1f, 0.1f);
 
-            objects["glowingCube"]->setPosition(-2.f, -1.f, 7.f);
-            objects["glowingCube"]->setRotation(45, 45, 45);
-            objects["glowingCube"]->setBloomFactor(1.f);
-            objects["glowingCube"]->setColor(0.9f, 0.9f, 0.9f);
+        objects["flatMesh1"]->setPosition(0, -2.5, 0);
+        objects["flatMesh1"]->setSpecularity(0.2f);
+        objects["flatMesh1"]->setScale(20, 0.5, 10);
 
-            objects["intel"]->setPosition(0, -1.9, -8);
-            objects["intel"]->setScale(0.1f, 0.1f, 0.1f);
+        objects["extraFlatMesh1"]->setTexture(textures["wood"].get());
+        objects["extraFlatMesh1"]->setPosition(0, -4.0, 0);
+        objects["extraFlatMesh1"]->setSpecularity(0.2f);
+        objects["extraFlatMesh1"]->setScale(100, 1.0f, 100);
+        objects["extraFlatMesh1"]->setColor(126.0f / 255.0f, 200.0f / 255.0f, 90.0f / 255.0f);
 
-            objects["flatMesh1"]->setPosition(0, -2.5, 0);
-            objects["flatMesh1"]->setSpecularity(0.2f);
-            objects["flatMesh1"]->setScale(20, 0.5, 10);
+        objects["porshe"]->setPosition(0, -1, -4);
+        objects["porshe"]->setSpecularity(0.8f);
+        objects["porshe"]->setScale(0.9f, 0.9f, 0.9f);
+        objects["porshe"]->setTexture(textures["porsche"].get());
 
-            objects["extraFlatMesh1"]->setTexture(textures["wood"].get());
-            objects["extraFlatMesh1"]->setPosition(0, -4.0, 0);
-            objects["extraFlatMesh1"]->setSpecularity(0.2f);
-            objects["extraFlatMesh1"]->setScale(100, 1.0f, 100);
-            objects["extraFlatMesh1"]->setColor(126.0f / 255.0f, 200.0f / 255.0f, 90.0f / 255.0f);
+        objects["aventador"]->setPosition(-14, -2, 0);
+        objects["aventador"]->setColor(0.0f, 113.0f / 255.0f, 197.0f / 255.0f);
+        objects["aventador"]->setSpecularity(0.8f);
+        objects["aventador"]->setScale(0.9f, 0.9f, 0.9f);
+        objects["aventador"]->setRotation(XMFLOAT3(0, 1, 0), -90);
 
-            objects["porshe"]->setPosition(0, -1, -4);
-            objects["porshe"]->setSpecularity(0.8f);
-            objects["porshe"]->setScale(0.9f, 0.9f, 0.9f);
-            objects["porshe"]->setTexture(textures["porsche"].get());
-
-            objects["aventador"]->setPosition(-14, -2, 0);
-            objects["aventador"]->setColor(0.0f, 113.0f / 255.0f, 197.0f / 255.0f);
-            objects["aventador"]->setSpecularity(0.8f);
-            objects["aventador"]->setScale(0.9f, 0.9f, 0.9f);
-            objects["aventador"]->setRotation(XMFLOAT3(0, 1, 0), -90);
-
-            objects["actorMesh1"]->setPosition(-2, -2, -8);
-            objects["actorMesh1"]->setScale(0.01f, 0.01f, 0.01f);
-            objects["actorMesh1"]->setRotation(XMFLOAT3(0, 1, 0), 90);
-            objects["actorMesh1"]->setSpecularity(0.02f);
-            objects["actorMesh1"]->setColor(1, 224.0f / 255.0f, 189.0f / 255.0f);
-            objects["actorMesh1"]->setTexture(textures["dennis"].get());
-        }
-        DXD::log("Done!\n");
+        objects["actorMesh1"]->setPosition(-2, -2, -8);
+        objects["actorMesh1"]->setScale(0.01f, 0.01f, 0.01f);
+        objects["actorMesh1"]->setRotation(XMFLOAT3(0, 1, 0), 90);
+        objects["actorMesh1"]->setSpecularity(0.02f);
+        objects["actorMesh1"]->setColor(1, 224.0f / 255.0f, 189.0f / 255.0f);
+        objects["actorMesh1"]->setTexture(textures["dennis"].get());
     }
     void prepLights() {
         DXD::log("Loading lights...\n");
@@ -185,9 +186,10 @@ private:
             lights["blueLight"]->setDirection(-1, 0, 1);
             lights["blueLight"]->setPower(2);
         }
-        DXD::log("Done!\n");
     }
     void prepTextures() {
+        DXD::log("Loading textures...\n");
+
         struct TextureCreationData {
             std::string name;
             std::wstring path;
@@ -211,9 +213,10 @@ private:
         camera->setFovAngleYDeg(70);
         camera->setNearZ(0.1f);
         camera->setFarZ(140.0f);
-        DXD::log("Done!\n");
     }
     void prepPostProcesses() {
+        DXD::log("Loading post processes...\n");
+
         postProcesses["blackBars"] = DXD::PostProcess::create();
         postProcesses["blackBars"]->setBlackBars(0.0f, 0.0f, 0.05f, 0.05f);
         postProcesses["blackBars"]->setEnabled(false);
@@ -261,7 +264,6 @@ private:
         for (auto &text : texts) {
             scene->addText(*text.second);
         }
-        DXD::log("Preparing scene done.\n");
     }
 
     // Internal game logic
