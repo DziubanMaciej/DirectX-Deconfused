@@ -15,12 +15,12 @@
 #include "DXD/Texture.h"
 #include "DXD/Window.h"
 
+#include <algorithm>
 #include <cmath>
 #include <iostream>
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include <algorithm>
 
 class Game : DXD::CallbackHandler {
 public:
@@ -127,7 +127,7 @@ private:
             objects["flatMesh1"]->setSpecularity(0.2f);
             objects["flatMesh1"]->setScale(20, 0.5, 10);
 
-            objects["extraFlatMesh1"]->setTexture(woodTexture.get());
+            objects["extraFlatMesh1"]->setTexture(textures["wood"].get());
             objects["extraFlatMesh1"]->setPosition(0, -4.0, 0);
             objects["extraFlatMesh1"]->setSpecularity(0.2f);
             objects["extraFlatMesh1"]->setScale(100, 1.0f, 100);
@@ -136,7 +136,7 @@ private:
             objects["porshe"]->setPosition(0, -1, -4);
             objects["porshe"]->setSpecularity(0.8f);
             objects["porshe"]->setScale(0.9f, 0.9f, 0.9f);
-            objects["porshe"]->setTexture(porsheTexture.get());
+            objects["porshe"]->setTexture(textures["porsche"].get());
 
             objects["aventador"]->setPosition(-14, -2, 0);
             objects["aventador"]->setColor(0.0f, 113.0f / 255.0f, 197.0f / 255.0f);
@@ -149,7 +149,7 @@ private:
             objects["actorMesh1"]->setRotation(XMFLOAT3(0, 1, 0), 90);
             objects["actorMesh1"]->setSpecularity(0.02f);
             objects["actorMesh1"]->setColor(1, 224.0f / 255.0f, 189.0f / 255.0f);
-            objects["actorMesh1"]->setTexture(dennisTexture.get());
+            objects["actorMesh1"]->setTexture(textures["dennis"].get());
         }
         DXD::log("Done!\n");
     }
@@ -188,14 +188,21 @@ private:
         DXD::log("Done!\n");
     }
     void prepTextures() {
-        porsheTexture = DXD::Texture::createFromFile(*application, L"Resources/textures/porsche.bmp", true);
-        assert(porsheTexture);
+        struct TextureCreationData {
+            std::string name;
+            std::wstring path;
+            bool asynchronousLoading;
+        };
 
-        dennisTexture = DXD::Texture::createFromFile(*application, L"Resources/textures/dennis.jpg", true);
-        assert(dennisTexture);
+        TextureCreationData texturesCreationData[] = {
+            {"porsche", L"Resources/textures/porsche.bmp", true},
+            {"dennis", L"Resources/textures/dennis.jpg", true},
+            {"wood", L"Resources/textures/wood.jpg", true}};
 
-        woodTexture = DXD::Texture::createFromFile(*application, L"Resources/textures/wood.jpg", true);
-        assert(woodTexture);
+        for (const auto &data : texturesCreationData) {
+            textures[data.name] = DXD::Texture::createFromFile(*application, data.path, data.asynchronousLoading);
+            assert(textures[data.name]);
+        }
     }
     void prepCamera() {
         DXD::log("Preparing camera...\n");
@@ -392,9 +399,11 @@ private:
         }
     }
 
+    // Constants
     constexpr static float movementSpeed = 0.7f;
     constexpr static float cameraRotationSpeed = 0.007f;
 
+    // Data
     unsigned int lastMouseX, lastMouseY;
     bool lookingAroundEnabled = false;
     bool fullscreen = false;
@@ -406,20 +415,19 @@ private:
     FpsCounter<180> fpsCounter;
     UINT gaussianBlurPassCount = 0u;
 
+    // General DXD objects
     std::unique_ptr<DXD::Application> application;
     std::unique_ptr<DXD::Window> window;
+    std::unique_ptr<DXD::Camera> camera;
+    std::unique_ptr<DXD::Scene> scene;
+
+    // DXD Scene elements
     std::unordered_map<std::string, std::unique_ptr<DXD::Mesh>> meshes;
     std::unordered_map<std::string, std::unique_ptr<DXD::Light>> lights;
     std::unordered_map<std::string, std::unique_ptr<DXD::Object>> objects;
     std::unordered_map<std::string, std::unique_ptr<DXD::Text>> texts;
     std::unordered_map<std::string, std::unique_ptr<DXD::PostProcess>> postProcesses;
-
-    // TODO: unordered_map for three below
-    std::unique_ptr<DXD::Texture> porsheTexture;
-    std::unique_ptr<DXD::Texture> dennisTexture;
-    std::unique_ptr<DXD::Texture> woodTexture;
-    std::unique_ptr<DXD::Scene> scene;
-    std::unique_ptr<DXD::Camera> camera;
+    std::unordered_map<std::string, std::unique_ptr<DXD::Texture>> textures;
 };
 
 int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int show) {
