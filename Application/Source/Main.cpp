@@ -56,6 +56,7 @@ private:
         std::unordered_map<std::string, MeshCreationData> meshMap = {
             {"teapot", {L"Resources/meshes/teapot_normals.obj", false}},
             {"cubeNormal", {L"Resources/meshes/cube_normals.obj", false}},
+            {"cubeNormalUv", {L"Resources/meshes/cube_normals_uvs.obj", true}},
             {"actor", {L"Resources/meshes/dennis.obj", true}},
             {"dxd", {L"Resources/meshes/dxd_comicsans.obj", false}},
             {"intelMesh", {L"Resources/meshes/corei7.obj", false}},
@@ -79,7 +80,7 @@ private:
                 {"glowingCube", "cubeNormal"},
                 {"flatMesh1", "cubeNormal"},
                 {"intel", "intelMesh"},
-                {"extraFlatMesh1", "cubeNormal"},
+                {"extraFlatMesh1", "cubeNormalUv"},
                 {"aventador", "aventadorMesh"},
                 {"porshe", "porsheMesh"},
                 {"actorMesh1", "actor"}};
@@ -125,6 +126,7 @@ private:
             objects["flatMesh1"]->setSpecularity(0.2f);
             objects["flatMesh1"]->setScale(20, 0.5, 10);
 
+            objects["extraFlatMesh1"]->setTexture(woodTexture.get());
             objects["extraFlatMesh1"]->setPosition(0, -4.0, 0);
             objects["extraFlatMesh1"]->setSpecularity(0.2f);
             objects["extraFlatMesh1"]->setScale(100, 1.0f, 100);
@@ -190,6 +192,9 @@ private:
 
         dennisTexture = DXD::Texture::createFromFile(*application, L"Resources/textures/dennis.jpg", true);
         assert(dennisTexture);
+
+        woodTexture = DXD::Texture::createFromFile(*application, L"Resources/textures/wood.jpg", true);
+        assert(woodTexture);
     }
     void prepCamera() {
         DXD::log("Preparing camera...\n");
@@ -399,6 +404,7 @@ private:
     // TODO: unordered_map for three below
     std::unique_ptr<DXD::Texture> porsheTexture;
     std::unique_ptr<DXD::Texture> dennisTexture;
+    std::unique_ptr<DXD::Texture> woodTexture;
     std::unique_ptr<DXD::Scene> scene;
     std::unique_ptr<DXD::Camera> camera;
 };

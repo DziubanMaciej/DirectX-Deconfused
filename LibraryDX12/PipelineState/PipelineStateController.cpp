@@ -139,6 +139,7 @@ void PipelineStateController::compilePipelineStateNormal(RootSignature &rootSign
 void PipelineStateController::compilePipelineStateTextureNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
     StaticSampler sampler{D3D12_SHADER_VISIBILITY_PIXEL};
+    sampler.addressMode(D3D12_TEXTURE_ADDRESS_MODE_MIRROR);
     DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
     table.appendSrvRange(t(0), 1); // diffuse texture
     rootSignature
