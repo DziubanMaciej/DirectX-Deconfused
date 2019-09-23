@@ -11,7 +11,7 @@ class RootSignature;
 
 class PipelineState : DXD::NonCopyableAndMovable {
 protected:
-    D3D12_SHADER_BYTECODE loadAndCompileShader(const std::wstring &name, const std::string &target, const D3D_SHADER_MACRO* defines);
+    D3D12_SHADER_BYTECODE loadAndCompileShader(const std::wstring &name, const std::string &target, const D3D_SHADER_MACRO *defines);
     std::vector<ID3DBlobPtr> shaderBlobs = {};
 };
 
@@ -46,4 +46,14 @@ public:
 
 private:
     D3D12_GRAPHICS_PIPELINE_STATE_DESC description = {};
+};
+
+class ComputePipelineState : public PipelineState {
+public:
+    ComputePipelineState(RootSignature &rootSignature);
+    ComputePipelineState &CS(const std::wstring &path, const D3D_SHADER_MACRO *defines);
+    void compile(ID3D12DevicePtr device, ID3D12PipelineStatePtr &pipelineState);
+
+private:
+    D3D12_COMPUTE_PIPELINE_STATE_DESC description = {};
 };

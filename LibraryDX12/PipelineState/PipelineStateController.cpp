@@ -243,17 +243,9 @@ inline void compilePipelineStatePostProcessGaussianBlurCompute(ID3D12DevicePtr &
         .compile(device);
 
     // Compile shaders
-    ID3DBlob *compiledShader = nullptr;
-    ID3DBlob *errorBlob = nullptr;
-    const auto path = std::wstring{SHADERS_PATH} + L"PostProcess/gaussian_blur_CS.hlsl";
-    const auto result = D3DCompileFromFile(path.c_str(), shaderDefines, nullptr, "main", "cs_5_1", 0, 0, &compiledShader, &errorBlob);
-    throwIfFailed(result, errorBlob);
-    D3D12_SHADER_BYTECODE bytecode{compiledShader->GetBufferPointer(), compiledShader->GetBufferSize()};
-
-    D3D12_COMPUTE_PIPELINE_STATE_DESC desc = {};
-    desc.CS = bytecode;
-    desc.pRootSignature = rootSignature.getRootSignature().Get();
-    throwIfFailed(device->CreateComputePipelineState(&desc, IID_PPV_ARGS(&pipelineState)));
+    return ComputePipelineState{rootSignature}
+        .CS(L"PostProcess/gaussian_blur_CS.hlsl", shaderDefines)
+        .compile(device, pipelineState);
 }
 
 void PipelineStateController::compilePipelineStatePostProcessGaussianBlurComputeHorizontal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {

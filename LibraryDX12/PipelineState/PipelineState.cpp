@@ -1,4 +1,5 @@
 #include "PipelineState/PipelineState.h"
+#include "PipelineState/RootSignature.h"
 #include "Utility/ThrowIfFailed.h"
 
 GraphicsPipelineState &GraphicsPipelineState::VS(const std::wstring &path) {
@@ -52,7 +53,7 @@ void GraphicsPipelineState::compile(ID3D12DevicePtr device, ID3D12PipelineStateP
     throwIfFailed(device->CreateGraphicsPipelineState(&description, IID_PPV_ARGS(&pipelineState)));
 }
 
-D3D12_SHADER_BYTECODE PipelineState::loadAndCompileShader(const std::wstring &name, const std::string &target, const D3D_SHADER_MACRO* defines) {
+D3D12_SHADER_BYTECODE PipelineState::loadAndCompileShader(const std::wstring &name, const std::string &target, const D3D_SHADER_MACRO *defines) {
     ID3DBlob *compiledShader = nullptr;
     ID3DBlob *errorBlob = nullptr;
 
@@ -62,4 +63,17 @@ D3D12_SHADER_BYTECODE PipelineState::loadAndCompileShader(const std::wstring &na
 
     this->shaderBlobs.emplace_back(compiledShader);
     return D3D12_SHADER_BYTECODE{compiledShader->GetBufferPointer(), compiledShader->GetBufferSize()};
+}
+
+ComputePipelineState::ComputePipelineState(RootSignature &rootSignature) {
+    description.pRootSignature = rootSignature.getRootSignature().Get();
+}
+
+ComputePipelineState &ComputePipelineState::CS(const std::wstring &path, const D3D_SHADER_MACRO *defines) {
+    description.CS = loadAndCompileShader(path, "cs_5_1", defines);
+    return *this;
+}
+
+void ComputePipelineState::compile(ID3D12DevicePtr device, ID3D12PipelineStatePtr &pipelineState) {
+    throwIfFailed(device->CreateComputePipelineState(&description, IID_PPV_ARGS(&pipelineState)));
 }
