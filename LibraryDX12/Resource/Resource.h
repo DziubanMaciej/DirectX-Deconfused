@@ -47,10 +47,12 @@ public:
     // Descriptors
     void createCbv(D3D12_CONSTANT_BUFFER_VIEW_DESC *desc);
     void createSrv(D3D12_SHADER_RESOURCE_VIEW_DESC *desc);
+    void createUav(D3D12_UNORDERED_ACCESS_VIEW_DESC *desc);
     void createDsv(D3D12_DEPTH_STENCIL_VIEW_DESC *desc);
     void createRtv(D3D12_RENDER_TARGET_VIEW_DESC *desc);
     D3D12_CPU_DESCRIPTOR_HANDLE getCbv() const { return descriptorsCbvSrvUav.getCpuHandle(0); }
     D3D12_CPU_DESCRIPTOR_HANDLE getSrv() const { return descriptorsCbvSrvUav.getCpuHandle(1); }
+    D3D12_CPU_DESCRIPTOR_HANDLE getUav() const { return descriptorsCbvSrvUav.getCpuHandle(2); }
     D3D12_CPU_DESCRIPTOR_HANDLE getDsv() const { return descriptorsDsv.getCpuHandle(); }
     D3D12_CPU_DESCRIPTOR_HANDLE getRtv() const { return descriptorsRtv.getCpuHandle(); }
 

@@ -9,7 +9,7 @@
 Resource::Resource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES state)
     : resource(resource),
       state(state),
-      descriptorsCbvSrvUav(ApplicationImpl::getInstance().getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 2)),
+      descriptorsCbvSrvUav(ApplicationImpl::getInstance().getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 3)),
       descriptorsDsv(ApplicationImpl::getInstance().getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1)),
       descriptorsRtv(ApplicationImpl::getInstance().getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1)) {}
 
@@ -51,6 +51,12 @@ void Resource::createSrv(D3D12_SHADER_RESOURCE_VIEW_DESC *desc) {
     ID3D12DevicePtr device = {};
     throwIfFailed(resource->GetDevice(IID_PPV_ARGS(&device)));
     device->CreateShaderResourceView(resource.Get(), desc, descriptorsCbvSrvUav.getCpuHandle(1));
+}
+
+void Resource::createUav(D3D12_UNORDERED_ACCESS_VIEW_DESC *desc) {
+    ID3D12DevicePtr device = {};
+    throwIfFailed(resource->GetDevice(IID_PPV_ARGS(&device)));
+    device->CreateUnorderedAccessView(resource.Get(), nullptr, desc, descriptorsCbvSrvUav.getCpuHandle(2));
 }
 
 void Resource::createDsv(D3D12_DEPTH_STENCIL_VIEW_DESC *desc) {
