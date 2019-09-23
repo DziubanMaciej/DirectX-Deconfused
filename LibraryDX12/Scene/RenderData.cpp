@@ -102,7 +102,7 @@ void RenderData::resize(int width, int height) {
     renderTargetDesc.SampleDesc.Count = 1;
     renderTargetDesc.SampleDesc.Quality = 0;
     renderTargetDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    renderTargetDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+    renderTargetDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS; // TODO can delete allow render target?
 
     bloomMap = std::make_unique<Resource>(
         device,
@@ -113,6 +113,7 @@ void RenderData::resize(int width, int height) {
         nullptr);
     bloomMap->createSrv(nullptr);
     bloomMap->createRtv(nullptr);
+    bloomMap->createUav(nullptr);
     bloomMap->getResource()->SetName(L"Bloom map");
     SET_OBJECT_NAME(*bloomMap, L"BloomMap");
 
@@ -259,7 +260,7 @@ void PostProcessRenderTargets::resize(int width, int height) {
     renderTargetDesc.SampleDesc.Count = 1;
     renderTargetDesc.SampleDesc.Quality = 0;
     renderTargetDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    renderTargetDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+    renderTargetDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
     for (int i = 0; i <= 1; i++) { // Initialize resource0 and resource1 the same way
         resources[i] = std::make_unique<Resource>(
@@ -271,6 +272,7 @@ void PostProcessRenderTargets::resize(int width, int height) {
             nullptr);
         resources[i]->createSrv(nullptr);
         resources[i]->createRtv(nullptr);
+        resources[i]->createUav(nullptr);
         SET_OBJECT_NAME(*resources[i], L"PostProcessRT%d", i);
     }
 }

@@ -13,6 +13,7 @@ add_shaders_and_cmake_file(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/PostProcess/apply_bloom_PS.hlsl               Pixel
     ${CMAKE_CURRENT_SOURCE_DIR}/PostProcess/black_bars_PS.hlsl                Pixel
     ${CMAKE_CURRENT_SOURCE_DIR}/PostProcess/convolution_PS.hlsl               Pixel
+    ${CMAKE_CURRENT_SOURCE_DIR}/PostProcess/gaussian_blur_CS.hlsl             Compute
     ${CMAKE_CURRENT_SOURCE_DIR}/PostProcess/gaussian_blur_PS.hlsl             Pixel
     ${CMAKE_CURRENT_SOURCE_DIR}/PostProcess/linear_color_correction_PS.hlsl   Pixel
     ${CMAKE_CURRENT_SOURCE_DIR}/PostProcess/VS.hlsl                           Vertex

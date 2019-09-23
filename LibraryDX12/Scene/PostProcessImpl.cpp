@@ -109,7 +109,5 @@ void PostProcessImpl::setGaussianBlur(UINT passCount, UINT samplingRange) {
     auto &data = this->data.gaussianBlur;
     data.cb.screenHeight = -1;
     data.cb.screenWidth = -1;
-    data.cb.samplingRange = std::min(samplingRange, maxSamplingRange);
-    data.cb.horizontal = false;
     data.passCount = std::min(passCount, maxPassCount);
 }

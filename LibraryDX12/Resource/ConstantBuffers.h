@@ -42,6 +42,8 @@ struct PostProcessApplyBloomCB {
     float screenHeight;
 };
 
+using PostProcessGaussianBlurComputeCB = PostProcessApplyBloomCB;
+
 struct SsaoCB {
     float screenWidth;
     float screenHeight;
@@ -57,7 +59,7 @@ struct SsrCB {
 };
 
 struct PostProcessGaussianBlurData {
-    PostProcessGaussianBlurCB cb;
+    PostProcessGaussianBlurComputeCB cb;
     UINT passCount;
 };
 

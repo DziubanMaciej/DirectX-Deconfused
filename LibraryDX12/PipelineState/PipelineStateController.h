@@ -29,6 +29,8 @@ public:
         PIPELINE_STATE_POST_PROCESS_CONVOLUTION,
         PIPELINE_STATE_POST_PROCESS_LINEAR_COLOR_CORRECTION,
         PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR,
+        PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR_COMPUTE_HORIZONTAL,
+        PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR_COMPUTE_VERTICAL,
         PIPELINE_STATE_POST_PROCESS_APPLY_BLOOM,
         // This hould be the last entry
         COUNT
@@ -60,6 +62,8 @@ private:
     void compilePipelineStatePostProcessConvolution(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStatePostProcessLinearColorCorrection(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStatePostProcessGaussianBlur(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    void compilePipelineStatePostProcessGaussianBlurComputeHorizontal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    void compilePipelineStatePostProcessGaussianBlurComputeVertical(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStatePostProcessApplyBloom(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
 
     ID3D12DevicePtr device;

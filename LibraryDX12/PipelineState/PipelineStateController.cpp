@@ -78,6 +78,12 @@ void PipelineStateController::compile(Identifier identifier) {
     case Identifier::PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR:
         compilePipelineStatePostProcessGaussianBlur(rootSignature, pipelineState);
         break;
+    case Identifier::PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR_COMPUTE_HORIZONTAL:
+        compilePipelineStatePostProcessGaussianBlurComputeHorizontal(rootSignature, pipelineState);
+        break;
+    case Identifier::PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR_COMPUTE_VERTICAL:
+        compilePipelineStatePostProcessGaussianBlurComputeVertical(rootSignature, pipelineState);
+        break;
     case Identifier::PIPELINE_STATE_POST_PROCESS_APPLY_BLOOM:
         compilePipelineStatePostProcessApplyBloom(rootSignature, pipelineState);
         break;
@@ -220,6 +226,48 @@ void PipelineStateController::compilePipelineStatePostProcessLinearColorCorrecti
 
 void PipelineStateController::compilePipelineStatePostProcessGaussianBlur(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     compileBasicPipelineStatePostProcess<PostProcessGaussianBlurCB>(device, rootSignature, pipelineState, L"PostProcess/gaussian_blur_PS.hlsl");
+}
+
+inline void compilePipelineStatePostProcessGaussianBlurCompute(ID3D12DevicePtr &device, RootSignature &rootSignature,
+                                                               ID3D12PipelineStatePtr &pipelineState, const D3D_SHADER_MACRO *shaderDefines) {
+    StaticSampler sampler{D3D12_SHADER_VISIBILITY_ALL};
+    DescriptorTable table{D3D12_SHADER_VISIBILITY_ALL};
+    table.appendSrvRange(t(0), 1)
+        .appendUavRange(u(0), 1);
+
+    // Root signature - crossthread data
+    rootSignature
+        .appendDescriptorTable(std::move(table))
+        .append32bitConstant<PostProcessGaussianBlurComputeCB>(b(0), D3D12_SHADER_VISIBILITY_ALL)
+        .appendStaticSampler(s(0), sampler)
+        .compile(device);
+
+    // Compile shaders
+    ID3DBlob *compiledShader = nullptr;
+    ID3DBlob *errorBlob = nullptr;
+    const auto path = std::wstring{SHADERS_PATH} + L"PostProcess/gaussian_blur_CS.hlsl";
+    const auto result = D3DCompileFromFile(path.c_str(), shaderDefines, nullptr, "main", "cs_5_1", 0, 0, &compiledShader, &errorBlob);
+    throwIfFailed(result, errorBlob);
+    D3D12_SHADER_BYTECODE bytecode{compiledShader->GetBufferPointer(), compiledShader->GetBufferSize()};
+
+    D3D12_COMPUTE_PIPELINE_STATE_DESC desc = {};
+    desc.CS = bytecode;
+    desc.pRootSignature = rootSignature.getRootSignature().Get();
+    throwIfFailed(device->CreateComputePipelineState(&desc, IID_PPV_ARGS(&pipelineState)));
+}
+
+void PipelineStateController::compilePipelineStatePostProcessGaussianBlurComputeHorizontal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
+    const D3D_SHADER_MACRO shaderDefines[] = {
+        {"HORIZONTAL", ""},
+        {nullptr, nullptr}};
+    compilePipelineStatePostProcessGaussianBlurCompute(device, rootSignature, pipelineState, shaderDefines);
+}
+
+void PipelineStateController::compilePipelineStatePostProcessGaussianBlurComputeVertical(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
+    const D3D_SHADER_MACRO shaderDefines[] = {
+        {"VERTICAL", ""},
+        {nullptr, nullptr}};
+    compilePipelineStatePostProcessGaussianBlurCompute(device, rootSignature, pipelineState, shaderDefines);
 }
 
 void PipelineStateController::compilePipelineStatePostProcessApplyBloom(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {

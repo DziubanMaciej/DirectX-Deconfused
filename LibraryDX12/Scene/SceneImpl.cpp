@@ -511,8 +511,10 @@ void SceneImpl::renderPostProcess(PostProcessImpl &postProcess, CommandList &com
         postProcessData.cb.screenWidth = screenWidth;
         postProcessData.cb.screenHeight = screenHeight;
 
+        const UINT threadGroupCountX = static_cast<UINT>(screenWidth / 16 + 0.5f);
+        const UINT threadGroupCountY = static_cast<UINT>(screenHeight / 16 + 0.5f);
+
         // Set cross-pass state
-        commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR);
         commandList.IASetVertexBuffer(fullscreenVB);
 
         // Render all passes of the blur filter
@@ -520,25 +522,23 @@ void SceneImpl::renderPostProcess(PostProcessImpl &postProcess, CommandList &com
 
             // Render horizontal pass
             const bool firstPass = (passIndex == 0);
-            getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, firstPass, false, input, nullptr, source, destination);
-            postProcessData.cb.horizontal = true;
-            commandList.OMSetRenderTargetNoDepth(*destination);
-            commandList.clearRenderTargetView(destination->getRtv(), blackColor);
-            commandList.setGraphicsRoot32BitConstant(0, postProcessData.cb);
-            commandList.setSrvInDescriptorTable(1, 0, *source);
-            commandList.draw(6u);
+            getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, firstPass, false, input, nullptr, source, destination, true);
+            commandList.setPipelineStateAndComputeRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR_COMPUTE_HORIZONTAL);
+            commandList.setSrvInDescriptorTable(0, 0, *source);
+            commandList.setUavInDescriptorTable(0, 1, *destination);
+            commandList.setComputeRoot32BitConstant(1, postProcessData.cb);
+            commandList.dispatch(threadGroupCountX, threadGroupCountY, 1u);
 
             renderTargets.swapResources();
 
             // Render vertical pass
             const bool lastPass = (passIndex == postProcessData.passCount - 1);
-            getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, false, lastPass, nullptr, output, source, destination);
-            postProcessData.cb.horizontal = false;
-            commandList.OMSetRenderTargetNoDepth(*destination);
-            commandList.clearRenderTargetView(destination->getRtv(), blackColor);
-            commandList.setGraphicsRoot32BitConstant(0, postProcessData.cb);
-            commandList.setSrvInDescriptorTable(1, 0, *source);
-            commandList.draw(6u);
+            getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, false, lastPass, nullptr, output, source, destination, true);
+            commandList.setPipelineStateAndComputeRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR_COMPUTE_VERTICAL);
+            commandList.setSrvInDescriptorTable(0, 0, *source);
+            commandList.setUavInDescriptorTable(0, 1, *destination);
+            commandList.setComputeRoot32BitConstant(1, postProcessData.cb);
+            commandList.dispatch(threadGroupCountX, threadGroupCountY, 1u);
 
             if (!lastPass) {
                 renderTargets.swapResources();
