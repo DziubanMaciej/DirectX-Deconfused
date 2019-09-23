@@ -1,7 +1,7 @@
 // -------------------------------------------------------- Parameters (defines)
 // HORIZONTAL - defined for horizontal pass, not defined for a vertical pass
 // SAMPLING_BORDER - how many pixels in each direction will be sampled to blur
-// THREAD_GROUP_LENGTH - must be at least 2*SAMPLING_BORDER
+// THREAD_GROUP_LENGTH - how many threads in a wave in one dimension
 
 #ifndef SAMPLING_BORDER
 #define SAMPLING_BORDER 5
@@ -77,7 +77,7 @@ void sampleBorderPixels(uint3 GroupThreadID, float2 uvBase, float2 uvOffset, uin
         storeInGroupMemory(groupMemoryIndex, borderPixel);
     }
 
-    else if (SELECT_COMPONENT(GroupThreadID) >= THREAD_GROUP_LENGTH - SAMPLING_BORDER) {
+    if (SELECT_COMPONENT(GroupThreadID) >= THREAD_GROUP_LENGTH - SAMPLING_BORDER) {
         const float2 uv = OFFSET_UV(uvBase, SAMPLING_BORDER * uvOffset);
         const float2 groupMemoryIndex = OFFSET_GROUP_MEMORY_INDEX(groupMemoryIndexBase, SAMPLING_BORDER);
         const float3 borderPixel = input.SampleLevel(sceneSampler, uv, 0).rgb;
