@@ -103,8 +103,8 @@ void PipelineStateController::compilePipelineStateNormal(RootSignature &rootSign
 
     // Pipeline state object
     PipelineState{inputLayout, rootSignature}
-        .VS(L"vertex_normal.hlsl")
-        .PS(L"pixel_normal.hlsl")
+        .VS(L"3D/normal_VS.hlsl")
+        .PS(L"3D/normal_PS.hlsl")
         .setRenderTargetsCount(3)
         .setRenderTargetFormat(1, DXGI_FORMAT_R16G16B16A16_SNORM)
         .compile(device, pipelineState);
@@ -132,8 +132,8 @@ void PipelineStateController::compilePipelineStateTextureNormal(RootSignature &r
 
     // Pipeline state object
     PipelineState{inputLayout, rootSignature}
-        .VS(L"vertex_normal_texture.hlsl")
-        .PS(L"pixel_normal_texture.hlsl")
+        .VS(L"3D/normal_texture_VS.hlsl")
+        .PS(L"3D/normal_texture_PS.hlsl")
         .setRenderTargetsCount(3)
         .setRenderTargetFormat(1, DXGI_FORMAT_R16G16B16A16_SNORM)
         .compile(device, pipelineState);
@@ -155,7 +155,7 @@ void PipelineStateController::compilePipelineStateShadowMapNormal(RootSignature 
 
     // Pipeline state object
     PipelineState{inputLayout, rootSignature}
-        .VS(L"vertex_normal_sm.hlsl")
+        .VS(L"ShadowMap/normal_VS.hlsl")
         .compile(device, pipelineState);
 }
 
@@ -174,7 +174,7 @@ void PipelineStateController::compilePipelineStateShadowMapTextureNormal(RootSig
 
     // Pipeline state object
     PipelineState{inputLayout, rootSignature}
-        .VS(L"vertex_normal_texture_sm.hlsl")
+        .VS(L"ShadowMap/normal_texture_VS.hlsl")
         .compile(device, pipelineState);
 }
 
@@ -200,26 +200,26 @@ static void compileBasicPipelineStatePostProcess(ID3D12DevicePtr device, RootSig
 
     // Pipeline state object
     return PipelineState{inputLayout, rootSignature}
-        .VS(L"vertex_post_process.hlsl")
+        .VS(L"PostProcess/VS.hlsl")
         .PS(psPath)
         .disableDepthStencil()
         .compile(device, pipelineState);
 }
 
 void PipelineStateController::compilePipelineStatePostProcessBlackBars(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
-    compileBasicPipelineStatePostProcess<PostProcessBlackBarsCB>(device, rootSignature, pipelineState, L"pixel_post_process_black_bars.hlsl");
+    compileBasicPipelineStatePostProcess<PostProcessBlackBarsCB>(device, rootSignature, pipelineState, L"PostProcess/black_bars_PS.hlsl");
 }
 
 void PipelineStateController::compilePipelineStatePostProcessConvolution(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
-    compileBasicPipelineStatePostProcess<PostProcessConvolutionCB>(device, rootSignature, pipelineState, L"pixel_post_process_convolution.hlsl");
+    compileBasicPipelineStatePostProcess<PostProcessConvolutionCB>(device, rootSignature, pipelineState, L"PostProcess/convolution_PS.hlsl");
 }
 
 void PipelineStateController::compilePipelineStatePostProcessLinearColorCorrection(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
-    compileBasicPipelineStatePostProcess<PostProcessLinearColorCorrectionCB>(device, rootSignature, pipelineState, L"pixel_post_process_linear_color_correction.hlsl");
+    compileBasicPipelineStatePostProcess<PostProcessLinearColorCorrectionCB>(device, rootSignature, pipelineState, L"PostProcess/linear_color_correction_PS.hlsl");
 }
 
 void PipelineStateController::compilePipelineStatePostProcessGaussianBlur(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
-    compileBasicPipelineStatePostProcess<PostProcessGaussianBlurCB>(device, rootSignature, pipelineState, L"pixel_post_process_gaussian_blur.hlsl");
+    compileBasicPipelineStatePostProcess<PostProcessGaussianBlurCB>(device, rootSignature, pipelineState, L"PostProcess/gaussian_blur_PS.hlsl");
 }
 
 void PipelineStateController::compilePipelineStatePostProcessApplyBloom(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
@@ -254,8 +254,8 @@ void PipelineStateController::compilePipelineStatePostProcessApplyBloom(RootSign
 
     // Pipeline state object
     return PipelineState{inputLayout, rootSignature}
-        .VS(L"vertex_post_process.hlsl")
-        .PS(L"pixel_post_process_apply_bloom.hlsl")
+        .VS(L"PostProcess/VS.hlsl")
+        .PS(L"PostProcess/apply_bloom_PS.hlsl")
         .disableDepthStencil()
         .setBlendDesc(blendDesc)
         .compile(device, pipelineState);
@@ -287,8 +287,8 @@ void PipelineStateController::compilePipelineStateLighting(RootSignature &rootSi
 
     // Pipeline state object
     return PipelineState{inputLayout, rootSignature}
-        .VS(L"vertex_post_process.hlsl")
-        .PS(L"pixel_lighting.hlsl")
+        .VS(L"PostProcess/VS.hlsl")
+        .PS(L"lighting_PS.hlsl")
         .disableDepthStencil()
         .setRenderTargetsCount(3)
         .compile(device, pipelineState);
@@ -314,8 +314,8 @@ void PipelineStateController::compilePipelineStateSSAO(RootSignature &rootSignat
 
     // Pipeline state object
     return PipelineState{inputLayout, rootSignature}
-        .VS(L"vertex_post_process.hlsl")
-        .PS(L"pixel_ssao.hlsl")
+        .VS(L"PostProcess/VS.hlsl")
+        .PS(L"ssao_PS.hlsl")
         .disableDepthStencil()
         .setRenderTargetsCount(1)
         .setRenderTargetFormat(0, DXGI_FORMAT_R8_UNORM)
@@ -344,8 +344,8 @@ void PipelineStateController::compilePipelineStateSSR(RootSignature &rootSignatu
 
     // Pipeline state object
     return PipelineState{inputLayout, rootSignature}
-        .VS(L"vertex_post_process.hlsl")
-        .PS(L"pixel_ssr.hlsl")
+        .VS(L"PostProcess/VS.hlsl")
+        .PS(L"ssr_PS.hlsl")
         .disableDepthStencil()
         .setRenderTargetsCount(1)
         .compile(device, pipelineState);

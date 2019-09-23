@@ -1,18 +1,24 @@
 add_shaders_and_cmake_file(${TARGET_NAME}
-    ${CMAKE_CURRENT_SOURCE_DIR}/pixel_ssao.hlsl            Pixel
-    ${CMAKE_CURRENT_SOURCE_DIR}/pixel_ssr.hlsl             Pixel
-    ${CMAKE_CURRENT_SOURCE_DIR}/pixel_lighting.hlsl        Pixel
-    ${CMAKE_CURRENT_SOURCE_DIR}/pixel_normal.hlsl          Pixel
-    ${CMAKE_CURRENT_SOURCE_DIR}/pixel_normal_texture.hlsl  Pixel
-    ${CMAKE_CURRENT_SOURCE_DIR}/pixel_post_process_apply_bloom.hlsl  Pixel
-    ${CMAKE_CURRENT_SOURCE_DIR}/pixel_post_process_black_bars.hlsl Pixel
-    ${CMAKE_CURRENT_SOURCE_DIR}/pixel_post_process_convolution.hlsl   Pixel
-    ${CMAKE_CURRENT_SOURCE_DIR}/pixel_post_process_gaussian_blur.hlsl   Pixel
-    ${CMAKE_CURRENT_SOURCE_DIR}/pixel_post_process_linear_color_correction.hlsl   Pixel
+    # Shadow map shaders
+    ${CMAKE_CURRENT_SOURCE_DIR}/ShadowMap/normal_VS.hlsl         Vertex
+    ${CMAKE_CURRENT_SOURCE_DIR}/ShadowMap/normal_texture_VS.hlsl Vertex
 
-    ${CMAKE_CURRENT_SOURCE_DIR}/vertex_normal.hlsl         Vertex
-    ${CMAKE_CURRENT_SOURCE_DIR}/vertex_normal_texture.hlsl Vertex
-    ${CMAKE_CURRENT_SOURCE_DIR}/vertex_normal_texture_sm.hlsl Vertex
-    ${CMAKE_CURRENT_SOURCE_DIR}/vertex_normal_sm.hlsl      Vertex
-    ${CMAKE_CURRENT_SOURCE_DIR}/vertex_post_process.hlsl   Vertex
+    # 3D shaders
+    ${CMAKE_CURRENT_SOURCE_DIR}/3D/normal_PS.hlsl           Pixel
+    ${CMAKE_CURRENT_SOURCE_DIR}/3D/normal_texture_PS.hlsl   Pixel
+    ${CMAKE_CURRENT_SOURCE_DIR}/3D/normal_texture_VS.hlsl   Vertex
+    ${CMAKE_CURRENT_SOURCE_DIR}/3D/normal_VS.hlsl           Vertex
+
+    # Post process shaders
+    ${CMAKE_CURRENT_SOURCE_DIR}/PostProcess/apply_bloom_PS.hlsl               Pixel
+    ${CMAKE_CURRENT_SOURCE_DIR}/PostProcess/black_bars_PS.hlsl                Pixel
+    ${CMAKE_CURRENT_SOURCE_DIR}/PostProcess/convolution_PS.hlsl               Pixel
+    ${CMAKE_CURRENT_SOURCE_DIR}/PostProcess/gaussian_blur_PS.hlsl             Pixel
+    ${CMAKE_CURRENT_SOURCE_DIR}/PostProcess/linear_color_correction_PS.hlsl   Pixel
+    ${CMAKE_CURRENT_SOURCE_DIR}/PostProcess/VS.hlsl                           Vertex
+
+    # Other shaders
+    ${CMAKE_CURRENT_SOURCE_DIR}/lighting_PS.hlsl   Pixel
+    ${CMAKE_CURRENT_SOURCE_DIR}/ssao_PS.hlsl       Pixel
+    ${CMAKE_CURRENT_SOURCE_DIR}/ssr_PS.hlsl        Pixel
 )
