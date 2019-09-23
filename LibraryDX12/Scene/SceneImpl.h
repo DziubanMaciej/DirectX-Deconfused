@@ -46,7 +46,8 @@ protected:
     void inspectObjectsNotReady();
     size_t getEnabledPostProcessesCount() const;
     static void getAndPrepareSourceAndDestinationForPostProcess(CommandList &commandList, PostProcessRenderTargets &renderTargets, bool first, bool last,
-                                                                Resource *initialInput, Resource *finalOutput, Resource *&outSource, Resource *&outDestination);
+                                                                Resource *initialInput, Resource *finalOutput, Resource *&outSource, Resource *&outDestination,
+                                                                bool compute = false);
 
     // Render methods
     void renderShadowMaps(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);

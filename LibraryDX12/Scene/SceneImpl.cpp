@@ -120,14 +120,19 @@ void SceneImpl::getAndPrepareSourceAndDestinationForPostProcess(CommandList &com
                                                                 PostProcessRenderTargets &renderTargets,
                                                                 bool first, bool last,
                                                                 Resource *initialInput, Resource *finalOutput,
-                                                                Resource *&outSource, Resource *&outDestination) {
+                                                                Resource *&outSource, Resource *&outDestination, bool compute) {
     // Get resources
     outSource = (first && initialInput) ? initialInput : &renderTargets.getSource();
     outDestination = (last && finalOutput) ? finalOutput : &renderTargets.getDestination();
 
     // Set states
-    commandList.transitionBarrier(*outSource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    commandList.transitionBarrier(*outDestination, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    if (compute) {
+        commandList.transitionBarrier(*outSource, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        commandList.transitionBarrier(*outDestination, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+    } else {
+        commandList.transitionBarrier(*outSource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        commandList.transitionBarrier(*outDestination, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    }
 }
 
 // --------------------------------------------------------------------------- Render methods
