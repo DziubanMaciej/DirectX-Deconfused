@@ -45,9 +45,6 @@ void PipelineStateController::compile(Identifier identifier) {
     switch (identifier) {
     case Identifier::PIPELINE_STATE_UNKNOWN:
         break;
-    case Identifier::PIPELINE_STATE_DEFAULT:
-        compilePipelineStateDefault(rootSignature, pipelineState);
-        break;
     case Identifier::PIPELINE_STATE_TEXTURE_NORMAL:
         compilePipelineStateTextureNormal(rootSignature, pipelineState);
         break;
@@ -90,29 +87,6 @@ void PipelineStateController::compile(Identifier identifier) {
 }
 
 // --------------------------------------------------------------------------------------------- 3D
-
-void PipelineStateController::compilePipelineStateDefault(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
-    // Root signature - crossthread data
-    DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
-    table.appendCbvRange(b(1), 1);
-    rootSignature
-        .append32bitConstant<ModelMvp>(b(0), D3D12_SHADER_VISIBILITY_VERTEX)
-        .append32bitConstant<ObjectProperties>(b(2), D3D12_SHADER_VISIBILITY_PIXEL)
-        .appendDescriptorTable(std::move(table))
-        .compile(device);
-
-    // Input layout - per vertex data
-    const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
-        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-    };
-
-    // Pipeline state object
-    PipelineState{inputLayout, rootSignature}
-        .VS(L"vertex.hlsl")
-        .PS(L"pixel.hlsl")
-        .setRenderTargetsCount(2)
-        .compile(device, pipelineState);
-}
 
 void PipelineStateController::compilePipelineStateNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data

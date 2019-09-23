@@ -228,7 +228,6 @@ UINT MeshImpl::computeVertexSize(MeshType meshType) {
 
 std::map<MeshImpl::MeshType, PipelineStateController::Identifier> MeshImpl::getPipelineStateIdentifierMap() {
     std::map<MeshImpl::MeshType, PipelineStateController::Identifier> map = {};
-    map[TRIANGLE_STRIP] = PipelineStateController::Identifier::PIPELINE_STATE_DEFAULT;
     map[TRIANGLE_STRIP | NORMALS] = PipelineStateController::Identifier::PIPELINE_STATE_NORMAL;
     map[TRIANGLE_STRIP | NORMALS | TEXTURE_COORDS] = PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE_NORMAL;
     return std::move(map);

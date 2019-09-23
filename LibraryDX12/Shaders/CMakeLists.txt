@@ -1,5 +1,4 @@
 add_shaders_and_cmake_file(${TARGET_NAME}
-    ${CMAKE_CURRENT_SOURCE_DIR}/pixel.hlsl                 Pixel
     ${CMAKE_CURRENT_SOURCE_DIR}/pixel_ssao.hlsl            Pixel
     ${CMAKE_CURRENT_SOURCE_DIR}/pixel_ssr.hlsl             Pixel
     ${CMAKE_CURRENT_SOURCE_DIR}/pixel_lighting.hlsl        Pixel
@@ -11,7 +10,6 @@ add_shaders_and_cmake_file(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/pixel_post_process_gaussian_blur.hlsl   Pixel
     ${CMAKE_CURRENT_SOURCE_DIR}/pixel_post_process_linear_color_correction.hlsl   Pixel
 
-    ${CMAKE_CURRENT_SOURCE_DIR}/vertex.hlsl                Vertex
     ${CMAKE_CURRENT_SOURCE_DIR}/vertex_normal.hlsl         Vertex
     ${CMAKE_CURRENT_SOURCE_DIR}/vertex_normal_texture.hlsl Vertex
     ${CMAKE_CURRENT_SOURCE_DIR}/vertex_normal_texture_sm.hlsl Vertex

@@ -13,7 +13,6 @@ public:
     enum class Identifier {
         PIPELINE_STATE_UNKNOWN,
         // 3D
-        PIPELINE_STATE_DEFAULT,
         PIPELINE_STATE_TEXTURE_NORMAL,
         PIPELINE_STATE_NORMAL,
         // Shadow maps
@@ -45,7 +44,6 @@ private:
     void compile(Identifier identifier);
 
     // 3D
-    void compilePipelineStateDefault(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateTextureNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     // SSAO
