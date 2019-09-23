@@ -1,5 +1,6 @@
 #pragma once
 
+#include "CommandList/ResourceBindingType.h"
 #include "Descriptor/DescriptorAllocation.h"
 
 #include "DXD/NonCopyableAndMovable.h"
@@ -9,8 +10,8 @@
 #include <set>
 #include <vector>
 
-class CommandList;
 class RootSignature;
+class CommandList;
 struct D3D12_CPU_DESCRIPTOR_HANDLE;
 
 /// \brief Manages descriptors in GPU visible descriptor heap
@@ -58,7 +59,8 @@ public:
     /// it's immediate, no need to wait for it. Also, calls to setGraphicsRootSignature is performed on the
     /// CommandList. Call to commit() should be done as late as possible to batch the operations. Just before
     /// draw/dispatch call is ideal.
-    void commit();
+    /// \param resourceBindingType specifies, whether a compute or graphics root signature should be bound
+    void commit(ResourceBindingType::ResourceBindingType resourceBindingType);
 
     auto &getGpuDescriptorAllocations() { return gpuDescriptorAllocations; }
 

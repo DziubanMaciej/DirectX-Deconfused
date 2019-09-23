@@ -59,7 +59,7 @@ void GpuDescriptorHeapController::stage(RootParameterIndex indexOfTable, UINT of
     stagedDescriptorTables.insert(indexOfTable);
 }
 
-void GpuDescriptorHeapController::commit() {
+void GpuDescriptorHeapController::commit(ResourceBindingType::ResourceBindingType resourceBindingType) {
     // Do nothing if we haven't staged anything new since last commit
     if (stagedDescriptorTables.size() == 0) {
         return;
@@ -93,7 +93,7 @@ void GpuDescriptorHeapController::commit() {
                                 sourceRangesCount, sourceRangeStarts, sourceRangeSizes, this->heapType);
 
         // Bind the table to command list
-        commandList.getCommandList()->SetGraphicsRootDescriptorTable(rootParameterIndex, currentGpuHandle);
+        ResourceBindingType::setRootDescriptorTableFunctions[resourceBindingType](commandList.getCommandList().Get(), rootParameterIndex, currentGpuHandle);
 
         // Increment GPU visible heap handles
         currentCpuHandle.Offset(descriptorTableInfo.descriptorCount, descriptorIncrementSize);

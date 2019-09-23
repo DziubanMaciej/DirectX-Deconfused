@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CommandList/CommandAllocatorController.h"
+#include "CommandList/ResourceBindingType.h"
 #include "Descriptor/DescriptorController.h"
 #include "Descriptor/GpuDescriptorHeapController.h"
 #include "PipelineState/PipelineStateController.h"
@@ -33,12 +34,15 @@ public:
     void clearRenderTargetView(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT colorRGBA[4]);
     void clearDepthStencilView(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags, FLOAT depth, UINT8 stencil);
 
+    void setPipelineStateAndRootSignature(PipelineStateController::Identifier identifier, ResourceBindingType::ResourceBindingType resourceBindingType);
     void setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier identifier);
+    void setPipelineStateAndComputeRootSignature(PipelineStateController::Identifier identifier);
 
     void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, ID3D12DescriptorHeapPtr descriptorHeap);
 
     void setCbvInDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const Resource &resource);
     void setSrvInDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const Resource &resource);
+    void setUavInDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const Resource &resource);
 
     void IASetVertexBuffers(UINT startSlot, UINT numBuffers, VertexBuffer *vertexBuffers);
     void IASetVertexBuffer(UINT slot, VertexBuffer &vertexBuffer);
@@ -65,9 +69,13 @@ public:
 
     template <typename ConstantType>
     void setGraphicsRoot32BitConstant(UINT rootParameterIndex, const ConstantType &constant);
+    template <typename ConstantType>
+    void setComputeRoot32BitConstant(UINT rootParameterIndex, const ConstantType &constant);
 
     void drawIndexed(UINT verticesCount, INT startVertexLocation = 0u, INT startIndexLocation = 0u);
     void draw(UINT verticesCount, INT startVertexLocation = 0u);
+
+    void dispatch(UINT threadGroupCountX, UINT threadGroupCountY, UINT threadGroupCountZ);
 
     void close();
     void registerAllData(ResourceUsageTracker &resourceUsageTracker, uint64_t fenceValue);
@@ -90,6 +98,7 @@ private:
     CommandAllocatorController &commandAllocatorController;
     ID3D12CommandAllocatorPtr commandAllocator;
     ID3D12GraphicsCommandListPtr commandList;
+    ResourceBindingType::ResourceBindingType resourceBindingType;
 
     // Descriptor controllers
     GpuDescriptorHeapController gpuDescriptorHeapControllerSampler;
@@ -137,4 +146,11 @@ inline void CommandList::setGraphicsRoot32BitConstant(UINT rootParameterIndex, c
     static_assert(sizeof(ConstantType) % 4 == 0, "Not a dword aligned type");
     constexpr static auto dwordCount = sizeof(ConstantType) / 4;
     commandList->SetGraphicsRoot32BitConstants(rootParameterIndex, dwordCount, &constant, 0);
+}
+
+template <typename ConstantType>
+inline void CommandList::setComputeRoot32BitConstant(UINT rootParameterIndex, const ConstantType &constant) {
+    static_assert(sizeof(ConstantType) % 4 == 0, "Not a dword aligned type");
+    constexpr static auto dwordCount = sizeof(ConstantType) / 4;
+    commandList->SetComputeRoot32BitConstants(rootParameterIndex, dwordCount, &constant, 0);
 }

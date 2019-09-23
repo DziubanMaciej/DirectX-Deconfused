@@ -39,17 +39,31 @@ void CommandList::clearDepthStencilView(D3D12_CPU_DESCRIPTOR_HANDLE depthStencil
     commandList->ClearDepthStencilView(depthStencilView, clearFlags, depth, stencil, 0, nullptr);
 }
 
-void CommandList::setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier identifier) {
+void CommandList::setPipelineStateAndRootSignature(PipelineStateController::Identifier identifier, ResourceBindingType::ResourceBindingType resourceBindingType) {
+    // Get data
     auto &pipelineStateController = ApplicationImpl::getInstance().getPipelineStateController();
     auto &pipelineState = pipelineStateController.getPipelineState(identifier);
     auto &rootSignature = pipelineStateController.getRootSignature(identifier);
 
+    // Set pipeline state and root signature
     commandList->SetPipelineState(pipelineState.Get());
-    commandList->SetGraphicsRootSignature(rootSignature.getRootSignature().Get());
+    ResourceBindingType::setRootSignatureFunctions[resourceBindingType](commandList.Get(), rootSignature.getRootSignature().Get());
 
+    // Pass the root signature to descriptor heap controllers
     gpuDescriptorHeapControllerCbvSrvUav.setRootSignature(rootSignature);
     gpuDescriptorHeapControllerSampler.setRootSignature(rootSignature);
+
+    // Save some state in the CommandList object
     this->pipelineStateIdentifier = identifier;
+    this->resourceBindingType = resourceBindingType;
+}
+
+void CommandList::setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier identifier) {
+    setPipelineStateAndRootSignature(identifier, ResourceBindingType::Graphics);
+}
+
+void CommandList::setPipelineStateAndComputeRootSignature(PipelineStateController::Identifier identifier) {
+    setPipelineStateAndRootSignature(identifier, ResourceBindingType::Compute);
 }
 
 void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, ID3D12DescriptorHeapPtr descriptorHeap) {
@@ -83,6 +97,11 @@ void CommandList::setCbvInDescriptorTable(UINT rootParameterIndexOfTable, UINT o
 
 void CommandList::setSrvInDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const Resource &resource) {
     gpuDescriptorHeapControllerCbvSrvUav.stage(rootParameterIndexOfTable, offsetInTable, resource.getSrv(), 1u);
+    addUsedResource(resource.getResource());
+}
+
+void CommandList::setUavInDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const Resource &resource) {
+    gpuDescriptorHeapControllerCbvSrvUav.stage(rootParameterIndexOfTable, offsetInTable, resource.getUav(), 1u);
     addUsedResource(resource.getResource());
 }
 
@@ -186,6 +205,12 @@ void CommandList::draw(UINT verticesCount, INT startIndexLocation) {
     commandList->DrawInstanced(verticesCount, 1, startIndexLocation, 0);
 }
 
+void CommandList::dispatch(UINT threadGroupCountX, UINT threadGroupCountY, UINT threadGroupCountZ) {
+    commitResourceBarriers();
+    commitDescriptors();
+    commandList->Dispatch(threadGroupCountX, threadGroupCountY, threadGroupCountZ);
+}
+
 void CommandList::close() {
     commitResourceBarriers();
     throwIfFailed(commandList->Close());
@@ -216,8 +241,8 @@ void CommandList::addUsedResources(const ID3D12ResourcePtr *resources, UINT reso
 }
 
 void CommandList::commitDescriptors() {
-    gpuDescriptorHeapControllerCbvSrvUav.commit();
-    gpuDescriptorHeapControllerSampler.commit();
+    gpuDescriptorHeapControllerCbvSrvUav.commit(resourceBindingType);
+    gpuDescriptorHeapControllerSampler.commit(resourceBindingType);
 }
 
 void CommandList::commitResourceBarriers() {
