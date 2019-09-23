@@ -10,9 +10,15 @@
 class RootSignature;
 
 class PipelineState : DXD::NonCopyableAndMovable {
+protected:
+    D3D12_SHADER_BYTECODE loadAndCompileShader(const std::wstring &name, const std::string &target, const D3D_SHADER_MACRO* defines);
+    std::vector<ID3DBlobPtr> shaderBlobs = {};
+};
+
+class GraphicsPipelineState : public PipelineState {
 public:
     template <typename UINT inputLayoutSize>
-    PipelineState(const D3D12_INPUT_ELEMENT_DESC (&inputLayout)[inputLayoutSize], RootSignature &rootSignature) {
+    GraphicsPipelineState(const D3D12_INPUT_ELEMENT_DESC (&inputLayout)[inputLayoutSize], RootSignature &rootSignature) {
         description.InputLayout = D3D12_INPUT_LAYOUT_DESC{inputLayout, inputLayoutSize};
         description.pRootSignature = rootSignature.getRootSignature().Get();
         description.BlendState = CD3DX12_BLEND_DESC(D3D12_DEFAULT);
@@ -26,21 +32,18 @@ public:
         description.SampleDesc.Count = 1;
     }
 
-    PipelineState &VS(const std::wstring &path);
-    PipelineState &PS(const std::wstring &path);
-    PipelineState &DS(const std::wstring &path);
-    PipelineState &HS(const std::wstring &path);
-    PipelineState &GS(const std::wstring &path);
-    PipelineState &disableDepthStencil();
-    PipelineState &setRenderTargetsCount(UINT count);
-    PipelineState &setRenderTargetFormat(UINT idx, DXGI_FORMAT format);
-    PipelineState &setBlendDesc(const D3D12_BLEND_DESC &blendDesc);
+    GraphicsPipelineState &VS(const std::wstring &path);
+    GraphicsPipelineState &PS(const std::wstring &path);
+    GraphicsPipelineState &DS(const std::wstring &path);
+    GraphicsPipelineState &HS(const std::wstring &path);
+    GraphicsPipelineState &GS(const std::wstring &path);
+    GraphicsPipelineState &disableDepthStencil();
+    GraphicsPipelineState &setRenderTargetsCount(UINT count);
+    GraphicsPipelineState &setRenderTargetFormat(UINT idx, DXGI_FORMAT format);
+    GraphicsPipelineState &setBlendDesc(const D3D12_BLEND_DESC &blendDesc);
 
     void compile(ID3D12DevicePtr device, ID3D12PipelineStatePtr &pipelineState);
 
 private:
-    D3D12_SHADER_BYTECODE loadAndCompileShader(const std::wstring &name, const std::string &target);
-
     D3D12_GRAPHICS_PIPELINE_STATE_DESC description = {};
-    std::vector<ID3DBlobPtr> shaderBlobs = {};
 };

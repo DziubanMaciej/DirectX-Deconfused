@@ -108,7 +108,7 @@ void PipelineStateController::compilePipelineStateNormal(RootSignature &rootSign
     };
 
     // Pipeline state object
-    PipelineState{inputLayout, rootSignature}
+    GraphicsPipelineState{inputLayout, rootSignature}
         .VS(L"3D/normal_VS.hlsl")
         .PS(L"3D/normal_PS.hlsl")
         .setRenderTargetsCount(3)
@@ -137,7 +137,7 @@ void PipelineStateController::compilePipelineStateTextureNormal(RootSignature &r
     };
 
     // Pipeline state object
-    PipelineState{inputLayout, rootSignature}
+    GraphicsPipelineState{inputLayout, rootSignature}
         .VS(L"3D/normal_texture_VS.hlsl")
         .PS(L"3D/normal_texture_PS.hlsl")
         .setRenderTargetsCount(3)
@@ -160,7 +160,7 @@ void PipelineStateController::compilePipelineStateShadowMapNormal(RootSignature 
     };
 
     // Pipeline state object
-    PipelineState{inputLayout, rootSignature}
+    GraphicsPipelineState{inputLayout, rootSignature}
         .VS(L"ShadowMap/normal_VS.hlsl")
         .compile(device, pipelineState);
 }
@@ -179,7 +179,7 @@ void PipelineStateController::compilePipelineStateShadowMapTextureNormal(RootSig
     };
 
     // Pipeline state object
-    PipelineState{inputLayout, rootSignature}
+    GraphicsPipelineState{inputLayout, rootSignature}
         .VS(L"ShadowMap/normal_texture_VS.hlsl")
         .compile(device, pipelineState);
 }
@@ -205,7 +205,7 @@ static void compileBasicPipelineStatePostProcess(ID3D12DevicePtr device, RootSig
     };
 
     // Pipeline state object
-    return PipelineState{inputLayout, rootSignature}
+    return GraphicsPipelineState{inputLayout, rootSignature}
         .VS(L"PostProcess/VS.hlsl")
         .PS(psPath)
         .disableDepthStencil()
@@ -301,7 +301,7 @@ void PipelineStateController::compilePipelineStatePostProcessApplyBloom(RootSign
     blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
 
     // Pipeline state object
-    return PipelineState{inputLayout, rootSignature}
+    return GraphicsPipelineState{inputLayout, rootSignature}
         .VS(L"PostProcess/VS.hlsl")
         .PS(L"PostProcess/apply_bloom_PS.hlsl")
         .disableDepthStencil()
@@ -334,7 +334,7 @@ void PipelineStateController::compilePipelineStateLighting(RootSignature &rootSi
     };
 
     // Pipeline state object
-    return PipelineState{inputLayout, rootSignature}
+    return GraphicsPipelineState{inputLayout, rootSignature}
         .VS(L"PostProcess/VS.hlsl")
         .PS(L"lighting_PS.hlsl")
         .disableDepthStencil()
@@ -361,7 +361,7 @@ void PipelineStateController::compilePipelineStateSSAO(RootSignature &rootSignat
     };
 
     // Pipeline state object
-    return PipelineState{inputLayout, rootSignature}
+    return GraphicsPipelineState{inputLayout, rootSignature}
         .VS(L"PostProcess/VS.hlsl")
         .PS(L"ssao_PS.hlsl")
         .disableDepthStencil()
@@ -391,7 +391,7 @@ void PipelineStateController::compilePipelineStateSSR(RootSignature &rootSignatu
     };
 
     // Pipeline state object
-    return PipelineState{inputLayout, rootSignature}
+    return GraphicsPipelineState{inputLayout, rootSignature}
         .VS(L"PostProcess/VS.hlsl")
         .PS(L"ssr_PS.hlsl")
         .disableDepthStencil()

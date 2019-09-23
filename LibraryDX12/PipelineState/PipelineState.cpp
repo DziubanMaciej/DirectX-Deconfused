@@ -1,63 +1,63 @@
 #include "PipelineState/PipelineState.h"
 #include "Utility/ThrowIfFailed.h"
 
-PipelineState &PipelineState::VS(const std::wstring &path) {
-    description.VS = loadAndCompileShader(path, "vs_5_1");
+GraphicsPipelineState &GraphicsPipelineState::VS(const std::wstring &path) {
+    description.VS = loadAndCompileShader(path, "vs_5_1", nullptr);
     return *this;
 }
 
-PipelineState &PipelineState::PS(const std::wstring &path) {
-    description.PS = loadAndCompileShader(path, "ps_5_1");
+GraphicsPipelineState &GraphicsPipelineState::PS(const std::wstring &path) {
+    description.PS = loadAndCompileShader(path, "ps_5_1", nullptr);
     return *this;
 }
 
-PipelineState &PipelineState::DS(const std::wstring &path) {
-    description.DS = loadAndCompileShader(path, "ds_5_1");
+GraphicsPipelineState &GraphicsPipelineState::DS(const std::wstring &path) {
+    description.DS = loadAndCompileShader(path, "ds_5_1", nullptr);
     return *this;
 }
 
-PipelineState &PipelineState::HS(const std::wstring &path) {
-    description.HS = loadAndCompileShader(path, "hs_5_1");
+GraphicsPipelineState &GraphicsPipelineState::HS(const std::wstring &path) {
+    description.HS = loadAndCompileShader(path, "hs_5_1", nullptr);
     return *this;
 }
 
-PipelineState &PipelineState::GS(const std::wstring &path) {
-    description.GS = loadAndCompileShader(path, "gs_5_1");
+GraphicsPipelineState &GraphicsPipelineState::GS(const std::wstring &path) {
+    description.GS = loadAndCompileShader(path, "gs_5_1", nullptr);
     return *this;
 }
 
-PipelineState &PipelineState::disableDepthStencil() {
+GraphicsPipelineState &GraphicsPipelineState::disableDepthStencil() {
     description.DepthStencilState.DepthEnable = false;
     description.DepthStencilState.StencilEnable = false;
     return *this;
 }
 
-PipelineState &PipelineState::setRenderTargetsCount(UINT count) {
+GraphicsPipelineState &GraphicsPipelineState::setRenderTargetsCount(UINT count) {
     description.NumRenderTargets = count;
     std::fill_n(description.RTVFormats, count, DXGI_FORMAT_R8G8B8A8_UNORM);
     return *this;
 }
 
-PipelineState &PipelineState::setRenderTargetFormat(UINT idx, DXGI_FORMAT format) {
+GraphicsPipelineState &GraphicsPipelineState::setRenderTargetFormat(UINT idx, DXGI_FORMAT format) {
     description.RTVFormats[idx] = format;
     return *this;
 }
 
-PipelineState &PipelineState::setBlendDesc(const D3D12_BLEND_DESC &blendDesc) {
+GraphicsPipelineState &GraphicsPipelineState::setBlendDesc(const D3D12_BLEND_DESC &blendDesc) {
     description.BlendState = blendDesc;
     return *this;
 }
 
-void PipelineState::compile(ID3D12DevicePtr device, ID3D12PipelineStatePtr &pipelineState) {
+void GraphicsPipelineState::compile(ID3D12DevicePtr device, ID3D12PipelineStatePtr &pipelineState) {
     throwIfFailed(device->CreateGraphicsPipelineState(&description, IID_PPV_ARGS(&pipelineState)));
 }
 
-D3D12_SHADER_BYTECODE PipelineState::loadAndCompileShader(const std::wstring &name, const std::string &target) {
+D3D12_SHADER_BYTECODE PipelineState::loadAndCompileShader(const std::wstring &name, const std::string &target, const D3D_SHADER_MACRO* defines) {
     ID3DBlob *compiledShader = nullptr;
     ID3DBlob *errorBlob = nullptr;
 
     const auto path = std::wstring{SHADERS_PATH} + name;
-    const auto result = D3DCompileFromFile(path.c_str(), nullptr, nullptr, "main", target.c_str(), 0, 0, &compiledShader, &errorBlob);
+    const auto result = D3DCompileFromFile(path.c_str(), defines, nullptr, "main", target.c_str(), 0, 0, &compiledShader, &errorBlob);
     throwIfFailed(result, errorBlob);
 
     this->shaderBlobs.emplace_back(compiledShader);
