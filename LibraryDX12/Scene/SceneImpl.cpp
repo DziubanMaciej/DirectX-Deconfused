@@ -178,7 +178,7 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
             if (mesh.getShadowMapPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
                 SMmvp smmvp;
                 smmvp.modelViewProjectionMatrix = XMMatrixMultiply(object->getModelMatrix(), light->smViewProjectionMatrix);
-                commandList.setGraphicsRoot32BitConstant(0, smmvp);
+                commandList.setRoot32BitConstant(0, smmvp);
 
                 commandList.IASetVertexAndIndexBuffer(mesh);
                 commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
@@ -192,7 +192,7 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
             if (mesh.getShadowMapPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
                 SMmvp smmvp;
                 smmvp.modelViewProjectionMatrix = XMMatrixMultiply(object->getModelMatrix(), light->smViewProjectionMatrix);
-                commandList.setGraphicsRoot32BitConstant(0, smmvp);
+                commandList.setRoot32BitConstant(0, smmvp);
 
                 commandList.IASetVertexAndIndexBuffer(mesh);
                 commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
@@ -259,13 +259,13 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
             ModelMvp mmvp;
             mmvp.modelMatrix = object->getModelMatrix();
             mmvp.modelViewProjectionMatrix = XMMatrixMultiply(mmvp.modelMatrix, vpMatrix);
-            commandList.setGraphicsRoot32BitConstant(0, mmvp);
+            commandList.setRoot32BitConstant(0, mmvp);
 
             ObjectProperties op = {};
             op.albedoColor = object->getColor();
             op.specularity = object->getSpecularity();
             op.bloomFactor = object->getBloomFactor();
-            commandList.setGraphicsRoot32BitConstant(1, op);
+            commandList.setRoot32BitConstant(1, op);
 
             commandList.IASetVertexAndIndexBuffer(mesh);
             commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
@@ -282,13 +282,13 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
             ModelMvp mmvp;
             mmvp.modelMatrix = object->getModelMatrix();
             mmvp.modelViewProjectionMatrix = XMMatrixMultiply(mmvp.modelMatrix, vpMatrix);
-            commandList.setGraphicsRoot32BitConstant(0, mmvp);
+            commandList.setRoot32BitConstant(0, mmvp);
 
             ObjectProperties op = {};
             op.albedoColor = object->getColor();
             op.specularity = object->getSpecularity();
             op.bloomFactor = object->getBloomFactor();
-            commandList.setGraphicsRoot32BitConstant(1, op);
+            commandList.setRoot32BitConstant(1, op);
 
             commandList.IASetVertexAndIndexBuffer(mesh);
             commandList.setSrvInDescriptorTable(2, 0, *texture);
@@ -322,7 +322,7 @@ void SceneImpl::renderSSAO(SwapChain &swapChain, RenderData &renderData, Command
     ssaoCB.screenHeight = static_cast<float>(swapChain.getHeight());
     ssaoCB.viewMatrixInverse = camera->getInvViewMatrix();
     ssaoCB.projMatrixInverse = camera->getInvProjectionMatrix();
-    commandList.setGraphicsRoot32BitConstant(1, ssaoCB);
+    commandList.setRoot32BitConstant(1, ssaoCB);
 
     commandList.IASetVertexBuffer(fullscreenVB);
 
@@ -355,7 +355,7 @@ void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, Com
     ssrCB.screenHeight = static_cast<float>(swapChain.getHeight());
     ssrCB.viewMatrixInverse = camera->getInvViewMatrix();
     ssrCB.projMatrixInverse = camera->getInvProjectionMatrix();
-    commandList.setGraphicsRoot32BitConstant(1, ssrCB);
+    commandList.setRoot32BitConstant(1, ssrCB);
 
     commandList.IASetVertexBuffer(fullscreenVB);
 
@@ -392,7 +392,7 @@ void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, Com
     InverseViewProj invVP;
     invVP.viewMatrixInverse = camera->getInvViewMatrix();
     invVP.projMatrixInverse = camera->getInvProjectionMatrix();
-    commandList.setGraphicsRoot32BitConstant(1, invVP);
+    commandList.setRoot32BitConstant(1, invVP);
 
     commandList.IASetVertexBuffer(fullscreenVB);
 
@@ -440,7 +440,7 @@ void SceneImpl::renderBloom(SwapChain &swapChain, CommandList &commandList, Post
     cb.screenHeight = static_cast<float>(swapChain.getHeight());
     commandList.transitionBarrier(bloomMap, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_APPLY_BLOOM);
-    commandList.setGraphicsRoot32BitConstant(0, cb);
+    commandList.setRoot32BitConstant(0, cb);
     commandList.setSrvInDescriptorTable(1, 0, bloomMap);
     commandList.OMSetRenderTargetNoDepth(output);
     commandList.IASetVertexBuffer(fullscreenVB);
@@ -464,7 +464,7 @@ void SceneImpl::renderPostProcess(PostProcessImpl &postProcess, CommandList &com
 
         // Set state
         commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_CONVOLUTION);
-        commandList.setGraphicsRoot32BitConstant(0, postProcessData);
+        commandList.setRoot32BitConstant(0, postProcessData);
         commandList.setSrvInDescriptorTable(1, 0, *source);
         commandList.OMSetRenderTargetNoDepth(*destination);
         commandList.IASetVertexBuffer(fullscreenVB);
@@ -481,7 +481,7 @@ void SceneImpl::renderPostProcess(PostProcessImpl &postProcess, CommandList &com
 
         // Set state
         commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_BLACK_BARS);
-        commandList.setGraphicsRoot32BitConstant(0, postProcessData);
+        commandList.setRoot32BitConstant(0, postProcessData);
         commandList.setSrvInDescriptorTable(1, 0, *source);
         commandList.OMSetRenderTargetNoDepth(*destination);
         commandList.IASetVertexBuffer(fullscreenVB);
@@ -498,7 +498,7 @@ void SceneImpl::renderPostProcess(PostProcessImpl &postProcess, CommandList &com
 
         // Set state
         commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_LINEAR_COLOR_CORRECTION);
-        commandList.setGraphicsRoot32BitConstant(0, postProcessData);
+        commandList.setRoot32BitConstant(0, postProcessData);
         commandList.setSrvInDescriptorTable(1, 0, *source);
         commandList.OMSetRenderTargetNoDepth(*destination);
         commandList.IASetVertexBuffer(fullscreenVB);
@@ -526,7 +526,7 @@ void SceneImpl::renderPostProcess(PostProcessImpl &postProcess, CommandList &com
             commandList.setPipelineStateAndComputeRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR_COMPUTE_HORIZONTAL);
             commandList.setSrvInDescriptorTable(0, 0, *source);
             commandList.setUavInDescriptorTable(0, 1, *destination);
-            commandList.setComputeRoot32BitConstant(1, postProcessData.cb);
+            commandList.setRoot32BitConstant(1, postProcessData.cb);
             commandList.dispatch(threadGroupCountX, threadGroupCountY, 1u);
 
             renderTargets.swapResources();
@@ -537,7 +537,7 @@ void SceneImpl::renderPostProcess(PostProcessImpl &postProcess, CommandList &com
             commandList.setPipelineStateAndComputeRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR_COMPUTE_VERTICAL);
             commandList.setSrvInDescriptorTable(0, 0, *source);
             commandList.setUavInDescriptorTable(0, 1, *destination);
-            commandList.setComputeRoot32BitConstant(1, postProcessData.cb);
+            commandList.setRoot32BitConstant(1, postProcessData.cb);
             commandList.dispatch(threadGroupCountX, threadGroupCountY, 1u);
 
             if (!lastPass) {

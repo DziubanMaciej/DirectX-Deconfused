@@ -68,9 +68,7 @@ public:
     void OMSetRenderTargetNoDepth(const Resource &renderTarget);
 
     template <typename ConstantType>
-    void setGraphicsRoot32BitConstant(UINT rootParameterIndex, const ConstantType &constant);
-    template <typename ConstantType>
-    void setComputeRoot32BitConstant(UINT rootParameterIndex, const ConstantType &constant);
+    void setRoot32BitConstant(UINT rootParameterIndex, const ConstantType &constant);
 
     void drawIndexed(UINT verticesCount, INT startVertexLocation = 0u, INT startIndexLocation = 0u);
     void draw(UINT verticesCount, INT startVertexLocation = 0u);
@@ -142,15 +140,8 @@ inline void CommandList::OMSetRenderTargetsNoDepth(const Resource *(&renderTarge
 }
 
 template <typename ConstantType>
-inline void CommandList::setGraphicsRoot32BitConstant(UINT rootParameterIndex, const ConstantType &constant) {
+inline void CommandList::setRoot32BitConstant(UINT rootParameterIndex, const ConstantType &constant) {
     static_assert(sizeof(ConstantType) % 4 == 0, "Not a dword aligned type");
     constexpr static auto dwordCount = sizeof(ConstantType) / 4;
-    commandList->SetGraphicsRoot32BitConstants(rootParameterIndex, dwordCount, &constant, 0);
-}
-
-template <typename ConstantType>
-inline void CommandList::setComputeRoot32BitConstant(UINT rootParameterIndex, const ConstantType &constant) {
-    static_assert(sizeof(ConstantType) % 4 == 0, "Not a dword aligned type");
-    constexpr static auto dwordCount = sizeof(ConstantType) / 4;
-    commandList->SetComputeRoot32BitConstants(rootParameterIndex, dwordCount, &constant, 0);
+    ResourceBindingType::setRoot32BitConstantsFunctions[resourceBindingType](commandList.Get(), rootParameterIndex, dwordCount, &constant, 0);
 }
