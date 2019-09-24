@@ -31,8 +31,8 @@ public:
 
     void transitionBarrier(Resource &resource, D3D12_RESOURCE_STATES targetState);
 
-    void clearRenderTargetView(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT colorRGBA[4]);
-    void clearDepthStencilView(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags, FLOAT depth, UINT8 stencil);
+    void clearRenderTargetView(Resource &renderTarget, const FLOAT colorRGBA[4]);
+    void clearDepthStencilView(Resource &dsBuffer, D3D12_CLEAR_FLAGS clearFlags, FLOAT depth, UINT8 stencil);
 
     void setPipelineStateAndRootSignature(PipelineStateController::Identifier identifier, ResourceBindingType::ResourceBindingType resourceBindingType);
     void setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier identifier);

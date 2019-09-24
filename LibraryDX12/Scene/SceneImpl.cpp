@@ -154,7 +154,7 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
 
     for (LightImpl *light : lights) {
         commandList.OMSetRenderTargetDepthOnly(renderData.getShadowMap(lightIdx));
-        commandList.clearDepthStencilView(renderData.getShadowMap(lightIdx).getDsv(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
+        commandList.clearDepthStencilView(renderData.getShadowMap(lightIdx), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
         // View projection matrix
         camera->setAspectRatio(1.0f);
@@ -219,7 +219,7 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
     commandList.transitionBarrier(renderData.getDepthStencilBuffer(), D3D12_RESOURCE_STATE_DEPTH_WRITE);
 
     // Clear depth buffer, gbuffers don't have to be cleared, all unwanted data from previous frame will be discarded by lighting shader
-    commandList.clearDepthStencilView(renderData.getDepthStencilBuffer().getDsv(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
+    commandList.clearDepthStencilView(renderData.getDepthStencilBuffer(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
     // View projection matrix
     float aspectRatio = (float)swapChain.getWidth() / swapChain.getHeight();
@@ -371,9 +371,9 @@ void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, Com
     commandList.transitionBarrier(renderData.getBloomMap(), D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-    commandList.clearRenderTargetView(renderData.getBloomMap().getRtv(), blackColor);
-    commandList.clearRenderTargetView(renderData.getLightingOutput().getRtv(), backgroundColor);
-    commandList.clearRenderTargetView(output.getRtv(), backgroundColor);
+    commandList.clearRenderTargetView(renderData.getBloomMap(), blackColor);
+    commandList.clearRenderTargetView(renderData.getLightingOutput(), backgroundColor);
+    commandList.clearRenderTargetView(output, backgroundColor);
 
     const Resource *lightingRts[] = {&output, &renderData.getBloomMap(), &renderData.getLightingOutput()};
     commandList.OMSetRenderTargetsNoDepth(lightingRts);

@@ -29,14 +29,16 @@ void CommandList::transitionBarrier(Resource &resource, D3D12_RESOURCE_STATES ta
     }
 }
 
-void CommandList::clearRenderTargetView(D3D12_CPU_DESCRIPTOR_HANDLE renderTargetView, const FLOAT colorRGBA[4]) {
+void CommandList::clearRenderTargetView(Resource &renderTarget, const FLOAT colorRGBA[4]) {
     commitResourceBarriers();
-    commandList->ClearRenderTargetView(renderTargetView, colorRGBA, 0, nullptr);
+    commandList->ClearRenderTargetView(renderTarget.getRtv(), colorRGBA, 0, nullptr);
+    addUsedResource(renderTarget.getResource());
 }
 
-void CommandList::clearDepthStencilView(D3D12_CPU_DESCRIPTOR_HANDLE depthStencilView, D3D12_CLEAR_FLAGS clearFlags, FLOAT depth, UINT8 stencil) {
+void CommandList::clearDepthStencilView(Resource &dsBuffer, D3D12_CLEAR_FLAGS clearFlags, FLOAT depth, UINT8 stencil) {
     commitResourceBarriers();
-    commandList->ClearDepthStencilView(depthStencilView, clearFlags, depth, stencil, 0, nullptr);
+    commandList->ClearDepthStencilView(dsBuffer.getDsv(), clearFlags, depth, stencil, 0, nullptr);
+    addUsedResource(dsBuffer.getResource());
 }
 
 void CommandList::setPipelineStateAndRootSignature(PipelineStateController::Identifier identifier, ResourceBindingType::ResourceBindingType resourceBindingType) {
