@@ -345,16 +345,20 @@ void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, Com
     const Resource *ssrRts[] = {&renderData.getSsrMap()};
     commandList.OMSetRenderTargetsNoDepth(ssrRts);
 
+    commandList.clearRenderTargetView(renderData.getSsrMap(), backgroundColor);
+
     commandList.setSrvInDescriptorTable(0, 0, renderData.getGBufferNormal());
     commandList.setSrvInDescriptorTable(0, 1, renderData.getDepthStencilBuffer());
     commandList.setSrvInDescriptorTable(0, 2, renderData.getGBufferSpecular());
     commandList.setSrvInDescriptorTable(0, 3, renderData.getLightingOutput());
 
-    SsaoCB ssrCB;
+    SsrCB ssrCB;
+    ssrCB.cameraPosition = XMFLOAT4(camera->getEyePosition().x, camera->getEyePosition().y, camera->getEyePosition().z, 1);
     ssrCB.screenWidth = static_cast<float>(swapChain.getWidth());
     ssrCB.screenHeight = static_cast<float>(swapChain.getHeight());
     ssrCB.viewMatrixInverse = camera->getInvViewMatrix();
     ssrCB.projMatrixInverse = camera->getInvProjectionMatrix();
+    ssrCB.viewProjectionMatrix = XMMatrixMultiply(camera->getViewMatrix(), camera->getProjectionMatrix());
     commandList.setRoot32BitConstant(1, ssrCB);
 
     commandList.IASetVertexBuffer(fullscreenVB);

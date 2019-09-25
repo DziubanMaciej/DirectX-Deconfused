@@ -96,27 +96,27 @@ private:
         objects["teapotMesh1"]->setPosition(8, -1, 0);
         objects["teapotMesh1"]->setScale(0.1f, 0.1f, 0.1f);
         objects["teapotMesh1"]->setColor(0.0f, 0.8f, 0.0f);
-        objects["teapotMesh1"]->setSpecularity(0.7f);
+        objects["teapotMesh1"]->setSpecularity(0.4f);
 
         objects["teapotMesh2"]->setPosition(0, 1, 0);
         objects["teapotMesh2"]->setScale(0.1f, 0.1f, 0.1f);
         objects["teapotMesh2"]->setColor(0.5f, 0.5f, 0.0f);
-        objects["teapotMesh2"]->setSpecularity(0.7f);
+        objects["teapotMesh2"]->setSpecularity(0.4f);
 
         objects["teapotMesh3"]->setPosition(-8, -1, 0);
         objects["teapotMesh3"]->setScale(0.1f, 0.1f, 0.1f);
         objects["teapotMesh3"]->setColor(0.0f, 0.0f, 0.8f);
-        objects["teapotMesh3"]->setSpecularity(0.7f);
+        objects["teapotMesh3"]->setSpecularity(0.4f);
 
         objects["cubeNormalMesh1"]->setPosition(-8, -1, -5.5);
         objects["cubeNormalMesh1"]->setScale(1, 1, 2);
-        objects["cubeNormalMesh1"]->setSpecularity(1);
+        objects["cubeNormalMesh1"]->setSpecularity(0.1f);
 
         objects["cubeNormalMesh2"]->setPosition(9, -1, -9);
 
         objects["cubeNormalMesh3"]->setPosition(0, -1.9, 0);
         objects["cubeNormalMesh3"]->setScale(2, 0.1f, 2);
-        objects["cubeNormalMesh3"]->setSpecularity(1);
+        objects["cubeNormalMesh3"]->setSpecularity(0.1f);
 
         objects["glowingCube"]->setPosition(-2.f, -1.f, 7.f);
         objects["glowingCube"]->setRotation(45, 45, 45);
@@ -125,6 +125,7 @@ private:
 
         objects["intel"]->setPosition(0, -1.9, -8);
         objects["intel"]->setScale(0.1f, 0.1f, 0.1f);
+        objects["intel"]->setSpecularity(0.4f);
 
         objects["flatMesh1"]->setPosition(0, -2.5, 0);
         objects["flatMesh1"]->setSpecularity(0.2f);
@@ -132,7 +133,7 @@ private:
 
         objects["extraFlatMesh1"]->setTexture(textures["wood"].get());
         objects["extraFlatMesh1"]->setPosition(0, -4.0, 0);
-        objects["extraFlatMesh1"]->setSpecularity(0.2f);
+        objects["extraFlatMesh1"]->setSpecularity(0.0f);
         objects["extraFlatMesh1"]->setScale(100, 1.0f, 100);
         objects["extraFlatMesh1"]->setColor(126.0f / 255.0f, 200.0f / 255.0f, 90.0f / 255.0f);
 
@@ -150,7 +151,7 @@ private:
         objects["actorMesh1"]->setPosition(-2, -2, -8);
         objects["actorMesh1"]->setScale(0.01f, 0.01f, 0.01f);
         objects["actorMesh1"]->setRotation(XMFLOAT3(0, 1, 0), 90);
-        objects["actorMesh1"]->setSpecularity(0.02f);
+        objects["actorMesh1"]->setSpecularity(0.0f);
         objects["actorMesh1"]->setColor(1, 224.0f / 255.0f, 189.0f / 255.0f);
         objects["actorMesh1"]->setTexture(textures["dennis"].get());
     }

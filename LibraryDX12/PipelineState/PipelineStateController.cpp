@@ -365,6 +365,8 @@ void PipelineStateController::compilePipelineStateSSAO(RootSignature &rootSignat
 void PipelineStateController::compilePipelineStateSSR(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
     StaticSampler sampler{D3D12_SHADER_VISIBILITY_PIXEL};
+    sampler.lodRange(0, D3D12_FLOAT_TO_SRGB_OFFSET);
+
     DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
     table.appendSrvRange(t(0), 1) // gbuffer normal
         .appendSrvRange(t(1), 1)  // gbuffer depth

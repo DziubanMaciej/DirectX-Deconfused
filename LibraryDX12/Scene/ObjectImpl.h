@@ -57,7 +57,7 @@ protected:
     XMVECTOR rotationOrigin = {0, 0, 0};
 
     XMFLOAT3 color = {0, 0, 0};
-    float specularity = 0.4f;
+    float specularity = 0.0f;
     float bloomFactor = 0.f;
 
     XMMATRIX modelMatrix;

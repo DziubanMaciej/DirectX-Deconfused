@@ -52,10 +52,12 @@ struct SsaoCB {
 };
 
 struct SsrCB {
+    XMFLOAT4 cameraPosition;
     float screenWidth;
     float screenHeight;
     XMMATRIX viewMatrixInverse;
     XMMATRIX projMatrixInverse;
+    XMMATRIX viewProjectionMatrix;
 };
 
 struct PostProcessGaussianBlurData {
