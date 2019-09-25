@@ -62,7 +62,7 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
     float3 INnormal = normalize(gBufferNormal.Sample(g_sampler, float2(uBase, vBase)).xyz);
 
-    float3 jitt = lerp(float3(0.0f, 0.0f, 0.0f), hash(worldSpacePos.xyz), INspecularity) * 0.1f;
+    float3 jitt = lerp(float3(0.0f, 0.0f, 0.0f), hash(worldSpacePos.xyz), INspecularity) * 0.05f;
 
     float3 reflectDir = normalize(reflect(cameraDirection, INnormal)) + jitt;
 

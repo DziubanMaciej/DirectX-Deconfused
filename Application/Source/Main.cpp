@@ -96,17 +96,17 @@ private:
         objects["teapotMesh1"]->setPosition(8, -1, 0);
         objects["teapotMesh1"]->setScale(0.1f, 0.1f, 0.1f);
         objects["teapotMesh1"]->setColor(0.0f, 0.8f, 0.0f);
-        objects["teapotMesh1"]->setSpecularity(0.4f);
+        objects["teapotMesh1"]->setSpecularity(0.2f);
 
         objects["teapotMesh2"]->setPosition(0, 1, 0);
         objects["teapotMesh2"]->setScale(0.1f, 0.1f, 0.1f);
         objects["teapotMesh2"]->setColor(0.5f, 0.5f, 0.0f);
-        objects["teapotMesh2"]->setSpecularity(0.4f);
+        objects["teapotMesh2"]->setSpecularity(0.2f);
 
         objects["teapotMesh3"]->setPosition(-8, -1, 0);
         objects["teapotMesh3"]->setScale(0.1f, 0.1f, 0.1f);
         objects["teapotMesh3"]->setColor(0.0f, 0.0f, 0.8f);
-        objects["teapotMesh3"]->setSpecularity(0.4f);
+        objects["teapotMesh3"]->setSpecularity(0.2f);
 
         objects["cubeNormalMesh1"]->setPosition(-8, -1, -5.5);
         objects["cubeNormalMesh1"]->setScale(1, 1, 2);
@@ -138,13 +138,13 @@ private:
         objects["extraFlatMesh1"]->setColor(126.0f / 255.0f, 200.0f / 255.0f, 90.0f / 255.0f);
 
         objects["porshe"]->setPosition(0, -1, -4);
-        objects["porshe"]->setSpecularity(0.8f);
+        objects["porshe"]->setSpecularity(0.4f);
         objects["porshe"]->setScale(0.9f, 0.9f, 0.9f);
         objects["porshe"]->setTexture(textures["porsche"].get());
 
         objects["aventador"]->setPosition(-14, -2, 0);
         objects["aventador"]->setColor(0.0f, 113.0f / 255.0f, 197.0f / 255.0f);
-        objects["aventador"]->setSpecularity(0.8f);
+        objects["aventador"]->setSpecularity(0.4f);
         objects["aventador"]->setScale(0.9f, 0.9f, 0.9f);
         objects["aventador"]->setRotation(XMFLOAT3(0, 1, 0), -90);
 
