@@ -93,7 +93,7 @@ private:
             objects.insert({object.first, DXD::Object::create(*meshes[object.second])});
         }
 
-        objects["teapotMesh1"]->setPosition(8, -1, 0);
+        objects["teapotMesh1"]->setPosition(8, -1.25, 0);
         objects["teapotMesh1"]->setScale(0.1f, 0.1f, 0.1f);
         objects["teapotMesh1"]->setColor(0.0f, 0.8f, 0.0f);
         objects["teapotMesh1"]->setSpecularity(0.2f);
@@ -103,7 +103,7 @@ private:
         objects["teapotMesh2"]->setColor(0.5f, 0.5f, 0.0f);
         objects["teapotMesh2"]->setSpecularity(0.2f);
 
-        objects["teapotMesh3"]->setPosition(-8, -1, 0);
+        objects["teapotMesh3"]->setPosition(-8, -1.25, 0);
         objects["teapotMesh3"]->setScale(0.1f, 0.1f, 0.1f);
         objects["teapotMesh3"]->setColor(0.0f, 0.0f, 0.8f);
         objects["teapotMesh3"]->setSpecularity(0.2f);
