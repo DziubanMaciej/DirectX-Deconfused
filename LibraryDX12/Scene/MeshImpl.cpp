@@ -12,6 +12,8 @@
 
 namespace DXD {
 
+// ----------------------------------------------------------------- Creation and destruction
+
 std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const std::wstring &filePath,
                                           bool useTextures, bool asynchronousLoading) {
     return std::unique_ptr<Mesh>(new MeshImpl(*static_cast<ApplicationImpl *>(&application),
@@ -21,47 +23,24 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
 
 MeshImpl::MeshImpl(ApplicationImpl &application, const std::wstring &filePath, bool useTextures, bool asynchronousLoading)
     : application(application) {
-    if (asynchronousLoading) {
-        auto task = [this, &application, filePath, useTextures]() {
-            loadAndUploadObj(application, filePath, useTextures);
-        };
-        application.getBackgroundWorkerController().pushTask(task, this->loadingComplete);
-    } else {
-        loadAndUploadObj(application, filePath, useTextures);
-        this->loadingComplete = true;
-    }
+    const MeshCpuLoadArgs cpuLoadArgs{filePath, useTextures};
+    cpuGpuLoad(cpuLoadArgs, asynchronousLoading);
 }
 
-void MeshImpl::loadAndUploadObj(ApplicationImpl &application, const std::wstring &filePath, bool useTextures) {
-    const LoadResults loadResults = loadObj(filePath, useTextures);
-    const auto meshType = loadResults.meshType;
-    assert(meshType != UNKNOWN);
-    const auto &vertexElements = loadResults.vertexElements;
-    const auto &indices = loadResults.indices;
-    const auto vertexSizeInBytes = computeVertexSize(loadResults.meshType);
-    const auto verticesCount = static_cast<UINT>(vertexElements.size() * sizeof(FLOAT) / vertexSizeInBytes);
-    assert(vertexSizeInBytes * verticesCount == vertexElements.size() * sizeof(FLOAT));
-    const auto indicesCount = static_cast<UINT>(indices.size());
-    const auto pipelineStateIdentifier = computePipelineStateIdentifier(meshType);
-    const auto shadowMapPipelineStateIdentifier = computeShadowMapPipelineStateIdentifier(meshType);
-
-    UploadResults uploadResults = uploadToGPU(application, loadResults.vertexElements, loadResults.indices, verticesCount, vertexSizeInBytes);
-    auto &vertexBuffer = uploadResults.vertexBuffer;
-    auto &indexBuffer = uploadResults.indexBuffer;
-
-    setData(meshType, vertexSizeInBytes, verticesCount, indicesCount,
-            pipelineStateIdentifier, shadowMapPipelineStateIdentifier,
-            std::move(vertexBuffer), std::move(indexBuffer));
+MeshImpl::~MeshImpl() {
+    // TODO busy waiting, so the object is not deallocated while reference on a worker thread
+    while (!cpuLoadComplete.load())
+        ;
 }
 
-MeshImpl::LoadResults MeshImpl::loadObj(const std::wstring &filePath, bool useTextures) {
-    LoadResults result{};
+// ----------------------------------------------------------------- AsyncLoadableObject overrides
 
+MeshCpuLoadResult MeshImpl::cpuLoad(const MeshCpuLoadArgs &args) {
     // Initial validation
-    const auto fullFilePath = std::wstring{RESOURCES_PATH} + filePath;
+    const auto fullFilePath = std::wstring{RESOURCES_PATH} + args.filePath;
     std::fstream inputFile{fullFilePath, std::ios::in};
     if (!inputFile.good()) {
-        return {};
+        return std::move(MeshCpuLoadResult{});
     }
 
     // Temporary variables for loading
@@ -126,10 +105,12 @@ MeshImpl::LoadResults MeshImpl::loadObj(const std::wstring &filePath, bool useTe
     }
 
     // Compute some fields based on lines that were read
-    result.meshType = MeshImpl::computeMeshType(normalCoordinates, textureCoordinates, useTextures);
+    MeshCpuLoadResult result{};
+    result.meshType = MeshImpl::computeMeshType(normalCoordinates, textureCoordinates, args.useTextures);
+    result.vertexSizeInBytes = computeVertexSize(result.meshType);
     const bool usesIndexBuffer = normalCoordinates.size() == 0 && textureCoordinates.size() == 0;
     if (result.meshType == MeshImpl::UNKNOWN) {
-        return {};
+        return std::move(MeshCpuLoadResult{});
     }
 
     // Prepare final buffers for GPU upload
@@ -183,11 +164,61 @@ MeshImpl::LoadResults MeshImpl::loadObj(const std::wstring &filePath, bool useTe
         }
     }
 
+    result.verticesCount = static_cast<UINT>(result.vertexElements.size() * sizeof(FLOAT) / result.vertexSizeInBytes);
     return std::move(result);
 }
 
+MeshGpuLoadArgs MeshImpl::createArgsForGpuLoad(const MeshCpuLoadResult &cpuLoadResult) {
+    return std::move(MeshGpuLoadArgs{
+        cpuLoadResult.vertexElements,
+        cpuLoadResult.indices,
+        cpuLoadResult.verticesCount,
+        cpuLoadResult.vertexSizeInBytes});
+}
+
+MeshGpuLoadResult MeshImpl::gpuLoad(const MeshGpuLoadArgs &args) {
+    MeshGpuLoadResult results = {};
+    const bool useIndexBuffer = args.indices.size() > 0;
+
+    // Context
+    ID3D12DevicePtr device = application.getDevice();
+    auto &commandQueue = application.getCopyCommandQueue();
+
+    // Record command list for GPU upload
+    CommandList commandList{commandQueue};
+    results.vertexBuffer = std::make_unique<VertexBuffer>(device, commandList, args.vertexElements.data(), args.verticesCount, args.vertexSizeInBytes);
+    if (useIndexBuffer) {
+        results.indexBuffer = std::make_unique<IndexBuffer>(device, commandList, args.indices.data(), static_cast<UINT>(args.indices.size()));
+    }
+    commandList.close();
+
+    // Execute and register obtained allocator and lists to the manager
+    const uint64_t fenceValue = commandQueue.executeCommandListAndSignal(commandList);
+
+    // Register upload status for buffers
+    results.vertexBuffer->registerUpload(commandQueue, fenceValue);
+    if (useIndexBuffer) {
+        results.indexBuffer->registerUpload(commandQueue, fenceValue);
+    }
+
+    return std::move(results);
+}
+
+void MeshImpl::writeCpuGpuLoadResults(MeshCpuLoadResult &cpuLoadResult, MeshGpuLoadResult &gpuLoadResult) {
+    this->meshType = cpuLoadResult.meshType;
+    this->vertexSizeInBytes = cpuLoadResult.vertexSizeInBytes;
+    this->verticesCount = cpuLoadResult.verticesCount;
+    this->indicesCount = static_cast<UINT>(cpuLoadResult.indices.size());
+    this->pipelineStateIdentifier = computePipelineStateIdentifier(meshType);
+    this->shadowMapPipelineStateIdentifier = computeShadowMapPipelineStateIdentifier(meshType);
+    this->vertexBuffer = std::move(gpuLoadResult.vertexBuffer);
+    this->indexBuffer = std::move(gpuLoadResult.indexBuffer);
+}
+
+// ----------------------------------------------------------------- Getters
+
 bool MeshImpl::isUploadInProgress() {
-    if (!loadingComplete.load()) {
+    if (!cpuLoadComplete.load()) {
         return true;
     }
 
@@ -195,6 +226,8 @@ bool MeshImpl::isUploadInProgress() {
     const bool indexInProgress = this->indexBuffer != nullptr && this->indexBuffer->isUploadInProgress();
     return vertexInProgress || indexInProgress;
 }
+
+// ----------------------------------------------------------------- Helpers
 
 MeshImpl::MeshType MeshImpl::computeMeshType(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates, bool useTextures) {
     MeshType meshType = TRIANGLE_STRIP;
@@ -256,45 +289,4 @@ PipelineStateController::Identifier MeshImpl::computeShadowMapPipelineStateIdent
         return PipelineStateController::Identifier::PIPELINE_STATE_UNKNOWN;
     }
     return it->second;
-}
-
-MeshImpl::UploadResults MeshImpl::uploadToGPU(ApplicationImpl &application, const std::vector<FLOAT> &vertexElements, const std::vector<UINT> &indices, UINT verticesCount, UINT vertexSizeInBytes) {
-    UploadResults results = {};
-    const bool useIndexBuffer = indices.size() > 0;
-
-    // Context
-    ID3D12DevicePtr device = application.getDevice();
-    auto &commandQueue = application.getCopyCommandQueue();
-
-    // Record command list for GPU upload
-    CommandList commandList{commandQueue};
-    results.vertexBuffer = std::make_unique<VertexBuffer>(device, commandList, vertexElements.data(), verticesCount, vertexSizeInBytes);
-    if (useIndexBuffer) {
-        results.indexBuffer = std::make_unique<IndexBuffer>(device, commandList, indices.data(), static_cast<UINT>(indices.size()));
-    }
-    commandList.close();
-
-    // Execute and register obtained allocator and lists to the manager
-    const uint64_t fenceValue = commandQueue.executeCommandListAndSignal(commandList);
-
-    // Register upload status for buffers
-    results.vertexBuffer->registerUpload(commandQueue, fenceValue);
-    if (useIndexBuffer) {
-        results.indexBuffer->registerUpload(commandQueue, fenceValue);
-    }
-
-    return results;
-}
-
-void MeshImpl::setData(MeshType meshType, UINT vertexSizeInBytes, UINT verticesCount, UINT indicesCount,
-                       PipelineStateController::Identifier pipelineStateIdentifier, PipelineStateController::Identifier shadowMapPipelineStateIdentifier,
-                       std::unique_ptr<VertexBuffer> &&vertexBuffer, std::unique_ptr<IndexBuffer> &&indexBuffer) {
-    this->meshType = meshType;
-    this->vertexSizeInBytes = vertexSizeInBytes;
-    this->verticesCount = verticesCount;
-    this->indicesCount = indicesCount;
-    this->pipelineStateIdentifier = pipelineStateIdentifier;
-    this->shadowMapPipelineStateIdentifier = shadowMapPipelineStateIdentifier;
-    this->vertexBuffer = std::move(vertexBuffer);
-    this->indexBuffer = std::move(indexBuffer);
 }

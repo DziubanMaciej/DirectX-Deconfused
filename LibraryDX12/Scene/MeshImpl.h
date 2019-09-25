@@ -4,6 +4,7 @@
 #include "PipelineState/PipelineStateController.h"
 #include "Resource/Resource.h"
 #include "Resource/VertexOrIndexBuffer.h"
+#include "Threading/AsyncLoadableObject.h"
 
 #include "DXD/Mesh.h"
 
@@ -11,7 +12,33 @@
 #include <utility>
 #include <vector>
 
-class MeshImpl : public DXD::Mesh {
+struct MeshCpuLoadArgs {
+    const std::wstring filePath;
+    bool useTextures;
+};
+
+struct MeshCpuLoadResult {
+    unsigned int meshType = 0; // TODO
+    std::vector<FLOAT> vertexElements = {};
+    std::vector<UINT> indices = {};
+    UINT verticesCount;
+    UINT vertexSizeInBytes;
+};
+
+struct MeshGpuLoadArgs {
+    const std::vector<FLOAT> &vertexElements;
+    const std::vector<UINT> &indices;
+    UINT verticesCount;
+    UINT vertexSizeInBytes;
+};
+
+struct MeshGpuLoadResult {
+    std::unique_ptr<VertexBuffer> vertexBuffer = {};
+    std::unique_ptr<IndexBuffer> indexBuffer = {};
+};
+using MeshAsyncLoadableObject = AsyncLoadableObject<MeshCpuLoadArgs, MeshCpuLoadResult, MeshGpuLoadArgs, MeshGpuLoadResult>;
+
+class MeshImpl : public DXD::Mesh, MeshAsyncLoadableObject {
 public:
     using MeshType = unsigned int;
     constexpr static MeshType UNKNOWN = 0x0;
@@ -22,11 +49,7 @@ public:
 protected:
     friend class DXD::Mesh;
     MeshImpl(ApplicationImpl &application, const std::wstring &filePath, bool useTextures, bool asynchronousLoading);
-    ~MeshImpl() {
-        // TODO busy waiting, so the object is not deallocated while reference on a worker thread
-        while (!loadingComplete.load())
-            ;
-    }
+    ~MeshImpl();
 
 public:
     UINT getVertexSizeInBytes() const { return vertexSizeInBytes; }
@@ -46,7 +69,6 @@ protected:
     ApplicationImpl &application;
 
     // CPU data, set during load time
-    std::atomic_bool loadingComplete = false;
     MeshType meshType = UNKNOWN;
     UINT vertexSizeInBytes = 0;
     UINT verticesCount = 0;
@@ -66,27 +88,10 @@ private:
     static PipelineStateController::Identifier computePipelineStateIdentifier(MeshType meshType);
     static std::map<MeshType, PipelineStateController::Identifier> getShadowMapPipelineStateIdentifierMap();
     static PipelineStateController::Identifier computeShadowMapPipelineStateIdentifier(MeshType meshType);
-    void loadAndUploadObj(ApplicationImpl &application, const std::wstring &filePath, bool useTextures);
 
-    // Loading CPU data
-    struct LoadResults {
-        LoadResults() = default;
-
-        MeshType meshType = UNKNOWN;
-        std::vector<FLOAT> vertexElements = {};
-        std::vector<UINT> indices = {};
-    };
-    static LoadResults loadObj(const std::wstring &filePath, bool useTextures);
-
-    // Uploading GPU data
-    struct UploadResults {
-        std::unique_ptr<VertexBuffer> vertexBuffer = {};
-        std::unique_ptr<IndexBuffer> indexBuffer = {};
-    };
-    static UploadResults uploadToGPU(ApplicationImpl &application, const std::vector<FLOAT> &vertexElements, const std::vector<UINT> &indices, UINT verticesCount, UINT vertexSizeInBytes);
-
-    // Called after all CPU and GPU data is available
-    void setData(MeshType meshType, UINT vertexSizeInBytes, UINT verticesCount, UINT indicesCount,
-                 PipelineStateController::Identifier pipelineStateIdentifier, PipelineStateController::Identifier shadowMapPipelineStateIdentifier,
-                 std::unique_ptr<VertexBuffer> &&vertexBuffer, std::unique_ptr<IndexBuffer> &&indexBuffer);
+    // AsyncLoadableObject overrides
+    MeshCpuLoadResult cpuLoad(const MeshCpuLoadArgs &args) override;
+    MeshGpuLoadArgs createArgsForGpuLoad(const MeshCpuLoadResult &cpuLoadResult) override;
+    MeshGpuLoadResult gpuLoad(const MeshGpuLoadArgs &args) override;
+    void writeCpuGpuLoadResults(MeshCpuLoadResult &cpuLoadResult, MeshGpuLoadResult &gpuLoadResult) override;
 };
