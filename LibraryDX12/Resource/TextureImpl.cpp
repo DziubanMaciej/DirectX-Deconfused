@@ -67,6 +67,10 @@ TextureCpuLoadResult TextureImpl::cpuLoad(const TextureCpuLoadArgs &args) {
     return std::move(result);
 }
 
+bool TextureImpl::isCpuLoadSuccessful(const TextureCpuLoadResult &result) {
+    return result.success;
+}
+
 TextureGpuLoadArgs TextureImpl::createArgsForGpuLoad(const TextureCpuLoadResult &cpuLoadResult) {
     return std::move(TextureGpuLoadArgs{
         cpuLoadResult.metadata,

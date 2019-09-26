@@ -18,8 +18,10 @@ protected:
     }
 
     virtual CpuLoadResult cpuLoad(const CpuLoadArgs &args) = 0;
+    virtual bool isCpuLoadSuccessful(const CpuLoadResult &result) { return true; }
     virtual GpuLoadArgs createArgsForGpuLoad(const CpuLoadResult &cpuLoadResult) = 0;
     virtual GpuLoadResult gpuLoad(const GpuLoadArgs &args) = 0;
+    virtual bool isGpuLoadSuccessful(const GpuLoadResult &result) { return true; }
     virtual void writeCpuGpuLoadResults(CpuLoadResult &cpuLoadResult, GpuLoadResult &gpuLoadResult) = 0;
 
     void terminateBackgroundProcessing(bool blocking) {
@@ -40,8 +42,16 @@ protected:
 private:
     void cpuGpuLoadImpl(const CpuLoadArgs &cpuLoadArgs) {
         CpuLoadResult cpuLoadResult = cpuLoad(cpuLoadArgs);
+        if (!isCpuLoadSuccessful(cpuLoadResult)) {
+            return; // TODO set some error info
+        }
+
         GpuLoadArgs gpuLoadArgs = createArgsForGpuLoad(cpuLoadResult);
         GpuLoadResult gpuLoadResult = gpuLoad(gpuLoadArgs);
+        if (!isGpuLoadSuccessful(gpuLoadResult)) {
+            return; // TODO set some error info
+        }
+
         writeCpuGpuLoadResults(cpuLoadResult, gpuLoadResult);
     }
 };

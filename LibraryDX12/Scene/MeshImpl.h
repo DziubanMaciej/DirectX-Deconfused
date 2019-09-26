@@ -91,6 +91,7 @@ private:
 
     // AsyncLoadableObject overrides
     MeshCpuLoadResult cpuLoad(const MeshCpuLoadArgs &args) override;
+    bool isCpuLoadSuccessful(const MeshCpuLoadResult &result) override;
     MeshGpuLoadArgs createArgsForGpuLoad(const MeshCpuLoadResult &cpuLoadResult) override;
     MeshGpuLoadResult gpuLoad(const MeshGpuLoadArgs &args) override;
     void writeCpuGpuLoadResults(MeshCpuLoadResult &cpuLoadResult, MeshGpuLoadResult &gpuLoadResult) override;

@@ -170,6 +170,10 @@ MeshCpuLoadResult MeshImpl::cpuLoad(const MeshCpuLoadArgs &args) {
     return std::move(result);
 }
 
+bool MeshImpl::isCpuLoadSuccessful(const MeshCpuLoadResult &result) {
+    return result.meshType != UNKNOWN;
+}
+
 MeshGpuLoadArgs MeshImpl::createArgsForGpuLoad(const MeshCpuLoadResult &cpuLoadResult) {
     return std::move(MeshGpuLoadArgs{
         cpuLoadResult.vertexElements,

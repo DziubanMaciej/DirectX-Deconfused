@@ -50,6 +50,7 @@ private:
 
     // AsyncLoadableObject overrides
     TextureCpuLoadResult cpuLoad(const TextureCpuLoadArgs &args) override;
+    bool isCpuLoadSuccessful(const TextureCpuLoadResult &result) override;
     TextureGpuLoadArgs createArgsForGpuLoad(const TextureCpuLoadResult &cpuLoadResult) override;
     TextureGpuLoadResult gpuLoad(const TextureGpuLoadArgs &args) override;
     void writeCpuGpuLoadResults(TextureCpuLoadResult &cpuLoadResult, TextureGpuLoadResult &gpuLoadResult) override;
