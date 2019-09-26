@@ -22,7 +22,20 @@ protected:
     virtual GpuLoadResult gpuLoad(const GpuLoadArgs &args) = 0;
     virtual void writeCpuGpuLoadResults(CpuLoadResult &cpuLoadResult, GpuLoadResult &gpuLoadResult) = 0;
 
+    void terminateBackgroundProcessing(bool blocking) {
+        terminate.store(true);
+        if (blocking) {
+            while (!cpuLoadComplete.load())
+                ;
+        }
+    }
+
+    bool shouldBackgroundProcessingTerminate() const {
+        return terminate.load();
+    }
+
     std::atomic_bool cpuLoadComplete = false;
+    std::atomic_bool terminate = false;
 
 private:
     void cpuGpuLoadImpl(const CpuLoadArgs &cpuLoadArgs) {

@@ -28,9 +28,7 @@ MeshImpl::MeshImpl(ApplicationImpl &application, const std::wstring &filePath, b
 }
 
 MeshImpl::~MeshImpl() {
-    // TODO busy waiting, so the object is not deallocated while reference on a worker thread
-    while (!cpuLoadComplete.load())
-        ;
+    terminateBackgroundProcessing(true);
 }
 
 // ----------------------------------------------------------------- AsyncLoadableObject overrides
@@ -54,6 +52,10 @@ MeshCpuLoadResult MeshImpl::cpuLoad(const MeshCpuLoadArgs &args) {
 
     // Read all lines
     for (std::string line; getline(inputFile, line).good();) {
+        if (shouldBackgroundProcessingTerminate()) {
+            return std::move(MeshCpuLoadResult{});
+        }
+
         std::istringstream strs(line);
         strs >> lineType;
 
