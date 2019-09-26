@@ -75,7 +75,7 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
                 for (int ox = -2; ox < 3; ox++) {
                     for (int oy = -2; oy < 3; oy++) {
                         float2 offset = float2(float(ox) / 2048.0f, float(oy) / 2048.0f);
-                        smDepth = shadowMaps[i].Sample(g_sampler, smCoords.xy + offset).r;
+                        smDepth = shadowMaps[i].SampleLevel(g_sampler, smCoords.xy + offset, 0).r;
 
                         if (((smCoords.z / smCoords.w) - 0.002f) > smDepth) {
                             shadowFactor = shadowFactor - 1;
@@ -116,7 +116,7 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
     float3 ambientLightColor = ambientLight.xyz / 4;
     float ambientLightPower = distance(float3(0, 0, 0), ambientLight.xyz) * 0.25f;
 
-    OUT_Color.xyz = OUT_Color.xyz + ((INalbedo + ambientLightColor) * ambientLightPower * (INspecularity.x / 10.0f + 1.0f));
+    OUT_Color.xyz = OUT_Color.xyz + ((INalbedo.xyz + ambientLightColor) * ambientLightPower * (INspecularity.x / 10.0f + 1.0f));
 
     PS_OUT result;
 

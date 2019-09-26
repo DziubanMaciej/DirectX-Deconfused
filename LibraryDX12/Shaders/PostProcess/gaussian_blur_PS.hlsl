@@ -22,12 +22,12 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
     float4 OUT_Color = scene.Sample(sceneSampler, float2(uBase, vBase)) * weights[0]; // current pixel's contribution
     if (cb.horizontal) {
-        for (int i = 1; i < cb.samplingRange; i++) {
+        for (uint i = 1u; i < cb.samplingRange; i++) {
             OUT_Color.rgb += weights[i] * scene.Sample(sceneSampler, float2(uBase - i * uOffset, vBase)).rgb;
             OUT_Color.rgb += weights[i] * scene.Sample(sceneSampler, float2(uBase + i * uOffset, vBase)).rgb;
         }
     } else {
-        for (int i = 1; i < cb.samplingRange; i++) {
+        for (uint i = 1u; i < cb.samplingRange; i++) {
             OUT_Color.rgb += weights[i] * scene.Sample(sceneSampler, float2(uBase, vBase + i * vOffset)).rgb;
             OUT_Color.rgb += weights[i] * scene.Sample(sceneSampler, float2(uBase, vBase - i * vOffset)).rgb;
         }

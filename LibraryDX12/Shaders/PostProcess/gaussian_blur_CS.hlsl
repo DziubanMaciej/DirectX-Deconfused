@@ -93,7 +93,7 @@ void sampleBorderPixels(uint3 GroupThreadID, float2 uvBase, float2 uvOffset, uin
 
     // Sample pixel for this thread and store it in groupshared memory
     const float4 pixel = input.SampleLevel(sceneSampler, uvBase, 0);
-    storeInGroupMemory(groupMemoryIndexBase, pixel);
+    storeInGroupMemory(groupMemoryIndexBase, pixel.rgb);
 
     // Sample border pixels
     sampleBorderPixels(IN.GroupThreadID, uvBase, uvOffset, groupMemoryIndexBase);
