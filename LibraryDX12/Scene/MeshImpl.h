@@ -49,7 +49,7 @@ public:
 protected:
     friend class DXD::Mesh;
     MeshImpl(ApplicationImpl &application, const std::wstring &filePath, bool useTextures, bool asynchronousLoading);
-    ~MeshImpl();
+    ~MeshImpl() override;
 
 public:
     UINT getVertexSizeInBytes() const { return vertexSizeInBytes; }

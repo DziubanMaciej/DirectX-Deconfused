@@ -39,6 +39,7 @@ class TextureImpl : public DXD::Texture, public Resource, TextureAsyncLoadableOb
 protected:
     friend class DXD::Texture;
     TextureImpl(ApplicationImpl &application, const std::wstring &filePath, bool asynchronousLoading);
+    ~TextureImpl() override;
 
 public:
     // Accessors

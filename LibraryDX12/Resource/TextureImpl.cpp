@@ -24,6 +24,10 @@ TextureImpl::TextureImpl(ApplicationImpl &application, const std::wstring &fileP
     this->cpuGpuLoad(cpuLoadArgs, asynchronousLoading);
 }
 
+TextureImpl::~TextureImpl() {
+    terminateBackgroundProcessing(true);
+}
+
 // ----------------------------------------------------------------- AsyncLoadableObject overrides
 
 TextureCpuLoadResult TextureImpl::cpuLoad(const TextureCpuLoadArgs &args) {
