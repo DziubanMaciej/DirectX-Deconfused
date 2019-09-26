@@ -68,7 +68,8 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
     float4 rayPoint = worldSpacePos;
 
-    for (int i = 0; i < 50; i++) {
+    [loop]
+    for (int i = 0; i < 75; i++) {
 
         float marchingStep = 0.1f;
 

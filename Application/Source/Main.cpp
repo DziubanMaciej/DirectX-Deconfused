@@ -100,7 +100,7 @@ private:
 
         objects["teapotMesh2"]->setPosition(0, 1, 0);
         objects["teapotMesh2"]->setScale(0.1f, 0.1f, 0.1f);
-        objects["teapotMesh2"]->setColor(0.5f, 0.5f, 0.0f);
+        objects["teapotMesh2"]->setColor(0.3f, 0.0f, 0.0f);
         objects["teapotMesh2"]->setSpecularity(0.2f);
 
         objects["teapotMesh3"]->setPosition(-8, -1.25, 0);
@@ -114,7 +114,7 @@ private:
 
         objects["cubeNormalMesh2"]->setPosition(9, -1, -9);
 
-        objects["cubeNormalMesh3"]->setPosition(0, -1.9, 0);
+        objects["cubeNormalMesh3"]->setPosition(0, -1.9f, 0);
         objects["cubeNormalMesh3"]->setScale(2, 0.1f, 2);
         objects["cubeNormalMesh3"]->setSpecularity(0.1f);
 
@@ -123,7 +123,7 @@ private:
         objects["glowingCube"]->setBloomFactor(1.f);
         objects["glowingCube"]->setColor(0.9f, 0.9f, 0.9f);
 
-        objects["intel"]->setPosition(0, -1.9, -8);
+        objects["intel"]->setPosition(0, -1.9f, -8);
         objects["intel"]->setScale(0.1f, 0.1f, 0.1f);
         objects["intel"]->setSpecularity(0.4f);
 
