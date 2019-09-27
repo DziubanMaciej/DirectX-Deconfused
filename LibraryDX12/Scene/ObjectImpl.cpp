@@ -103,5 +103,5 @@ float ObjectImpl::getBloomFactor() const {
 }
 
 bool ObjectImpl::isUploadInProgress() {
-    return mesh.isUploadInProgress() || (texture != nullptr && texture->isUploadInProgress());
+    return mesh.isUploadInProgress() || (texture != nullptr && texture->isUploadInProgress()) || (normalMap != nullptr && normalMap->isUploadInProgress());
 }

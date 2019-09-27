@@ -45,11 +45,16 @@ public:
     DXD::Texture *getTexture() override { return texture; }
     TextureImpl *getTextureImpl() { return texture; }
 
+    void setNormalMap(DXD::Texture *normalMap) override { this->normalMap = static_cast<TextureImpl *>(normalMap); }
+    DXD::Texture *getNormalMap() override { return normalMap; }
+    TextureImpl *getNormalMapImpl() { return normalMap; }
+
     bool isUploadInProgress();
 
-protected:
+protected: 
     MeshImpl &mesh;
     TextureImpl *texture = {};
+    TextureImpl *normalMap = {};
 
     XMVECTOR scale = {1, 1, 1};
     XMVECTOR position = {0, 0, 0};

@@ -43,6 +43,9 @@ public:
     virtual void setTexture(Texture *texture) = 0;
     virtual const Texture *getTexture() = 0;
 
+    virtual void setNormalMap(Texture *texture) = 0;
+    virtual const Texture *getNormalMap() = 0;
+
     virtual ~Object() = default;
     static std::unique_ptr<Object> create(DXD::Mesh &mesh);
 
