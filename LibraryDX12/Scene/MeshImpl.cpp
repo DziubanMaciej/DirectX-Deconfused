@@ -15,15 +15,16 @@ namespace DXD {
 // ----------------------------------------------------------------- Creation and destruction
 
 std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const std::wstring &filePath,
-                                          bool useTextures, bool asynchronousLoading) {
+                                          bool loadNormals, bool loadTextureCoordinates,
+                                          bool asynchronousLoading) {
     return std::unique_ptr<Mesh>(new MeshImpl(*static_cast<ApplicationImpl *>(&application),
-                                              filePath, useTextures, asynchronousLoading));
+                                              filePath, loadNormals, loadTextureCoordinates, asynchronousLoading));
 }
 } // namespace DXD
 
-MeshImpl::MeshImpl(ApplicationImpl &application, const std::wstring &filePath, bool useTextures, bool asynchronousLoading)
+MeshImpl::MeshImpl(ApplicationImpl &application, const std::wstring &filePath, bool loadNormals, bool loadTextureCoordinates, bool asynchronousLoading)
     : application(application) {
-    const MeshCpuLoadArgs cpuLoadArgs{filePath, useTextures};
+    const MeshCpuLoadArgs cpuLoadArgs{filePath, loadNormals, loadTextureCoordinates};
     cpuGpuLoad(cpuLoadArgs, asynchronousLoading);
 }
 
@@ -108,7 +109,7 @@ MeshCpuLoadResult MeshImpl::cpuLoad(const MeshCpuLoadArgs &args) {
 
     // Compute some fields based on lines that were read
     MeshCpuLoadResult result{};
-    result.meshType = MeshImpl::computeMeshType(normalCoordinates, textureCoordinates, args.useTextures);
+    result.meshType = MeshImpl::computeMeshType(normalCoordinates, textureCoordinates, args.loadNormals, args.loadTextureCoordinates);
     result.vertexSizeInBytes = computeVertexSize(result.meshType);
     const bool usesIndexBuffer = normalCoordinates.size() == 0 && textureCoordinates.size() == 0;
     if (result.meshType == MeshImpl::UNKNOWN) {
@@ -235,12 +236,17 @@ bool MeshImpl::isUploadInProgress() {
 
 // ----------------------------------------------------------------- Helpers
 
-MeshImpl::MeshType MeshImpl::computeMeshType(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates, bool useTextures) {
+MeshImpl::MeshType MeshImpl::computeMeshType(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates,
+                                             bool loadNormals, bool loadTextureCoordinates) {
     MeshType meshType = TRIANGLE_STRIP;
-    if (normals.size() > 0) {
-        meshType |= NORMALS;
+    if (loadNormals) {
+        if (normals.size() > 0) {
+            meshType |= NORMALS;
+        } else {
+            return UNKNOWN; // user wants normals which .obj doesn't provide - error
+        }
     }
-    if (useTextures) {
+    if (loadTextureCoordinates) {
         if (textureCoordinates.size() > 0) {
             meshType |= TEXTURE_COORDS;
         } else {

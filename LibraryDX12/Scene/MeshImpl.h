@@ -14,7 +14,8 @@
 
 struct MeshCpuLoadArgs {
     const std::wstring filePath;
-    bool useTextures;
+    bool loadNormals;
+    bool loadTextureCoordinates;
 };
 
 struct MeshCpuLoadResult {
@@ -48,7 +49,7 @@ public:
 
 protected:
     friend class DXD::Mesh;
-    MeshImpl(ApplicationImpl &application, const std::wstring &filePath, bool useTextures, bool asynchronousLoading);
+    MeshImpl(ApplicationImpl &application, const std::wstring &filePath, bool loadNormals, bool loadTextureCoordinates, bool asynchronousLoading);
     ~MeshImpl() override;
 
 public:
@@ -82,7 +83,8 @@ protected:
 
 private:
     // Helpers
-    static MeshType computeMeshType(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates, bool useTextures);
+    static MeshType computeMeshType(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates,
+                                    bool loadNormals, bool loadTextureCoordinates);
     static UINT computeVertexSize(MeshType meshType);
     static std::map<MeshType, PipelineStateController::Identifier> getPipelineStateIdentifierMap();
     static PipelineStateController::Identifier computePipelineStateIdentifier(MeshType meshType);

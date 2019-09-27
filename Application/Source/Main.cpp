@@ -53,7 +53,7 @@ private:
         struct MeshCreationData {
             std::string name;
             std::wstring filePath;
-            bool useTextures;
+            bool loadTextures;
         };
 
         MeshCreationData meshesCreationData[] = {
@@ -67,7 +67,7 @@ private:
             {"porsheMesh", L"Resources/meshes/porshe.obj", true}};
 
         for (const auto &data : meshesCreationData) {
-            meshes[data.name] = DXD::Mesh::createFromObj(*application, data.filePath, data.useTextures, true);
+            meshes[data.name] = DXD::Mesh::createFromObj(*application, data.filePath, true, data.loadTextures, true);
             assert(meshes[data.name]);
         }
     }
