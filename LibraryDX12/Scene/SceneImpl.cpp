@@ -297,6 +297,30 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
         }
     }
 
+    //Draw TEXTURE_NORMAL_MAP
+    commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE_NORMAL_MAP);
+    for (ObjectImpl *object : objects) {
+        MeshImpl &mesh = object->getMesh();
+        if (mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
+            NormalTextureCB cb;
+            cb.modelMatrix = object->getModelMatrix();
+            cb.modelViewProjectionMatrix = XMMatrixMultiply(cb.modelMatrix, vpMatrix);
+            cb.textureScale = object->getTextureScale();
+            commandList.setRoot32BitConstant(0, cb);
+
+            ObjectProperties op = {};
+            op.albedoColor = object->getColor();
+            op.specularity = object->getSpecularity();
+            op.bloomFactor = object->getBloomFactor();
+            commandList.setRoot32BitConstant(1, op);
+
+            commandList.IASetVertexAndIndexBuffer(mesh);
+            commandList.setSrvInDescriptorTable(2, 0, *object->getNormalMapImpl());
+            commandList.setSrvInDescriptorTable(2, 1, *object->getTextureImpl());
+            commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
+        }
+    }
+
     commandList.transitionBarrier(renderData.getGBufferAlbedo(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getGBufferNormal(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getGBufferSpecular(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);

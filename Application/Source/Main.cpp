@@ -53,21 +53,24 @@ private:
         struct MeshCreationData {
             std::string name;
             std::wstring filePath;
+            bool loadNormals;
             bool loadTextures;
         };
 
         MeshCreationData meshesCreationData[] = {
-            {"teapot", L"Resources/meshes/teapot_normals.obj", false},
-            {"cubeNormal", L"Resources/meshes/cube_normals.obj", false},
-            {"cubeNormalUv", L"Resources/meshes/cube_normals_uvs.obj", true},
-            {"actor", L"Resources/meshes/dennis.obj", true},
-            {"dxd", L"Resources/meshes/dxd_comicsans.obj", false},
-            {"intelMesh", L"Resources/meshes/corei7.obj", false},
-            {"aventadorMesh", L"Resources/meshes/aventador.obj", false},
-            {"porsheMesh", L"Resources/meshes/porshe.obj", true}};
+            {"cubeUv", L"Resources/meshes/cube_normals_uvs.obj", false, true},
+            {"cubeNormal", L"Resources/meshes/cube_normals.obj", true, false},
+            {"cubeNormalUv", L"Resources/meshes/cube_normals_uvs.obj", true, true},
+            {"teapot", L"Resources/meshes/teapot_normals.obj", true, false},
+            {"actor", L"Resources/meshes/dennis.obj", true, true},
+            {"dxd", L"Resources/meshes/dxd_comicsans.obj", true, false},
+            {"intelMesh", L"Resources/meshes/corei7.obj", true, false},
+            {"aventadorMesh", L"Resources/meshes/aventador.obj", true, false},
+            {"porsheMesh", L"Resources/meshes/porshe.obj", true, true}};
 
         for (const auto &data : meshesCreationData) {
-            meshes[data.name] = DXD::Mesh::createFromObj(*application, data.filePath, true, data.loadTextures, true);
+            const bool asynchronousLoading = true;
+            meshes[data.name] = DXD::Mesh::createFromObj(*application, data.filePath, data.loadNormals, data.loadTextures, asynchronousLoading);
             assert(meshes[data.name]);
         }
     }
@@ -84,7 +87,7 @@ private:
             {"glowingCube", "cubeNormal"},
             {"flatMesh1", "cubeNormal"},
             {"intel", "intelMesh"},
-            {"extraFlatMesh1", "cubeNormalUv"},
+            {"extraFlatMesh1", "cubeUv"},
             {"aventador", "aventadorMesh"},
             {"porshe", "porsheMesh"},
             {"actorMesh1", "actor"}};
@@ -131,12 +134,12 @@ private:
         objects["flatMesh1"]->setSpecularity(0.2f);
         objects["flatMesh1"]->setScale(20, 0.5, 10);
 
-        objects["extraFlatMesh1"]->setTexture(textures["wood"].get());
+        objects["extraFlatMesh1"]->setTexture(textures["brickwall"].get());
+        objects["extraFlatMesh1"]->setNormalMap(textures["brickwall_normal"].get());
         objects["extraFlatMesh1"]->setPosition(0, -4.0, 0);
         objects["extraFlatMesh1"]->setSpecularity(0.0f);
         objects["extraFlatMesh1"]->setScale(100, 1.0f, 100);
         objects["extraFlatMesh1"]->setTextureScale(20, 20);
-        objects["extraFlatMesh1"]->setColor(126.0f / 255.0f, 200.0f / 255.0f, 90.0f / 255.0f);
 
         objects["porshe"]->setPosition(0, -1, -4);
         objects["porshe"]->setSpecularity(0.4f);
@@ -199,6 +202,8 @@ private:
         };
 
         TextureCreationData texturesCreationData[] = {
+            {"brickwall", L"Resources/textures/brickwall.jpg", true},
+            {"brickwall_normal", L"Resources/textures/brickwall_normal.jpg", false},
             {"porsche", L"Resources/textures/porsche.bmp", true},
             {"dennis", L"Resources/textures/dennis.jpg", true},
             {"wood", L"Resources/textures/wood.jpg", true}};
@@ -286,6 +291,8 @@ private:
         objects["porshe"]->setRotation(XMFLOAT3(0, 1, 0), rotation - 45); // +180 for aventador
         objects["porshe"]->setPosition(7 * sinf(rotation) * 0.6f, -1.475f, 7 * cosf(rotation) * 0.6f);
         objects["teapotMesh2"]->setRotation(rotation, rotation, rotation);
+
+        lights["blueLight"]->setPosition(7 * sinf(rotation) * 0.6f, -2.5f, 7 * cosf(rotation) * 0.6f - 14);
     }
 
     // Callbacks

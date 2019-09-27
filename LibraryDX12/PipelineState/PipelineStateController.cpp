@@ -45,11 +45,14 @@ void PipelineStateController::compile(Identifier identifier) {
     switch (identifier) {
     case Identifier::PIPELINE_STATE_UNKNOWN:
         break;
+    case Identifier::PIPELINE_STATE_NORMAL:
+        compilePipelineStateNormal(rootSignature, pipelineState);
+        break;
     case Identifier::PIPELINE_STATE_TEXTURE_NORMAL:
         compilePipelineStateTextureNormal(rootSignature, pipelineState);
         break;
-    case Identifier::PIPELINE_STATE_NORMAL:
-        compilePipelineStateNormal(rootSignature, pipelineState);
+    case Identifier::PIPELINE_STATE_TEXTURE_NORMAL_MAP:
+        compilePipelineStateTextureNormalMap(rootSignature, pipelineState);
         break;
     case Identifier::PIPELINE_STATE_SSAO:
         compilePipelineStateSSAO(rootSignature, pipelineState);
@@ -68,6 +71,9 @@ void PipelineStateController::compile(Identifier identifier) {
         break;
     case Identifier::PIPELINE_STATE_SM_TEXTURE_NORMAL:
         compilePipelineStateShadowMapTextureNormal(rootSignature, pipelineState);
+        break;
+    case Identifier::PIPELINE_STATE_SM_TEXTURE_NORMAL_MAP:
+        compilePipelineStateShadowMapTextureNormalMap(rootSignature, pipelineState);
         break;
     case Identifier::PIPELINE_STATE_POST_PROCESS_CONVOLUTION:
         compilePipelineStatePostProcessConvolution(rootSignature, pipelineState);
@@ -145,6 +151,35 @@ void PipelineStateController::compilePipelineStateTextureNormal(RootSignature &r
         .compile(device, pipelineState);
 }
 
+void PipelineStateController::compilePipelineStateTextureNormalMap(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
+    // Root signature - crossthread data
+    StaticSampler sampler{D3D12_SHADER_VISIBILITY_PIXEL};
+    sampler.addressMode(D3D12_TEXTURE_ADDRESS_MODE_MIRROR);
+    DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
+    table.appendSrvRange(t(0), 1); // normal map
+    table.appendSrvRange(t(1), 1); // diffuse texture
+    rootSignature
+        .append32bitConstant<NormalTextureCB>(b(0), D3D12_SHADER_VISIBILITY_VERTEX)
+        .append32bitConstant<ObjectProperties>(b(1), D3D12_SHADER_VISIBILITY_PIXEL)
+        .appendDescriptorTable(std::move(table))
+        .appendStaticSampler(s(0), sampler)
+        .compile(device);
+
+    // Input layout - per vertex data
+    const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+    };
+
+    // Pipeline state object
+    GraphicsPipelineState{inputLayout, rootSignature}
+        .VS(L"3D/texture_normal_map_VS.hlsl")
+        .PS(L"3D/texture_normal_map_PS.hlsl")
+        .setRenderTargetsCount(3)
+        .setRenderTargetFormat(1, DXGI_FORMAT_R16G16B16A16_SNORM)
+        .compile(device, pipelineState);
+}
+
 // --------------------------------------------------------------------------------------------- Shadow maps
 
 void PipelineStateController::compilePipelineStateShadowMapNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
@@ -181,6 +216,25 @@ void PipelineStateController::compilePipelineStateShadowMapTextureNormal(RootSig
     // Pipeline state object
     GraphicsPipelineState{inputLayout, rootSignature}
         .VS(L"ShadowMap/normal_texture_VS.hlsl")
+        .compile(device, pipelineState);
+}
+
+void PipelineStateController::compilePipelineStateShadowMapTextureNormalMap(RootSignature & rootSignature, ID3D12PipelineStatePtr & pipelineState)
+{
+    // Root signature - crossthread data
+    rootSignature
+        .append32bitConstant<SMmvp>(b(0), D3D12_SHADER_VISIBILITY_VERTEX) // register(b0)
+        .compile(device);
+
+    // Input layout - per vertex data
+    const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+    };
+
+    // Pipeline state object
+    GraphicsPipelineState{ inputLayout, rootSignature }
+        .VS(L"ShadowMap/texture_normal_map_VS.hlsl")
         .compile(device, pipelineState);
 }
 

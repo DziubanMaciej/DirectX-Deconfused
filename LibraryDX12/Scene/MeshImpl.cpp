@@ -274,6 +274,7 @@ UINT MeshImpl::computeVertexSize(MeshType meshType) {
 std::map<MeshImpl::MeshType, PipelineStateController::Identifier> MeshImpl::getPipelineStateIdentifierMap() {
     std::map<MeshImpl::MeshType, PipelineStateController::Identifier> map = {};
     map[TRIANGLE_STRIP | NORMALS] = PipelineStateController::Identifier::PIPELINE_STATE_NORMAL;
+    map[TRIANGLE_STRIP | TEXTURE_COORDS] = PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE_NORMAL_MAP;
     map[TRIANGLE_STRIP | NORMALS | TEXTURE_COORDS] = PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE_NORMAL;
     return std::move(map);
 }
@@ -290,6 +291,7 @@ PipelineStateController::Identifier MeshImpl::computePipelineStateIdentifier(Mes
 std::map<MeshImpl::MeshType, PipelineStateController::Identifier> MeshImpl::getShadowMapPipelineStateIdentifierMap() {
     std::map<MeshImpl::MeshType, PipelineStateController::Identifier> map = {};
     map[TRIANGLE_STRIP | NORMALS] = PipelineStateController::Identifier::PIPELINE_STATE_SM_NORMAL;
+    map[TRIANGLE_STRIP | TEXTURE_COORDS] = PipelineStateController::Identifier::PIPELINE_STATE_SM_TEXTURE_NORMAL_MAP;
     map[TRIANGLE_STRIP | NORMALS | TEXTURE_COORDS] = PipelineStateController::Identifier::PIPELINE_STATE_SM_TEXTURE_NORMAL;
     return std::move(map);
 }
@@ -298,7 +300,7 @@ PipelineStateController::Identifier MeshImpl::computeShadowMapPipelineStateIdent
     static const auto map = getShadowMapPipelineStateIdentifierMap();
     auto it = map.find(meshType);
     if (it == map.end()) {
-        return PipelineStateController::Identifier::PIPELINE_STATE_UNKNOWN;
+        UNREACHABLE_CODE();
     }
     return it->second;
 }

@@ -13,11 +13,13 @@ public:
     enum class Identifier {
         PIPELINE_STATE_UNKNOWN,
         // 3D
-        PIPELINE_STATE_TEXTURE_NORMAL,
         PIPELINE_STATE_NORMAL,
+        PIPELINE_STATE_TEXTURE_NORMAL,
+        PIPELINE_STATE_TEXTURE_NORMAL_MAP,
         // Shadow maps
         PIPELINE_STATE_SM_NORMAL,
         PIPELINE_STATE_SM_TEXTURE_NORMAL,
+        PIPELINE_STATE_SM_TEXTURE_NORMAL_MAP,
         // SSAO
         PIPELINE_STATE_SSAO,
         // SSR
@@ -48,6 +50,7 @@ private:
     // 3D
     void compilePipelineStateNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateTextureNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    void compilePipelineStateTextureNormalMap(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     // SSAO
     void compilePipelineStateSSAO(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     // SSR
@@ -57,6 +60,7 @@ private:
     // Shadow maps
     void compilePipelineStateShadowMapNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateShadowMapTextureNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    void compilePipelineStateShadowMapTextureNormalMap(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     // Post processes
     void compilePipelineStatePostProcessBlackBars(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStatePostProcessConvolution(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
