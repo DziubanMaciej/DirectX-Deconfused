@@ -63,6 +63,18 @@ macro(set_shaders_properties TARGET_NAME COMPILATION_ENABLED)
     endforeach()
 endmacro()
 
+# ---------------------------------------------- Helpers for CMake parameters
+
+macro(validate_parameters)
+    foreach(required_arg ${ARGN})
+        if (DEFINED ${required_arg})
+            message("CMake parameter ${required_arg}=${${required_arg}}")
+        else()
+            message(FATAL_ERROR "ERROR: CMake parameter \"${required_arg}\" is required." )
+        endif()
+    endforeach()
+endmacro()
+
 # ---------------------------------------------- Helpers for configuring paths
 
 macro(set_output_directories)
@@ -79,9 +91,24 @@ macro(set_link_directory_to_lib)
     link_directories(${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
 endmacro()
 
+set(DXD_SRC_DIR ${PROJECT_SOURCE_DIR}/LibraryDX12)
+set(DXD_INCLUDE_DIR ${DXD_SRC_DIR}/Include)
+
 macro(add_definitions_for_paths ${TARGET_NAME})
-    add_definitions(-DSHADERS_PATH=L"../../../${TARGET_NAME}/Shaders/")
-    add_definitions(-DRESOURCES_PATH=L"../../../")
+    add_definitions(-DSHADERS_PATH=L"${DXD_SRC_DIR}/Shaders/")
+    add_definitions(-DRESOURCES_PATH=L"${PROJECT_SOURCE_DIR}/")
 endmacro()
 
-set(DXD_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/LibraryDX12/Include)
+# ---------------------------------------------- Helpers for external libraries
+
+macro(set_output_directories_to_dxd)
+    validate_parameters("DXD_BIN_PATH")
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${DXD_BIN_PATH}/lib) # .lib
+    set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${DXD_BIN_PATH}/bin) # .dll
+    set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${DXD_BIN_PATH}/bin) # .exe
+endmacro()
+
+macro(set_link_directory_to_dxd)
+    validate_parameters("DXD_BIN_PATH")
+    link_directories(${DXD_BIN_PATH}/lib)
+endmacro()
