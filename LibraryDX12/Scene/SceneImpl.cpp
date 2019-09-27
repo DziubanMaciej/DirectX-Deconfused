@@ -279,10 +279,11 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
         MeshImpl &mesh = object->getMesh();
         TextureImpl *texture = object->getTextureImpl();
         if (mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
-            ModelMvp mmvp;
-            mmvp.modelMatrix = object->getModelMatrix();
-            mmvp.modelViewProjectionMatrix = XMMatrixMultiply(mmvp.modelMatrix, vpMatrix);
-            commandList.setRoot32BitConstant(0, mmvp);
+            NormalTextureCB cb;
+            cb.modelMatrix = object->getModelMatrix();
+            cb.modelViewProjectionMatrix = XMMatrixMultiply(cb.modelMatrix, vpMatrix);
+            cb.textureScale = object->getTextureScale();
+            commandList.setRoot32BitConstant(0, cb);
 
             ObjectProperties op = {};
             op.albedoColor = object->getColor();

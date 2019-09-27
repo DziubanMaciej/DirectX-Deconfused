@@ -4,10 +4,8 @@ struct ObjectProperties {
     float bloomFactor;
 };
 
-ConstantBuffer<ObjectProperties> op : register(b2);
-
+ConstantBuffer<ObjectProperties> op : register(b1);
 Texture2D diffuseTexture : register(t0);
-
 SamplerState s_sampler : register(s0);
 
 struct PixelShaderInput {
@@ -16,18 +14,17 @@ struct PixelShaderInput {
     float2 UV : TEXCOORD;
 };
 
-struct PS_OUT {
+struct PixelShaderOutput {
     float4 gBufferAlbedo;
     float4 gBufferNormal;
     float4 gBufferSpecular;
 };
 
-PS_OUT main(PixelShaderInput IN) : SV_Target {
-
+PixelShaderOutput main(PixelShaderInput IN) : SV_Target {
     float2 textureCoords = float2(IN.UV.x, 1 - IN.UV.y);
     float4 objectTextureColor = diffuseTexture.Sample(s_sampler, textureCoords);
 
-    PS_OUT result;
+    PixelShaderOutput result;
 
     result.gBufferAlbedo = objectTextureColor;
     result.gBufferNormal = normalize(IN.Normal);

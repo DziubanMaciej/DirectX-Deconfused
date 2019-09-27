@@ -1,9 +1,10 @@
-struct ModelViewProjection {
+struct NormalTextureCB {
     matrix modelMatrix;
     matrix mvpMatrix;
+    float2 textureScale;
 };
 
-ConstantBuffer<ModelViewProjection> mmvp : register(b0);
+ConstantBuffer<NormalTextureCB> cb : register(b0);
 
 struct VertexShaderInput {
     float3 Position : POSITION;
@@ -19,10 +20,8 @@ struct VertexShaderOutput {
 
 VertexShaderOutput main(VertexShaderInput IN) {
     VertexShaderOutput OUT;
-
-    OUT.Position = mul(mmvp.mvpMatrix, float4(IN.Position, 1.0f));
-    OUT.Normal = mul(mmvp.modelMatrix, float4(IN.Normal, 0.0f));
-    OUT.UV = IN.UV;
-
+    OUT.Position = mul(cb.mvpMatrix, float4(IN.Position, 1.0f));
+    OUT.Normal = mul(cb.modelMatrix, float4(IN.Normal, 0.0f));
+    OUT.UV = IN.UV * cb.textureScale;
     return OUT;
 }

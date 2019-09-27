@@ -46,6 +46,10 @@ public:
     virtual void setNormalMap(Texture *texture) = 0;
     virtual const Texture *getNormalMap() = 0;
 
+    virtual void setTextureScale(float u, float v) = 0;
+    virtual void setTextureScale(XMFLOAT2 uv) = 0;
+    virtual XMFLOAT2 getTextureScale() const = 0;
+
     virtual ~Object() = default;
     static std::unique_ptr<Object> create(DXD::Mesh &mesh);
 

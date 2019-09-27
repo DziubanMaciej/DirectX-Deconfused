@@ -7,6 +7,12 @@ struct ModelMvp {
     XMMATRIX modelViewProjectionMatrix;
 };
 
+struct NormalTextureCB{
+    XMMATRIX modelMatrix;
+    XMMATRIX modelViewProjectionMatrix;
+    XMFLOAT2 textureScale;
+};
+
 struct PostProcessBlackBarsCB {
     float screenWidth;
     float screenHeight;

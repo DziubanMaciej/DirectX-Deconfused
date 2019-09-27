@@ -123,8 +123,8 @@ void PipelineStateController::compilePipelineStateTextureNormal(RootSignature &r
     DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
     table.appendSrvRange(t(0), 1); // diffuse texture
     rootSignature
-        .append32bitConstant<ModelMvp>(b(0), D3D12_SHADER_VISIBILITY_VERTEX)
-        .append32bitConstant<ObjectProperties>(b(2), D3D12_SHADER_VISIBILITY_PIXEL)
+        .append32bitConstant<NormalTextureCB>(b(0), D3D12_SHADER_VISIBILITY_VERTEX)
+        .append32bitConstant<ObjectProperties>(b(1), D3D12_SHADER_VISIBILITY_PIXEL)
         .appendDescriptorTable(std::move(table))
         .appendStaticSampler(s(0), sampler)
         .compile(device);

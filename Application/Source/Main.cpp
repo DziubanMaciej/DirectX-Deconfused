@@ -135,6 +135,7 @@ private:
         objects["extraFlatMesh1"]->setPosition(0, -4.0, 0);
         objects["extraFlatMesh1"]->setSpecularity(0.0f);
         objects["extraFlatMesh1"]->setScale(100, 1.0f, 100);
+        objects["extraFlatMesh1"]->setTextureScale(20, 20);
         objects["extraFlatMesh1"]->setColor(126.0f / 255.0f, 200.0f / 255.0f, 90.0f / 255.0f);
 
         objects["porshe"]->setPosition(0, -1, -4);

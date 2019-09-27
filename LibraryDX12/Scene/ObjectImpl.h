@@ -49,12 +49,17 @@ public:
     DXD::Texture *getNormalMap() override { return normalMap; }
     TextureImpl *getNormalMapImpl() { return normalMap; }
 
+    void setTextureScale(float u, float v) override;
+    void setTextureScale(XMFLOAT2 uv) override;
+    XMFLOAT2 getTextureScale() const override;
+
     bool isUploadInProgress();
 
-protected: 
+protected:
     MeshImpl &mesh;
     TextureImpl *texture = {};
     TextureImpl *normalMap = {};
+    XMFLOAT2 textureScale = {1, 1};
 
     XMVECTOR scale = {1, 1, 1};
     XMVECTOR position = {0, 0, 0};

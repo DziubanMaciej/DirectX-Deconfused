@@ -102,6 +102,18 @@ float ObjectImpl::getBloomFactor() const {
     return bloomFactor;
 }
 
+void ObjectImpl::setTextureScale(float u, float v) {
+    this->textureScale = {u, v};
+}
+
+void ObjectImpl::setTextureScale(XMFLOAT2 uv) {
+    this->textureScale = uv;
+}
+
+XMFLOAT2 ObjectImpl::getTextureScale() const {
+    return this->textureScale;
+}
+
 bool ObjectImpl::isUploadInProgress() {
     return mesh.isUploadInProgress() || (texture != nullptr && texture->isUploadInProgress()) || (normalMap != nullptr && normalMap->isUploadInProgress());
 }
