@@ -1,7 +1,11 @@
 root_dir=`pwd`
 build_path=`realpath .build`
 architecture="x64"
-build_type="Debug"
+
+build_type="$1"
+if [ -z "$build_type" ]; then
+    build_type="Debug"
+fi
 
 function build() {
     # Get args
