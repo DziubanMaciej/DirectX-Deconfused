@@ -3,7 +3,8 @@ add_subdirectories()
 # Compile options
 add_definitions(/MP -DMAKEDLL)
 add_definitions_for_paths(${TARGET_NAME})
-include_directories(. ${DXD_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/ExternalLibraries)
+include_directories(. ${DXD_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/ExternalLibraries
+                    ${PROJECT_SOURCE_DIR}/ExternalLibraries/assimp/include ${EXTERNAL_LIBS_BIN_PATH}/assimp/include)
 
 # Source files
 collect_sources(SOURCES ${TARGET_NAME})
@@ -18,4 +19,4 @@ set_shaders_properties(${TARGET_NAME} OFF)
 
 # Dependencies
 target_link_libraries(${TARGET_NAME} "DXGI.lib" "D3D12.lib" "D3Dcompiler.lib" "d3d11.lib" "d2d1.lib" "dwrite.lib"
-                                     "directxtex.lib")
+                                     "directxtex.lib" "assimp-vc140-mtd.lib")

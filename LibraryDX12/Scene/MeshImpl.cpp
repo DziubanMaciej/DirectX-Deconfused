@@ -5,6 +5,9 @@
 #include "Utility/ThrowIfFailed.h"
 
 #include <algorithm>
+#include <assimp/Importer.hpp>
+#include <assimp/postprocess.h>
+#include <assimp/scene.h>
 #include <cassert>
 #include <fstream>
 #include <sstream>
@@ -24,6 +27,7 @@ std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const s
 MeshImpl::MeshImpl(ApplicationImpl &application, const std::wstring &filePath, bool useTextures, bool asynchronousLoading)
     : application(application) {
     const MeshCpuLoadArgs cpuLoadArgs{filePath, useTextures};
+     asynchronousLoading = false;
     cpuGpuLoad(cpuLoadArgs, asynchronousLoading);
 }
 
@@ -33,140 +37,81 @@ MeshImpl::~MeshImpl() {
 
 // ----------------------------------------------------------------- AsyncLoadableObject overrides
 
+#include <chrono>
 MeshCpuLoadResult MeshImpl::cpuLoad(const MeshCpuLoadArgs &args) {
-    // Initial validation
-    const auto fullFilePath = std::wstring{RESOURCES_PATH} + args.filePath;
-    std::fstream inputFile{fullFilePath, std::ios::in};
-    if (!inputFile.good()) {
-        return std::move(MeshCpuLoadResult{});
+    auto start = std::chrono::steady_clock::now();
+
+    // TODO dirty conversion to stdstring
+    const auto fullFilePathW = std::wstring{RESOURCES_PATH} + args.filePath;
+    std::string fullFilePath;
+    fullFilePath.reserve(fullFilePathW.size());
+    for (const auto &w : fullFilePathW) {
+        fullFilePath.push_back((char)w);
     }
 
-    // Temporary variables for loading
-    std::vector<FLOAT> vertexElements;     // vertex element is e.g x coordinate of vertex position
-    std::vector<std::string> indexTokens;  // index token is a bundle of 1-based indices of vertex/normal/uv delimeted by slash, e.g. 1//2, 1/3/21
-    std::vector<FLOAT> normalCoordinates;  // normal coordinate is e.g. x coordinate of a normal vector
-    std::vector<FLOAT> textureCoordinates; // normal coordinate is e.g. u coordinate of a texture coordinate
-    std::string lineType;
-    FLOAT x, y, z;
-    std::string f1, f2, f3, f4;
+    Assimp::Importer importer;
+    const aiScene *scene = importer.ReadFile(fullFilePath, aiProcess_Triangulate);
 
-    // Read all lines
-    for (std::string line; getline(inputFile, line).good();) {
-        if (shouldBackgroundProcessingTerminate()) {
-            return std::move(MeshCpuLoadResult{});
-        }
+    assert(!args.useTextures || scene->mMeshes[0]->HasNormals());
 
-        std::istringstream strs(line);
-        strs >> lineType;
-
-        if (lineType == "v") { //vertices
-            strs >> x;
-            strs >> y;
-            strs >> z;
-            vertexElements.push_back(x);
-            vertexElements.push_back(y);
-            vertexElements.push_back(z);
-        } else if (lineType == "f") { //faces
-            strs >> f1;
-            strs >> f2;
-            strs >> f3;
-            indexTokens.push_back(f1);
-            indexTokens.push_back(f2);
-            indexTokens.push_back(f3);
-
-            try { // TODO
-                const auto slashCount = std::count(line.begin(), line.end(), '/');
-                if (slashCount > 6 && strs.good() && !strs.eof()) {
-                    strs >> f4;
-                    if (!f4.empty()) {
-                        indexTokens.push_back(f1);
-                        indexTokens.push_back(f3);
-                        indexTokens.push_back(f4);
-                    } else {
-                        int t = 0;
-                    }
-                } else {
-                    int r = 0;
-                }
-            } catch (...) {
-            }
-        } else if (lineType == "vn") { //normal vector
-            strs >> x;
-            strs >> y;
-            strs >> z;
-            normalCoordinates.push_back(x);
-            normalCoordinates.push_back(y);
-            normalCoordinates.push_back(z);
-        } else if (lineType == "vt") { //texture vector
-            strs >> x;
-            strs >> y;
-            strs >> z;
-            textureCoordinates.push_back(x);
-            textureCoordinates.push_back(y);
-        }
+    auto meshType = TRIANGLE_STRIP;
+    if (scene->mMeshes[0]->HasNormals()) {
+        meshType |= NORMALS;
+    }
+    if (args.useTextures) {
+        meshType |= TEXTURE_COORDS;
     }
 
-    // Compute some fields based on lines that were read
-    MeshCpuLoadResult result{};
-    result.meshType = MeshImpl::computeMeshType(normalCoordinates, textureCoordinates, args.useTextures);
+    MeshCpuLoadResult result = {};
+    result.meshType = meshType;
     result.vertexSizeInBytes = computeVertexSize(result.meshType);
-    const bool usesIndexBuffer = normalCoordinates.size() == 0 && textureCoordinates.size() == 0;
-    if (result.meshType == MeshImpl::UNKNOWN) {
-        return std::move(MeshCpuLoadResult{});
-    }
 
-    // Prepare final buffers for GPU upload
-    if (usesIndexBuffer) {
-        // No vertex elements interleaving is required - we only have position
-        result.vertexElements = std::move(vertexElements);
-    }
-    for (std::string face : indexTokens) {
-        UINT vertexElementIdx;
-        UINT normalIdx;
-        UINT textCoordIdx;
-        size_t pos = 0;
-        std::string f = face;
-        for (int i = 0; i < 3; i++) {
-            pos = f.find("/");
-            std::string t = f.substr(0, pos);
-            switch (i) {
-            case 0:
-                vertexElementIdx = std::stoi(t);
-                break;
-            case 1:
-                if (t.length() > 0) {
-                    textCoordIdx = std::stoi(t);
-                }
-                break;
-            case 2:
-                if (t.length() > 0) {
-                    normalIdx = std::stoi(t);
-                }
-                break;
-            }
-            f.erase(0, pos + 1);
+    for (auto meshIndex = 0u; meshIndex < scene->mNumMeshes; meshIndex++) {
+        const aiMesh *mesh = scene->mMeshes[meshIndex];
+
+        assert(!args.useTextures || mesh->HasNormals());
+
+        auto meshType = TRIANGLE_STRIP;
+        if (mesh->HasNormals()) {
+            meshType |= NORMALS;
         }
-        if (usesIndexBuffer) {
-            // Vertices go unmodified to the vertex buffer, we use an index buffer to define polygons
-            result.indices.push_back(vertexElementIdx - 1);
-        } else {
-            // We have to interleave vertex attributes gather in different arrays into one
-            result.vertexElements.push_back(vertexElements[3 * (vertexElementIdx - 1)]);
-            result.vertexElements.push_back(vertexElements[3 * (vertexElementIdx - 1) + 1]);
-            result.vertexElements.push_back(vertexElements[3 * (vertexElementIdx - 1) + 2]);
-            if (result.meshType & MeshImpl::NORMALS) {
-                result.vertexElements.push_back(normalCoordinates[3 * (normalIdx - 1)]);
-                result.vertexElements.push_back(normalCoordinates[3 * (normalIdx - 1) + 1]);
-                result.vertexElements.push_back(normalCoordinates[3 * (normalIdx - 1) + 2]);
+        if (args.useTextures) {
+            meshType |= TEXTURE_COORDS;
+        }
+        assert(result.meshType = meshType);
+
+       
+        result.verticesCount += mesh->mNumVertices;
+
+        const auto vertexSizeInComponents = result.vertexSizeInBytes / sizeof(FLOAT);
+        const auto vertexElementsCount = mesh->mNumVertices * vertexSizeInComponents;
+        result.vertexElements.reserve(result.vertexElements.capacity() + vertexElementsCount);
+        result.indices.reserve(result.indices.capacity() + mesh->mNumFaces * 3);
+        for (auto i = 0u; i < mesh->mNumVertices; i++) {
+            result.vertexElements.push_back(mesh->mVertices[i].x);
+            result.vertexElements.push_back(mesh->mVertices[i].y);
+            result.vertexElements.push_back(mesh->mVertices[i].z);
+            if (mesh->HasNormals()) {
+                result.vertexElements.push_back(mesh->mNormals[i].x);
+                result.vertexElements.push_back(mesh->mNormals[i].y);
+                result.vertexElements.push_back(mesh->mNormals[i].z);
             }
-            if (result.meshType & MeshImpl::TEXTURE_COORDS) {
-                result.vertexElements.push_back(textureCoordinates[2 * (textCoordIdx - 1)]);
-                result.vertexElements.push_back(textureCoordinates[2 * (textCoordIdx - 1) + 1]);
+            if (args.useTextures) {
+                result.vertexElements.push_back(mesh->mTextureCoords[0][i].x);
+                result.vertexElements.push_back(mesh->mTextureCoords[0][i].y);
             }
+        }
+        for (auto i = 0u; i < mesh->mNumFaces; i++) {
+            result.indices.push_back(mesh->mFaces[i].mIndices[0]);
+            result.indices.push_back(mesh->mFaces[i].mIndices[1]);
+            result.indices.push_back(mesh->mFaces[i].mIndices[2]);
         }
     }
 
-    result.verticesCount = static_cast<UINT>(result.vertexElements.size() * sizeof(FLOAT) / result.vertexSizeInBytes);
+    auto end = std::chrono::steady_clock::now();
+    auto time = end - start;
+    DXD::log("Loaded in %dms\n", std::chrono::duration_cast<std::chrono::milliseconds>(time).count());
+
     return std::move(result);
 }
 
