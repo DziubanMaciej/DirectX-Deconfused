@@ -6,6 +6,8 @@
 # http://go.microsoft.com/fwlink/?LinkId=248926
 
 cmake_minimum_required (VERSION 3.8)
+project (DirectXTex_CMake LANGUAGES CXX)
+include(${DXD_MACROS_PATH})
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -15,9 +17,9 @@ set(WarningsLib "-Wall" "-Wpedantic" "-Wextra")
 set(WarningsEXE ${WarningsLib} "-Wno-c++98-compat" "-Wno-c++98-compat-pedantic" "-Wno-switch" "-Wno-switch-enum" "-Wno-language-extension-token" "-Wno-missing-prototypes")
 
 add_definitions(/MP)
-set_output_directories()
+set_output_directories_to_dxd()
 
-add_library (${TARGET_NAME} STATIC
+add_library (directxtex STATIC
     DirectXTex/BC.h
     DirectXTex/BCDirectCompute.h
     DirectXTex/d3dx12.h
@@ -49,7 +51,22 @@ add_library (${TARGET_NAME} STATIC
     DirectXTex/DirectXTexWIC.cpp
 )
 
-set_target_properties(${TARGET_NAME} PROPERTIES FOLDER ExternalLibraries)
-target_include_directories( ${TARGET_NAME} PUBLIC DirectXTex )
-target_compile_options( ${TARGET_NAME} PRIVATE /fp:fast /Wall /permissive- /Zc:__cplusplus )
+target_include_directories( directxtex PUBLIC DirectXTex )
 
+target_compile_options( directxtex PRIVATE /fp:fast )
+
+if ( CMAKE_CXX_COMPILER_ID MATCHES "Clang" )
+    target_compile_options( directxtex PRIVATE ${WarningsLib} )
+    target_compile_options( texassemble PRIVATE ${WarningsEXE}  )
+    target_compile_options( texconv PRIVATE ${WarningsEXE}  )
+    target_compile_options( texdiag PRIVATE ${WarningsEXE} "-Wno-double-promotion" )
+    if (${CMAKE_SIZEOF_VOID_P} EQUAL "4")
+        target_compile_options( directxtex PRIVATE /arch:SSE2 )
+        target_compile_options( texassemble PRIVATE /arch:SSE2 )
+        target_compile_options( texconv PRIVATE /arch:SSE2 )
+        target_compile_options( texdiag PRIVATE /arch:SSE2 )
+    endif()
+endif()
+if ( CMAKE_CXX_COMPILER_ID MATCHES "MSVC" )
+    target_compile_options( directxtex PRIVATE /Wall /permissive- /Zc:__cplusplus )
+endif()
