@@ -87,7 +87,7 @@ private:
             {"glowingCube", "cubeNormal"},
             {"flatMesh1", "cubeNormal"},
             {"intel", "intelMesh"},
-            {"extraFlatMesh1", "cubeUv"},
+            {"extraFlatMesh1", "cubeNormalUv"},
             {"aventador", "aventadorMesh"},
             {"porshe", "porsheMesh"},
             {"actorMesh1", "actor"}};
@@ -134,8 +134,7 @@ private:
         objects["flatMesh1"]->setSpecularity(0.2f);
         objects["flatMesh1"]->setScale(20, 0.5, 10);
 
-        objects["extraFlatMesh1"]->setTexture(textures["brickwall"].get());
-        objects["extraFlatMesh1"]->setNormalMap(textures["brickwall_normal"].get());
+        objects["extraFlatMesh1"]->setTexture(textures["wood"].get());
         objects["extraFlatMesh1"]->setPosition(0, -4.0, 0);
         objects["extraFlatMesh1"]->setSpecularity(0.0f);
         objects["extraFlatMesh1"]->setScale(100, 1.0f, 100);
