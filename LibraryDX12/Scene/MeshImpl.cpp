@@ -103,58 +103,50 @@ MeshCpuLoadResult MeshImpl::cpuLoad(const MeshCpuLoadArgs &args) {
     MeshCpuLoadResult result{};
     result.meshType = MeshImpl::computeMeshType(normalCoordinates, textureCoordinates, args.loadNormals, args.loadTextureCoordinates);
     result.vertexSizeInBytes = computeVertexSize(result.meshType);
-    const bool usesIndexBuffer = normalCoordinates.size() == 0 && textureCoordinates.size() == 0;
+    const bool hasTextureCoordinates = result.meshType & MeshImpl::TEXTURE_COORDS;
+    const bool hasNormals = result.meshType & MeshImpl::NORMALS;
     if (result.meshType == MeshImpl::UNKNOWN) {
         return std::move(MeshCpuLoadResult{});
     }
 
-    // Prepare final buffers for GPU upload
+    const bool usesIndexBuffer = !hasTextureCoordinates && !hasNormals;
     if (usesIndexBuffer) {
-        // No vertex elements interleaving is required - we only have position
+        // Index buffer path - vertices are unmodified, we push indices to index buffer to define polygons
         result.vertexElements = std::move(vertexElements);
-    }
-    for (std::string face : indexTokens) {
-        UINT vertexElementIndex;
-        UINT normalIndex;
-        UINT textureCoordinateIndex;
-        size_t pos = 0;
-        std::string f = face;
-        for (int i = 0; i < 3; i++) {
-            pos = f.find("/");
-            std::string t = f.substr(0, pos);
-            switch (i) {
-            case 0:
-                vertexElementIndex = std::stoi(t) - 1;
-                break;
-            case 1:
-                if (t.length() > 0) {
-                    textureCoordinateIndex = std::stoi(t) - 1;
-                }
-                break;
-            case 2:
-                if (t.length() > 0) {
-                    normalIndex = std::stoi(t) - 1;
-                }
-                break;
-            }
-            f.erase(0, pos + 1);
+        for (int indexTokenIndex = 0; indexTokenIndex < indexTokens.size(); indexTokenIndex += 3) {
+            UINT vertexIndices[3] = {};
+            processIndexToken(indexTokens[indexTokenIndex + 0], false, false, vertexIndices + 0, nullptr, nullptr);
+            processIndexToken(indexTokens[indexTokenIndex + 1], false, false, vertexIndices + 1, nullptr, nullptr);
+            processIndexToken(indexTokens[indexTokenIndex + 2], false, false, vertexIndices + 2, nullptr, nullptr);
+            result.indices.push_back(vertexIndices[0]);
+            result.indices.push_back(vertexIndices[1]);
+            result.indices.push_back(vertexIndices[2]);
         }
-        if (usesIndexBuffer) {
-            // Vertices go unmodified to the vertex buffer, we use an index buffer to define polygons
-            result.indices.push_back(vertexElementIndex - 1);
-        } else {
-            // We have to interleave vertex attributes gather in different arrays into one
-            result.vertexElements.push_back(vertexElements[3 * (vertexElementIndex)]);
-            result.vertexElements.push_back(vertexElements[3 * (vertexElementIndex) + 1]);
-            result.vertexElements.push_back(vertexElements[3 * (vertexElementIndex) + 2]);
-            if (result.meshType & MeshImpl::NORMALS) {
-                result.vertexElements.push_back(normalCoordinates[3 * (normalIndex)]);
-                result.vertexElements.push_back(normalCoordinates[3 * (normalIndex) + 1]);
-                result.vertexElements.push_back(normalCoordinates[3 * (normalIndex) + 2]);
-            }
-            if (result.meshType & MeshImpl::TEXTURE_COORDS) {
-                result.vertexElements.push_back(textureCoordinates[2 * (textureCoordinateIndex)]);
-                result.vertexElements.push_back(textureCoordinates[2 * (textureCoordinateIndex) + 1]);
+    } else {
+        // No index buffer path - we interleave all vertex attributesm, so they're next to each other
+        for (int indexTokenIndex = 0; indexTokenIndex < indexTokens.size(); indexTokenIndex += 3) {
+            // Get all vertex attributes
+            UINT vertexIndices[3] = {};
+            UINT textureCoordinateIndices[3] = {};
+            UINT normalIndices[3] = {};
+            processIndexToken(indexTokens[indexTokenIndex + 0], hasTextureCoordinates, hasNormals, vertexIndices + 0, textureCoordinateIndices + 0, normalIndices + 0);
+            processIndexToken(indexTokens[indexTokenIndex + 1], hasTextureCoordinates, hasNormals, vertexIndices + 1, textureCoordinateIndices + 1, normalIndices + 1);
+            processIndexToken(indexTokens[indexTokenIndex + 2], hasTextureCoordinates, hasNormals, vertexIndices + 2, textureCoordinateIndices + 2, normalIndices + 2);
+
+            // Append interleaved attributes to the vertex buffer memory
+            for (int vertexInTriangleIndex = 0; vertexInTriangleIndex < 3; vertexInTriangleIndex++) {
+                result.vertexElements.push_back(vertexElements[3 * (vertexIndices[vertexInTriangleIndex]) + 0]);
+                result.vertexElements.push_back(vertexElements[3 * (vertexIndices[vertexInTriangleIndex]) + 1]);
+                result.vertexElements.push_back(vertexElements[3 * (vertexIndices[vertexInTriangleIndex]) + 2]);
+                if (hasNormals) {
+                    result.vertexElements.push_back(normalCoordinates[3 * (normalIndices[vertexInTriangleIndex]) + 0]);
+                    result.vertexElements.push_back(normalCoordinates[3 * (normalIndices[vertexInTriangleIndex]) + 1]);
+                    result.vertexElements.push_back(normalCoordinates[3 * (normalIndices[vertexInTriangleIndex]) + 2]);
+                }
+                if (hasTextureCoordinates) {
+                    result.vertexElements.push_back(textureCoordinates[2 * (textureCoordinateIndices[vertexInTriangleIndex]) + 0]);
+                    result.vertexElements.push_back(textureCoordinates[2 * (textureCoordinateIndices[vertexInTriangleIndex]) + 1]);
+                }
             }
         }
     }
@@ -261,6 +253,28 @@ UINT MeshImpl::computeVertexSize(MeshType meshType) {
         vertexSize += 3;
     }
     return vertexSize * sizeof(FLOAT);
+}
+
+void MeshImpl::processIndexToken(const std::string &indexToken, bool textures, bool normals,
+                                 UINT *outVertexIndex, UINT *outTextureCoordinateIndex, UINT *outNormalIndex) {
+    size_t leftPosition{};
+    size_t rightPosition{};
+
+    rightPosition = indexToken.find('/', 0u);
+    *outVertexIndex = std::stoi(indexToken.substr(leftPosition, rightPosition)) - 1;
+
+    leftPosition = rightPosition + 1;
+    rightPosition = indexToken.find('/', rightPosition + 1);
+    if (textures && leftPosition != rightPosition) {
+        *outTextureCoordinateIndex = std::stoi(indexToken.substr(leftPosition, rightPosition)) - 1;
+    }
+
+    leftPosition = rightPosition + 1;
+    rightPosition = indexToken.find('/', rightPosition + 1);
+    assert(rightPosition == std::string::npos);
+    if (normals && leftPosition < indexToken.size()) {
+        *outNormalIndex = std::stoi(indexToken.substr(leftPosition, rightPosition)) - 1;
+    }
 }
 
 std::map<MeshImpl::MeshType, PipelineStateController::Identifier> MeshImpl::getPipelineStateIdentifierMap() {

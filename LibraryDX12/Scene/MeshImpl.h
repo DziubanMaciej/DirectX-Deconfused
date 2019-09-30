@@ -86,6 +86,8 @@ private:
     static MeshType computeMeshType(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates,
                                     bool loadNormals, bool loadTextureCoordinates);
     static UINT computeVertexSize(MeshType meshType);
+    static void processIndexToken(const std::string &indexToken, bool textures, bool normals,
+                                  UINT *outVertexIndex, UINT *outTextureCoordinateIndex, UINT *outNormalIndex);
     static std::map<MeshType, PipelineStateController::Identifier> getPipelineStateIdentifierMap();
     static PipelineStateController::Identifier computePipelineStateIdentifier(MeshType meshType);
     static std::map<MeshType, PipelineStateController::Identifier> getShadowMapPipelineStateIdentifierMap();
