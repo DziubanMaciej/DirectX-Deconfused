@@ -122,9 +122,9 @@ MeshCpuLoadResult MeshImpl::cpuLoad(const MeshCpuLoadArgs &args) {
         result.vertexElements = std::move(vertexElements);
     }
     for (std::string face : indexTokens) {
-        UINT vertexElementIdx;
-        UINT normalIdx;
-        UINT textCoordIdx;
+        UINT vertexElementIndex;
+        UINT normalIndex;
+        UINT textureCoordinateIndex;
         size_t pos = 0;
         std::string f = face;
         for (int i = 0; i < 3; i++) {
@@ -132,16 +132,16 @@ MeshCpuLoadResult MeshImpl::cpuLoad(const MeshCpuLoadArgs &args) {
             std::string t = f.substr(0, pos);
             switch (i) {
             case 0:
-                vertexElementIdx = std::stoi(t);
+                vertexElementIndex = std::stoi(t) - 1;
                 break;
             case 1:
                 if (t.length() > 0) {
-                    textCoordIdx = std::stoi(t);
+                    textureCoordinateIndex = std::stoi(t) - 1;
                 }
                 break;
             case 2:
                 if (t.length() > 0) {
-                    normalIdx = std::stoi(t);
+                    normalIndex = std::stoi(t) - 1;
                 }
                 break;
             }
@@ -149,20 +149,20 @@ MeshCpuLoadResult MeshImpl::cpuLoad(const MeshCpuLoadArgs &args) {
         }
         if (usesIndexBuffer) {
             // Vertices go unmodified to the vertex buffer, we use an index buffer to define polygons
-            result.indices.push_back(vertexElementIdx - 1);
+            result.indices.push_back(vertexElementIndex - 1);
         } else {
             // We have to interleave vertex attributes gather in different arrays into one
-            result.vertexElements.push_back(vertexElements[3 * (vertexElementIdx - 1)]);
-            result.vertexElements.push_back(vertexElements[3 * (vertexElementIdx - 1) + 1]);
-            result.vertexElements.push_back(vertexElements[3 * (vertexElementIdx - 1) + 2]);
+            result.vertexElements.push_back(vertexElements[3 * (vertexElementIndex)]);
+            result.vertexElements.push_back(vertexElements[3 * (vertexElementIndex) + 1]);
+            result.vertexElements.push_back(vertexElements[3 * (vertexElementIndex) + 2]);
             if (result.meshType & MeshImpl::NORMALS) {
-                result.vertexElements.push_back(normalCoordinates[3 * (normalIdx - 1)]);
-                result.vertexElements.push_back(normalCoordinates[3 * (normalIdx - 1) + 1]);
-                result.vertexElements.push_back(normalCoordinates[3 * (normalIdx - 1) + 2]);
+                result.vertexElements.push_back(normalCoordinates[3 * (normalIndex)]);
+                result.vertexElements.push_back(normalCoordinates[3 * (normalIndex) + 1]);
+                result.vertexElements.push_back(normalCoordinates[3 * (normalIndex) + 2]);
             }
             if (result.meshType & MeshImpl::TEXTURE_COORDS) {
-                result.vertexElements.push_back(textureCoordinates[2 * (textCoordIdx - 1)]);
-                result.vertexElements.push_back(textureCoordinates[2 * (textCoordIdx - 1) + 1]);
+                result.vertexElements.push_back(textureCoordinates[2 * (textureCoordinateIndex)]);
+                result.vertexElements.push_back(textureCoordinates[2 * (textureCoordinateIndex) + 1]);
             }
         }
     }
