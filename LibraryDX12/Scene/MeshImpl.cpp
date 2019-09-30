@@ -74,22 +74,14 @@ MeshCpuLoadResult MeshImpl::cpuLoad(const MeshCpuLoadArgs &args) {
             indexTokens.push_back(f1);
             indexTokens.push_back(f2);
             indexTokens.push_back(f3);
-
-            try { // TODO
-                const auto slashCount = std::count(line.begin(), line.end(), '/');
-                if (slashCount > 6 && strs.good() && !strs.eof()) {
-                    strs >> f4;
-                    if (!f4.empty()) {
-                        indexTokens.push_back(f1);
-                        indexTokens.push_back(f3);
-                        indexTokens.push_back(f4);
-                    } else {
-                        int t = 0;
-                    }
-                } else {
-                    int r = 0;
+            if (!strs.eof()) {
+                strs >> f4;
+                if (!f4.empty()) {
+                    // Lines can and with a space, hence this check
+                    indexTokens.push_back(f1);
+                    indexTokens.push_back(f3);
+                    indexTokens.push_back(f4);
                 }
-            } catch (...) {
             }
         } else if (lineType == "vn") { //normal vector
             strs >> x;
