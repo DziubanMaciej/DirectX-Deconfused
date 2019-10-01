@@ -8,6 +8,7 @@
 
 #include "DXD/Mesh.h"
 
+#include "DXD/ExternalHeadersWrappers/DirectXMath.h"
 #include "DXD/ExternalHeadersWrappers/d3d12.h"
 #include <utility>
 #include <vector>
@@ -16,6 +17,7 @@ struct MeshCpuLoadArgs {
     const std::wstring filePath;
     bool loadNormals;
     bool loadTextureCoordinates;
+    bool computeTangents;
 };
 
 struct MeshCpuLoadResult {
@@ -46,10 +48,12 @@ public:
     constexpr static MeshType TRIANGLE_STRIP = 0x01;
     constexpr static MeshType TEXTURE_COORDS = 0x02;
     constexpr static MeshType NORMALS = 0x04;
+    constexpr static MeshType TANGENTS = 0x08;
 
 protected:
     friend class DXD::Mesh;
-    MeshImpl(ApplicationImpl &application, const std::wstring &filePath, bool loadNormals, bool loadTextureCoordinates, bool asynchronousLoading);
+    MeshImpl(ApplicationImpl &application, const std::wstring &filePath, bool loadNormals,
+             bool loadTextureCoordinates, bool computeTangents, bool asynchronousLoading);
     ~MeshImpl() override;
 
 public:
@@ -84,10 +88,14 @@ protected:
 private:
     // Helpers
     static MeshType computeMeshType(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates,
-                                    bool loadNormals, bool loadTextureCoordinates);
+                                    bool loadNormals, bool loadTextureCoordinates, bool computeTangents);
     static UINT computeVertexSize(MeshType meshType);
     static void processIndexToken(const std::string &indexToken, bool textures, bool normals,
                                   UINT *outVertexIndex, UINT *outTextureCoordinateIndex, UINT *outNormalIndex);
+    static XMFLOAT3 getVertexVector(const std::vector<FLOAT> &vertices, UINT vertexIndex);
+    static XMFLOAT2 getTextureCoordinateVector(const std::vector<FLOAT> &textureCoordinates, UINT textureCoordinateIndex);
+    static void computeVertexTangent(const std::vector<FLOAT> &vertices, const std::vector<FLOAT> &textureCoordinates,
+                                     const UINT vertexIndices[3], UINT textureCoordinateIndices[3], XMFLOAT3 &outTangent);
     static std::map<MeshType, PipelineStateController::Identifier> getPipelineStateIdentifierMap();
     static PipelineStateController::Identifier computePipelineStateIdentifier(MeshType meshType);
     static std::map<MeshType, PipelineStateController::Identifier> getShadowMapPipelineStateIdentifierMap();
