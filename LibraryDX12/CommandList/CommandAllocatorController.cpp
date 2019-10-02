@@ -8,7 +8,8 @@
 CommandAllocatorController::CommandAllocatorController(ID3D12DevicePtr device, Fence &fence, D3D12_COMMAND_LIST_TYPE type)
     : device(device), fence(fence), type(type) {}
 
-ID3D12CommandAllocatorPtr CommandAllocatorController::retieveCommandAllocator() {
+ID3D12CommandAllocatorPtr CommandAllocatorController::retrieveCommandAllocator() {
+    std::lock_guard<std::mutex> lock{this->commandAllocatorMutex};
     if (!commandAllocators.empty() && fence.isComplete(commandAllocators.front().lastFence)) {
         // First allocator is done, we can reuse it
         ID3D12CommandAllocatorPtr result = commandAllocators.front().commandAllocator;
@@ -22,6 +23,7 @@ ID3D12CommandAllocatorPtr CommandAllocatorController::retieveCommandAllocator() 
 }
 
 ID3D12GraphicsCommandListPtr CommandAllocatorController::retrieveCommandList(ID3D12CommandAllocatorPtr commandAllocator, ID3D12PipelineState *initialPipelineState) {
+    std::lock_guard<std::mutex> lock{this->commandListMutex};
     if (commandLists.empty()) {
         // Allocate new command list
         ID3D12GraphicsCommandListPtr commandList;
@@ -43,6 +45,9 @@ ID3D12CommandAllocatorPtr CommandAllocatorController::createCommandAllocator() {
 }
 
 void CommandAllocatorController::registerAllocatorAndList(ID3D12CommandAllocatorPtr commandAllocator, ID3D12GraphicsCommandListPtr commandList, uint64_t fence) {
+    std::lock_guard<std::mutex> allocatorLock{this->commandAllocatorMutex};
+    std::lock_guard<std::mutex> listLock{this->commandListMutex};
+
     commandAllocators.emplace_back(CommandAllocatorEntry{commandAllocator, fence});
     commandLists.push_back(commandList);
 #if defined(_DEBUG)
