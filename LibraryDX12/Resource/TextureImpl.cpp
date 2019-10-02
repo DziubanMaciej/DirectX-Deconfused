@@ -110,14 +110,12 @@ TextureGpuLoadResult TextureImpl::gpuLoad(const TextureGpuLoadArgs &args) {
     return std::move(result);
 }
 
-void TextureImpl::writeCpuGpuLoadResults(TextureCpuLoadResult &cpuLoadResult, TextureGpuLoadResult &gpuLoadResult) {
-    this->description = gpuLoadResult.description;
+bool TextureImpl::hasGpuLoadEnded() {
+    return !Resource::isUploadInProgress();
 }
 
-// ----------------------------------------------------------------- Accessors
-
-bool TextureImpl::isUploadInProgress() {
-    return !cpuLoadComplete.load() || Resource::isUploadInProgress();
+void TextureImpl::writeCpuGpuLoadResults(TextureCpuLoadResult &cpuLoadResult, TextureGpuLoadResult &gpuLoadResult) {
+    this->description = gpuLoadResult.description;
 }
 
 // ----------------------------------------------------------------- Helpers

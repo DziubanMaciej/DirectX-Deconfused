@@ -114,6 +114,8 @@ XMFLOAT2 ObjectImpl::getTextureScale() const {
     return this->textureScale;
 }
 
-bool ObjectImpl::isUploadInProgress() {
-    return mesh.isUploadInProgress() || (texture != nullptr && texture->isUploadInProgress()) || (normalMap != nullptr && normalMap->isUploadInProgress());
+bool ObjectImpl::isReady() {
+    return mesh.isReady() &&
+           (texture == nullptr || texture->isReady()) &&
+           (normalMap == nullptr || normalMap->isReady());
 }

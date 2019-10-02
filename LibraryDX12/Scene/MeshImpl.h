@@ -41,7 +41,7 @@ struct MeshGpuLoadResult {
 };
 using MeshAsyncLoadableObject = AsyncLoadableObject<MeshCpuLoadArgs, MeshCpuLoadResult, MeshGpuLoadArgs, MeshGpuLoadResult>;
 
-class MeshImpl : public DXD::Mesh, MeshAsyncLoadableObject {
+class MeshImpl : public DXD::Mesh, public MeshAsyncLoadableObject {
 public:
     using MeshType = unsigned int;
     constexpr static MeshType UNKNOWN = 0x0;
@@ -63,8 +63,6 @@ public:
     MeshType getMeshType() const { return meshType; }
     PipelineStateController::Identifier getPipelineStateIdentifier() const { return pipelineStateIdentifier; }
     PipelineStateController::Identifier getShadowMapPipelineStateIdentifier() const { return shadowMapPipelineStateIdentifier; }
-
-    bool isUploadInProgress();
 
     auto &getVertexBuffer() { return vertexBuffer; }
     auto &getIndexBuffer() { return indexBuffer; }
@@ -106,5 +104,6 @@ private:
     bool isCpuLoadSuccessful(const MeshCpuLoadResult &result) override;
     MeshGpuLoadArgs createArgsForGpuLoad(const MeshCpuLoadResult &cpuLoadResult) override;
     MeshGpuLoadResult gpuLoad(const MeshGpuLoadArgs &args) override;
+    bool hasGpuLoadEnded() override;
     void writeCpuGpuLoadResults(MeshCpuLoadResult &cpuLoadResult, MeshGpuLoadResult &gpuLoadResult) override;
 };

@@ -35,15 +35,11 @@ using TextureAsyncLoadableObject = AsyncLoadableObject<TextureCpuLoadArgs, Textu
 
 // TODO if texture used as Albedo (Diffuse), make SRGB, e.g. convert DXGI_FORMAT_R8G8B8A8_UNORM to DXGI_FORMAT_R8G8B8A8_UNORM_SRGB
 // TODO mips
-class TextureImpl : public DXD::Texture, public Resource, TextureAsyncLoadableObject {
+class TextureImpl : public DXD::Texture, public Resource, public TextureAsyncLoadableObject {
 protected:
     friend class DXD::Texture;
     TextureImpl(ApplicationImpl &application, const std::wstring &filePath, bool asynchronousLoading);
     ~TextureImpl() override;
-
-public:
-    // Accessors
-    bool isUploadInProgress() override;
 
 private:
     // Helpers
@@ -54,6 +50,7 @@ private:
     bool isCpuLoadSuccessful(const TextureCpuLoadResult &result) override;
     TextureGpuLoadArgs createArgsForGpuLoad(const TextureCpuLoadResult &cpuLoadResult) override;
     TextureGpuLoadResult gpuLoad(const TextureGpuLoadArgs &args) override;
+    bool hasGpuLoadEnded() override;
     void writeCpuGpuLoadResults(TextureCpuLoadResult &cpuLoadResult, TextureGpuLoadResult &gpuLoadResult) override;
 
     // Fields

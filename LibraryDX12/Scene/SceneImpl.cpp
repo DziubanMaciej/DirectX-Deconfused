@@ -96,7 +96,7 @@ DXD::Camera *SceneImpl::getCamera() {
 void SceneImpl::inspectObjectsNotReady() {
     for (auto it = objectsNotReady.begin(); it != objectsNotReady.end();) {
         ObjectImpl *object = *it;
-        if (!object->isUploadInProgress()) {
+        if (object->isReady()) {
             auto itToDelete = it++;
             objects.insert(object);
             objectsNotReady.erase(itToDelete);

@@ -212,6 +212,13 @@ MeshGpuLoadResult MeshImpl::gpuLoad(const MeshGpuLoadArgs &args) {
     return std::move(results);
 }
 
+bool MeshImpl::hasGpuLoadEnded() {
+    const bool vertexInProgress = this->vertexBuffer->isUploadInProgress();
+    const bool indexInProgress = this->indexBuffer != nullptr && this->indexBuffer->isUploadInProgress();
+    const bool bothEnded = !vertexInProgress && !indexInProgress;
+    return bothEnded;
+}
+
 void MeshImpl::writeCpuGpuLoadResults(MeshCpuLoadResult &cpuLoadResult, MeshGpuLoadResult &gpuLoadResult) {
     this->meshType = cpuLoadResult.meshType;
     this->vertexSizeInBytes = cpuLoadResult.vertexSizeInBytes;
@@ -221,18 +228,6 @@ void MeshImpl::writeCpuGpuLoadResults(MeshCpuLoadResult &cpuLoadResult, MeshGpuL
     this->shadowMapPipelineStateIdentifier = computeShadowMapPipelineStateIdentifier(meshType);
     this->vertexBuffer = std::move(gpuLoadResult.vertexBuffer);
     this->indexBuffer = std::move(gpuLoadResult.indexBuffer);
-}
-
-// ----------------------------------------------------------------- Getters
-
-bool MeshImpl::isUploadInProgress() {
-    if (!cpuLoadComplete.load()) {
-        return true;
-    }
-
-    const bool vertexInProgress = this->vertexBuffer->isUploadInProgress();
-    const bool indexInProgress = this->indexBuffer != nullptr && this->indexBuffer->isUploadInProgress();
-    return vertexInProgress || indexInProgress;
 }
 
 // ----------------------------------------------------------------- Helpers

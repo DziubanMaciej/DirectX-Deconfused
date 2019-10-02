@@ -41,7 +41,7 @@ public:
     D3D12_RESOURCE_STATES getState() const { return state; }
 
     // Gpu upload functions
-    virtual bool isUploadInProgress();
+    bool isUploadInProgress();
     void registerUpload(CommandQueue &uploadingQueue, uint64_t uploadFence);
 
     // Descriptors
