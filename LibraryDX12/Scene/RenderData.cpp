@@ -102,7 +102,7 @@ void RenderData::resize(int width, int height) {
     renderTargetDesc.SampleDesc.Count = 1;
     renderTargetDesc.SampleDesc.Quality = 0;
     renderTargetDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    renderTargetDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS; // TODO can delete allow render target?
+    renderTargetDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
     bloomMap = std::make_unique<Resource>(
         device,
@@ -213,7 +213,7 @@ void RenderData::resize(int width, int height) {
         // Resource
         shadowMap[i] = std::make_unique<Resource>(device,
                                                   &CD3DX12_HEAP_PROPERTIES{D3D12_HEAP_TYPE_DEFAULT},
-                                                  D3D12_HEAP_FLAG_NONE, // TODO D3D12_HEAP_FLAG_DENY_NON_RT_DS_TEXTURES good?
+                                                  D3D12_HEAP_FLAG_NONE,
                                                   &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32_TYPELESS, static_cast<uint32_t>(2048), static_cast<uint32_t>(2048), 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
                                                   D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
                                                   &CD3DX12_CLEAR_VALUE{DXGI_FORMAT_D32_FLOAT, 1.0f, 0});
@@ -225,7 +225,7 @@ void RenderData::resize(int width, int height) {
     // Depth stencil buffer
     depthStencilBuffer = std::make_unique<Resource>(device,
                                                     &CD3DX12_HEAP_PROPERTIES{D3D12_HEAP_TYPE_DEFAULT},
-                                                    D3D12_HEAP_FLAG_NONE, // TODO D3D12_HEAP_FLAG_DENY_NON_RT_DS_TEXTURES good?
+                                                    D3D12_HEAP_FLAG_NONE,
                                                     &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32_TYPELESS, width, height, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
                                                     D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
                                                     &CD3DX12_CLEAR_VALUE{DXGI_FORMAT_D32_FLOAT, 1.0f, 0});

@@ -32,7 +32,6 @@ private:
 
 class IndexBuffer : public VertexOrIndexBuffer {
 public:
-    // TODO Format is hardcoded. This should take format as an argument and deduce index size base on its
     IndexBuffer(ID3D12DevicePtr device, CommandList &commandList, const void *data, UINT indicesCount)
         : VertexOrIndexBuffer(device, commandList, data, indicesCount * sizeof(UINT)) {
         view.BufferLocation = resource->GetGPUVirtualAddress();

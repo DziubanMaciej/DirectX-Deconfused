@@ -5,7 +5,6 @@
 
 #include "DXD/PostProcess.h"
 
-// TODO std::variant to hold data as union?
 class PostProcessImpl : public DXD::PostProcess {
 protected:
     friend class DXD::PostProcess;
