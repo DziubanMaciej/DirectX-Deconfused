@@ -609,7 +609,7 @@ void SceneImpl::renderD2DTexts(SwapChain &swapChain) {
 void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     auto &commandQueue = application.getDirectCommandQueue();
     auto &backBuffer = swapChain.getCurrentBackBuffer();
-    commandQueue.performResourcesDeletion();
+    commandQueue.performResourcesDeletion(true);
     inspectObjectsNotReady();
 
     // Render shadow maps

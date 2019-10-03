@@ -105,11 +105,21 @@ ID3D12DevicePtr ApplicationImpl::createDevice(IDXGIAdapterPtr &adapter, bool deb
 }
 
 void ApplicationImpl::flushAllQueues() {
-    copyCommandQueue.flush();
-    directCommandQueue.flush();
+    const std::unique_lock<std::mutex> locks[] = {
+        copyCommandQueue.getLock(true),
+        directCommandQueue.getLock(true),
+    };
+
+    copyCommandQueue.flush(false);
+    directCommandQueue.flush(false);
 }
 
 void ApplicationImpl::flushAllResources() {
-    copyCommandQueue.performResourcesDeletion();
-    directCommandQueue.performResourcesDeletion();
+    const std::unique_lock<std::mutex> locks[] = {
+        copyCommandQueue.getLock(true),
+        directCommandQueue.getLock(true),
+    };
+
+    copyCommandQueue.performResourcesDeletion(false);
+    directCommandQueue.performResourcesDeletion(false);
 }
