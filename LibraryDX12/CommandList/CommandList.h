@@ -9,7 +9,7 @@
 
 #include "DXD/NonCopyableAndMovable.h"
 
-#include <DXD/ExternalHeadersWrappers/d3dx12.h>
+#include <ExternalHeaders/Wrappers/d3dx12.h>
 #include <cstdint>
 #include <set>
 #include <vector>

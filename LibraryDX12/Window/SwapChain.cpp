@@ -5,7 +5,7 @@
 #include "Utility/DxObjectNaming.h"
 #include "Utility/ThrowIfFailed.h"
 
-#include <DXD/ExternalHeadersWrappers/d3dx12.h>
+#include <ExternalHeaders/Wrappers/d3dx12.h>
 #include <algorithm>
 
 SwapChain::SwapChain(HWND windowHandle, CommandQueue &commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount)

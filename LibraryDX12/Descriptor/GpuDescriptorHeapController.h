@@ -5,7 +5,7 @@
 
 #include "DXD/NonCopyableAndMovable.h"
 
-#include <DXD/ExternalHeadersWrappers/d3dx12.h>
+#include <ExternalHeaders/Wrappers/d3dx12.h>
 #include <map>
 #include <set>
 #include <vector>

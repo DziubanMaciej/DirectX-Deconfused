@@ -3,7 +3,7 @@
 #include "DXD/Text.h"
 
 #include <DXD/ExternalHeadersWrappers/d2d.h>
-#include <DXD/ExternalHeadersWrappers/d3dx12.h>
+#include <ExternalHeaders/Wrappers/d3dx12.h>
 
 class TextImpl : public DXD::Text {
 protected:
