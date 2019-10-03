@@ -1,13 +1,13 @@
 #pragma once
 
-#include "DXD/ExternalHeadersWrappers/DirectXMath.h"
+#include <DXD/ExternalHeadersWrappers/DirectXMath.h>
 
 struct ModelMvp {
     XMMATRIX modelMatrix;
     XMMATRIX modelViewProjectionMatrix;
 };
 
-struct NormalTextureCB{
+struct NormalTextureCB {
     XMMATRIX modelMatrix;
     XMMATRIX modelViewProjectionMatrix;
     XMFLOAT2 textureScale;

@@ -2,7 +2,8 @@
 
 #include "DXD/Export.h"
 #include "DXD/NonCopyableAndMovable.h"
-#include "DXD/ExternalHeadersWrappers/DirectXMath.h"
+
+#include <DXD/ExternalHeadersWrappers/DirectXMath.h>
 #include <memory>
 
 namespace DXD {

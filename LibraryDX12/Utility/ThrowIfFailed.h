@@ -2,8 +2,8 @@
 
 #include "DXD/Logger.h"
 
-#include "DXD/ExternalHeadersWrappers/d3dcompiler.h"
-#include "DXD/ExternalHeadersWrappers/windows.h"
+#include <DXD/ExternalHeadersWrappers/d3dcompiler.h>
+#include <DXD/ExternalHeadersWrappers/windows.h>
 #include <exception>
 
 #define DXD_ABORT() throw std::exception();

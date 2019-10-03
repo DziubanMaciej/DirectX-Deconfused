@@ -2,7 +2,7 @@
 
 #include "Utility/ThrowIfFailed.h"
 
-#include "DXD/ExternalHeadersWrappers/dxgi.h"
+#include <DXD/ExternalHeadersWrappers/dxgi.h>
 
 D2DContext::D2DContext(ID3D12DevicePtr device, ID3D12CommandQueuePtr queue) {
     // Create DX11 device wrapped around the DX12 device with shared CommandQueue

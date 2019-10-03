@@ -6,7 +6,7 @@
 #include "Utility/FileHelper.h"
 #include "Utility/ThrowIfFailed.h"
 
-#include "DXD/ExternalHeadersWrappers/d3dx12.h"
+#include <DXD/ExternalHeadersWrappers/d3dx12.h>
 #include <cassert>
 #include <cstdlib>
 

@@ -2,7 +2,8 @@
 
 #include "DXD/Export.h"
 #include "DXD/NonCopyableAndMovable.h"
-#include "DXD/ExternalHeadersWrappers/windows.h"
+
+#include <DXD/ExternalHeadersWrappers/windows.h>
 #include <debugapi.h>
 #include <mutex>
 #include <string>

@@ -2,11 +2,10 @@
 
 #include "PipelineState/ShaderRegister.h"
 
-
-#include "DXD/ExternalHeadersWrappers/d3d12.h"
+#include <DXD/ExternalHeadersWrappers/d3d12.h>
 #include <vector>
 
-class DescriptorTable{
+class DescriptorTable {
 public:
     DescriptorTable(D3D12_SHADER_VISIBILITY shaderVisibility);
     DescriptorTable(DescriptorTable &&) = default;

@@ -5,7 +5,7 @@
 #include "Synchronization/Event.h"
 #include "Synchronization/Fence.h"
 
-#include "DXD/ExternalHeadersWrappers/d3d12.h"
+#include <DXD/ExternalHeadersWrappers/d3d12.h>
 #include <mutex>
 #include <vector>
 

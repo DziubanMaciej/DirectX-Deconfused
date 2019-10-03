@@ -1,7 +1,7 @@
 #pragma once
 
-#include "DXD/ExternalHeadersWrappers/d3d12.h"
-#include "DXD/ExternalHeadersWrappers/windows.h"
+#include <DXD/ExternalHeadersWrappers/d3d12.h>
+#include <DXD/ExternalHeadersWrappers/windows.h>
 
 template <D3D12_DESCRIPTOR_RANGE_TYPE type>
 struct ShaderRegister {

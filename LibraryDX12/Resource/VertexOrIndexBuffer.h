@@ -3,7 +3,7 @@
 #include "CommandList/CommandList.h"
 #include "Resource/Resource.h"
 
-#include "DXD/ExternalHeadersWrappers/d3d12.h"
+#include <DXD/ExternalHeadersWrappers/d3d12.h>
 
 // ---------------------------------------------------------------------------------------------------------------- Template class handling index or vertex buffer
 

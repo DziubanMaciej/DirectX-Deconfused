@@ -8,7 +8,7 @@
 #include "Resource/ConstantBuffers.h"
 #include "Utility/ThrowIfFailed.h"
 
-#include "DXD/ExternalHeadersWrappers/DirectXMath.h"
+#include <DXD/ExternalHeadersWrappers/DirectXMath.h>
 #include <cassert>
 
 // --------------------------------------------------------------------------------------------- General methods
@@ -221,8 +221,7 @@ void PipelineStateController::compilePipelineStateShadowMapTextureNormal(RootSig
         .compile(device, pipelineState);
 }
 
-void PipelineStateController::compilePipelineStateShadowMapTextureNormalMap(RootSignature & rootSignature, ID3D12PipelineStatePtr & pipelineState)
-{
+void PipelineStateController::compilePipelineStateShadowMapTextureNormalMap(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
     rootSignature
         .append32bitConstant<SMmvp>(b(0), D3D12_SHADER_VISIBILITY_VERTEX) // register(b0)
@@ -237,7 +236,7 @@ void PipelineStateController::compilePipelineStateShadowMapTextureNormalMap(Root
     };
 
     // Pipeline state object
-    GraphicsPipelineState{ inputLayout, rootSignature }
+    GraphicsPipelineState{inputLayout, rootSignature}
         .VS(L"ShadowMap/texture_normal_map_VS.hlsl")
         .compile(device, pipelineState);
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DXD/ExternalHeadersWrappers/d3d12.h"
+#include <DXD/ExternalHeadersWrappers/d3d12.h>
 
 class StaticSampler {
 public:

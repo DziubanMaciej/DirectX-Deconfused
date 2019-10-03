@@ -8,8 +8,8 @@
 
 #include "DXD/Mesh.h"
 
-#include "DXD/ExternalHeadersWrappers/DirectXMath.h"
-#include "DXD/ExternalHeadersWrappers/d3d12.h"
+#include <DXD/ExternalHeadersWrappers/DirectXMath.h>
+#include <DXD/ExternalHeadersWrappers/d3d12.h>
 #include <utility>
 #include <vector>
 

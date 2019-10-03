@@ -51,7 +51,7 @@ ForEachMacros:   [ foreach, Q_FOREACH, BOOST_FOREACH ]
 
 IncludeBlocks:   Regroup
 IncludeCategories: 
-  - Regex:           '^("DXD/ExternalHeadersWrappers/)|(<.*>$)'      # external libs
+  - Regex:           '^<.*>$'                                        # external libs
     Priority:        30                                              #
   - Regex:           '^"DXD/'                                        # library API
     Priority:        20                                              #

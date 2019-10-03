@@ -3,8 +3,8 @@
 #include "DXD/Export.h"
 #include "DXD/NonCopyableAndMovable.h"
 
-#include "DXD/ExternalHeadersWrappers/DirectXMath.h"
-#include "DXD/ExternalHeadersWrappers/windows.h"
+#include <DXD/ExternalHeadersWrappers/DirectXMath.h>
+#include <DXD/ExternalHeadersWrappers/windows.h>
 #include <memory>
 
 namespace DXD {

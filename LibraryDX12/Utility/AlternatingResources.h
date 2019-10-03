@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DXD/ExternalHeadersWrappers/d3d12.h"
+#include <DXD/ExternalHeadersWrappers/d3d12.h>
 
 /// Encapsulates two resources - source and destination resource - which can be easily
 /// swapped, so the source becomes destination and vice versa.

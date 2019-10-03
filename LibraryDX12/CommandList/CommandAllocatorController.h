@@ -2,7 +2,7 @@
 
 #include "DXD/NonCopyableAndMovable.h"
 
-#include "DXD/ExternalHeadersWrappers/d3dx12.h"
+#include <DXD/ExternalHeadersWrappers/d3dx12.h>
 #include <deque>
 #include <mutex>
 

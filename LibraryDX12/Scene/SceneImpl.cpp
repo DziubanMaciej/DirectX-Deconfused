@@ -9,7 +9,7 @@
 #include "Utility/ThrowIfFailed.h"
 #include "Window/WindowImpl.h"
 
-#include "DXD/ExternalHeadersWrappers/d3dx12.h"
+#include <DXD/ExternalHeadersWrappers/d3dx12.h>
 #include <algorithm>
 #include <cassert>
 

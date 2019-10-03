@@ -2,8 +2,8 @@
 
 #include "DXD/NonCopyableAndMovable.h"
 
-#include "DXD/ExternalHeadersWrappers/d2d.h"
-#include "DXD/ExternalHeadersWrappers/d3d12.h"
+#include <DXD/ExternalHeadersWrappers/d2d.h>
+#include <DXD/ExternalHeadersWrappers/d3d12.h>
 
 class Resource;
 class AcquiredD2DWrappedResource;
