@@ -7,7 +7,6 @@
 #include "Utility/ThrowIfFailed.h"
 
 #include "DXD/ExternalHeadersWrappers/d3dx12.h"
-#include "DXD/ExternalHeadersWrappers/stb_image.h"
 #include <cassert>
 #include <cstdlib>
 

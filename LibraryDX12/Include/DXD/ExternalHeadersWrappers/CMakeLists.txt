@@ -5,7 +5,6 @@ add_sources_and_cmake_file(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/d3dx12.h
     ${CMAKE_CURRENT_SOURCE_DIR}/dxgi.h
     ${CMAKE_CURRENT_SOURCE_DIR}/DirectXMath.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/stb_image.h
     ${CMAKE_CURRENT_SOURCE_DIR}/windows.h
     ${CMAKE_CURRENT_SOURCE_DIR}/TextEnums.h
 )
