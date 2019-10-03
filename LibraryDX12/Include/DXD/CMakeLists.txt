@@ -10,6 +10,7 @@ add_sources_and_cmake_file(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/PostProcess.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Scene.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Settings.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/Sprite.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Text.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Texture.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Window.h

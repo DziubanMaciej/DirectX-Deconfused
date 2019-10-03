@@ -10,6 +10,7 @@
 #include <DXD/PostProcess.h>
 #include <DXD/Scene.h>
 #include <DXD/Settings.h>
+#include <DXD/Sprite.h>
 #include <DXD/Text.h>
 #include <DXD/Texture.h>
 #include <DXD/Window.h>

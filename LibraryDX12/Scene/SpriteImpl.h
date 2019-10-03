@@ -6,7 +6,7 @@
 #include "DXD/Sprite.h"
 #include "DXD/Texture.h"
 
-#include "DXD/ExternalHeadersWrappers/d3dx12.h"
+#include <ExternalHeaders/Wrappers/d3dx12.h>
 class ApplicationImpl;
 class TextureImpl;
 class SpriteImpl : public DXD::Sprite {
