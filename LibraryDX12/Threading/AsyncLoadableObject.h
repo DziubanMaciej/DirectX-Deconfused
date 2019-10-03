@@ -3,6 +3,7 @@
 #include "Utility/ThrowIfFailed.h"
 
 #include <atomic>
+#include <mutex>
 
 template <typename CpuLoadArgs, typename CpuLoadResult, typename GpuLoadArgs, typename GpuLoadResult>
 class AsyncLoadableObject {
@@ -40,6 +41,7 @@ protected:
             AsyncLoadingStatus currentStatus;
             do {
                 currentStatus = status.load();
+                isReady();
             } while (currentStatus != AsyncLoadingStatus::SUCCESS && currentStatus != AsyncLoadingStatus::FAIL);
         }
     }
@@ -58,12 +60,14 @@ public:
         case AsyncLoadingStatus::CPU_LOAD:
         case AsyncLoadingStatus::FAIL:
             return false;
-        case AsyncLoadingStatus::GPU_LOAD:
+        case AsyncLoadingStatus::GPU_LOAD: {
+            std::lock_guard<std::mutex> lock{this->gpuLoadLock};
             if (this->hasGpuLoadEnded()) {
                 this->status = AsyncLoadingStatus::SUCCESS;
                 return true;
             }
             return false;
+        }
         case AsyncLoadingStatus::SUCCESS:
             return true;
         default:
@@ -81,7 +85,9 @@ private:
         }
 
         GpuLoadArgs gpuLoadArgs = createArgsForGpuLoad(cpuLoadResult);
+        std::unique_lock<std::mutex> gpuLoadLock{this->gpuLoadLock};
         GpuLoadResult gpuLoadResult = gpuLoad(gpuLoadArgs);
+        gpuLoadLock.unlock();
         status = AsyncLoadingStatus::GPU_LOAD;
         if (!isGpuLoadSuccessful(gpuLoadResult)) {
             this->status = AsyncLoadingStatus::FAIL;
@@ -90,4 +96,6 @@ private:
 
         writeCpuGpuLoadResults(cpuLoadResult, gpuLoadResult);
     }
+
+    std::mutex gpuLoadLock;
 };
