@@ -14,7 +14,8 @@ protected:
     friend class DXD::Sprite;
 
 public:
-    SpriteImpl(ApplicationImpl &application, const std::wstring filePath, int textureSizeX, int textureOffsetX, int textureSizeY, int textureOffsetY);
+    SpriteImpl(ApplicationImpl &application, const std::wstring filePath, int textureSizeX, int textureOffsetX, int textureSizeY, int textureOffsetY,
+               VerticalAlignment verticalAlignment, HorizontalAlignment horizontalAlignment);
     ~SpriteImpl() = default;
 
     TextureImpl *getTextureImpl();
@@ -26,4 +27,6 @@ private:
     int textureOffsetX;
     int textureSizeY;
     int textureOffsetY;
+    DXD::Sprite::VerticalAlignment verticalAlignment;
+    DXD::Sprite::HorizontalAlignment horizontalAlignment;
 };

@@ -99,8 +99,12 @@ struct InverseViewProj {
 };
 
 struct SpriteCB {
+    float screenWidth;
+    float screenHeight;
     float textureSizeX;
     float textureOffsetX;
     float textureSizeY;
     float textureOffsetY;
+    UINT verticalAlignment;
+    UINT horizontalAlignment;
 };

@@ -235,15 +235,17 @@ private:
             int spriteOffsetX;
             int spriteSizeY;
             int spriteOffsetY;
+            DXD::Sprite::VerticalAlignment verticalAlignment;
+            DXD::Sprite::HorizontalAlignment horizontalAlignment;
         };
 
         SpriteCreationData spritesCreationData[] = {
-            {"shrek", L"Resources/sprites/shrek.png", 368, 10, 250, 10},
-            {"rectangle-alpha", L"Resources/sprites/rectangle-alpha.png", 165, 0, 33, 0}
-        };
+            {"shrek", L"Resources/sprites/shrek.png", 368, -60, 250, -120, DXD::Sprite::VerticalAlignment::BOTTOM, DXD::Sprite::HorizontalAlignment::RIGHT},
+            {"rectangle-alpha", L"Resources/sprites/rectangle-alpha.png", 165, 0, 33, 0, DXD::Sprite::VerticalAlignment::TOP, DXD::Sprite::HorizontalAlignment::LEFT},
+            {"crosshair", L"Resources/sprites/crosshair.png", 100, 0, 100, 0, DXD::Sprite::VerticalAlignment::CENTER, DXD::Sprite::HorizontalAlignment::CENTER}};
 
         for (const auto &data : spritesCreationData) {
-            sprites[data.name] = DXD::Sprite::createFromFile(*application, data.path, data.spriteSizeX, data.spriteOffsetX, data.spriteSizeY, data.spriteOffsetY);
+            sprites[data.name] = DXD::Sprite::createFromFile(*application, data.path, data.spriteSizeX, data.spriteOffsetX, data.spriteSizeY, data.spriteOffsetY, data.verticalAlignment, data.horizontalAlignment);
             assert(sprites[data.name]);
         }
     }

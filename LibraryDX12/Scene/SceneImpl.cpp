@@ -614,6 +614,8 @@ void SceneImpl::renderSprite(SpriteImpl *sprite, SwapChain &swapChain, CommandLi
     auto &backBuffer = swapChain.getCurrentBackBuffer();
     // Prepare constant buffer
     SpriteCB spriteData = sprite->getData();
+    spriteData.screenWidth = static_cast<float>(swapChain.getWidth());
+    spriteData.screenHeight = static_cast<float>(swapChain.getHeight());
     // Set state
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SPRITE);
     commandList.setRoot32BitConstant(0, spriteData);
