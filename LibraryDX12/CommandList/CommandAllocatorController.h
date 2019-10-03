@@ -1,9 +1,10 @@
 #pragma once
 
-#include "DXD/NonCopyableAndMovable.h"
+#include "DXD/Utility/NonCopyableAndMovable.h"
 
-#include "DXD/ExternalHeadersWrappers/d3dx12.h"
+#include <ExternalHeaders/Wrappers/d3dx12.h>
 #include <deque>
+#include <mutex>
 
 class Fence;
 
@@ -33,7 +34,7 @@ public:
     /// allocators are registered in a non-decreasing order (ordered by their fenceValues) and checks only
     /// the first entry of the queue.
     /// \return valid DX12 command allocator
-    ID3D12CommandAllocatorPtr retieveCommandAllocator();
+    ID3D12CommandAllocatorPtr retrieveCommandAllocator();
 
     /// Retrieves command list that was registered to this manager
     /// (see registerAllocatorAndList(ID3D12CommandAllocatorPtr, ID3D12GraphicsCommandListPtr, uint64_t))
@@ -66,4 +67,6 @@ protected:
 
     std::deque<CommandAllocatorEntry> commandAllocators;
     std::deque<ID3D12GraphicsCommandListPtr> commandLists;
+    std::mutex commandListMutex;
+    std::mutex commandAllocatorMutex;
 };

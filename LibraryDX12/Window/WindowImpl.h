@@ -5,7 +5,7 @@
 
 #include "DXD/Window.h"
 
-#include "DXD/ExternalHeadersWrappers/windows.h"
+#include <DXD/ExternalHeadersWrappers/windows.h>
 #include <chrono>
 
 class ApplicationImpl;

@@ -3,10 +3,9 @@
 #include "CommandList/CommandList.h"
 #include "CommandList/CommandQueue.h"
 
-#include "DXD/NonCopyableAndMovable.h"
+#include "DXD/Utility/NonCopyableAndMovable.h"
 
-#include "DXD/ExternalHeadersWrappers/d3d12.h"
-#include "DXD/ExternalHeadersWrappers/d3dx12.h"
+#include <ExternalHeaders/Wrappers/d3dx12.h>
 
 class ApplicationImpl;
 class CommandList;
@@ -41,7 +40,7 @@ public:
     D3D12_RESOURCE_STATES getState() const { return state; }
 
     // Gpu upload functions
-    virtual bool isUploadInProgress();
+    bool isUploadInProgress();
     void registerUpload(CommandQueue &uploadingQueue, uint64_t uploadFence);
 
     // Descriptors

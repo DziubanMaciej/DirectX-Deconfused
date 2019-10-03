@@ -5,13 +5,12 @@
 #include "Synchronization/Event.h"
 #include "Synchronization/Fence.h"
 
-#include "DXD/ExternalHeadersWrappers/d3d12.h"
+#include <DXD/ExternalHeadersWrappers/d3d12.h>
 #include <mutex>
 #include <vector>
 
 class CommandList;
 
-// TODO: flush and performResourcesDeletion() are not entirely thread safe
 class CommandQueue : DXD::NonCopyableAndMovable {
 public:
     CommandQueue(ID3D12DevicePtr device, D3D12_COMMAND_LIST_TYPE type);
@@ -23,9 +22,10 @@ public:
 
     uint64_t executeCommandListsAndSignal(std::vector<CommandList *> &commandLists);
     uint64_t executeCommandListAndSignal(CommandList &commandList);
-    void performResourcesDeletion();
+    void performResourcesDeletion(bool lockQueue);
 
-    void flush();
+    void flush(bool lockQueue);
+    std::unique_lock<std::mutex> getLock(bool lockQueue);
 
 private:
     static ID3D12CommandQueuePtr createCommandQueue(ID3D12DevicePtr &device, D3D12_COMMAND_LIST_TYPE type);

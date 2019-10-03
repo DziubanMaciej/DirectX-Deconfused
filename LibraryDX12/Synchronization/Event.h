@@ -1,7 +1,8 @@
 #pragma once
 
-#include "DXD/NonCopyableAndMovable.h"
-#include "DXD/ExternalHeadersWrappers/windows.h"
+#include "DXD/Utility/NonCopyableAndMovable.h"
+
+#include <DXD/ExternalHeadersWrappers/windows.h>
 #include <chrono>
 
 class Event : DXD::NonCopyable {

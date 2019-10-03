@@ -1,21 +1,7 @@
 ﻿#define _USE_MATH_DEFINES
 #include "FpsCounter.h"
 
-#include "DXD/Application.h"
-#include "DXD/CallbackHandler.h"
-#include "DXD/Camera.h"
-#include "DXD/Light.h"
-#include "DXD/Logger.h"
-#include "DXD/Mesh.h"
-#include "DXD/Object.h"
-#include "DXD/PostProcess.h"
-#include "DXD/Scene.h"
-#include "DXD/Settings.h"
-#include "DXD/Sprite.h"
-#include "DXD/Text.h"
-#include "DXD/Texture.h"
-#include "DXD/Window.h"
-
+#include <DXD/DXD.h>
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -57,22 +43,24 @@ private:
             std::wstring filePath;
             bool loadNormals;
             bool loadTextures;
+            bool computeTangents;
         };
 
         MeshCreationData meshesCreationData[] = {
-            {"cubeUv", L"Resources/meshes/cube_normals_uvs.obj", false, true},
-            {"cubeNormal", L"Resources/meshes/cube_normals.obj", true, false},
-            {"cubeNormalUv", L"Resources/meshes/cube_normals_uvs.obj", true, true},
-            {"teapot", L"Resources/meshes/teapot_normals.obj", true, false},
-            {"actor", L"Resources/meshes/dennis.obj", true, true},
-            {"dxd", L"Resources/meshes/dxd_comicsans.obj", true, false},
-            {"intelMesh", L"Resources/meshes/corei7.obj", true, false},
-            {"aventadorMesh", L"Resources/meshes/aventador.obj", true, false},
-            {"porsheMesh", L"Resources/meshes/porshe.obj", true, true}};
+            {"cubeNormal", L"Resources/meshes/cube_normals.obj", true, false, false},
+            {"cubeNormalUv", L"Resources/meshes/cube_normals_uvs.obj", true, true, false},
+            {"cubeNormalUvTangents", L"Resources/meshes/cube_normals_uvs.obj", true, true, true},
+            {"teapot", L"Resources/meshes/teapot_normals.obj", true, false, false},
+            {"actor", L"Resources/meshes/dennis.obj", true, true, false},
+            {"dxd", L"Resources/meshes/dxd_comicsans.obj", true, false, false},
+            {"intelMesh", L"Resources/meshes/corei7.obj", true, false, false},
+            {"aventadorMesh", L"Resources/meshes/aventador.obj", true, false, false},
+            {"porsheMesh", L"Resources/meshes/porshe.obj", true, true, false}};
 
         for (const auto &data : meshesCreationData) {
             const bool asynchronousLoading = true;
-            meshes[data.name] = DXD::Mesh::createFromObj(*application, data.filePath, data.loadNormals, data.loadTextures, asynchronousLoading);
+            meshes[data.name] = DXD::Mesh::createFromObj(*application, data.filePath, data.loadNormals,
+                                                         data.loadTextures, data.computeTangents, asynchronousLoading);
             assert(meshes[data.name]);
         }
     }

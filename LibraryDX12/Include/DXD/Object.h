@@ -1,11 +1,11 @@
 #pragma once
 
-#include "DXD/Export.h"
 #include "DXD/Mesh.h"
-#include "DXD/NonCopyableAndMovable.h"
+#include "DXD/Utility/Export.h"
+#include "DXD/Utility/NonCopyableAndMovable.h"
 
-#include "DXD/ExternalHeadersWrappers/DirectXMath.h"
-#include "DXD/ExternalHeadersWrappers/windows.h"
+#include <DXD/ExternalHeadersWrappers/DirectXMath.h>
+#include <DXD/ExternalHeadersWrappers/windows.h>
 #include <memory>
 #include <string>
 

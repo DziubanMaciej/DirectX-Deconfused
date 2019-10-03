@@ -1,10 +1,10 @@
 #pragma once
 
-#include "DXD/Export.h"
-#include "DXD/NonCopyableAndMovable.h"
+#include "DXD/Utility/Export.h"
+#include "DXD/Utility/NonCopyableAndMovable.h"
 
-#include "DXD/ExternalHeadersWrappers/TextEnums.h"
-#include "DXD/ExternalHeadersWrappers/d2d.h"
+#include <DXD/ExternalHeadersWrappers/TextEnums.h>
+#include <DXD/ExternalHeadersWrappers/d2d.h>
 #include <memory>
 #include <string>
 

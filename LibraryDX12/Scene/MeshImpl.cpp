@@ -15,16 +15,17 @@ namespace DXD {
 // ----------------------------------------------------------------- Creation and destruction
 
 std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const std::wstring &filePath,
-                                          bool loadNormals, bool loadTextureCoordinates,
+                                          bool loadNormals, bool loadTextureCoordinates, bool computeTangents,
                                           bool asynchronousLoading) {
     return std::unique_ptr<Mesh>(new MeshImpl(*static_cast<ApplicationImpl *>(&application),
-                                              filePath, loadNormals, loadTextureCoordinates, asynchronousLoading));
+                                              filePath, loadNormals, loadTextureCoordinates, computeTangents, asynchronousLoading));
 }
 } // namespace DXD
 
-MeshImpl::MeshImpl(ApplicationImpl &application, const std::wstring &filePath, bool loadNormals, bool loadTextureCoordinates, bool asynchronousLoading)
+MeshImpl::MeshImpl(ApplicationImpl &application, const std::wstring &filePath, bool loadNormals,
+                   bool loadTextureCoordinates, bool computeTangents, bool asynchronousLoading)
     : application(application) {
-    const MeshCpuLoadArgs cpuLoadArgs{filePath, loadNormals, loadTextureCoordinates};
+    const MeshCpuLoadArgs cpuLoadArgs{filePath, loadNormals, loadTextureCoordinates, computeTangents};
     cpuGpuLoad(cpuLoadArgs, asynchronousLoading);
 }
 
@@ -57,6 +58,10 @@ MeshCpuLoadResult MeshImpl::cpuLoad(const MeshCpuLoadArgs &args) {
             return std::move(MeshCpuLoadResult{});
         }
 
+        if (line.empty()) {
+            continue;
+        }
+
         std::istringstream strs(line);
         strs >> lineType;
 
@@ -74,22 +79,14 @@ MeshCpuLoadResult MeshImpl::cpuLoad(const MeshCpuLoadArgs &args) {
             indexTokens.push_back(f1);
             indexTokens.push_back(f2);
             indexTokens.push_back(f3);
-
-            try { // TODO
-                const auto slashCount = std::count(line.begin(), line.end(), '/');
-                if (slashCount > 6 && strs.good() && !strs.eof()) {
-                    strs >> f4;
-                    if (!f4.empty()) {
-                        indexTokens.push_back(f1);
-                        indexTokens.push_back(f3);
-                        indexTokens.push_back(f4);
-                    } else {
-                        int t = 0;
-                    }
-                } else {
-                    int r = 0;
+            if (!strs.eof()) {
+                strs >> f4;
+                if (!f4.empty()) {
+                    // Lines can and with a space, hence this check
+                    indexTokens.push_back(f1);
+                    indexTokens.push_back(f3);
+                    indexTokens.push_back(f4);
                 }
-            } catch (...) {
             }
         } else if (lineType == "vn") { //normal vector
             strs >> x;
@@ -109,60 +106,64 @@ MeshCpuLoadResult MeshImpl::cpuLoad(const MeshCpuLoadArgs &args) {
 
     // Compute some fields based on lines that were read
     MeshCpuLoadResult result{};
-    result.meshType = MeshImpl::computeMeshType(normalCoordinates, textureCoordinates, args.loadNormals, args.loadTextureCoordinates);
+    result.meshType = MeshImpl::computeMeshType(normalCoordinates, textureCoordinates, args.loadNormals, args.loadTextureCoordinates, args.computeTangents);
     result.vertexSizeInBytes = computeVertexSize(result.meshType);
-    const bool usesIndexBuffer = normalCoordinates.size() == 0 && textureCoordinates.size() == 0;
     if (result.meshType == MeshImpl::UNKNOWN) {
         return std::move(MeshCpuLoadResult{});
     }
 
-    // Prepare final buffers for GPU upload
+    const bool hasTextureCoordinates = result.meshType & TEXTURE_COORDS;
+    const bool hasNormals = result.meshType & NORMALS;
+    const bool hasTangents = result.meshType & TANGENTS;
+    const bool usesIndexBuffer = !hasTextureCoordinates && !hasNormals && !hasTangents;
     if (usesIndexBuffer) {
-        // No vertex elements interleaving is required - we only have position
+        // Index buffer path - vertices are unmodified, we push indices to index buffer to define polygons
         result.vertexElements = std::move(vertexElements);
-    }
-    for (std::string face : indexTokens) {
-        UINT vertexElementIdx;
-        UINT normalIdx;
-        UINT textCoordIdx;
-        size_t pos = 0;
-        std::string f = face;
-        for (int i = 0; i < 3; i++) {
-            pos = f.find("/");
-            std::string t = f.substr(0, pos);
-            switch (i) {
-            case 0:
-                vertexElementIdx = std::stoi(t);
-                break;
-            case 1:
-                if (t.length() > 0) {
-                    textCoordIdx = std::stoi(t);
-                }
-                break;
-            case 2:
-                if (t.length() > 0) {
-                    normalIdx = std::stoi(t);
-                }
-                break;
-            }
-            f.erase(0, pos + 1);
+        for (int indexTokenIndex = 0; indexTokenIndex < indexTokens.size(); indexTokenIndex += 3) {
+            UINT vertexIndices[3] = {};
+            processIndexToken(indexTokens[indexTokenIndex + 0], false, false, vertexIndices + 0, nullptr, nullptr);
+            processIndexToken(indexTokens[indexTokenIndex + 1], false, false, vertexIndices + 1, nullptr, nullptr);
+            processIndexToken(indexTokens[indexTokenIndex + 2], false, false, vertexIndices + 2, nullptr, nullptr);
+            result.indices.push_back(vertexIndices[0]);
+            result.indices.push_back(vertexIndices[1]);
+            result.indices.push_back(vertexIndices[2]);
         }
-        if (usesIndexBuffer) {
-            // Vertices go unmodified to the vertex buffer, we use an index buffer to define polygons
-            result.indices.push_back(vertexElementIdx - 1);
-        } else {
-            // We have to interleave vertex attributes gather in different arrays into one
-            result.vertexElements.push_back(vertexElements[3 * (vertexElementIdx - 1)]);
-            result.vertexElements.push_back(vertexElements[3 * (vertexElementIdx - 1) + 1]);
-            result.vertexElements.push_back(vertexElements[3 * (vertexElementIdx - 1) + 2]);
-            if (result.meshType & MeshImpl::NORMALS) {
-                result.vertexElements.push_back(normalCoordinates[3 * (normalIdx - 1)]);
-                result.vertexElements.push_back(normalCoordinates[3 * (normalIdx - 1) + 1]);
-                result.vertexElements.push_back(normalCoordinates[3 * (normalIdx - 1) + 2]);
+    } else {
+        // No index buffer path - we interleave all vertex attributesm, so they're next to each other
+        for (int indexTokenIndex = 0; indexTokenIndex < indexTokens.size(); indexTokenIndex += 3) {
+            // Get all vertex attributes
+            UINT vertexIndices[3] = {};
+            UINT textureCoordinateIndices[3] = {};
+            UINT normalIndices[3] = {};
+            processIndexToken(indexTokens[indexTokenIndex + 0], hasTextureCoordinates, hasNormals, vertexIndices + 0, textureCoordinateIndices + 0, normalIndices + 0);
+            processIndexToken(indexTokens[indexTokenIndex + 1], hasTextureCoordinates, hasNormals, vertexIndices + 1, textureCoordinateIndices + 1, normalIndices + 1);
+            processIndexToken(indexTokens[indexTokenIndex + 2], hasTextureCoordinates, hasNormals, vertexIndices + 2, textureCoordinateIndices + 2, normalIndices + 2);
+
+            // If there are no normals, we use normal mapping, which means we'll need a tangent
+            XMFLOAT3 tangent = {};
+            if (hasTangents) {
+                computeVertexTangent(vertexElements, textureCoordinates, vertexIndices, textureCoordinateIndices, tangent);
             }
-            if (result.meshType & MeshImpl::TEXTURE_COORDS) {
-                result.vertexElements.push_back(textureCoordinates[2 * (textCoordIdx - 1)]);
-                result.vertexElements.push_back(textureCoordinates[2 * (textCoordIdx - 1) + 1]);
+
+            // Append interleaved attributes to the vertex buffer memory
+            for (int vertexInTriangleIndex = 0; vertexInTriangleIndex < 3; vertexInTriangleIndex++) {
+                result.vertexElements.push_back(vertexElements[3 * (vertexIndices[vertexInTriangleIndex]) + 0]);
+                result.vertexElements.push_back(vertexElements[3 * (vertexIndices[vertexInTriangleIndex]) + 1]);
+                result.vertexElements.push_back(vertexElements[3 * (vertexIndices[vertexInTriangleIndex]) + 2]);
+                if (hasNormals) {
+                    result.vertexElements.push_back(normalCoordinates[3 * (normalIndices[vertexInTriangleIndex]) + 0]);
+                    result.vertexElements.push_back(normalCoordinates[3 * (normalIndices[vertexInTriangleIndex]) + 1]);
+                    result.vertexElements.push_back(normalCoordinates[3 * (normalIndices[vertexInTriangleIndex]) + 2]);
+                }
+                if (hasTangents) {
+                    result.vertexElements.push_back(tangent.x);
+                    result.vertexElements.push_back(tangent.y);
+                    result.vertexElements.push_back(tangent.z);
+                }
+                if (hasTextureCoordinates) {
+                    result.vertexElements.push_back(textureCoordinates[2 * (textureCoordinateIndices[vertexInTriangleIndex]) + 0]);
+                    result.vertexElements.push_back(textureCoordinates[2 * (textureCoordinateIndices[vertexInTriangleIndex]) + 1]);
+                }
             }
         }
     }
@@ -211,6 +212,13 @@ MeshGpuLoadResult MeshImpl::gpuLoad(const MeshGpuLoadArgs &args) {
     return std::move(results);
 }
 
+bool MeshImpl::hasGpuLoadEnded() {
+    const bool vertexInProgress = this->vertexBuffer->isUploadInProgress();
+    const bool indexInProgress = this->indexBuffer != nullptr && this->indexBuffer->isUploadInProgress();
+    const bool bothEnded = !vertexInProgress && !indexInProgress;
+    return bothEnded;
+}
+
 void MeshImpl::writeCpuGpuLoadResults(MeshCpuLoadResult &cpuLoadResult, MeshGpuLoadResult &gpuLoadResult) {
     this->meshType = cpuLoadResult.meshType;
     this->vertexSizeInBytes = cpuLoadResult.vertexSizeInBytes;
@@ -222,22 +230,10 @@ void MeshImpl::writeCpuGpuLoadResults(MeshCpuLoadResult &cpuLoadResult, MeshGpuL
     this->indexBuffer = std::move(gpuLoadResult.indexBuffer);
 }
 
-// ----------------------------------------------------------------- Getters
-
-bool MeshImpl::isUploadInProgress() {
-    if (!cpuLoadComplete.load()) {
-        return true;
-    }
-
-    const bool vertexInProgress = this->vertexBuffer->isUploadInProgress();
-    const bool indexInProgress = this->indexBuffer != nullptr && this->indexBuffer->isUploadInProgress();
-    return vertexInProgress || indexInProgress;
-}
-
 // ----------------------------------------------------------------- Helpers
 
 MeshImpl::MeshType MeshImpl::computeMeshType(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates,
-                                             bool loadNormals, bool loadTextureCoordinates) {
+                                             bool loadNormals, bool loadTextureCoordinates, bool computeTangents) {
     MeshType meshType = TRIANGLE_STRIP;
     if (loadNormals) {
         if (normals.size() > 0) {
@@ -253,6 +249,9 @@ MeshImpl::MeshType MeshImpl::computeMeshType(const std::vector<FLOAT> &normals, 
             return UNKNOWN; // user wants texture coords which .obj doesn't provide - error
         }
     }
+    if (computeTangents) {
+        meshType |= TANGENTS;
+    }
 
     return meshType;
 }
@@ -265,17 +264,82 @@ UINT MeshImpl::computeVertexSize(MeshType meshType) {
     if (meshType & TEXTURE_COORDS) {
         vertexSize += 2;
     }
+    if (meshType & TANGENTS) {
+        vertexSize += 3;
+    }
     if (meshType & NORMALS) {
         vertexSize += 3;
     }
     return vertexSize * sizeof(FLOAT);
 }
 
+void MeshImpl::processIndexToken(const std::string &indexToken, bool textures, bool normals,
+                                 UINT *outVertexIndex, UINT *outTextureCoordinateIndex, UINT *outNormalIndex) {
+    size_t leftPosition{};
+    size_t rightPosition{};
+
+    rightPosition = indexToken.find('/', 0u);
+    *outVertexIndex = std::stoi(indexToken.substr(leftPosition, rightPosition)) - 1;
+
+    leftPosition = rightPosition + 1;
+    rightPosition = indexToken.find('/', rightPosition + 1);
+    if (textures && leftPosition != rightPosition) {
+        *outTextureCoordinateIndex = std::stoi(indexToken.substr(leftPosition, rightPosition)) - 1;
+    }
+
+    leftPosition = rightPosition + 1;
+    rightPosition = indexToken.find('/', rightPosition + 1);
+    assert(rightPosition == std::string::npos);
+    if (normals && leftPosition < indexToken.size()) {
+        *outNormalIndex = std::stoi(indexToken.substr(leftPosition, rightPosition)) - 1;
+    }
+}
+
+XMFLOAT3 MeshImpl::getVertexVector(const std::vector<FLOAT> &vertices, UINT vertexIndex) {
+    const float x = vertices[3 * vertexIndex + 0];
+    const float y = vertices[3 * vertexIndex + 1];
+    const float z = vertices[3 * vertexIndex + 2];
+    return XMFLOAT3{x, y, z};
+}
+
+XMFLOAT2 MeshImpl::getTextureCoordinateVector(const std::vector<FLOAT> &textureCoordinates, UINT textureCoordinateIndex) {
+    const float u = textureCoordinates[2 * textureCoordinateIndex + 0];
+    const float v = textureCoordinates[2 * textureCoordinateIndex + 1];
+    return XMFLOAT2{u, v};
+}
+
+void MeshImpl::computeVertexTangent(const std::vector<FLOAT> &vertices, const std::vector<FLOAT> &textureCoordinates,
+                                    const UINT vertexIndices[3], UINT textureCoordinateIndices[3], XMFLOAT3 &outTangent) {
+    // Get position and texture coordinate deltas (edges)
+    XMFLOAT3 pos1 = getVertexVector(vertices, vertexIndices[0]);
+    XMFLOAT3 pos2 = getVertexVector(vertices, vertexIndices[1]);
+    XMFLOAT3 pos3 = getVertexVector(vertices, vertexIndices[2]);
+    XMFLOAT3 posEdge1 = XMFLOAT3{pos2.x - pos1.x, pos2.y - pos1.y, pos2.z - pos1.z};
+    XMFLOAT3 posEdge2 = XMFLOAT3{pos3.x - pos1.x, pos3.y - pos1.y, pos3.z - pos1.z};
+    XMFLOAT2 uv1 = getTextureCoordinateVector(textureCoordinates, textureCoordinateIndices[0]);
+    XMFLOAT2 uv2 = getTextureCoordinateVector(textureCoordinates, textureCoordinateIndices[1]);
+    XMFLOAT2 uv3 = getTextureCoordinateVector(textureCoordinates, textureCoordinateIndices[2]);
+    XMFLOAT2 uvEdge1 = XMFLOAT2{uv2.x - uv1.x, uv2.y - uv1.y};
+    XMFLOAT2 uvEdge2 = XMFLOAT2{uv3.x - uv1.x, uv3.y - uv1.y};
+
+    // Calculate tangent
+    float f = 1.0f / (uvEdge1.x * uvEdge2.y - uvEdge2.x * uvEdge1.y);
+    outTangent.x = f * (uvEdge2.y * posEdge1.x - uvEdge1.y * posEdge2.x);
+    outTangent.y = f * (uvEdge2.y * posEdge1.y - uvEdge1.y * posEdge2.y);
+    outTangent.z = f * (uvEdge2.y * posEdge1.z - uvEdge1.y * posEdge2.z);
+
+    // normalize
+    float len = sqrtf(outTangent.x * outTangent.x + outTangent.y * outTangent.y + outTangent.z * outTangent.z);
+    outTangent.x /= len;
+    outTangent.y /= len;
+    outTangent.z /= len;
+}
+
 std::map<MeshImpl::MeshType, PipelineStateController::Identifier> MeshImpl::getPipelineStateIdentifierMap() {
     std::map<MeshImpl::MeshType, PipelineStateController::Identifier> map = {};
     map[TRIANGLE_STRIP | NORMALS] = PipelineStateController::Identifier::PIPELINE_STATE_NORMAL;
-    map[TRIANGLE_STRIP | TEXTURE_COORDS] = PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE_NORMAL_MAP;
     map[TRIANGLE_STRIP | NORMALS | TEXTURE_COORDS] = PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE_NORMAL;
+    map[TRIANGLE_STRIP | NORMALS | TEXTURE_COORDS | TANGENTS] = PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE_NORMAL_MAP;
     return std::move(map);
 }
 
@@ -291,8 +355,8 @@ PipelineStateController::Identifier MeshImpl::computePipelineStateIdentifier(Mes
 std::map<MeshImpl::MeshType, PipelineStateController::Identifier> MeshImpl::getShadowMapPipelineStateIdentifierMap() {
     std::map<MeshImpl::MeshType, PipelineStateController::Identifier> map = {};
     map[TRIANGLE_STRIP | NORMALS] = PipelineStateController::Identifier::PIPELINE_STATE_SM_NORMAL;
-    map[TRIANGLE_STRIP | TEXTURE_COORDS] = PipelineStateController::Identifier::PIPELINE_STATE_SM_TEXTURE_NORMAL_MAP;
     map[TRIANGLE_STRIP | NORMALS | TEXTURE_COORDS] = PipelineStateController::Identifier::PIPELINE_STATE_SM_TEXTURE_NORMAL;
+    map[TRIANGLE_STRIP | NORMALS | TEXTURE_COORDS | TANGENTS] = PipelineStateController::Identifier::PIPELINE_STATE_SM_TEXTURE_NORMAL_MAP;
     return std::move(map);
 }
 

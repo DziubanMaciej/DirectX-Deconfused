@@ -3,9 +3,9 @@
 #include "CommandList/ResourceBindingType.h"
 #include "Descriptor/DescriptorAllocation.h"
 
-#include "DXD/NonCopyableAndMovable.h"
+#include "DXD/Utility/NonCopyableAndMovable.h"
 
-#include "DXD/ExternalHeadersWrappers/d3dx12.h"
+#include <ExternalHeaders/Wrappers/d3dx12.h>
 #include <map>
 #include <set>
 #include <vector>

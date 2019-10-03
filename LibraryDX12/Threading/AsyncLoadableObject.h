@@ -1,19 +1,29 @@
 #pragma once
 
+#include "Utility/ThrowIfFailed.h"
+
 #include <atomic>
+#include <mutex>
 
 template <typename CpuLoadArgs, typename CpuLoadResult, typename GpuLoadArgs, typename GpuLoadResult>
 class AsyncLoadableObject {
 protected:
+    enum class AsyncLoadingStatus {
+        NOT_STARTED,
+        CPU_LOAD,
+        GPU_LOAD,
+        SUCCESS,
+        FAIL,
+    };
+
     void cpuGpuLoad(const CpuLoadArgs &args, bool asynchronousLoading) {
         if (asynchronousLoading) {
             auto task = [this, args]() {
                 cpuGpuLoadImpl(args);
             };
-            ApplicationImpl::getInstance().getBackgroundWorkerController().pushTask(task, this->cpuLoadComplete);
+            ApplicationImpl::getInstance().getBackgroundWorkerController().pushTask(task);
         } else {
             cpuGpuLoadImpl(args);
-            this->cpuLoadComplete = true;
         }
     }
 
@@ -22,13 +32,17 @@ protected:
     virtual GpuLoadArgs createArgsForGpuLoad(const CpuLoadResult &cpuLoadResult) = 0;
     virtual GpuLoadResult gpuLoad(const GpuLoadArgs &args) = 0;
     virtual bool isGpuLoadSuccessful(const GpuLoadResult &result) { return true; }
+    virtual bool hasGpuLoadEnded() = 0;
     virtual void writeCpuGpuLoadResults(CpuLoadResult &cpuLoadResult, GpuLoadResult &gpuLoadResult) = 0;
 
     void terminateBackgroundProcessing(bool blocking) {
         terminate.store(true);
         if (blocking) {
-            while (!cpuLoadComplete.load())
-                ;
+            AsyncLoadingStatus currentStatus;
+            do {
+                currentStatus = status.load();
+                isReady();
+            } while (currentStatus != AsyncLoadingStatus::SUCCESS && currentStatus != AsyncLoadingStatus::FAIL);
         }
     }
 
@@ -36,22 +50,52 @@ protected:
         return terminate.load();
     }
 
-    std::atomic_bool cpuLoadComplete = false;
     std::atomic_bool terminate = false;
+    std::atomic<AsyncLoadingStatus> status = AsyncLoadingStatus::NOT_STARTED;
+
+public:
+    bool isReady() {
+        switch (this->status) {
+        case AsyncLoadingStatus::NOT_STARTED:
+        case AsyncLoadingStatus::CPU_LOAD:
+        case AsyncLoadingStatus::FAIL:
+            return false;
+        case AsyncLoadingStatus::GPU_LOAD: {
+            std::lock_guard<std::mutex> lock{this->gpuLoadLock};
+            if (this->hasGpuLoadEnded()) {
+                this->status = AsyncLoadingStatus::SUCCESS;
+                return true;
+            }
+            return false;
+        }
+        case AsyncLoadingStatus::SUCCESS:
+            return true;
+        default:
+            UNREACHABLE_CODE();
+        }
+    }
 
 private:
     void cpuGpuLoadImpl(const CpuLoadArgs &cpuLoadArgs) {
+        status = AsyncLoadingStatus::CPU_LOAD;
         CpuLoadResult cpuLoadResult = cpuLoad(cpuLoadArgs);
         if (!isCpuLoadSuccessful(cpuLoadResult)) {
-            return; // TODO set some error info
+            this->status = AsyncLoadingStatus::FAIL;
+            return;
         }
 
         GpuLoadArgs gpuLoadArgs = createArgsForGpuLoad(cpuLoadResult);
+        std::unique_lock<std::mutex> gpuLoadLock{this->gpuLoadLock};
         GpuLoadResult gpuLoadResult = gpuLoad(gpuLoadArgs);
+        gpuLoadLock.unlock();
+        status = AsyncLoadingStatus::GPU_LOAD;
         if (!isGpuLoadSuccessful(gpuLoadResult)) {
-            return; // TODO set some error info
+            this->status = AsyncLoadingStatus::FAIL;
+            return;
         }
 
         writeCpuGpuLoadResults(cpuLoadResult, gpuLoadResult);
     }
+
+    std::mutex gpuLoadLock;
 };

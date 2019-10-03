@@ -1,8 +1,8 @@
 #pragma once
 
-#include "DXD/NonCopyableAndMovable.h"
+#include "DXD/Utility/NonCopyableAndMovable.h"
 
-#include "DXD/ExternalHeadersWrappers/windows.h"
+#include <DXD/ExternalHeadersWrappers/windows.h>
 #include <string>
 
 struct FileHelper : DXD::NonCopyableAndMovable {
@@ -31,7 +31,7 @@ struct FileHelper : DXD::NonCopyableAndMovable {
         const size_t fileNameStartIndex = getFileNameStartIndex(path, supportDirectories);
         const size_t dotIndex = path.find_last_of('.');
         if (dotIndex == std::basic_string<CharT>::npos || dotIndex < fileNameStartIndex) {
-            return  std::basic_string<CharT> {};
+            return std::basic_string<CharT>{};
         }
         return path.substr(dotIndex + 1);
     }

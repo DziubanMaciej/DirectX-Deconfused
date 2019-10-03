@@ -2,10 +2,10 @@
 
 #include "PipelineState/RootSignature.h"
 
-#include "DXD/NonCopyableAndMovable.h"
+#include "DXD/Utility/NonCopyableAndMovable.h"
 
-#include "DXD/ExternalHeadersWrappers/d3dcompiler.h"
-#include "DXD/ExternalHeadersWrappers/d3dx12.h"
+#include <DXD/ExternalHeadersWrappers/d3dcompiler.h>
+#include <ExternalHeaders/Wrappers/d3dx12.h>
 #include <string>
 
 class PipelineStateController : DXD::NonCopyableAndMovable {

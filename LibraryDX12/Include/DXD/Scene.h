@@ -1,7 +1,8 @@
 #pragma once
 
-#include "DXD/Export.h"
-#include "DXD/NonCopyableAndMovable.h"
+#include "DXD/Utility/Export.h"
+#include "DXD/Utility/NonCopyableAndMovable.h"
+
 #include <memory>
 
 namespace DXD {

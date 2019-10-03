@@ -69,7 +69,7 @@ void DescriptorHeap::deallocate(const DescriptorAllocation &allocation) {
             // cannot merge with left range, but can merge with right range
             const auto rightSize = right->second;
             freeList.erase(right);
-            freeList.emplace(offset, size + rightSize); // TODO <-- is it valid?
+            freeList.emplace(offset, size + rightSize);
         } else {
             // cannot merge with anything
             freeList.emplace(offset, size);

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "DXD/Export.h"
-#include "DXD/NonCopyableAndMovable.h"
+#include "DXD/Utility/Export.h"
+#include "DXD/Utility/NonCopyableAndMovable.h"
 
 #include <memory>
 #include <string>
@@ -14,7 +14,7 @@ class EXPORT Mesh : NonCopyableAndMovable {
 public:
     virtual ~Mesh() = default;
     static std::unique_ptr<Mesh> createFromObj(DXD::Application &application, const std::wstring &filePath,
-                                               bool loadNormals, bool loadTextureCoordinates,
+                                               bool loadNormals, bool loadTextureCoordinates, bool computeTangents,
                                                bool asynchronousLoading);
 
 protected:

@@ -2,9 +2,9 @@
 
 #include "Synchronization/Event.h"
 
-#include "DXD/NonCopyableAndMovable.h"
+#include "DXD/Utility/NonCopyableAndMovable.h"
 
-#include "DXD/ExternalHeadersWrappers/d3d12.h"
+#include <DXD/ExternalHeadersWrappers/d3d12.h>
 #include <stdint.h>
 
 class Fence : DXD::NonCopyable {

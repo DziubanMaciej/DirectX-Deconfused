@@ -14,7 +14,7 @@ CommandQueue::CommandQueue(ID3D12DevicePtr device, D3D12_COMMAND_LIST_TYPE type)
 }
 
 CommandQueue::~CommandQueue() {
-    flush();
+    flush(true);
 }
 
 ID3D12CommandQueuePtr CommandQueue::createCommandQueue(ID3D12DevicePtr &device, D3D12_COMMAND_LIST_TYPE type) {
@@ -34,7 +34,7 @@ ID3D12CommandQueuePtr CommandQueue::createCommandQueue(ID3D12DevicePtr &device, 
 // ------------------------------------------------------------------------------ Execute
 
 uint64_t CommandQueue::executeCommandListsAndSignal(std::vector<CommandList *> &commandLists) {
-    std::unique_lock<std::mutex> lock{this->lock};
+    std::unique_lock<std::mutex> lock = getLock(true);
 
     // Convert to vector of pointers to D3D command list objects
     std::vector<ID3D12CommandList *> commandListPtrs;
@@ -56,7 +56,7 @@ uint64_t CommandQueue::executeCommandListsAndSignal(std::vector<CommandList *> &
 }
 
 uint64_t CommandQueue::executeCommandListAndSignal(CommandList &commandList) {
-    std::unique_lock<std::mutex> lock{this->lock};
+    std::unique_lock<std::mutex> lock = getLock(true);
 
     // Submit work to GPU and signal fence
     ID3D12CommandList *commandListPtr = commandList.getCommandList().Get();
@@ -70,13 +70,23 @@ uint64_t CommandQueue::executeCommandListAndSignal(CommandList &commandList) {
     return fenceValue;
 }
 
-void CommandQueue::performResourcesDeletion() {
+void CommandQueue::performResourcesDeletion(bool lockQueue) {
+    std::unique_lock<std::mutex> lock = getLock(lockQueue);
     resourceUsageTracker.performDeletion(fence.getCompletedFenceValue());
 }
 
 // ------------------------------------------------------------------------------ Wait and signal
 
-void CommandQueue::flush() {
+void CommandQueue::flush(bool lockQueue) {
+    std::unique_lock<std::mutex> lock = getLock(lockQueue);
     const uint64_t newFenceValue = fence.signal(commandQueue);
     fence.waitOnCpu(newFenceValue);
+}
+
+std::unique_lock<std::mutex> CommandQueue::getLock(bool lockQueue) {
+    std::unique_lock<std::mutex> lock{this->lock, std::defer_lock};
+    if (lockQueue) {
+        lock.lock();
+    }
+    return std::move(lock);
 }

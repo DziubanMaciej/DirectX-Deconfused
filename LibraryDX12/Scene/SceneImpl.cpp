@@ -9,7 +9,7 @@
 #include "Utility/ThrowIfFailed.h"
 #include "Window/WindowImpl.h"
 
-#include "DXD/ExternalHeadersWrappers/d3dx12.h"
+#include <ExternalHeaders/Wrappers/d3dx12.h>
 #include <algorithm>
 #include <cassert>
 
@@ -100,7 +100,7 @@ DXD::Camera *SceneImpl::getCamera() {
 void SceneImpl::inspectObjectsNotReady() {
     for (auto it = objectsNotReady.begin(); it != objectsNotReady.end();) {
         ObjectImpl *object = *it;
-        if (!object->isUploadInProgress()) {
+        if (object->isReady()) {
             auto itToDelete = it++;
             objects.insert(object);
             objectsNotReady.erase(itToDelete);
@@ -628,7 +628,7 @@ void SceneImpl::renderSprite(SpriteImpl *sprite, SwapChain &swapChain, CommandLi
 void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     auto &commandQueue = application.getDirectCommandQueue();
     auto &backBuffer = swapChain.getCurrentBackBuffer();
-    commandQueue.performResourcesDeletion();
+    application.flushAllResources();
     inspectObjectsNotReady();
 
     // Render shadow maps

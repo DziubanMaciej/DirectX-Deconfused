@@ -6,6 +6,8 @@ ConstantBuffer<SMmvp> mvp : register(b0);
 
 struct VertexShaderInput {
     float3 Position : POSITION;
+    float3 Normal : NORMAL;
+    float3 Tangent : TANGENT;
     float2 UV : TEXCOORD;
 };
 

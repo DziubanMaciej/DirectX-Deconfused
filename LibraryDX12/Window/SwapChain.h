@@ -5,11 +5,11 @@
 #include "Resource/D2DWrappedResource.h"
 #include "Resource/Resource.h"
 
-#include "DXD/NonCopyableAndMovable.h"
+#include "DXD/Utility/NonCopyableAndMovable.h"
 
-#include "DXD/ExternalHeadersWrappers/d2d.h"
-#include "DXD/ExternalHeadersWrappers/d3d12.h"
-#include "DXD/ExternalHeadersWrappers/dxgi.h"
+#include <DXD/ExternalHeadersWrappers/d2d.h>
+#include <DXD/ExternalHeadersWrappers/d3d12.h>
+#include <DXD/ExternalHeadersWrappers/dxgi.h>
 #include <memory>
 #include <stdint.h>
 #include <vector>

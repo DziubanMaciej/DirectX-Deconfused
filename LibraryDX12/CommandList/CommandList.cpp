@@ -12,7 +12,7 @@
 CommandList::CommandList(CommandQueue &commandQueue, ID3D12PipelineState *initialPipelineState)
     : descriptorController(ApplicationImpl::getInstance().getDescriptorController()),
       commandAllocatorController(commandQueue.getCommandAllocatorController()),
-      commandAllocator(commandAllocatorController.retieveCommandAllocator()),
+      commandAllocator(commandAllocatorController.retrieveCommandAllocator()),
       commandList(commandAllocatorController.retrieveCommandList(commandAllocator, initialPipelineState)),
       gpuDescriptorHeapControllerCbvSrvUav(*this, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV),
       gpuDescriptorHeapControllerSampler(*this, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER) {}

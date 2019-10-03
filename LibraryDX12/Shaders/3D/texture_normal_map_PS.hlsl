@@ -11,6 +11,7 @@ SamplerState s_sampler : register(s0);
 
 struct PixelShaderInput {
     float4 Position : SV_Position;
+    float3 Tangent : TANGENT;
     float2 UV : TEXCOORD;
 };
 

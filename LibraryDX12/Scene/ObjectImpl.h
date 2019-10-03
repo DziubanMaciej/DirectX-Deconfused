@@ -53,7 +53,7 @@ public:
     void setTextureScale(XMFLOAT2 uv) override;
     XMFLOAT2 getTextureScale() const override;
 
-    bool isUploadInProgress();
+    bool isReady();
 
 protected:
     MeshImpl &mesh;

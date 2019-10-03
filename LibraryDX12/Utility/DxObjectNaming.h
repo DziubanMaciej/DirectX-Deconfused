@@ -1,9 +1,9 @@
 #pragma once
 
-#include "Resource/Resource.h"
 #include "CommandList/CommandList.h"
+#include "Resource/Resource.h"
 
-#include "DXD/ExternalHeadersWrappers/d3d12.h"
+#include <DXD/ExternalHeadersWrappers/d3d12.h>
 #include <string>
 
 #if defined(_DEBUG)

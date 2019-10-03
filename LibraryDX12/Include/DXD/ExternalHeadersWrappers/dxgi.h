@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DXD/ExternalHeadersWrappers/windows.h"
+#include <DXD/ExternalHeadersWrappers/windows.h>
 #include <dxgi1_6.h>
 #include <wrl.h>
 

@@ -9,7 +9,7 @@
 
 #include "DXD/Application.h"
 
-#include "DXD/ExternalHeadersWrappers/dxgi.h"
+#include <DXD/ExternalHeadersWrappers/dxgi.h>
 
 class ApplicationImpl : public DXD::Application {
 protected:
