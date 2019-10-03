@@ -3,7 +3,7 @@
 #include "CommandList/CommandList.h"
 #include "CommandList/CommandQueue.h"
 
-#include "DXD/NonCopyableAndMovable.h"
+#include "DXD/Utility/NonCopyableAndMovable.h"
 
 #include <ExternalHeaders/Wrappers/d3dx12.h>
 

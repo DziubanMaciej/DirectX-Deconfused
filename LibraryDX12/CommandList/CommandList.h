@@ -7,7 +7,7 @@
 #include "PipelineState/PipelineStateController.h"
 #include "Resource/ResourceUsageTracker.h"
 
-#include "DXD/NonCopyableAndMovable.h"
+#include "DXD/Utility/NonCopyableAndMovable.h"
 
 #include <ExternalHeaders/Wrappers/d3dx12.h>
 #include <cstdint>

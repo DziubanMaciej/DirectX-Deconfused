@@ -3,7 +3,7 @@
 #include "CommandList/ResourceBindingType.h"
 #include "Descriptor/DescriptorAllocation.h"
 
-#include "DXD/NonCopyableAndMovable.h"
+#include "DXD/Utility/NonCopyableAndMovable.h"
 
 #include <ExternalHeaders/Wrappers/d3dx12.h>
 #include <map>

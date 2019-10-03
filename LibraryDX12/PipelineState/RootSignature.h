@@ -3,7 +3,7 @@
 #include "PipelineState/DescriptorTable.h"
 #include "PipelineState/ShaderRegister.h"
 
-#include "DXD/NonCopyableAndMovable.h"
+#include "DXD/Utility/NonCopyableAndMovable.h"
 
 #include <ExternalHeaders/Wrappers/d3dx12.h>
 #include <map>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DXD/NonCopyableAndMovable.h"
+#include "DXD/Utility/NonCopyableAndMovable.h"
 
 #include <ExternalHeaders/Wrappers/d3dx12.h>
 #include <deque>
