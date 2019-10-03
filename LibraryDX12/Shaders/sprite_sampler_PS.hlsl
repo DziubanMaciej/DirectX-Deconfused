@@ -18,9 +18,9 @@ struct PixelShaderInput {
 };
 
 float4 main(PixelShaderInput IN) : SV_Target {
-    const float vBase = cb.verticalAlignment == 0 ? IN.Position.x - cb.textureOffsetX                                                     // left case
-                                                  : cb.verticalAlignment == 2 ? cb.screenWidth - IN.Position.x - cb.textureOffsetX        // right case
-                                                                              : cb.screenWidth / 2 - IN.Position.x + cb.textureSizeX / 2; // center case
+    const float vBase = cb.verticalAlignment == 0 ? IN.Position.x - cb.textureOffsetX                                                                         // left case
+                                                  : cb.verticalAlignment == 2 ? cb.screenWidth - IN.Position.x - cb.textureOffsetX                            // right case
+                                                                              : cb.screenWidth / 2 - IN.Position.x + cb.textureSizeX / 2 + cb.textureOffsetX; // center case
 
     const float hBase = cb.horizontalAlignment == 0 ? IN.Position.y - cb.textureOffsetY                                                                            // top case
                                                     : cb.horizontalAlignment == 2 ? IN.Position.y + cb.textureOffsetY - cb.screenHeight + cb.textureSizeY          // bottom case
