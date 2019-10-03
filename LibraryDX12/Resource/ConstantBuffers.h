@@ -97,3 +97,10 @@ struct InverseViewProj {
     XMMATRIX viewMatrixInverse;
     XMMATRIX projMatrixInverse;
 };
+
+struct SpriteCB {
+    float textureSizeX;
+    float textureOffsetX;
+    float textureSizeY;
+    float textureOffsetY;
+};

@@ -54,6 +54,10 @@ void SceneImpl::addLight(DXD::Light &light) {
     lights.push_back(static_cast<LightImpl *>(&light));
 }
 
+void SceneImpl::addSprite(DXD::Sprite &sprite) {
+    sprites.push_back(static_cast<SpriteImpl *>(&sprite));
+}
+
 void SceneImpl::addText(DXD::Text &text) {
     texts.push_back(static_cast<TextImpl *>(&text));
 }
@@ -605,6 +609,21 @@ void SceneImpl::renderD2DTexts(SwapChain &swapChain) {
     }
     throwIfFailed(d2dDeviceContext->EndDraw());
 }
+void SceneImpl::renderSprite(SpriteImpl *sprite, SwapChain &swapChain, CommandList &commandList, VertexBuffer &fullscreenVB) {
+    TextureImpl *tex = sprite->getTextureImpl();
+    auto &backBuffer = swapChain.getCurrentBackBuffer();
+    // Prepare constant buffer
+    SpriteCB spriteData = sprite->getData();
+    // Set state
+    commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SPRITE);
+    commandList.setRoot32BitConstant(0, spriteData);
+    commandList.setSrvInDescriptorTable(1, 0, *tex);
+    commandList.OMSetRenderTargetNoDepth(backBuffer);
+    commandList.IASetVertexBuffer(fullscreenVB);
+
+    // Render
+    commandList.draw(6u);
+}
 
 void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     auto &commandQueue = application.getDirectCommandQueue();
@@ -670,7 +689,17 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
 
     // Close command list and submit it to the GPU
     commandListPostProcess.close();
-    const uint64_t fenceValue = commandQueue.executeCommandListAndSignal(commandListPostProcess);
+    commandQueue.executeCommandListAndSignal(commandListPostProcess);
+
+    CommandList commandListSprite{commandQueue};
+    commandListSprite.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+    commandListSprite.RSSetScissorRectNoScissor();
+    commandListSprite.IASetPrimitiveTopologyTriangleList();
+    //auto &tex = DXD::Texture::createFromFile(this->application, L"Resources/textures/brickwall.jpg", false);
+    for (auto &sprite : sprites)
+        renderSprite(sprite, swapChain, commandListSprite, *postProcessVB);
+    commandListSprite.close();
+    const uint64_t fenceValue = commandQueue.executeCommandListAndSignal(commandListSprite);
 
     // D2D, additional command list is inserted
     if (!texts.empty()) {

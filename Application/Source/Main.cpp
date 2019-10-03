@@ -11,6 +11,7 @@
 #include "DXD/PostProcess.h"
 #include "DXD/Scene.h"
 #include "DXD/Settings.h"
+#include "DXD/Sprite.h"
 #include "DXD/Text.h"
 #include "DXD/Texture.h"
 #include "DXD/Window.h"
@@ -33,6 +34,7 @@ public:
         prepLights();
         prepCamera();
         prepPostProcesses();
+        prepSprites();
         prepText();
         prepScene();
         updateCamera();
@@ -235,6 +237,28 @@ private:
         postProcesses["sepia"]->setLinearColorCorrectionSepia();
         postProcesses["sepia"]->setEnabled(false);
     }
+    void prepSprites() {
+        DXD::log("Loading sprites...\n");
+
+        struct SpriteCreationData {
+            std::string name;
+            std::wstring path;
+            int spriteSizeX;
+            int spriteOffsetX;
+            int spriteSizeY;
+            int spriteOffsetY;
+        };
+
+        SpriteCreationData spritesCreationData[] = {
+            {"shrek", L"Resources/sprites/shrek.png", 368, 10, 250, 10},
+            {"rectangle-alpha", L"Resources/sprites/rectangle-alpha.png", 165, 0, 33, 0}
+        };
+
+        for (const auto &data : spritesCreationData) {
+            sprites[data.name] = DXD::Sprite::createFromFile(*application, data.path, data.spriteSizeX, data.spriteOffsetX, data.spriteSizeY, data.spriteOffsetY);
+            assert(sprites[data.name]);
+        }
+    }
 
     void prepText() {
         DXD::log("Loading texts...\n");
@@ -266,6 +290,9 @@ private:
         }
         for (auto &postProcess : postProcesses) {
             scene->addPostProcess(*postProcess.second);
+        }
+        for (auto &sprite : sprites) {
+            scene->addSprite(*sprite.second);
         }
         for (auto &text : texts) {
             scene->addText(*text.second);
@@ -438,6 +465,7 @@ private:
     std::unordered_map<std::string, std::unique_ptr<DXD::Text>> texts;
     std::unordered_map<std::string, std::unique_ptr<DXD::PostProcess>> postProcesses;
     std::unordered_map<std::string, std::unique_ptr<DXD::Texture>> textures;
+    std::unordered_map<std::string, std::unique_ptr<DXD::Sprite>> sprites;
 };
 
 int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int show) {

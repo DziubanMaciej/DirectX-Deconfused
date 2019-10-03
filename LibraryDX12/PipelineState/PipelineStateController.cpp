@@ -93,6 +93,9 @@ void PipelineStateController::compile(Identifier identifier) {
     case Identifier::PIPELINE_STATE_POST_PROCESS_APPLY_BLOOM:
         compilePipelineStatePostProcessApplyBloom(rootSignature, pipelineState);
         break;
+    case Identifier::PIPELINE_STATE_SPRITE:
+        compilePipelineStateSprite(rootSignature, pipelineState);
+        break;
     default:
         UNREACHABLE_CODE();
     }
@@ -219,8 +222,7 @@ void PipelineStateController::compilePipelineStateShadowMapTextureNormal(RootSig
         .compile(device, pipelineState);
 }
 
-void PipelineStateController::compilePipelineStateShadowMapTextureNormalMap(RootSignature & rootSignature, ID3D12PipelineStatePtr & pipelineState)
-{
+void PipelineStateController::compilePipelineStateShadowMapTextureNormalMap(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
     rootSignature
         .append32bitConstant<SMmvp>(b(0), D3D12_SHADER_VISIBILITY_VERTEX) // register(b0)
@@ -233,7 +235,7 @@ void PipelineStateController::compilePipelineStateShadowMapTextureNormalMap(Root
     };
 
     // Pipeline state object
-    GraphicsPipelineState{ inputLayout, rootSignature }
+    GraphicsPipelineState{inputLayout, rootSignature}
         .VS(L"ShadowMap/texture_normal_map_VS.hlsl")
         .compile(device, pipelineState);
 }
@@ -350,6 +352,44 @@ void PipelineStateController::compilePipelineStatePostProcessApplyBloom(RootSign
     return GraphicsPipelineState{inputLayout, rootSignature}
         .VS(L"PostProcess/VS.hlsl")
         .PS(L"PostProcess/apply_bloom_PS.hlsl")
+        .disableDepthStencil()
+        .setBlendDesc(blendDesc)
+        .compile(device, pipelineState);
+}
+
+void PipelineStateController::compilePipelineStateSprite(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
+    // Root signature - crossthread data
+    StaticSampler sampler{D3D12_SHADER_VISIBILITY_PIXEL};
+    DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
+    table.appendSrvRange(t(0), 1);
+    rootSignature
+        .appendStaticSampler(s(0), sampler)
+        .append32bitConstant<SpriteCB>(b(0), D3D12_SHADER_VISIBILITY_PIXEL)
+        .appendDescriptorTable(std::move(table))
+        .compile(device);
+
+    // Input layout - per vertex data
+    const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+    };
+    // Blend state
+    D3D12_BLEND_DESC blendDesc = {};
+    blendDesc.RenderTarget[0].BlendEnable = TRUE;
+    blendDesc.RenderTarget[0].LogicOpEnable = FALSE;
+    blendDesc.RenderTarget[0].SrcBlend = D3D12_BLEND_SRC_ALPHA;
+    blendDesc.RenderTarget[0].DestBlend = D3D12_BLEND_INV_SRC_ALPHA;
+    blendDesc.RenderTarget[0].BlendOp = D3D12_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].SrcBlendAlpha = D3D12_BLEND_ZERO;
+    blendDesc.RenderTarget[0].DestBlendAlpha = D3D12_BLEND_ONE;
+    blendDesc.RenderTarget[0].BlendOpAlpha = D3D12_BLEND_OP_ADD;
+    blendDesc.RenderTarget[0].LogicOp = D3D12_LOGIC_OP_NOOP;
+    blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+
+    // Pipeline state object
+    return GraphicsPipelineState{inputLayout, rootSignature}
+        .VS(L"PostProcess/VS.hlsl")
+        .PS(L"sprite_sampler_PS.hlsl")
+        //.PS(L"sampler_PS.hlsl")
         .disableDepthStencil()
         .setBlendDesc(blendDesc)
         .compile(device, pipelineState);

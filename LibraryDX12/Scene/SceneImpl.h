@@ -5,6 +5,7 @@
 #include "Scene/LightImpl.h"
 #include "Scene/ObjectImpl.h"
 #include "Scene/PostProcessImpl.h"
+#include "Scene/SpriteImpl.h"
 #include "Scene/TextImpl.h"
 
 #include "DXD/Scene.h"
@@ -31,6 +32,7 @@ public:
     void setBackgroundColor(float r, float g, float b) override;
     void setAmbientLight(float r, float g, float b) override;
     void addLight(DXD::Light &light) override;
+    void addSprite(DXD::Sprite &sprite) override;
     void addText(DXD::Text &text) override;
     void addPostProcess(DXD::PostProcess &postProcess) override;
     bool removeLight(DXD::Light &light) override;
@@ -63,6 +65,7 @@ protected:
     static void renderBloom(SwapChain &swapChain, CommandList &commandList, PostProcessImpl &bloomBlurEffect, VertexBuffer &fullscreenVB,
                             Resource &bloomMap, PostProcessRenderTargets &renderTargets, Resource &output);
     void renderD2DTexts(SwapChain &swapChain);
+    void renderSprite(SpriteImpl *sprite, SwapChain &swapChain, CommandList &commandList, VertexBuffer &fullscreenVB);
 
     // Context
     ApplicationImpl &application;
@@ -79,6 +82,8 @@ protected:
     std::set<ObjectImpl *> objectsNotReady;
     std::vector<TextImpl *> texts;
     std::vector<PostProcessImpl *> postProcesses = {};
+    std::vector<SpriteImpl *> sprites = {};
+
     CameraImpl *camera;
 
     XMFLOAT3 postProcessSquare[6] =
