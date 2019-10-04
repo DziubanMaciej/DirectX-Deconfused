@@ -105,6 +105,6 @@ struct SpriteCB {
     float textureOffsetX;
     float textureSizeY;
     float textureOffsetY;
-    UINT verticalAlignment;
     UINT horizontalAlignment;
+    UINT verticalAlignment;
 };

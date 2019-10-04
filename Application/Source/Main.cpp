@@ -240,8 +240,8 @@ private:
             int spriteOffsetX;
             int spriteSizeY;
             int spriteOffsetY;
-            DXD::Sprite::VerticalAlignment verticalAlignment;
             DXD::Sprite::HorizontalAlignment horizontalAlignment;
+            DXD::Sprite::VerticalAlignment verticalAlignment;
         };
         SpriteTextureCreationData spriteTexturesCreationData[] = {
             {"shrek", L"Resources/sprites/shrek.png"},
@@ -249,17 +249,17 @@ private:
             {"crosshair", L"Resources/sprites/crosshair.png"}};
 
         SpriteCreationData spritesCreationData[] = {
-            {"shrek_right", "shrek", 368, -60, 250, -120, DXD::Sprite::VerticalAlignment::BOTTOM, DXD::Sprite::HorizontalAlignment::RIGHT},
-            {"shrek_LEFT", "shrek", 368, -60, 250, -120, DXD::Sprite::VerticalAlignment::BOTTOM, DXD::Sprite::HorizontalAlignment::LEFT},
-            {"rectangle-alpha", "rectangle-alpha", 165, 0, 33, 0, DXD::Sprite::VerticalAlignment::TOP, DXD::Sprite::HorizontalAlignment::LEFT},
-            {"crosshair", "crosshair", 50, 0, 50, 0, DXD::Sprite::VerticalAlignment::CENTER, DXD::Sprite::HorizontalAlignment::CENTER}};
+            {"shrek_right", "shrek", 368, 10, 250, -120, DXD::Sprite::HorizontalAlignment::RIGHT, DXD::Sprite::VerticalAlignment::BOTTOM},
+            {"shrek_left", "shrek", 368, -60, 250, -120, DXD::Sprite::HorizontalAlignment::LEFT, DXD::Sprite::VerticalAlignment::BOTTOM},
+            {"rectangle-alpha", "rectangle-alpha", 165, 0, 33, 0, DXD::Sprite::HorizontalAlignment::LEFT, DXD::Sprite::VerticalAlignment::TOP},
+            {"crosshair", "crosshair", 50, 0, 50, 0, DXD::Sprite::HorizontalAlignment::CENTER, DXD::Sprite::VerticalAlignment::CENTER}};
 
         for (const auto &data : spriteTexturesCreationData) {
             spriteTextures[data.name] = DXD::Texture::createFromFile(*application, data.path, false);
             assert(spriteTextures[data.name]);
         }
         for (const auto &data : spritesCreationData) {
-            sprites[data.name] = DXD::Sprite::create(*spriteTextures[data.textureName], data.spriteSizeX, data.spriteOffsetX, data.spriteSizeY, data.spriteOffsetY, data.verticalAlignment, data.horizontalAlignment);
+            sprites[data.name] = DXD::Sprite::create(*spriteTextures[data.textureName], data.spriteSizeX, data.spriteOffsetX, data.spriteSizeY, data.spriteOffsetY, data.horizontalAlignment, data.verticalAlignment);
             assert(sprites[data.name]);
         }
     }

@@ -5,8 +5,8 @@ struct SpriteCB {
     float textureOffsetX;
     float textureSizeY;
     float textureOffsetY;
-    uint verticalAlignment;
     uint horizontalAlignment;
+    uint verticalAlignment;
 };
 
 ConstantBuffer<SpriteCB> cb : register(b0);
@@ -19,7 +19,7 @@ struct PixelShaderInput {
 
 float4 main(PixelShaderInput IN) : SV_Target {
     const float hBase = cb.horizontalAlignment == 0 ? IN.Position.x - cb.textureOffsetX                                                                           // left case
-                                                    : cb.horizontalAlignment == 2 ? IN.Position.x - cb.textureOffsetX - cb.screenWidth + cb.textureSizeX          // right case
+                                                    : cb.horizontalAlignment == 2 ? IN.Position.x + cb.textureOffsetX - cb.screenWidth + cb.textureSizeX          // right case
                                                                                   : cb.screenWidth / 2 - IN.Position.x + cb.textureSizeX / 2 + cb.textureOffsetX; // center case
 
     const float vBase = cb.verticalAlignment == 0 ? IN.Position.y - cb.textureOffsetY                                                                          // top case

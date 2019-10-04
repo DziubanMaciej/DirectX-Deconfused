@@ -12,18 +12,18 @@ class Texture;
 
 class EXPORT Sprite : NonCopyableAndMovable {
 public:
-    enum class VerticalAlignment {
-        TOP,
-        CENTER,
-        BOTTOM
-    };
     enum class HorizontalAlignment {
         LEFT,
         CENTER,
         RIGHT
     };
+    enum class VerticalAlignment {
+        TOP,
+        CENTER,
+        BOTTOM
+    };
     static std::unique_ptr<Sprite> create(Texture &texture, int textureSizeX, int textureOffsetX, int textureSizeY, int textureOffsetY,
-                                                  VerticalAlignment verticalAlignment, HorizontalAlignment horizontalAlignment);
+                                          HorizontalAlignment horizontalAlignment, VerticalAlignment verticalAlignment);
     virtual ~Sprite() = default;
 
 protected:
