@@ -610,7 +610,7 @@ void SceneImpl::renderD2DTexts(SwapChain &swapChain) {
     throwIfFailed(d2dDeviceContext->EndDraw());
 }
 void SceneImpl::renderSprite(SpriteImpl *sprite, SwapChain &swapChain, CommandList &commandList, VertexBuffer &fullscreenVB) {
-    TextureImpl *tex = sprite->getTextureImpl();
+    auto &tex = sprite->getTextureImpl();
     auto &backBuffer = swapChain.getCurrentBackBuffer();
     // Prepare constant buffer
     SpriteCB spriteData = sprite->getData();
@@ -619,7 +619,7 @@ void SceneImpl::renderSprite(SpriteImpl *sprite, SwapChain &swapChain, CommandLi
     // Set state
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SPRITE);
     commandList.setRoot32BitConstant(0, spriteData);
-    commandList.setSrvInDescriptorTable(1, 0, *tex);
+    commandList.setSrvInDescriptorTable(1, 0, tex);
     commandList.OMSetRenderTargetNoDepth(backBuffer);
     commandList.IASetVertexBuffer(fullscreenVB);
 

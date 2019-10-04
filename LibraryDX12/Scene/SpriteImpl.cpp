@@ -4,20 +4,15 @@
 #include "Resource/TextureImpl.h"
 
 namespace DXD {
-std::unique_ptr<Sprite> Sprite::createFromFile(Application &application, const std::wstring &filePath, int textureSizeX, int textureOffsetX, int textureSizeY, int textureOffsetY,
+std::unique_ptr<Sprite> Sprite::create(Texture &texture, int textureSizeX, int textureOffsetX, int textureSizeY, int textureOffsetY,
                                                VerticalAlignment verticalAlignment, HorizontalAlignment horizontalAlignment) {
-    return std::unique_ptr<Sprite>(new SpriteImpl(*static_cast<ApplicationImpl *>(&application), filePath, textureSizeX, textureOffsetX, textureSizeY, textureOffsetY, verticalAlignment, horizontalAlignment));
+    return std::unique_ptr<Sprite>(new SpriteImpl(*static_cast<TextureImpl *>(&texture), textureSizeX, textureOffsetX, textureSizeY, textureOffsetY, verticalAlignment, horizontalAlignment));
 }
 } // namespace DXD
 
-SpriteImpl::SpriteImpl(ApplicationImpl &application, const std::wstring filePath, int textureSizeX, int textureOffsetX, int textureSizeY, int textureOffsetY,
+SpriteImpl::SpriteImpl(TextureImpl &texture, int textureSizeX, int textureOffsetX, int textureSizeY, int textureOffsetY,
                        VerticalAlignment verticalAlignment, HorizontalAlignment horizontalAlignment)
-    : textureSizeX(textureSizeX), textureOffsetX(textureOffsetX), textureSizeY(textureSizeY), textureOffsetY(textureOffsetY), verticalAlignment(verticalAlignment), horizontalAlignment(horizontalAlignment) {
-    texture = DXD::Texture::createFromFile(application, filePath, false);
-}
-
-TextureImpl *SpriteImpl::getTextureImpl() {
-    return static_cast<TextureImpl *>(texture.get());
+    : texture(texture), textureSizeX(textureSizeX), textureOffsetX(textureOffsetX), textureSizeY(textureSizeY), textureOffsetY(textureOffsetY), verticalAlignment(verticalAlignment), horizontalAlignment(horizontalAlignment) {
 }
 
 SpriteCB SpriteImpl::getData() {

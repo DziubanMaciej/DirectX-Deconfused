@@ -228,9 +228,14 @@ private:
     void prepSprites() {
         DXD::log("Loading sprites...\n");
 
-        struct SpriteCreationData {
+        struct SpriteTextureCreationData {
             std::string name;
             std::wstring path;
+        };
+
+        struct SpriteCreationData {
+            std::string name;
+            std::string textureName;
             int spriteSizeX;
             int spriteOffsetX;
             int spriteSizeY;
@@ -238,14 +243,23 @@ private:
             DXD::Sprite::VerticalAlignment verticalAlignment;
             DXD::Sprite::HorizontalAlignment horizontalAlignment;
         };
+        SpriteTextureCreationData spriteTexturesCreationData[] = {
+            {"shrek", L"Resources/sprites/shrek.png"},
+            {"rectangle-alpha", L"Resources/sprites/rectangle-alpha.png"},
+            {"crosshair", L"Resources/sprites/crosshair.png"}};
 
         SpriteCreationData spritesCreationData[] = {
-            {"shrek", L"Resources/sprites/shrek.png", 368, -60, 250, -120, DXD::Sprite::VerticalAlignment::BOTTOM, DXD::Sprite::HorizontalAlignment::RIGHT},
-            {"rectangle-alpha", L"Resources/sprites/rectangle-alpha.png", 165, 0, 33, 0, DXD::Sprite::VerticalAlignment::TOP, DXD::Sprite::HorizontalAlignment::LEFT},
-            {"crosshair", L"Resources/sprites/crosshair.png", 100, 0, 100, 0, DXD::Sprite::VerticalAlignment::CENTER, DXD::Sprite::HorizontalAlignment::CENTER}};
+            {"shrek_right", "shrek", 368, -60, 250, -120, DXD::Sprite::VerticalAlignment::BOTTOM, DXD::Sprite::HorizontalAlignment::RIGHT},
+            {"shrek_LEFT", "shrek", 368, -60, 250, -120, DXD::Sprite::VerticalAlignment::BOTTOM, DXD::Sprite::HorizontalAlignment::LEFT},
+            {"rectangle-alpha", "rectangle-alpha", 165, 0, 33, 0, DXD::Sprite::VerticalAlignment::TOP, DXD::Sprite::HorizontalAlignment::LEFT},
+            {"crosshair", "crosshair", 50, 0, 50, 0, DXD::Sprite::VerticalAlignment::CENTER, DXD::Sprite::HorizontalAlignment::CENTER}};
 
+        for (const auto &data : spriteTexturesCreationData) {
+            spriteTextures[data.name] = DXD::Texture::createFromFile(*application, data.path, false);
+            assert(spriteTextures[data.name]);
+        }
         for (const auto &data : spritesCreationData) {
-            sprites[data.name] = DXD::Sprite::createFromFile(*application, data.path, data.spriteSizeX, data.spriteOffsetX, data.spriteSizeY, data.spriteOffsetY, data.verticalAlignment, data.horizontalAlignment);
+            sprites[data.name] = DXD::Sprite::create(*spriteTextures[data.textureName], data.spriteSizeX, data.spriteOffsetX, data.spriteSizeY, data.spriteOffsetY, data.verticalAlignment, data.horizontalAlignment);
             assert(sprites[data.name]);
         }
     }
@@ -455,6 +469,7 @@ private:
     std::unordered_map<std::string, std::unique_ptr<DXD::Text>> texts;
     std::unordered_map<std::string, std::unique_ptr<DXD::PostProcess>> postProcesses;
     std::unordered_map<std::string, std::unique_ptr<DXD::Texture>> textures;
+    std::unordered_map<std::string, std::unique_ptr<DXD::Texture>> spriteTextures;
     std::unordered_map<std::string, std::unique_ptr<DXD::Sprite>> sprites;
 };
 

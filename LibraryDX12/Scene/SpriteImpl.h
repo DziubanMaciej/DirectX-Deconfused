@@ -7,22 +7,21 @@
 #include "DXD/Texture.h"
 
 #include <ExternalHeaders/Wrappers/d3dx12.h>
-class ApplicationImpl;
 class TextureImpl;
 class SpriteImpl : public DXD::Sprite {
 protected:
     friend class DXD::Sprite;
 
 public:
-    SpriteImpl(ApplicationImpl &application, const std::wstring filePath, int textureSizeX, int textureOffsetX, int textureSizeY, int textureOffsetY,
+    SpriteImpl(TextureImpl &texture, int textureSizeX, int textureOffsetX, int textureSizeY, int textureOffsetY,
                VerticalAlignment verticalAlignment, HorizontalAlignment horizontalAlignment);
     ~SpriteImpl() = default;
 
-    TextureImpl *getTextureImpl();
+    TextureImpl &getTextureImpl() { return texture; }
     SpriteCB getData();
 
 private:
-    std::unique_ptr<DXD::Texture> texture;
+    TextureImpl &texture;
     int textureSizeX;
     int textureOffsetX;
     int textureSizeY;

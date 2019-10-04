@@ -8,7 +8,7 @@
 
 namespace DXD {
 
-class Application;
+class Texture;
 
 class EXPORT Sprite : NonCopyableAndMovable {
 public:
@@ -22,7 +22,7 @@ public:
         CENTER,
         RIGHT
     };
-    static std::unique_ptr<Sprite> createFromFile(Application &application, const std::wstring &filePath, int textureSizeX, int textureOffsetX, int textureSizeY, int textureOffsetY,
+    static std::unique_ptr<Sprite> create(Texture &texture, int textureSizeX, int textureOffsetX, int textureSizeY, int textureOffsetY,
                                                   VerticalAlignment verticalAlignment, HorizontalAlignment horizontalAlignment);
     virtual ~Sprite() = default;
 
