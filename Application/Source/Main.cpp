@@ -252,7 +252,7 @@ private:
             {"shrek_right", "shrek", 368, 10, 250, -120, DXD::Sprite::HorizontalAlignment::RIGHT, DXD::Sprite::VerticalAlignment::BOTTOM},
             {"shrek_left", "shrek", 368, -60, 250, -120, DXD::Sprite::HorizontalAlignment::LEFT, DXD::Sprite::VerticalAlignment::BOTTOM},
             {"rectangle-alpha", "rectangle-alpha", 165, 0, 33, 0, DXD::Sprite::HorizontalAlignment::LEFT, DXD::Sprite::VerticalAlignment::TOP},
-            {"crosshair", "crosshair", 50, 0, 50, 0, DXD::Sprite::HorizontalAlignment::CENTER, DXD::Sprite::VerticalAlignment::CENTER}};
+            {"crosshair", "crosshair", 100, 0, 100, 0, DXD::Sprite::HorizontalAlignment::CENTER, DXD::Sprite::VerticalAlignment::CENTER}};
 
         for (const auto &data : spriteTexturesCreationData) {
             spriteTextures[data.name] = DXD::Texture::createFromFile(*application, data.path, false);
