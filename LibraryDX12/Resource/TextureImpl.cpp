@@ -3,9 +3,11 @@
 #include "Application/ApplicationImpl.h"
 #include "CommandList/CommandList.h"
 #include "CommandList/CommandQueue.h"
+#include "Resource/ConstantBuffers.h"
 #include "Utility/FileHelper.h"
 #include "Utility/ThrowIfFailed.h"
 
+#include <DXD/ExternalHeadersWrappers/DirectXMath.h>
 #include <ExternalHeaders/Wrappers/d3dx12.h>
 #include <cassert>
 #include <cstdlib>
@@ -80,14 +82,21 @@ TextureGpuLoadArgs TextureImpl::createArgsForGpuLoad(const TextureCpuLoadResult 
         cpuLoadResult.scratchImage});
 }
 
+template <typename T>
+inline T divideByMultiple(T value, size_t alignment) {
+    // TODO move to same shared header
+    return (T)((value + alignment - 1) / alignment);
+}
+
 TextureGpuLoadResult TextureImpl::gpuLoad(const TextureGpuLoadArgs &args) {
     TextureGpuLoadResult result = {};
 
     // Create GPU resource
     result.description = TextureImpl::createTextureDescription(args.metadata);
+    result.description.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
     this->setResource(createResource(ApplicationImpl::getInstance().getDevice(), &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
                                      &result.description, D3D12_RESOURCE_STATE_COPY_DEST, nullptr),
-                      D3D12_RESOURCE_STATE_COPY_DEST, 1u);
+                      D3D12_RESOURCE_STATE_COPY_DEST, 2u);
 
     // Upload data to the GPU resource
     Resource::uploadToGPU(ApplicationImpl::getInstance(), args.scratchImage.GetPixels(),
@@ -100,11 +109,64 @@ TextureGpuLoadResult TextureImpl::gpuLoad(const TextureGpuLoadArgs &args) {
     srvDescription.Format = result.description.Format;
     srvDescription.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     srvDescription.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDescription.Texture2D.MipLevels = 1;
+    srvDescription.Texture2D.MipLevels = 2;
     srvDescription.Texture2D.MostDetailedMip = 0;
     srvDescription.Texture2D.PlaneSlice = 0;
     srvDescription.Texture2D.ResourceMinLODClamp = 0;
     this->createSrv(&srvDescription);
+
+    {
+        auto descriptors = ApplicationImpl::getInstance().getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 2);
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDescription = {};
+        srvDescription.Format = result.description.Format;
+        srvDescription.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        srvDescription.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDescription.Texture2D.MipLevels = 1;
+        srvDescription.Texture2D.MostDetailedMip = 0;
+        srvDescription.Texture2D.PlaneSlice = 0;
+        srvDescription.Texture2D.ResourceMinLODClamp = 0;
+        ApplicationImpl::getInstance().getDevice()->CreateShaderResourceView(getResource().Get(), &srvDescription, descriptors.getCpuHandle(0));
+        D3D12_UNORDERED_ACCESS_VIEW_DESC uavDescription = {};
+        uavDescription.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        uavDescription.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+        uavDescription.Texture2D.MipSlice = 1;
+        uavDescription.Texture2D.PlaneSlice = 0;
+
+        ApplicationImpl::getInstance().getDevice()->CreateUnorderedAccessView(getResource().Get(), nullptr, &uavDescription, descriptors.getCpuHandle(1));
+
+        auto &queue = ApplicationImpl::getInstance().getDirectCommandQueue();
+        this->waitOnGpuForGpuUpload(queue);
+        CommandList list{queue};
+        list.setPipelineStateAndComputeRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_GENERATE_MIPS);
+
+        list.transitionBarrier(*this, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, 0);
+        list.transitionBarrier(*this, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, 1);
+
+        const uint32_t srcWidth = static_cast<uint32_t>(args.scratchImage.GetMetadata().width);
+        const uint32_t srcHeight = static_cast<uint32_t>(args.scratchImage.GetMetadata().height);
+        const uint32_t dstWidth = srcWidth / 2;
+        const uint32_t dstHeight = srcHeight / 2;
+
+        GenerateMipsCB cb = {};
+        cb.texelSize = XMFLOAT2{1.0f / dstWidth, 1.0f / dstHeight};
+        cb.sourceMipLevel = 0;
+
+        const UINT threadGroupSize = 16u;
+        const UINT threadGroupCountX = divideByMultiple(dstWidth, threadGroupSize);
+        const UINT threadGroupCountY = divideByMultiple(dstHeight, threadGroupSize);
+
+        list.setCbvSrvUavInDescriptorTable(0, 0, *this, descriptors.getCpuHandle(0));
+        list.setCbvSrvUavInDescriptorTable(0, 1, *this, descriptors.getCpuHandle(1));
+        list.setRoot32BitConstant(1, cb);
+        list.dispatch(threadGroupCountX, threadGroupCountY, 1u);
+
+        list.uavBarrier(*this);
+        list.transitionBarrier(*this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+
+        list.close();
+        queue.executeCommandListAndSignal(list);
+        queue.flush(true);
+    }
 
     return std::move(result);
 }

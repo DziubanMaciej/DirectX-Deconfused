@@ -30,6 +30,7 @@ public:
     ~CommandList();
 
     void transitionBarrier(Resource &resource, D3D12_RESOURCE_STATES targetState, UINT subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
+    void uavBarrier(Resource &resource);
 
     void clearRenderTargetView(Resource &renderTarget, const FLOAT colorRGBA[4]);
     void clearDepthStencilView(Resource &dsBuffer, D3D12_CLEAR_FLAGS clearFlags, FLOAT depth, UINT8 stencil);

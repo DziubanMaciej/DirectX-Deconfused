@@ -20,6 +20,8 @@ public:
         PIPELINE_STATE_SM_NORMAL,
         PIPELINE_STATE_SM_TEXTURE_NORMAL,
         PIPELINE_STATE_SM_TEXTURE_NORMAL_MAP,
+        // Mip maps
+        PIPELINE_STATE_GENERATE_MIPS,
         // SSAO
         PIPELINE_STATE_SSAO,
         // SSR
@@ -53,6 +55,8 @@ private:
     void compilePipelineStateNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateTextureNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateTextureNormalMap(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    // Mip maps
+    void compilePipelineStateGenerateMips(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     // SSAO
     void compilePipelineStateSSAO(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     // SSR

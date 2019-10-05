@@ -34,6 +34,11 @@ void CommandList::transitionBarrier(Resource &resource, D3D12_RESOURCE_STATES ta
     cachedResourceBarriers.insert(cachedResourceBarriers.end(), barriersStart, barriersEnd);
 }
 
+void CommandList::uavBarrier(Resource &resource) {
+    cachedResourceBarriers.push_back(CD3DX12_RESOURCE_BARRIER::UAV(resource.getResource().Get()));
+    addUsedResource(resource.getResource());
+}
+
 void CommandList::clearRenderTargetView(Resource &renderTarget, const FLOAT colorRGBA[4]) {
     commitResourceBarriers();
     commandList->ClearRenderTargetView(renderTarget.getRtv(), colorRGBA, 0, nullptr);

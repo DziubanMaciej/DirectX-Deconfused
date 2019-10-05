@@ -92,6 +92,7 @@ protected:
         CommandQueue &uploadingQueue;
         uint64_t uploadFence;
     };
+    void waitOnGpuForGpuUpload(CommandQueue &queue);
     void uploadToGPU(ApplicationImpl &application, const void *data, UINT rowPitch, UINT slicePitch);
     void recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data, UINT rowPitch, UINT slicePitch);
     bool isUploadInProgressWithoutLock();

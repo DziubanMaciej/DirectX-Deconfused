@@ -98,6 +98,13 @@ ID3D12ResourcePtr Resource::createResource(ID3D12DevicePtr device, const D3D12_H
     return resource;
 }
 
+void Resource::waitOnGpuForGpuUpload(CommandQueue &queue) {
+    std::lock_guard<std::mutex> gpuUploadDataLock{ this->gpuUploadDataLock };
+    if (gpuUploadData) {
+        queue.waitOnGpu(gpuUploadData->uploadingQueue, gpuUploadData->uploadFence);
+    }
+}
+
 void Resource::uploadToGPU(ApplicationImpl &application, const void *data, UINT rowPitch, UINT slicePitch) {
     assert(gpuUploadData == nullptr);
 

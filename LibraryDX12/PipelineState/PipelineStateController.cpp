@@ -54,6 +54,9 @@ void PipelineStateController::compile(Identifier identifier) {
     case Identifier::PIPELINE_STATE_TEXTURE_NORMAL_MAP:
         compilePipelineStateTextureNormalMap(rootSignature, pipelineState);
         break;
+    case Identifier::PIPELINE_STATE_GENERATE_MIPS:
+        compilePipelineStateGenerateMips(rootSignature, pipelineState);
+        break;
     case Identifier::PIPELINE_STATE_SSAO:
         compilePipelineStateSSAO(rootSignature, pipelineState);
         break;
@@ -129,6 +132,7 @@ void PipelineStateController::compilePipelineStateTextureNormal(RootSignature &r
     // Root signature - crossthread data
     StaticSampler sampler{D3D12_SHADER_VISIBILITY_PIXEL};
     sampler.addressMode(D3D12_TEXTURE_ADDRESS_MODE_MIRROR);
+    sampler.filter(D3D12_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR);
     DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
     table.appendSrvRange(t(0), 1); // diffuse texture
     rootSignature
@@ -241,6 +245,29 @@ void PipelineStateController::compilePipelineStateShadowMapTextureNormalMap(Root
     // Pipeline state object
     GraphicsPipelineState{inputLayout, rootSignature}
         .VS(L"ShadowMap/texture_normal_map_VS.hlsl")
+        .compile(device, pipelineState);
+}
+
+// --------------------------------------------------------------------------------------------- Mip maps
+
+void PipelineStateController::compilePipelineStateGenerateMips(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
+    StaticSampler sampler{D3D12_SHADER_VISIBILITY_ALL};
+    sampler.filter(D3D12_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT)
+        .addressMode(D3D12_TEXTURE_ADDRESS_MODE_CLAMP);
+    DescriptorTable table{D3D12_SHADER_VISIBILITY_ALL};
+    table.appendSrvRange(t(0), 1)
+        .appendUavRange(u(0), 1);
+
+    // Root signature - crossthread data
+    rootSignature
+        .appendDescriptorTable(std::move(table))
+        .append32bitConstant<GenerateMipsCB>(b(0), D3D12_SHADER_VISIBILITY_ALL)
+        .appendStaticSampler(s(0), sampler)
+        .compile(device);
+
+    // Compile shaders
+    return ComputePipelineState{rootSignature}
+        .CS(L"generate_mip_maps_CS.hlsl", nullptr)
         .compile(device, pipelineState);
 }
 
