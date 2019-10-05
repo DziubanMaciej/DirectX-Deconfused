@@ -38,7 +38,7 @@ public:
     auto getResource() { return resource; };
     const auto getResource() const { return resource; }
     void reset();
-    void setResource(ID3D12ResourcePtr resource) { this->resource = resource; };
+    void setResource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES state);
 
     // Gpu upload functions
     bool isUploadInProgress();
@@ -70,6 +70,7 @@ protected:
     void uploadToGPU(ApplicationImpl &application, const void *data, UINT rowPitch, UINT slicePitch);
     void recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data, UINT rowPitch, UINT slicePitch);
 
+private:
     // state accessors, should be used only by classes making transitions, hence the friend declarations
     void setState(D3D12_RESOURCE_STATES state, UINT subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
     D3D12_RESOURCE_STATES getState() const;
