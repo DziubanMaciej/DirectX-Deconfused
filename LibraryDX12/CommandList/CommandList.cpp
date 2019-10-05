@@ -22,7 +22,7 @@ CommandList::~CommandList() {
 }
 
 void CommandList::transitionBarrier(Resource &resource, D3D12_RESOURCE_STATES targetState) {
-    const auto currentState = resource.getState();
+    const auto currentState = resource.getState().getState();
     if (currentState != targetState) {
         cachedResourceBarriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(resource.getResource().Get(), currentState, targetState));
         resource.setState(Resource::ResourceState{targetState});

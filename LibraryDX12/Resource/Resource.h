@@ -28,6 +28,7 @@ public:
 
         D3D12_RESOURCE_STATES getState() const;
         void setState(D3D12_RESOURCE_STATES state, UINT subresource);
+        bool areAllSubresourcesInState(D3D12_RESOURCE_STATES state) const;
     };
 
     /// Base constructor initializing every member. It is called by every other constructor. It can also be used
@@ -87,7 +88,7 @@ protected:
 
 private:
     // state accessors, should be used only by classes making transitions, hence the friend declarations
-    D3D12_RESOURCE_STATES getState() const { return state.getState(); }
+    const ResourceState &getState() const { return state; }
     void setState(const ResourceState &state) { this->state = state; }
     friend class CommandList;
     friend class AcquiredD2DWrappedResource;
