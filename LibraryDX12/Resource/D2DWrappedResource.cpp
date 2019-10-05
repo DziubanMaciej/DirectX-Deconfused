@@ -66,7 +66,7 @@ AcquiredD2DWrappedResource::~AcquiredD2DWrappedResource() {
 
     // Manage state
     assert(parent->d12Resource.getState() == parent->inState);
-    parent->d12Resource.setState(parent->outState);
+    parent->d12Resource.setState(Resource::ResourceState{parent->outState});
 
     // Flush to submit the D2D command list to the shared command queue.
     ApplicationImpl::getInstance().getD2DContext().getD3D11DeviceContext()->Flush();

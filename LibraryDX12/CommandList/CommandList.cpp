@@ -25,7 +25,7 @@ void CommandList::transitionBarrier(Resource &resource, D3D12_RESOURCE_STATES ta
     const auto currentState = resource.getState();
     if (currentState != targetState) {
         cachedResourceBarriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(resource.getResource().Get(), currentState, targetState));
-        resource.setState(targetState);
+        resource.setState(Resource::ResourceState{targetState});
     }
 }
 

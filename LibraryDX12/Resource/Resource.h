@@ -15,6 +15,21 @@ class Resource : DXD::NonCopyable {
 public:
     constexpr static UINT maxSubresourcesCount = 10;
 
+    struct ResourceState {
+        explicit ResourceState(D3D12_RESOURCE_STATES state) : resourceState(state) {}
+        ResourceState &operator=(D3D12_RESOURCE_STATES state) {
+            resourceState = state;
+            hasSubresourceSpecificState = false;
+            return *this;
+        }
+        D3D12_RESOURCE_STATES resourceState;
+        bool hasSubresourceSpecificState = false;
+        D3D12_RESOURCE_STATES subresourcesStates[maxSubresourcesCount] = {};
+
+        D3D12_RESOURCE_STATES getState() const;
+        void setState(D3D12_RESOURCE_STATES state, UINT subresource);
+    };
+
     /// Base constructor initializing every member. It is called by every other constructor. It can also be used
     /// to wrap an existing ID3D12Resource, e.g. a back buffer allocated by SwapChain.
     explicit Resource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES state);
@@ -72,23 +87,13 @@ protected:
 
 private:
     // state accessors, should be used only by classes making transitions, hence the friend declarations
-    void setState(D3D12_RESOURCE_STATES state, UINT subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
-    D3D12_RESOURCE_STATES getState() const;
+    D3D12_RESOURCE_STATES getState() const { return state.getState(); }
+    void setState(const ResourceState &state) { this->state = state; }
     friend class CommandList;
     friend class AcquiredD2DWrappedResource;
 
     // Data
-    struct ResourceState {
-        explicit ResourceState(D3D12_RESOURCE_STATES state) : resourceState(state) {}
-        ResourceState &operator=(D3D12_RESOURCE_STATES state) {
-            resourceState = state;
-            hasSubresourceSpecificState = false;
-            return *this;
-        }
-        D3D12_RESOURCE_STATES resourceState;
-        bool hasSubresourceSpecificState = false;
-        D3D12_RESOURCE_STATES subresourcesStates[maxSubresourcesCount] = {};
-    } state;
+    ResourceState state;
     ID3D12ResourcePtr resource = {};
     UINT subresourcesCount = 1u;
     std::unique_ptr<GpuUploadData> gpuUploadData = {};

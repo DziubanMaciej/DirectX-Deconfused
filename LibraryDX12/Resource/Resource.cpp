@@ -123,20 +123,23 @@ void Resource::recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &comm
     commandList.addUsedResource(intermediateResource.getResource());
 }
 
-void Resource::setState(D3D12_RESOURCE_STATES state, UINT subresource) {
+void Resource::ResourceState::setState(D3D12_RESOURCE_STATES state, UINT subresource) {
     if (subresource == D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES) {
-        this->state.resourceState = state;
-        this->state.hasSubresourceSpecificState = false;
+        // Setting all subresources to the same state
+        this->resourceState = state;
+        this->hasSubresourceSpecificState = false;
+
     } else {
-        if (!this->state.hasSubresourceSpecificState) {
-            std::fill_n(this->state.subresourcesStates, maxSubresourcesCount, this->state.resourceState);
-            this->state.hasSubresourceSpecificState = true;
+        // Setting state for only one subresource
+        if (!this->hasSubresourceSpecificState) {
+            std::fill_n(this->subresourcesStates, maxSubresourcesCount, this->resourceState);
+            this->hasSubresourceSpecificState = true;
         }
-        this->state.subresourcesStates[subresource] = state;
+        this->subresourcesStates[subresource] = state;
     };
 }
 
-D3D12_RESOURCE_STATES Resource::getState() const {
-    assert(!this->state.hasSubresourceSpecificState);
-    return this->state.resourceState;
+D3D12_RESOURCE_STATES Resource::ResourceState::getState() const {
+    assert(!this->hasSubresourceSpecificState);
+    return this->resourceState;
 }
