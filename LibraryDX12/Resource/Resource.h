@@ -13,6 +13,8 @@ class AcquiredD2DWrappedResource;
 
 class Resource : DXD::NonCopyable {
 public:
+    constexpr static UINT maxSubresourcesCount = 10;
+
     /// Base constructor initializing every member. It is called by every other constructor. It can also be used
     /// to wrap an existing ID3D12Resource, e.g. a back buffer allocated by SwapChain.
     explicit Resource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES state);
@@ -37,7 +39,6 @@ public:
     const auto getResource() const { return resource; }
     void reset();
     void setResource(ID3D12ResourcePtr resource) { this->resource = resource; };
-    D3D12_RESOURCE_STATES getState() const { return state; }
 
     // Gpu upload functions
     bool isUploadInProgress();
@@ -69,13 +70,24 @@ protected:
     void uploadToGPU(ApplicationImpl &application, const void *data, UINT rowPitch, UINT slicePitch);
     void recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data, UINT rowPitch, UINT slicePitch);
 
-    // state setter, should be used only by classes making transitions, hence the friend declarations
-    void setState(D3D12_RESOURCE_STATES state) { this->state = state; }
+    // state accessors, should be used only by classes making transitions, hence the friend declarations
+    void setState(D3D12_RESOURCE_STATES state, UINT subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
+    D3D12_RESOURCE_STATES getState() const;
     friend class CommandList;
     friend class AcquiredD2DWrappedResource;
 
     // Data
-    D3D12_RESOURCE_STATES state = {};
+    struct ResourceState {
+        explicit ResourceState(D3D12_RESOURCE_STATES state) : resourceState(state) {}
+        ResourceState &operator=(D3D12_RESOURCE_STATES state) {
+            resourceState = state;
+            hasSubresourceSpecificState = false;
+            return *this;
+        }
+        D3D12_RESOURCE_STATES resourceState;
+        bool hasSubresourceSpecificState = false;
+        D3D12_RESOURCE_STATES subresourcesStates[maxSubresourcesCount] = {};
+    } state;
     ID3D12ResourcePtr resource = {};
     std::unique_ptr<GpuUploadData> gpuUploadData = {};
     DescriptorAllocation descriptorsCbvSrvUav;

@@ -100,7 +100,7 @@ void Resource::uploadToGPU(ApplicationImpl &application, const void *data, UINT 
 }
 
 void Resource::recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data, UINT rowPitch, UINT slicePitch) {
-    assert(state & D3D12_RESOURCE_STATE_COPY_DEST);
+    assert(getState() & D3D12_RESOURCE_STATE_COPY_DEST);
 
     // Create buffer on upload heap
     Resource intermediateResource(device, D3D12_HEAP_TYPE_UPLOAD, D3D12_HEAP_FLAG_NONE, GetRequiredIntermediateSize(resource.Get(), 0, 1), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr);
@@ -114,4 +114,22 @@ void Resource::recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &comm
 
     // Make intermediateResource tracked so it's not deleted while still being processed on the GPU
     commandList.addUsedResource(intermediateResource.getResource());
+}
+
+void Resource::setState(D3D12_RESOURCE_STATES state, UINT subresource) {
+    if (subresource == D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES) {
+        this->state.resourceState = state;
+        this->state.hasSubresourceSpecificState = false;
+    } else {
+        if (!this->state.hasSubresourceSpecificState) {
+            std::fill_n(this->state.subresourcesStates, maxSubresourcesCount, this->state.resourceState);
+            this->state.hasSubresourceSpecificState = true;
+        }
+        this->state.subresourcesStates[subresource] = state;
+    };
+}
+
+D3D12_RESOURCE_STATES Resource::getState() const {
+    assert(!this->state.hasSubresourceSpecificState);
+    return this->state.resourceState;
 }
