@@ -38,7 +38,7 @@ public:
     auto getResource() { return resource; };
     const auto getResource() const { return resource; }
     void reset();
-    void setResource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES state);
+    void setResource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES state, UINT subresourcesCount);
 
     // Gpu upload functions
     bool isUploadInProgress();
@@ -90,6 +90,7 @@ private:
         D3D12_RESOURCE_STATES subresourcesStates[maxSubresourcesCount] = {};
     } state;
     ID3D12ResourcePtr resource = {};
+    UINT subresourcesCount = 1u;
     std::unique_ptr<GpuUploadData> gpuUploadData = {};
     DescriptorAllocation descriptorsCbvSrvUav;
     DescriptorAllocation descriptorsDsv;

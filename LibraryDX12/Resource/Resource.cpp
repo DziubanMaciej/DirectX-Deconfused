@@ -29,9 +29,11 @@ void Resource::reset() {
     resource.Reset();
 }
 
-void Resource::setResource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES state) {
+void Resource::setResource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES state, UINT subresourcesCount) {
+    assert(subresourcesCount < maxSubresourcesCount);
     this->resource = resource;
     this->state = state;
+    this->subresourcesCount = subresourcesCount;
 }
 
 bool Resource::isUploadInProgress() {

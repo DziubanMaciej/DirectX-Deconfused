@@ -67,7 +67,7 @@ void SwapChain::updateRenderTargetViews() {
         SET_OBJECT_NAME(backBuffer, L"BackBuffer%d", i);
 
         // Update DX12 back buffer data
-        backBufferEntry.backBuffer.setResource(backBuffer, D3D12_RESOURCE_STATE_PRESENT);
+        backBufferEntry.backBuffer.setResource(backBuffer, D3D12_RESOURCE_STATE_PRESENT, 1u);
         backBufferEntry.backBuffer.createRtv(nullptr);
 
         // Update DX11/D2D back buffer data
