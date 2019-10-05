@@ -16,6 +16,13 @@ public:
     constexpr static UINT maxSubresourcesCount = 10;
 
     struct ResourceState {
+        struct BarriersCreationData {
+            BarriersCreationData(Resource &resource) : resource(resource) {}
+            Resource &resource;
+            D3D12_RESOURCE_BARRIER barriers[maxSubresourcesCount] = {};
+            UINT barriersCount = 0u;
+        };
+
         explicit ResourceState(D3D12_RESOURCE_STATES state) : resourceState(state) {}
         ResourceState &operator=(D3D12_RESOURCE_STATES state) {
             resourceState = state;
@@ -26,8 +33,8 @@ public:
         bool hasSubresourceSpecificState = false;
         D3D12_RESOURCE_STATES subresourcesStates[maxSubresourcesCount] = {};
 
-        D3D12_RESOURCE_STATES getState() const;
-        void setState(D3D12_RESOURCE_STATES state, UINT subresource);
+        D3D12_RESOURCE_STATES getState(UINT subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES) const;
+        void setState(D3D12_RESOURCE_STATES state, UINT subresource, BarriersCreationData *outBarriers = nullptr);
         bool areAllSubresourcesInState(D3D12_RESOURCE_STATES state) const;
     };
 
@@ -53,6 +60,7 @@ public:
     // Accessors
     auto getResource() { return resource; };
     const auto getResource() const { return resource; }
+    auto getSubresourcesCount() const { return subresourcesCount; }
     void reset();
     void setResource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES state, UINT subresourcesCount);
 

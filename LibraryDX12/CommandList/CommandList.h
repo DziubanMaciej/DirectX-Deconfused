@@ -29,7 +29,7 @@ public:
     /// Registers the command list and allocator back to the commandAllocatorController for later reuse
     ~CommandList();
 
-    void transitionBarrier(Resource &resource, D3D12_RESOURCE_STATES targetState);
+    void transitionBarrier(Resource &resource, D3D12_RESOURCE_STATES targetState, UINT subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
 
     void clearRenderTargetView(Resource &renderTarget, const FLOAT colorRGBA[4]);
     void clearDepthStencilView(Resource &dsBuffer, D3D12_CLEAR_FLAGS clearFlags, FLOAT depth, UINT8 stencil);

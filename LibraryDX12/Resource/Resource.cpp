@@ -123,18 +123,45 @@ void Resource::recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &comm
     commandList.addUsedResource(intermediateResource.getResource());
 }
 
-void Resource::ResourceState::setState(D3D12_RESOURCE_STATES state, UINT subresource) {
+void Resource::ResourceState::setState(D3D12_RESOURCE_STATES state, UINT subresource, BarriersCreationData *outBarriers) {
+    // Helper lambda function to avoid duplication
+    auto addBarrier = [this, outBarriers, state](UINT subresource) {
+        const auto currentState = getState(subresource);
+        if (currentState != state) {
+            auto &barrier = outBarriers->barriers[outBarriers->barriersCount++];
+            barrier = CD3DX12_RESOURCE_BARRIER::Transition(outBarriers->resource.getResource().Get(), currentState, state, subresource);
+        }
+    };
+
+    // Setting all subresources to the same state
     if (subresource == D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES) {
-        // Setting all subresources to the same state
+        // Generate transition barriers
+        if (outBarriers) {
+            if (this->hasSubresourceSpecificState) {
+                for (auto currentSubresource = 0u; currentSubresource < outBarriers->resource.getSubresourcesCount(); currentSubresource++) {
+                    addBarrier(currentSubresource);
+                }
+            } else {
+                addBarrier(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
+            }
+        }
+        // Update data
         this->resourceState = state;
         this->hasSubresourceSpecificState = false;
 
-    } else {
-        // Setting state for only one subresource
+    }
+    // Setting state for only one subresource
+    else {
+        // Generate transition barrier
+        addBarrier(subresource);
+
+        // Set all subresources to correct state
         if (!this->hasSubresourceSpecificState) {
-            std::fill_n(this->subresourcesStates, maxSubresourcesCount, this->resourceState);
+            std::fill_n(this->subresourcesStates, outBarriers->resource.getSubresourcesCount(), this->resourceState);
             this->hasSubresourceSpecificState = true;
         }
+
+        // Update target subresource
         this->subresourcesStates[subresource] = state;
     };
 }
@@ -143,7 +170,14 @@ bool Resource::ResourceState::areAllSubresourcesInState(D3D12_RESOURCE_STATES st
     return !hasSubresourceSpecificState && (resourceState == state);
 }
 
-D3D12_RESOURCE_STATES Resource::ResourceState::getState() const {
-    assert(!this->hasSubresourceSpecificState);
-    return this->resourceState;
+D3D12_RESOURCE_STATES Resource::ResourceState::getState(UINT subresource) const {
+    if (subresource == D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES) {
+        assert(!this->hasSubresourceSpecificState);
+        return this->resourceState;
+    } else {
+        if (hasSubresourceSpecificState) {
+            return this->subresourcesStates[subresource];
+        }
+        return this->resourceState;
+    }
 }

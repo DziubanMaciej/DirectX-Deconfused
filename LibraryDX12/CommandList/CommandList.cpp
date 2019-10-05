@@ -21,12 +21,17 @@ CommandList::~CommandList() {
     assert(!commandAllocator && !commandList); // registerAllData should be called
 }
 
-void CommandList::transitionBarrier(Resource &resource, D3D12_RESOURCE_STATES targetState) {
-    const auto currentState = resource.getState().getState();
-    if (currentState != targetState) {
-        cachedResourceBarriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(resource.getResource().Get(), currentState, targetState));
-        resource.setState(Resource::ResourceState{targetState});
-    }
+void CommandList::transitionBarrier(Resource &resource, D3D12_RESOURCE_STATES targetState, UINT subresource) {
+    // Update internal Resource state and compute required resource barriers
+    Resource::ResourceState state = resource.getState();
+    Resource::ResourceState::BarriersCreationData barriers{resource};
+    state.setState(targetState, subresource, &barriers);
+    resource.setState(state);
+
+    // Push barriers to the command list
+    const auto barriersStart = barriers.barriers;
+    const auto barriersEnd = barriers.barriers + barriers.barriersCount;
+    cachedResourceBarriers.insert(cachedResourceBarriers.end(), barriersStart, barriersEnd);
 }
 
 void CommandList::clearRenderTargetView(Resource &renderTarget, const FLOAT colorRGBA[4]) {
