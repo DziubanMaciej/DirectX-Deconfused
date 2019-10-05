@@ -40,6 +40,7 @@ public:
 
     void setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, ID3D12DescriptorHeapPtr descriptorHeap);
 
+    void setCbvSrvUavInDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const Resource &resource, D3D12_CPU_DESCRIPTOR_HANDLE descriptor);
     void setCbvInDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const Resource &resource);
     void setSrvInDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const Resource &resource);
     void setUavInDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const Resource &resource);
