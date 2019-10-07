@@ -117,22 +117,7 @@ TextureGpuLoadResult TextureImpl::gpuLoad(const TextureGpuLoadArgs &args) {
 
     {
         auto descriptors = ApplicationImpl::getInstance().getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 2);
-        D3D12_SHADER_RESOURCE_VIEW_DESC srvDescription = {};
-        srvDescription.Format = result.description.Format;
-        srvDescription.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-        srvDescription.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-        srvDescription.Texture2D.MipLevels = 1;
-        srvDescription.Texture2D.MostDetailedMip = 0;
-        srvDescription.Texture2D.PlaneSlice = 0;
-        srvDescription.Texture2D.ResourceMinLODClamp = 0;
-        ApplicationImpl::getInstance().getDevice()->CreateShaderResourceView(getResource().Get(), &srvDescription, descriptors.getCpuHandle(0));
-        D3D12_UNORDERED_ACCESS_VIEW_DESC uavDescription = {};
-        uavDescription.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-        uavDescription.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
-        uavDescription.Texture2D.MipSlice = 1;
-        uavDescription.Texture2D.PlaneSlice = 0;
-
-        ApplicationImpl::getInstance().getDevice()->CreateUnorderedAccessView(getResource().Get(), nullptr, &uavDescription, descriptors.getCpuHandle(1));
+        createDescriptorsForMipMapGeneration(descriptors, getResource(), result.description.Format, 0, 1, 1);
 
         auto &queue = ApplicationImpl::getInstance().getDirectCommandQueue();
         this->waitOnGpuForGpuUpload(queue);
@@ -207,5 +192,50 @@ D3D12_RESOURCE_DESC TextureImpl::createTextureDescription(const DirectX::TexMeta
     default:
         UNREACHABLE_CODE();
     }
+    textureDesc.MipLevels = computeMaxMipsCount(metadata.width, metadata.height);
     return textureDesc;
+}
+
+uint32_t TextureImpl::computeMaxMipsCount(uint32_t width, uint32_t height) {
+    const auto biggerDimension = std::max(width, height);
+    DWORD result;
+    auto success = _BitScanReverse(&result, biggerDimension);
+    assert(success);
+    return result;
+}
+
+void TextureImpl::createDescriptorsForMipMapGeneration(DescriptorAllocation &descriptorAllocation, ID3D12ResourcePtr resource,
+                                                       DXGI_FORMAT format, uint32_t sourceMip, uint32_t outputMipsCount, uint32_t maxOutputMipsCount) {
+    auto device = ApplicationImpl::getInstance().getDevice();
+
+    // SRV
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDescription = {};
+    srvDescription.Format = format;
+    srvDescription.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDescription.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDescription.Texture2D.MipLevels = 1;
+    srvDescription.Texture2D.MostDetailedMip = sourceMip;
+    srvDescription.Texture2D.PlaneSlice = 0;
+    srvDescription.Texture2D.ResourceMinLODClamp = 0;
+    device->CreateShaderResourceView(resource.Get(), &srvDescription, descriptorAllocation.getCpuHandle(0));
+
+    // Real UAVs
+    for (auto i = 0u; i < outputMipsCount; i++) {
+        D3D12_UNORDERED_ACCESS_VIEW_DESC uavDescription = {};
+        uavDescription.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // TODO
+        uavDescription.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+        uavDescription.Texture2D.MipSlice = sourceMip + i + 1;
+        uavDescription.Texture2D.PlaneSlice = 0;
+        device->CreateUnorderedAccessView(resource.Get(), nullptr, &uavDescription, descriptorAllocation.getCpuHandle(i + 1));
+    }
+
+    // Null UAVs, required by the runtime to be bound
+    for (auto i = outputMipsCount; i < maxOutputMipsCount; i++) {
+        D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
+        uavDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // TODO
+        uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
+        uavDesc.Texture2D.MipSlice = 0;
+        uavDesc.Texture2D.PlaneSlice = 0;
+        device->CreateUnorderedAccessView(nullptr, nullptr, &uavDesc, descriptorAllocation.getCpuHandle(i + 1));
+    }
 }
