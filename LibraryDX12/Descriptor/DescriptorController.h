@@ -4,6 +4,7 @@
 
 #include <array>
 #include <vector>
+#include <mutex>
 
 class DescriptorController : DXD::NonCopyableAndMovable {
 public:
@@ -19,4 +20,6 @@ private:
     DescriptorHeap gpuCbvSrcUavHeap;
     DescriptorHeap gpuSamplerHeap;
     ID3D12DevicePtr device;
+    std::mutex allocateCpuLock = {};
+    std::mutex allocateGpuLock = {};
 };

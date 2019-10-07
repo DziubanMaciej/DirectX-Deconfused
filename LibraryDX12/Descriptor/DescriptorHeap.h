@@ -5,6 +5,7 @@
 #include <DXD/ExternalHeadersWrappers/d3d12.h>
 #include <map>
 #include <memory>
+#include <mutex>
 
 class DescriptorAllocation;
 
@@ -61,4 +62,5 @@ private:
     const D3D12_GPU_DESCRIPTOR_HANDLE gpuHeapStartHandle;
     FreeList freeList = {};
     UINT totalFreeSpace;
+    std::mutex lock;
 };

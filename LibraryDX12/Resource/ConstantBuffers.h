@@ -50,6 +50,11 @@ struct PostProcessApplyBloomCB {
 
 using PostProcessGaussianBlurComputeCB = PostProcessApplyBloomCB;
 
+struct GenerateMipsCB {
+    XMFLOAT2 texelSize;
+    uint32_t sourceMipLevel;
+};
+
 struct SsaoCB {
     float screenWidth;
     float screenHeight;

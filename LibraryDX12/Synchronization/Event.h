@@ -13,9 +13,9 @@ public:
     Event(Event &&other) noexcept;
     Event &operator=(Event &&other) noexcept;
 
-    void wait();
-    void wait(DWORD milliseconds);
-    void wait(std::chrono::milliseconds duration);
+    void wait() const;
+    void wait(DWORD milliseconds) const;
+    void wait(std::chrono::milliseconds duration) const;
 
     HANDLE getHandle() const { return handle; }
 

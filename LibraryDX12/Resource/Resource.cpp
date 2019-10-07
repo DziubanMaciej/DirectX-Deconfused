@@ -25,6 +25,7 @@ Resource::Resource(ID3D12DevicePtr device, D3D12_HEAP_TYPE heapType, D3D12_HEAP_
     : Resource(createResource(device, &CD3DX12_HEAP_PROPERTIES(heapType), heapFlags, &CD3DX12_RESOURCE_DESC::Buffer(bufferSize), initialResourceState, pOptimizedClearValue), initialResourceState) {}
 
 void Resource::reset() {
+    std::lock_guard<std::mutex> gpuUploadDataLock{this->gpuUploadDataLock};
     gpuUploadData.reset();
     resource.Reset();
 }
@@ -37,14 +38,20 @@ void Resource::setResource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES sta
 }
 
 bool Resource::isUploadInProgress() {
-    if (gpuUploadData != nullptr && gpuUploadData->uploadingQueue.getFence().isComplete(gpuUploadData->uploadFence)) {
+    std::lock_guard<std::mutex> gpuUploadDataLock{this->gpuUploadDataLock};
+    return isUploadInProgressWithoutLock();
+}
+
+bool Resource::isUploadInProgressWithoutLock() {
+    if (gpuUploadData != nullptr && gpuUploadData->uploadingQueue.isFenceComplete(gpuUploadData->uploadFence)) {
         gpuUploadData.reset();
     }
     return gpuUploadData != nullptr;
 }
 
 void Resource::registerUpload(CommandQueue &uploadingQueue, uint64_t uploadFence) {
-    assert(!Resource::isUploadInProgress()); // only check GPU upload, not CPU loading
+    std::lock_guard<std::mutex> gpuUploadDataLock{this->gpuUploadDataLock};
+    assert(!isUploadInProgressWithoutLock()); // only check GPU upload, not CPU loading
     this->gpuUploadData = std::make_unique<GpuUploadData>(uploadingQueue, uploadFence);
 }
 
@@ -89,6 +96,13 @@ ID3D12ResourcePtr Resource::createResource(ID3D12DevicePtr device, const D3D12_H
         pOptimizedClearValue,
         IID_PPV_ARGS(&resource)));
     return resource;
+}
+
+void Resource::waitOnGpuForGpuUpload(CommandQueue &queue) {
+    std::lock_guard<std::mutex> gpuUploadDataLock{ this->gpuUploadDataLock };
+    if (gpuUploadData) {
+        queue.waitOnGpu(gpuUploadData->uploadingQueue, gpuUploadData->uploadFence);
+    }
 }
 
 void Resource::uploadToGPU(ApplicationImpl &application, const void *data, UINT rowPitch, UINT slicePitch) {

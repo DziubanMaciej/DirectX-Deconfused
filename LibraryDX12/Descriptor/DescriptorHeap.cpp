@@ -15,6 +15,8 @@ DescriptorHeap::DescriptorHeap(ID3D12DevicePtr device, D3D12_DESCRIPTOR_HEAP_TYP
 }
 
 std::unique_ptr<DescriptorAllocation> DescriptorHeap::allocate(UINT descriptorsCount) {
+    std::lock_guard<std::mutex> lock{this->lock};
+
     if (descriptorsCount > totalFreeSpace) {
         return false;
     }
@@ -49,6 +51,8 @@ std::unique_ptr<DescriptorAllocation> DescriptorHeap::allocate(UINT descriptorsC
 }
 
 void DescriptorHeap::deallocate(const DescriptorAllocation &allocation) {
+    std::lock_guard<std::mutex> lock{this->lock};
+
     const auto offset = allocation.getOffsetInHeap();
     const auto size = allocation.getHandlesCount();
     auto right = findFreeRangeAfter(offset);

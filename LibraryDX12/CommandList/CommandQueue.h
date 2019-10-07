@@ -17,8 +17,12 @@ public:
     ~CommandQueue();
 
     auto getCommandQueue() { return commandQueue; }
-    auto &getFence() { return fence; }
     auto &getCommandAllocatorController() { return commandAllocatorController; }
+
+    bool isFenceComplete(uint64_t fenceValue);
+    void waitOnCpu(uint64_t fenceValue);
+    void waitOnGpu(const CommandQueue &queueToWaitFor, uint64_t fenceValue);
+
 
     uint64_t executeCommandListsAndSignal(std::vector<CommandList *> &commandLists);
     uint64_t executeCommandListAndSignal(CommandList &commandList);
