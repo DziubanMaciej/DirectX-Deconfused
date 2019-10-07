@@ -6,6 +6,7 @@
 #include "DXD/Utility/NonCopyableAndMovable.h"
 
 #include <ExternalHeaders/Wrappers/d3dx12.h>
+#include <mutex>
 
 class ApplicationImpl;
 class CommandList;
@@ -93,6 +94,7 @@ protected:
     };
     void uploadToGPU(ApplicationImpl &application, const void *data, UINT rowPitch, UINT slicePitch);
     void recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data, UINT rowPitch, UINT slicePitch);
+    bool isUploadInProgressWithoutLock();
 
 private:
     // state accessors, should be used only by classes making transitions, hence the friend declarations
@@ -109,4 +111,5 @@ private:
     DescriptorAllocation descriptorsCbvSrvUav;
     DescriptorAllocation descriptorsDsv;
     DescriptorAllocation descriptorsRtv;
+    std::mutex gpuUploadDataLock = {};
 };
