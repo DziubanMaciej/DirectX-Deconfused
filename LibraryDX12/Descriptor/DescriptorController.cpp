@@ -11,6 +11,8 @@ DescriptorController::DescriptorController(ID3D12DevicePtr device)
       gpuSamplerHeap(device, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER, 1024, D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE) {}
 
 DescriptorAllocation DescriptorController::allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount) {
+    std::lock_guard<std::mutex> lock{allocateCpuLock};
+
     HeapVector &heapsForGivenType = this->cpuHeaps[type];
     std::unique_ptr<DescriptorAllocation> allocation = nullptr;
 
@@ -34,6 +36,8 @@ DescriptorAllocation DescriptorController::allocateCpu(D3D12_DESCRIPTOR_HEAP_TYP
 }
 
 std::pair<ID3D12DescriptorHeapPtr, DescriptorAllocation> DescriptorController::allocateGpu(D3D12_DESCRIPTOR_HEAP_TYPE type, UINT descriptorsCount) {
+    std::lock_guard<std::mutex> lock{allocateGpuLock};
+
     DescriptorHeap &heap = getGpuHeap(type);
     ID3D12DescriptorHeapPtr dx12Heap = heap.getDescriptorHeap();
 
