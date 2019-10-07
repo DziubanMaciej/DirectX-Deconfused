@@ -121,8 +121,8 @@ void RenderData::resize(int width, int height) {
     D3D12_RESOURCE_DESC ssaoMapDesc = {};
     ssaoMapDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     ssaoMapDesc.Alignment = 0;
-    ssaoMapDesc.Width = width;
-    ssaoMapDesc.Height = height;
+    ssaoMapDesc.Width = width/2;
+    ssaoMapDesc.Height = height/2;
     ssaoMapDesc.DepthOrArraySize = 1;
     ssaoMapDesc.MipLevels = 0;
     ssaoMapDesc.Format = DXGI_FORMAT_R8_UNORM;
@@ -147,8 +147,8 @@ void RenderData::resize(int width, int height) {
     D3D12_RESOURCE_DESC ssrMapDesc = {};
     ssrMapDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     ssrMapDesc.Alignment = 0;
-    ssrMapDesc.Width = width;
-    ssrMapDesc.Height = height;
+    ssrMapDesc.Width = width/2;
+    ssrMapDesc.Height = height/2;
     ssrMapDesc.DepthOrArraySize = 1;
     ssrMapDesc.MipLevels = 0;
     ssrMapDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -169,7 +169,7 @@ void RenderData::resize(int width, int height) {
     ssrMap->getResource()->SetName(L"SSR map");
     SET_OBJECT_NAME(*ssrMap, L"SsrMap");
 
-    // SSR map
+    // Lighting output
     D3D12_RESOURCE_DESC loDesc = {};
     loDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     loDesc.Alignment = 0;

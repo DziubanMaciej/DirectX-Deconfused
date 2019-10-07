@@ -120,7 +120,14 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
 
     PS_OUT result;
 
-    result.scene = ((OUT_Color * (1 - pow(INspecularity.x, 2.0f))) + float4((pow(INspecularity.x, 2.0f) * ssrMap.Sample(g_sampler, float2(uBase, vBase)).xyz), 1.0f)) * INssao;
+    if (INspecularity.x > 0.0f) {
+        float3 INssr = ssrMap.Sample(g_sampler, float2(uBase, vBase)).xyz;
+        float ssrPower = pow(INspecularity.x, 2.0f);
+        result.scene = float4(((OUT_Color.xyz * (1 - ssrPower)) + (ssrPower * INssr)) * INssao, 1.0f);
+    } else {
+        result.scene = OUT_Color * INssao;
+    }
+
     result.lightingOutput = OUT_Color * INssao;
 
     const float brightness = dot(OUT_Color.rgb, float3(0.2126, 0.7152, 0.0722));

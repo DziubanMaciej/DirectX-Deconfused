@@ -402,6 +402,8 @@ void PipelineStateController::compilePipelineStateSprite(RootSignature &rootSign
 void PipelineStateController::compilePipelineStateLighting(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
     StaticSampler sampler{D3D12_SHADER_VISIBILITY_PIXEL};
+    sampler.filter(D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT);
+
     DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
     table.appendCbvRange(b(0), 1) // light constant buffer
         .appendSrvRange(t(0), 1)  // gbuffer albedo
@@ -435,6 +437,8 @@ void PipelineStateController::compilePipelineStateLighting(RootSignature &rootSi
 void PipelineStateController::compilePipelineStateSSAO(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
     StaticSampler sampler{D3D12_SHADER_VISIBILITY_PIXEL};
+    sampler.lodRange(0, 0);
+
     DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
     table.appendSrvRange(t(0), 1) // gbuffer normal
         .appendSrvRange(t(1), 1); // gbuffer depth
@@ -463,7 +467,7 @@ void PipelineStateController::compilePipelineStateSSAO(RootSignature &rootSignat
 void PipelineStateController::compilePipelineStateSSR(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
     StaticSampler sampler{D3D12_SHADER_VISIBILITY_PIXEL};
-    sampler.lodRange(0, D3D12_FLOAT_TO_SRGB_OFFSET);
+    sampler.lodRange(0, 0);
 
     DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
     table.appendSrvRange(t(0), 1) // gbuffer normal

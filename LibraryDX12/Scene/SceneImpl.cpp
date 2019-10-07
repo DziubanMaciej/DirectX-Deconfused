@@ -332,7 +332,7 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
 }
 
 void SceneImpl::renderSSAO(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, VertexBuffer &fullscreenVB) {
-    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()/2), static_cast<float>(swapChain.getHeight()/2));
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
@@ -347,8 +347,8 @@ void SceneImpl::renderSSAO(SwapChain &swapChain, RenderData &renderData, Command
     commandList.setSrvInDescriptorTable(0, 1, renderData.getDepthStencilBuffer());
 
     SsaoCB ssaoCB;
-    ssaoCB.screenWidth = static_cast<float>(swapChain.getWidth());
-    ssaoCB.screenHeight = static_cast<float>(swapChain.getHeight());
+    ssaoCB.screenWidth = static_cast<float>(swapChain.getWidth()/2);
+    ssaoCB.screenHeight = static_cast<float>(swapChain.getHeight()/2);
     ssaoCB.viewMatrixInverse = camera->getInvViewMatrix();
     ssaoCB.projMatrixInverse = camera->getInvProjectionMatrix();
     commandList.setRoot32BitConstant(1, ssaoCB);
@@ -363,7 +363,7 @@ void SceneImpl::renderSSAO(SwapChain &swapChain, RenderData &renderData, Command
 void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output, VertexBuffer &fullscreenVB) {
 
     // SSR
-    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()/2), static_cast<float>(swapChain.getHeight()/2));
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
@@ -383,11 +383,12 @@ void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, Com
 
     SsrCB ssrCB;
     ssrCB.cameraPosition = XMFLOAT4(camera->getEyePosition().x, camera->getEyePosition().y, camera->getEyePosition().z, 1);
-    ssrCB.screenWidth = static_cast<float>(swapChain.getWidth());
-    ssrCB.screenHeight = static_cast<float>(swapChain.getHeight());
+    ssrCB.screenWidth = static_cast<float>(swapChain.getWidth()/2);
+    ssrCB.screenHeight = static_cast<float>(swapChain.getHeight()/2);
     ssrCB.viewMatrixInverse = camera->getInvViewMatrix();
     ssrCB.projMatrixInverse = camera->getInvProjectionMatrix();
     ssrCB.viewProjectionMatrix = XMMatrixMultiply(camera->getViewMatrix(), camera->getProjectionMatrix());
+    ssrCB.clearColor = XMFLOAT4(backgroundColor[0], backgroundColor[1], backgroundColor[2], 1.0f);
     commandList.setRoot32BitConstant(1, ssrCB);
 
     commandList.IASetVertexBuffer(fullscreenVB);

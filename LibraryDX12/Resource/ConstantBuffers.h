@@ -64,6 +64,7 @@ struct SsrCB {
     XMMATRIX viewMatrixInverse;
     XMMATRIX projMatrixInverse;
     XMMATRIX viewProjectionMatrix;
+    XMFLOAT4 clearColor;
 };
 
 struct PostProcessGaussianBlurData {

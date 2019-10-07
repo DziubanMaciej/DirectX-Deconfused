@@ -17,6 +17,7 @@ struct SsrCB {
     matrix viewMatrixInverse;
     matrix projMatrixInverse;
     matrix viewProjMatrix;
+    float4 clearColor;
 };
 
 ConstantBuffer<SsrCB> scb : register(b1);
@@ -62,9 +63,9 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
     float3 INnormal = normalize(gBufferNormal.Sample(g_sampler, float2(uBase, vBase)).xyz);
 
-    float3 jitt = lerp(float3(0.0f, 0.0f, 0.0f), hash(worldSpacePos.xyz), INspecularity) * 0.05f;
+    //float3 jitt = lerp(float3(0.0f, 0.0f, 0.0f), hash(worldSpacePos.xyz), INspecularity) * 0.05f;
 
-    float3 reflectDir = normalize(reflect(cameraDirection, INnormal)) + jitt;
+    float3 reflectDir = normalize(reflect(cameraDirection, INnormal));
 
     float4 rayPoint = worldSpacePos;
 
@@ -127,7 +128,11 @@ float4 main(PixelShaderInput IN) : SV_Target {
                 }
             }
 
-            return float4(prevFrame.Sample(g_sampler, screenSpacePos.xy).xyz, 1.0f);
+            float screenEdgefactor = smoothstep(0.0f, 0.4f, 1.0f - (distance(float2(0.5f, 0.5f), screenSpacePos.xy) * 2.0f));
+
+            float3 OUT_Color = screenEdgefactor * prevFrame.Sample(g_sampler, screenSpacePos.xy).xyz + (1.0f - screenEdgefactor) * scb.clearColor.xyz;
+
+            return float4(OUT_Color, 1.0f);
         }
     }
 

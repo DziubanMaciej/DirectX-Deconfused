@@ -46,7 +46,7 @@ float main(PixelShaderInput IN) : SV_Target {
     float3 INnormal = gBufferNormal.Sample(g_sampler, float2(uBase, vBase)).xyz;
 
     float ao = 0.0f;
-    float rad = 4.0f / INdepth;
+    float rad = 2.0f / INdepth;
 
     for (int i = -2; i < 3; i++) {
         for (int j = -2; j < 3; j++) {
