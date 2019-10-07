@@ -322,7 +322,7 @@ private:
         objects["porshe"]->setPosition(7 * sinf(rotation) * 0.6f, -1.475f, 7 * cosf(rotation) * 0.6f);
         objects["teapotMesh2"]->setRotation(rotation, rotation, rotation);
 
-        lights["blueLight"]->setPosition(7 * sinf(rotation) * 0.6f, -2.5f, 7 * cosf(rotation) * 0.6f - 14);
+        lights["blueLight"]->setPosition(7 * sinf(rotation) * 0.6f, -2.5f, 7 * cosf(rotation) * 0.6f - 18);
     }
 
     // Callbacks
