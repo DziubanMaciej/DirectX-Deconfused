@@ -21,12 +21,17 @@ CommandList::~CommandList() {
     assert(!commandAllocator && !commandList); // registerAllData should be called
 }
 
-void CommandList::transitionBarrier(Resource &resource, D3D12_RESOURCE_STATES targetState) {
-    const auto currentState = resource.getState();
-    if (currentState != targetState) {
-        cachedResourceBarriers.push_back(CD3DX12_RESOURCE_BARRIER::Transition(resource.getResource().Get(), currentState, targetState));
-        resource.setState(targetState);
-    }
+void CommandList::transitionBarrier(Resource &resource, D3D12_RESOURCE_STATES targetState, UINT subresource) {
+    // Update internal Resource state and compute required resource barriers
+    Resource::ResourceState state = resource.getState();
+    Resource::ResourceState::BarriersCreationData barriers{resource};
+    state.setState(targetState, subresource, &barriers);
+    resource.setState(state);
+
+    // Push barriers to the command list
+    const auto barriersStart = barriers.barriers;
+    const auto barriersEnd = barriers.barriers + barriers.barriersCount;
+    cachedResourceBarriers.insert(cachedResourceBarriers.end(), barriersStart, barriersEnd);
 }
 
 void CommandList::clearRenderTargetView(Resource &renderTarget, const FLOAT colorRGBA[4]) {
@@ -92,19 +97,21 @@ void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, ID3D12D
     addUsedResource(descriptorHeap);
 }
 
-void CommandList::setCbvInDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const Resource &resource) {
-    gpuDescriptorHeapControllerCbvSrvUav.stage(rootParameterIndexOfTable, offsetInTable, resource.getCbv(), 1u);
+void CommandList::setCbvSrvUavInDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const Resource &resource, D3D12_CPU_DESCRIPTOR_HANDLE descriptor) {
+    gpuDescriptorHeapControllerCbvSrvUav.stage(rootParameterIndexOfTable, offsetInTable, descriptor, 1u);
     addUsedResource(resource.getResource());
+}
+
+void CommandList::setCbvInDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const Resource &resource) {
+    setCbvSrvUavInDescriptorTable(rootParameterIndexOfTable, offsetInTable, resource, resource.getCbv());
 }
 
 void CommandList::setSrvInDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const Resource &resource) {
-    gpuDescriptorHeapControllerCbvSrvUav.stage(rootParameterIndexOfTable, offsetInTable, resource.getSrv(), 1u);
-    addUsedResource(resource.getResource());
+    setCbvSrvUavInDescriptorTable(rootParameterIndexOfTable, offsetInTable, resource, resource.getSrv());
 }
 
 void CommandList::setUavInDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const Resource &resource) {
-    gpuDescriptorHeapControllerCbvSrvUav.stage(rootParameterIndexOfTable, offsetInTable, resource.getUav(), 1u);
-    addUsedResource(resource.getResource());
+    setCbvSrvUavInDescriptorTable(rootParameterIndexOfTable, offsetInTable, resource, resource.getUav());
 }
 
 void CommandList::IASetVertexBuffers(UINT startSlot, UINT numBuffers, VertexBuffer *vertexBuffers) {

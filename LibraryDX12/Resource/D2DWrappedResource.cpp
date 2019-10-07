@@ -65,8 +65,8 @@ AcquiredD2DWrappedResource::~AcquiredD2DWrappedResource() {
     device->ReleaseWrappedResources(parent->d3d11Resource.GetAddressOf(), 1); // This call makes implicit state transition
 
     // Manage state
-    assert(parent->d12Resource.getState() == parent->inState);
-    parent->d12Resource.setState(parent->outState);
+    assert(parent->d12Resource.getState().areAllSubresourcesInState(parent->inState));
+    parent->d12Resource.setState(Resource::ResourceState{parent->outState});
 
     // Flush to submit the D2D command list to the shared command queue.
     ApplicationImpl::getInstance().getD2DContext().getD3D11DeviceContext()->Flush();

@@ -85,9 +85,9 @@ TextureGpuLoadResult TextureImpl::gpuLoad(const TextureGpuLoadArgs &args) {
 
     // Create GPU resource
     result.description = TextureImpl::createTextureDescription(args.metadata);
-    this->resource = this->createResource(ApplicationImpl::getInstance().getDevice(), &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
-                                          &result.description, D3D12_RESOURCE_STATE_COPY_DEST, nullptr);
-    this->state = D3D12_RESOURCE_STATE_COPY_DEST;
+    this->setResource(createResource(ApplicationImpl::getInstance().getDevice(), &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
+                                     &result.description, D3D12_RESOURCE_STATE_COPY_DEST, nullptr),
+                      D3D12_RESOURCE_STATE_COPY_DEST, 1u);
 
     // Upload data to the GPU resource
     Resource::uploadToGPU(ApplicationImpl::getInstance(), args.scratchImage.GetPixels(),

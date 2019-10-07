@@ -13,6 +13,31 @@ class AcquiredD2DWrappedResource;
 
 class Resource : DXD::NonCopyable {
 public:
+    constexpr static UINT maxSubresourcesCount = 10;
+
+    struct ResourceState {
+        struct BarriersCreationData {
+            BarriersCreationData(Resource &resource) : resource(resource) {}
+            Resource &resource;
+            D3D12_RESOURCE_BARRIER barriers[maxSubresourcesCount] = {};
+            UINT barriersCount = 0u;
+        };
+
+        explicit ResourceState(D3D12_RESOURCE_STATES state) : resourceState(state) {}
+        ResourceState &operator=(D3D12_RESOURCE_STATES state) {
+            resourceState = state;
+            hasSubresourceSpecificState = false;
+            return *this;
+        }
+        D3D12_RESOURCE_STATES resourceState;
+        bool hasSubresourceSpecificState = false;
+        D3D12_RESOURCE_STATES subresourcesStates[maxSubresourcesCount] = {};
+
+        D3D12_RESOURCE_STATES getState(UINT subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES) const;
+        void setState(D3D12_RESOURCE_STATES state, UINT subresource, BarriersCreationData *outBarriers = nullptr);
+        bool areAllSubresourcesInState(D3D12_RESOURCE_STATES state) const;
+    };
+
     /// Base constructor initializing every member. It is called by every other constructor. It can also be used
     /// to wrap an existing ID3D12Resource, e.g. a back buffer allocated by SwapChain.
     explicit Resource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES state);
@@ -35,9 +60,9 @@ public:
     // Accessors
     auto getResource() { return resource; };
     const auto getResource() const { return resource; }
+    auto getSubresourcesCount() const { return subresourcesCount; }
     void reset();
-    void setResource(ID3D12ResourcePtr resource) { this->resource = resource; };
-    D3D12_RESOURCE_STATES getState() const { return state; }
+    void setResource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES state, UINT subresourcesCount);
 
     // Gpu upload functions
     bool isUploadInProgress();
@@ -69,14 +94,17 @@ protected:
     void uploadToGPU(ApplicationImpl &application, const void *data, UINT rowPitch, UINT slicePitch);
     void recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data, UINT rowPitch, UINT slicePitch);
 
-    // state setter, should be used only by classes making transitions, hence the friend declarations
-    void setState(D3D12_RESOURCE_STATES state) { this->state = state; }
+private:
+    // state accessors, should be used only by classes making transitions, hence the friend declarations
+    const ResourceState &getState() const { return state; }
+    void setState(const ResourceState &state) { this->state = state; }
     friend class CommandList;
     friend class AcquiredD2DWrappedResource;
 
     // Data
-    D3D12_RESOURCE_STATES state = {};
+    ResourceState state;
     ID3D12ResourcePtr resource = {};
+    UINT subresourcesCount = 1u;
     std::unique_ptr<GpuUploadData> gpuUploadData = {};
     DescriptorAllocation descriptorsCbvSrvUav;
     DescriptorAllocation descriptorsDsv;

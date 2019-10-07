@@ -29,6 +29,13 @@ void Resource::reset() {
     resource.Reset();
 }
 
+void Resource::setResource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES state, UINT subresourcesCount) {
+    assert(subresourcesCount < maxSubresourcesCount);
+    this->resource = resource;
+    this->state = state;
+    this->subresourcesCount = subresourcesCount;
+}
+
 bool Resource::isUploadInProgress() {
     if (gpuUploadData != nullptr && gpuUploadData->uploadingQueue.getFence().isComplete(gpuUploadData->uploadFence)) {
         gpuUploadData.reset();
@@ -100,7 +107,7 @@ void Resource::uploadToGPU(ApplicationImpl &application, const void *data, UINT 
 }
 
 void Resource::recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data, UINT rowPitch, UINT slicePitch) {
-    assert(state & D3D12_RESOURCE_STATE_COPY_DEST);
+    assert(getState().areAllSubresourcesInState(D3D12_RESOURCE_STATE_COPY_DEST));
 
     // Create buffer on upload heap
     Resource intermediateResource(device, D3D12_HEAP_TYPE_UPLOAD, D3D12_HEAP_FLAG_NONE, GetRequiredIntermediateSize(resource.Get(), 0, 1), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr);
@@ -114,4 +121,63 @@ void Resource::recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &comm
 
     // Make intermediateResource tracked so it's not deleted while still being processed on the GPU
     commandList.addUsedResource(intermediateResource.getResource());
+}
+
+void Resource::ResourceState::setState(D3D12_RESOURCE_STATES state, UINT subresource, BarriersCreationData *outBarriers) {
+    // Helper lambda function to avoid duplication
+    auto addBarrier = [this, outBarriers, state](UINT subresource) {
+        const auto currentState = getState(subresource);
+        if (currentState != state) {
+            auto &barrier = outBarriers->barriers[outBarriers->barriersCount++];
+            barrier = CD3DX12_RESOURCE_BARRIER::Transition(outBarriers->resource.getResource().Get(), currentState, state, subresource);
+        }
+    };
+
+    // Setting all subresources to the same state
+    if (subresource == D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES) {
+        // Generate transition barriers
+        if (outBarriers) {
+            if (this->hasSubresourceSpecificState) {
+                for (auto currentSubresource = 0u; currentSubresource < outBarriers->resource.getSubresourcesCount(); currentSubresource++) {
+                    addBarrier(currentSubresource);
+                }
+            } else {
+                addBarrier(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
+            }
+        }
+        // Update data
+        this->resourceState = state;
+        this->hasSubresourceSpecificState = false;
+
+    }
+    // Setting state for only one subresource
+    else {
+        // Generate transition barrier
+        addBarrier(subresource);
+
+        // Set all subresources to correct state
+        if (!this->hasSubresourceSpecificState) {
+            std::fill_n(this->subresourcesStates, outBarriers->resource.getSubresourcesCount(), this->resourceState);
+            this->hasSubresourceSpecificState = true;
+        }
+
+        // Update target subresource
+        this->subresourcesStates[subresource] = state;
+    };
+}
+
+bool Resource::ResourceState::areAllSubresourcesInState(D3D12_RESOURCE_STATES state) const {
+    return !hasSubresourceSpecificState && (resourceState == state);
+}
+
+D3D12_RESOURCE_STATES Resource::ResourceState::getState(UINT subresource) const {
+    if (subresource == D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES) {
+        assert(!this->hasSubresourceSpecificState);
+        return this->resourceState;
+    } else {
+        if (hasSubresourceSpecificState) {
+            return this->subresourcesStates[subresource];
+        }
+        return this->resourceState;
+    }
 }
