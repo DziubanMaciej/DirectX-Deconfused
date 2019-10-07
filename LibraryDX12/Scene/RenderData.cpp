@@ -147,8 +147,8 @@ void RenderData::resize(int width, int height) {
     D3D12_RESOURCE_DESC ssrMapDesc = {};
     ssrMapDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     ssrMapDesc.Alignment = 0;
-    ssrMapDesc.Width = width/2;
-    ssrMapDesc.Height = height/2;
+    ssrMapDesc.Width = width;
+    ssrMapDesc.Height = height;
     ssrMapDesc.DepthOrArraySize = 1;
     ssrMapDesc.MipLevels = 0;
     ssrMapDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
