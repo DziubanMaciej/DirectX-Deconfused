@@ -711,5 +711,5 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
 
     // Present (swap back buffers) and wait for next frame's fence
     swapChain.present(fenceValue);
-    commandQueue.getFence().waitOnCpu(swapChain.getFenceValueForCurrentBackBuffer());
+    commandQueue.waitOnCpu(swapChain.getFenceValueForCurrentBackBuffer());
 }

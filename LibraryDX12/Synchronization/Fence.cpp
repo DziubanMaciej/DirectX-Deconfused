@@ -5,16 +5,12 @@ Fence::Fence(ID3D12DevicePtr device) {
     throwIfFailed(device->CreateFence(0u, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence)));
 }
 
-void Fence::waitOnCpu(UINT64 fenceValue) {
+void Fence::waitOnCpu(UINT64 fenceValue) const {
     if (isComplete(fenceValue)) {
         return;
     }
     throwIfFailed(fence->SetEventOnCompletion(fenceValue, event.getHandle()));
     event.wait();
-}
-
-void Fence::waitOnGpu(ID3D12CommandQueuePtr commandQueue, UINT64 fenceValue) {
-    commandQueue->Wait(fence.Get(), fenceValue);
 }
 
 uint64_t Fence::signal(ID3D12CommandQueuePtr commandQueue) {

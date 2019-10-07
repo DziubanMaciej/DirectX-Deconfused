@@ -37,7 +37,7 @@ void Resource::setResource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES sta
 }
 
 bool Resource::isUploadInProgress() {
-    if (gpuUploadData != nullptr && gpuUploadData->uploadingQueue.getFence().isComplete(gpuUploadData->uploadFence)) {
+    if (gpuUploadData != nullptr && gpuUploadData->uploadingQueue.isFenceComplete(gpuUploadData->uploadFence)) {
         gpuUploadData.reset();
     }
     return gpuUploadData != nullptr;

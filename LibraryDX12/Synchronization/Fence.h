@@ -13,13 +13,14 @@ public:
     Fence(Fence &&other) = default;
     Fence &operator=(Fence &&other) = default;
 
-    void waitOnCpu(UINT64 fenceValue);
-    void waitOnGpu(ID3D12CommandQueuePtr commandQueue, UINT64 fenceValue);
+    void waitOnCpu(UINT64 fenceValue) const;
     uint64_t signal(ID3D12CommandQueuePtr commandQueue);
 
     bool isComplete(UINT64 fenceValue) const;
     uint64_t getLastSignalledFenceValue() const;
     uint64_t getCompletedFenceValue() const;
+
+    auto getFence() const { return fence; }
 
 private:
     ID3D12FencePtr fence;

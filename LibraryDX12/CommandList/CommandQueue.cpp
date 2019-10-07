@@ -33,6 +33,18 @@ ID3D12CommandQueuePtr CommandQueue::createCommandQueue(ID3D12DevicePtr &device, 
 
 // ------------------------------------------------------------------------------ Execute
 
+bool CommandQueue::isFenceComplete(uint64_t fenceValue) {
+    return this->fence.isComplete(fenceValue);
+}
+
+void CommandQueue::waitOnCpu(uint64_t fenceValue) {
+    return this->fence.waitOnCpu(fenceValue);
+}
+
+void CommandQueue::waitOnGpu(const CommandQueue &queueToWaitFor, uint64_t fenceValue) {
+    this->commandQueue->Wait(queueToWaitFor.fence.getFence().Get(), fenceValue);
+}
+
 uint64_t CommandQueue::executeCommandListsAndSignal(std::vector<CommandList *> &commandLists) {
     std::unique_lock<std::mutex> lock = getLock(true);
 

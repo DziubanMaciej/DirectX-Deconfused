@@ -1,4 +1,5 @@
 #include "Event.h"
+
 #include <cassert>
 
 Event::Event() : Event(false) {}
@@ -23,15 +24,15 @@ Event &Event::operator=(Event &&other) noexcept {
     return *this;
 }
 
-void Event::wait() {
+void Event::wait() const {
     wait(INFINITE);
 }
 
-void Event::wait(DWORD milliseconds) {
+void Event::wait(DWORD milliseconds) const {
     const auto result = ::WaitForSingleObject(this->handle, milliseconds);
     assert(result == 0);
 }
 
-void Event::wait(std::chrono::milliseconds duration) {
+void Event::wait(std::chrono::milliseconds duration) const {
     wait(static_cast<DWORD>(duration.count()));
 }
