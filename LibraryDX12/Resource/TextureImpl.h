@@ -44,7 +44,8 @@ protected:
 private:
     // Helpers
     static D3D12_RESOURCE_DESC createTextureDescription(const DirectX::TexMetadata &metadata);
-    static uint32_t computeMaxMipsCount(uint32_t width, uint32_t height);
+    static uint16_t computeMaxMipsCount(size_t width, size_t height);
+    void generateMips(D3D12_RESOURCE_DESC description);
     static void createDescriptorsForMipMapGeneration(DescriptorAllocation &descriptorAllocation, ID3D12ResourcePtr resource, DXGI_FORMAT format,
                                                      uint32_t sourceMip, uint32_t outputMipsCount, uint32_t maxOutputMipsCount);
     void transitionSubresourcesForMipMapGeneration(CommandList &commandList, uint32_t sourceMip, uint32_t outputMipsCount);
