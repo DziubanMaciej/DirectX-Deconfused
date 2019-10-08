@@ -109,7 +109,7 @@ TextureGpuLoadResult TextureImpl::gpuLoad(const TextureGpuLoadArgs &args) {
     srvDescription.Format = result.description.Format;
     srvDescription.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     srvDescription.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDescription.Texture2D.MipLevels = 2;
+    srvDescription.Texture2D.MipLevels = result.description.MipLevels;
     srvDescription.Texture2D.MostDetailedMip = 0;
     srvDescription.Texture2D.PlaneSlice = 0;
     srvDescription.Texture2D.ResourceMinLODClamp = 0;
@@ -129,28 +129,40 @@ void TextureImpl::generateMips(D3D12_RESOURCE_DESC description) {
     CommandList commandList{queue};
     commandList.setPipelineStateAndComputeRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_GENERATE_MIPS);
 
-    // Create descriptors and transition resources
-    auto descriptors = ApplicationImpl::getInstance().getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 2);
-    createDescriptorsForMipMapGeneration(descriptors, getResource(), description.Format, 0, 1, 1);
-    transitionSubresourcesForMipMapGeneration(commandList, 0, 1);
+    // Space for cpu visible descriptors, can be reused after committing to gpu visible heap (this is made on dispatch)
+    auto cpuDescriptors = ApplicationImpl::getInstance().getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 2);
 
-    // Bind resources
-    const uint32_t srcWidth = static_cast<uint32_t>(description.Width);
-    const uint32_t srcHeight = static_cast<uint32_t>(description.Height);
-    const uint32_t dstWidth = srcWidth / 2;
-    const uint32_t dstHeight = srcHeight / 2;
-    GenerateMipsCB cb = {};
-    cb.texelSize = XMFLOAT2{1.0f / dstWidth, 1.0f / dstHeight};
-    cb.sourceMipLevel = 0;
-    commandList.setCbvSrvUavInDescriptorTable(0, 0, *this, descriptors.getCpuHandle(0));
-    commandList.setCbvSrvUavInDescriptorTable(0, 1, *this, descriptors.getCpuHandle(1));
-    commandList.setRoot32BitConstant(1, cb);
+    // Generate subsequent mips
+    uint32_t currentSourceWidth = static_cast<uint32_t>(description.Width);
+    uint32_t currentSourceHeight = static_cast<uint32_t>(description.Height);
+    for (auto sourceMipLevel = 0u; sourceMipLevel < description.MipLevels - 1; sourceMipLevel++) {
+        const auto outputMipsCount = 1u;    // how many mips shader will generate in the current dispatch
+        const auto maxOutputMipsCount = 1u; // how many mips can a shader generate in one dispatch
 
-    // Dispatch
-    const UINT threadGroupSize = 16u;
-    const UINT threadGroupCountX = divideByMultiple(dstWidth, threadGroupSize);
-    const UINT threadGroupCountY = divideByMultiple(dstHeight, threadGroupSize);
-    commandList.dispatch(threadGroupCountX, threadGroupCountY, 1u);
+        // Create descriptors and transition resources
+        createDescriptorsForMipMapGeneration(cpuDescriptors, getResource(), description.Format, sourceMipLevel, outputMipsCount, maxOutputMipsCount);
+        transitionSubresourcesForMipMapGeneration(commandList, sourceMipLevel, outputMipsCount);
+
+        // Bind resources
+        const uint32_t dstWidth = currentSourceWidth / 2;
+        const uint32_t dstHeight = currentSourceHeight / 2;
+        GenerateMipsCB cb = {};
+        cb.texelSize = XMFLOAT2{1.0f / dstWidth, 1.0f / dstHeight};
+        cb.sourceMipLevel = sourceMipLevel;
+        commandList.setCbvSrvUavInDescriptorTable(0, 0, *this, cpuDescriptors.getCpuHandle(0));
+        commandList.setCbvSrvUavInDescriptorTable(0, 1, *this, cpuDescriptors.getCpuHandle(1));
+        commandList.setRoot32BitConstant(1, cb);
+
+        // Dispatch
+        const UINT threadGroupSize = 16u;
+        const UINT threadGroupCountX = divideByMultiple(dstWidth, threadGroupSize);
+        const UINT threadGroupCountY = divideByMultiple(dstHeight, threadGroupSize);
+        commandList.dispatch(threadGroupCountX, threadGroupCountY, 1u);
+
+        // Size of source texture in next iteration will be two times smaller, but cannot be 0
+        currentSourceWidth = std::max(currentSourceWidth / 2, 1u);
+        currentSourceHeight = std::max(currentSourceHeight / 2, 1u);
+    }
 
     // Barriers
     commandList.uavBarrier(*this);
@@ -200,7 +212,7 @@ D3D12_RESOURCE_DESC TextureImpl::createTextureDescription(const DirectX::TexMeta
         UNREACHABLE_CODE();
     }
     textureDesc.MipLevels = computeMaxMipsCount(metadata.width, metadata.height);
-    textureDesc.MipLevels = 2u; // TODO
+    textureDesc.MipLevels = std::min(static_cast<UINT16>(Resource::maxSubresourcesCount), textureDesc.MipLevels);
     return textureDesc;
 }
 

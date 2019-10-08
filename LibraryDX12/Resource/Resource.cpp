@@ -31,7 +31,7 @@ void Resource::reset() {
 }
 
 void Resource::setResource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES state, UINT subresourcesCount) {
-    assert(subresourcesCount < maxSubresourcesCount);
+    assert(subresourcesCount <= maxSubresourcesCount);
     this->resource = resource;
     this->state = state;
     this->subresourcesCount = subresourcesCount;
