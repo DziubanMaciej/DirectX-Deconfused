@@ -135,7 +135,7 @@ void TextureImpl::generateMips(D3D12_RESOURCE_DESC description) {
     // Generate subsequent mips
     uint32_t currentSourceWidth = static_cast<uint32_t>(description.Width);
     uint32_t currentSourceHeight = static_cast<uint32_t>(description.Height);
-    for (auto sourceMipLevel = 0u; sourceMipLevel < description.MipLevels - 1; sourceMipLevel++) {
+    for (auto sourceMipLevel = 0u; sourceMipLevel + 1u < description.MipLevels; sourceMipLevel++) {
         const auto outputMipsCount = 1u;    // how many mips shader will generate in the current dispatch
         const auto maxOutputMipsCount = 1u; // how many mips can a shader generate in one dispatch
 
@@ -171,8 +171,8 @@ void TextureImpl::generateMips(D3D12_RESOURCE_DESC description) {
     // Submit to gpu
     commandList.close();
     this->waitOnGpuForGpuUpload(queue);
-    queue.executeCommandListAndSignal(commandList);
-    queue.flush(true);
+    const uint64_t fenceValue = queue.executeCommandListAndSignal(commandList);
+    this->addGpuDependency(queue, fenceValue);
 }
 
 bool TextureImpl::hasGpuLoadEnded() {
