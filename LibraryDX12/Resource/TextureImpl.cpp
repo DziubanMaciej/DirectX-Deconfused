@@ -176,7 +176,7 @@ void TextureImpl::generateMips(D3D12_RESOURCE_DESC description) {
 }
 
 bool TextureImpl::hasGpuLoadEnded() {
-    return !Resource::isUploadInProgress();
+    return !isWaitingForGpuDependencies();
 }
 
 void TextureImpl::writeCpuGpuLoadResults(TextureCpuLoadResult &cpuLoadResult, TextureGpuLoadResult &gpuLoadResult) {

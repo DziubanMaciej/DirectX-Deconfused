@@ -19,8 +19,8 @@ public:
     auto getCommandQueue() { return commandQueue; }
     auto &getCommandAllocatorController() { return commandAllocatorController; }
 
-    bool isFenceComplete(uint64_t fenceValue);
-    void waitOnCpu(uint64_t fenceValue);
+    bool isFenceComplete(uint64_t fenceValue) const;
+    void waitOnCpu(uint64_t fenceValue) const;
     void waitOnGpu(const CommandQueue &queueToWaitFor, uint64_t fenceValue);
 
 

@@ -7,10 +7,14 @@ struct EXPORT NonCopyable {
     NonCopyable() = default;
     NonCopyable(const NonCopyable &) = delete;
     NonCopyable &operator=(const NonCopyable &) = delete;
+    NonCopyable(NonCopyable&&) = default;
+    NonCopyable &operator=(NonCopyable&&) = default;
 };
 
 struct EXPORT NonMovable {
     NonMovable() = default;
+    NonMovable(const NonMovable &) = default;
+    NonMovable &operator=(const NonMovable &) = default;
     NonMovable(NonMovable &&) = delete;
     NonMovable &operator=(NonMovable &&) = delete;
 };

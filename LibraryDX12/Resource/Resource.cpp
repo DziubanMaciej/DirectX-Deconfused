@@ -25,8 +25,8 @@ Resource::Resource(ID3D12DevicePtr device, D3D12_HEAP_TYPE heapType, D3D12_HEAP_
     : Resource(createResource(device, &CD3DX12_HEAP_PROPERTIES(heapType), heapFlags, &CD3DX12_RESOURCE_DESC::Buffer(bufferSize), initialResourceState, pOptimizedClearValue), initialResourceState) {}
 
 void Resource::reset() {
-    std::lock_guard<std::mutex> gpuUploadDataLock{this->gpuUploadDataLock};
-    gpuUploadData.reset();
+    std::lock_guard<std::mutex> gpuDependenciesLock{this->gpuDependenciesLock};
+    gpuDependencies.reset();
     resource.Reset();
 }
 
@@ -37,22 +37,14 @@ void Resource::setResource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES sta
     this->subresourcesCount = subresourcesCount;
 }
 
-bool Resource::isUploadInProgress() {
-    std::lock_guard<std::mutex> gpuUploadDataLock{this->gpuUploadDataLock};
-    return isUploadInProgressWithoutLock();
+bool Resource::isWaitingForGpuDependencies() {
+    std::unique_lock<std::mutex> gpuDependenciesLock{this->gpuDependenciesLock};
+    return !gpuDependencies.isComplete();
 }
 
-bool Resource::isUploadInProgressWithoutLock() {
-    if (gpuUploadData != nullptr && gpuUploadData->uploadingQueue.isFenceComplete(gpuUploadData->uploadFence)) {
-        gpuUploadData.reset();
-    }
-    return gpuUploadData != nullptr;
-}
-
-void Resource::registerUpload(CommandQueue &uploadingQueue, uint64_t uploadFence) {
-    std::lock_guard<std::mutex> gpuUploadDataLock{this->gpuUploadDataLock};
-    assert(!isUploadInProgressWithoutLock()); // only check GPU upload, not CPU loading
-    this->gpuUploadData = std::make_unique<GpuUploadData>(uploadingQueue, uploadFence);
+void Resource::addGpuDependency(CommandQueue &queue, uint64_t fenceValue) {
+    std::lock_guard<std::mutex> gpuDependenciesLock{this->gpuDependenciesLock};
+    gpuDependencies.add(queue, fenceValue);
 }
 
 void Resource::createCbv(D3D12_CONSTANT_BUFFER_VIEW_DESC *desc) {
@@ -99,15 +91,11 @@ ID3D12ResourcePtr Resource::createResource(ID3D12DevicePtr device, const D3D12_H
 }
 
 void Resource::waitOnGpuForGpuUpload(CommandQueue &queue) {
-    std::lock_guard<std::mutex> gpuUploadDataLock{ this->gpuUploadDataLock };
-    if (gpuUploadData) {
-        queue.waitOnGpu(gpuUploadData->uploadingQueue, gpuUploadData->uploadFence);
-    }
+    std::lock_guard<std::mutex> gpuDependenciesLock{this->gpuDependenciesLock};
+    gpuDependencies.waitOnGpu(queue);
 }
 
 void Resource::uploadToGPU(ApplicationImpl &application, const void *data, UINT rowPitch, UINT slicePitch) {
-    assert(gpuUploadData == nullptr);
-
     CommandQueue &commandQueue = application.getCopyCommandQueue();
 
     // Record command list for GPU upload
@@ -117,7 +105,7 @@ void Resource::uploadToGPU(ApplicationImpl &application, const void *data, UINT 
 
     // Execute on GPU
     const auto fence = commandQueue.executeCommandListAndSignal(commandList);
-    registerUpload(commandQueue, fence);
+    addGpuDependency(commandQueue, fence);
 }
 
 void Resource::recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data, UINT rowPitch, UINT slicePitch) {

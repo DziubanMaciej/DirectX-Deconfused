@@ -2,6 +2,7 @@
 
 #include "CommandList/CommandList.h"
 #include "CommandList/CommandQueue.h"
+#include "Utility/GpuDependency.h"
 
 #include "DXD/Utility/NonCopyableAndMovable.h"
 
@@ -65,9 +66,9 @@ public:
     void reset();
     void setResource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES state, UINT subresourcesCount);
 
-    // Gpu upload functions
-    bool isUploadInProgress();
-    void registerUpload(CommandQueue &uploadingQueue, uint64_t uploadFence);
+    // Gpu dependency functions
+    bool isWaitingForGpuDependencies();
+    void addGpuDependency(CommandQueue &queue, uint64_t fenceValue);
 
     // Descriptors
     void createCbv(D3D12_CONSTANT_BUFFER_VIEW_DESC *desc);
@@ -86,16 +87,10 @@ protected:
                                             const D3D12_RESOURCE_DESC *pDesc, D3D12_RESOURCE_STATES initialResourceState,
                                             const D3D12_CLEAR_VALUE *pOptimizedClearValue);
 
-    // Gpu upload functions
-    struct GpuUploadData {
-        GpuUploadData(CommandQueue &queue, uint64_t fence) : uploadingQueue(queue), uploadFence(fence) {}
-        CommandQueue &uploadingQueue;
-        uint64_t uploadFence;
-    };
+    // Gpu dependency functions
     void waitOnGpuForGpuUpload(CommandQueue &queue);
     void uploadToGPU(ApplicationImpl &application, const void *data, UINT rowPitch, UINT slicePitch);
     void recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data, UINT rowPitch, UINT slicePitch);
-    bool isUploadInProgressWithoutLock();
 
 private:
     // state accessors, should be used only by classes making transitions, hence the friend declarations
@@ -108,9 +103,9 @@ private:
     ResourceState state;
     ID3D12ResourcePtr resource = {};
     UINT subresourcesCount = 1u;
-    std::unique_ptr<GpuUploadData> gpuUploadData = {};
+    GpuDependencies gpuDependencies = {};
     DescriptorAllocation descriptorsCbvSrvUav;
     DescriptorAllocation descriptorsDsv;
     DescriptorAllocation descriptorsRtv;
-    std::mutex gpuUploadDataLock = {};
+    std::mutex gpuDependenciesLock = {};
 };

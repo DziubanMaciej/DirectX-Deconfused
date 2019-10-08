@@ -33,11 +33,11 @@ ID3D12CommandQueuePtr CommandQueue::createCommandQueue(ID3D12DevicePtr &device, 
 
 // ------------------------------------------------------------------------------ Execute
 
-bool CommandQueue::isFenceComplete(uint64_t fenceValue) {
+bool CommandQueue::isFenceComplete(uint64_t fenceValue) const {
     return this->fence.isComplete(fenceValue);
 }
 
-void CommandQueue::waitOnCpu(uint64_t fenceValue) {
+void CommandQueue::waitOnCpu(uint64_t fenceValue) const {
     return this->fence.waitOnCpu(fenceValue);
 }
 

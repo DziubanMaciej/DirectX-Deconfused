@@ -204,17 +204,17 @@ MeshGpuLoadResult MeshImpl::gpuLoad(const MeshGpuLoadArgs &args) {
     const uint64_t fenceValue = commandQueue.executeCommandListAndSignal(commandList);
 
     // Register upload status for buffers
-    results.vertexBuffer->registerUpload(commandQueue, fenceValue);
+    results.vertexBuffer->addGpuDependency(commandQueue, fenceValue);
     if (useIndexBuffer) {
-        results.indexBuffer->registerUpload(commandQueue, fenceValue);
+        results.indexBuffer->addGpuDependency(commandQueue, fenceValue);
     }
 
     return std::move(results);
 }
 
 bool MeshImpl::hasGpuLoadEnded() {
-    const bool vertexInProgress = this->vertexBuffer->isUploadInProgress();
-    const bool indexInProgress = this->indexBuffer != nullptr && this->indexBuffer->isUploadInProgress();
+    const bool vertexInProgress = this->vertexBuffer->isWaitingForGpuDependencies();
+    const bool indexInProgress = this->indexBuffer != nullptr && this->indexBuffer->isWaitingForGpuDependencies();
     const bool bothEnded = !vertexInProgress && !indexInProgress;
     return bothEnded;
 }
