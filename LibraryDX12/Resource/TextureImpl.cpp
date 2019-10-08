@@ -158,18 +158,18 @@ void TextureImpl::generateMips(D3D12_RESOURCE_DESC description) {
         const UINT threadGroupCountX = divideByMultiple(dstWidth, threadGroupSize);
         const UINT threadGroupCountY = divideByMultiple(dstHeight, threadGroupSize);
         commandList.dispatch(threadGroupCountX, threadGroupCountY, 1u);
+        commandList.uavBarrier(*this);
 
         // Size of source texture in next iteration will be two times smaller, but cannot be 0
         currentSourceWidth = std::max(currentSourceWidth / 2, 1u);
         currentSourceHeight = std::max(currentSourceHeight / 2, 1u);
     }
 
-    // Barriers
-    commandList.uavBarrier(*this);
+    // Epilogue
     commandList.transitionBarrier(*this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    commandList.close();
 
     // Submit to gpu
-    commandList.close();
     this->waitOnGpuForGpuUpload(queue);
     const uint64_t fenceValue = queue.executeCommandListAndSignal(commandList);
     this->addGpuDependency(queue, fenceValue);
