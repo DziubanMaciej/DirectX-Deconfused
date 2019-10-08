@@ -2,7 +2,7 @@
 
 #include "Descriptor/DescriptorAllocation.h"
 #include "Resource/Resource.h"
-#include "Utility/BitHelper.h"
+#include "Utility/MathHelper.h"
 
 #include <memory>
 

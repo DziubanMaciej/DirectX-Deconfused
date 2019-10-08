@@ -5,6 +5,7 @@
 #include "CommandList/CommandQueue.h"
 #include "Resource/ConstantBuffers.h"
 #include "Utility/FileHelper.h"
+#include "Utility/MathHelper.h"
 #include "Utility/ThrowIfFailed.h"
 
 #include <DXD/ExternalHeadersWrappers/DirectXMath.h>
@@ -82,12 +83,6 @@ TextureGpuLoadArgs TextureImpl::createArgsForGpuLoad(const TextureCpuLoadResult 
         cpuLoadResult.scratchImage});
 }
 
-template <typename T>
-inline T divideByMultiple(T value, size_t alignment) {
-    // TODO move to same shared header
-    return (T)((value + alignment - 1) / alignment);
-}
-
 TextureGpuLoadResult TextureImpl::gpuLoad(const TextureGpuLoadArgs &args) {
     TextureGpuLoadResult result = {};
 
@@ -155,8 +150,8 @@ void TextureImpl::generateMips(D3D12_RESOURCE_DESC description) {
 
         // Dispatch
         const UINT threadGroupSize = 16u;
-        const UINT threadGroupCountX = divideByMultiple(dstWidth, threadGroupSize);
-        const UINT threadGroupCountY = divideByMultiple(dstHeight, threadGroupSize);
+        const UINT threadGroupCountX = MathHelper::divideByMultiple(dstWidth, threadGroupSize);
+        const UINT threadGroupCountY = MathHelper::divideByMultiple(dstHeight, threadGroupSize);
         commandList.dispatch(threadGroupCountX, threadGroupCountY, 1u);
         commandList.uavBarrier(*this);
 

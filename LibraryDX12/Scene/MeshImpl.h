@@ -5,6 +5,7 @@
 #include "Resource/Resource.h"
 #include "Resource/VertexOrIndexBuffer.h"
 #include "Threading/AsyncLoadableObject.h"
+#include "Utility/MathHelper.h"
 
 #include "DXD/Mesh.h"
 

@@ -4,7 +4,7 @@
 #include "Utility/ThrowIfFailed.h"
 
 ConstantBuffer::ConstantBuffer(ID3D12DevicePtr device, DescriptorController &descriptorController, UINT size)
-    : Resource(device, D3D12_HEAP_TYPE_UPLOAD, D3D12_HEAP_FLAG_NONE, BitHelper::alignUp<64 * 1024>(size), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr),
+    : Resource(device, D3D12_HEAP_TYPE_UPLOAD, D3D12_HEAP_FLAG_NONE, MathHelper::alignUp<64 * 1024>(size), D3D12_RESOURCE_STATE_GENERIC_READ, nullptr),
       size(size),
       mappedConstantBuffer(map(getResource())),
       data(std::make_unique<uint8_t[]>(size)) {
@@ -30,6 +30,6 @@ void *ConstantBuffer::map(ID3D12ResourcePtr &resource) {
 void ConstantBuffer::createDescriptor(ID3D12DevicePtr &device) {
     D3D12_CONSTANT_BUFFER_VIEW_DESC cbvDescription = {};
     cbvDescription.BufferLocation = getResource()->GetGPUVirtualAddress();
-    cbvDescription.SizeInBytes = BitHelper::alignUp<256>(size);
+    cbvDescription.SizeInBytes = MathHelper::alignUp<256>(size);
     createCbv(&cbvDescription);
 }
