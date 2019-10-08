@@ -124,8 +124,7 @@ TextureGpuLoadResult TextureImpl::gpuLoad(const TextureGpuLoadArgs &args) {
         CommandList list{queue};
         list.setPipelineStateAndComputeRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_GENERATE_MIPS);
 
-        list.transitionBarrier(*this, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE, 0);
-        list.transitionBarrier(*this, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, 1);
+        transitionSubresourcesForMipMapGeneration(list, 0, 1);
 
         const uint32_t srcWidth = static_cast<uint32_t>(args.scratchImage.GetMetadata().width);
         const uint32_t srcHeight = static_cast<uint32_t>(args.scratchImage.GetMetadata().height);
@@ -237,5 +236,13 @@ void TextureImpl::createDescriptorsForMipMapGeneration(DescriptorAllocation &des
         uavDesc.Texture2D.MipSlice = 0;
         uavDesc.Texture2D.PlaneSlice = 0;
         device->CreateUnorderedAccessView(nullptr, nullptr, &uavDesc, descriptorAllocation.getCpuHandle(i + 1));
+    }
+}
+
+void TextureImpl::transitionSubresourcesForMipMapGeneration(CommandList &commandList, uint32_t sourceMip, uint32_t outputMipsCount) {
+    commandList.transitionBarrier(*this, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+    for (auto i = 0u; i < outputMipsCount; i++) {
+        const auto subresourceIndex = sourceMip + i + 1;
+        commandList.transitionBarrier(*this, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, subresourceIndex);
     }
 }
