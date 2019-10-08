@@ -6,6 +6,8 @@
 
 #include <cassert>
 
+// ------------------------------------------------------------------------------------- Creation
+
 Resource::Resource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES state)
     : resource(resource),
       state(state),
@@ -24,6 +26,21 @@ Resource::Resource(ID3D12DevicePtr device, D3D12_HEAP_TYPE heapType, D3D12_HEAP_
                    D3D12_RESOURCE_STATES initialResourceState, const D3D12_CLEAR_VALUE *pOptimizedClearValue)
     : Resource(createResource(device, &CD3DX12_HEAP_PROPERTIES(heapType), heapFlags, &CD3DX12_RESOURCE_DESC::Buffer(bufferSize), initialResourceState, pOptimizedClearValue), initialResourceState) {}
 
+ID3D12ResourcePtr Resource::createResource(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeapProperties, D3D12_HEAP_FLAGS heapFlags,
+                                           const D3D12_RESOURCE_DESC *pDesc, D3D12_RESOURCE_STATES initialResourceState, const D3D12_CLEAR_VALUE *pOptimizedClearValue) {
+    ID3D12ResourcePtr resource = {};
+    throwIfFailed(device->CreateCommittedResource(
+        pHeapProperties,
+        heapFlags,
+        pDesc,
+        initialResourceState,
+        pOptimizedClearValue,
+        IID_PPV_ARGS(&resource)));
+    return resource;
+}
+
+// ------------------------------------------------------------------------------------- Accessors
+
 void Resource::reset() {
     std::lock_guard<std::mutex> gpuDependenciesLock{this->gpuDependenciesLock};
     gpuDependencies.reset();
@@ -37,6 +54,8 @@ void Resource::setResource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES sta
     this->subresourcesCount = subresourcesCount;
 }
 
+// ------------------------------------------------------------------------------------- Gpu dependencies functions
+
 bool Resource::isWaitingForGpuDependencies() {
     std::unique_lock<std::mutex> gpuDependenciesLock{this->gpuDependenciesLock};
     return !gpuDependencies.isComplete();
@@ -45,49 +64,6 @@ bool Resource::isWaitingForGpuDependencies() {
 void Resource::addGpuDependency(CommandQueue &queue, uint64_t fenceValue) {
     std::lock_guard<std::mutex> gpuDependenciesLock{this->gpuDependenciesLock};
     gpuDependencies.add(queue, fenceValue);
-}
-
-void Resource::createCbv(D3D12_CONSTANT_BUFFER_VIEW_DESC *desc) {
-    ID3D12DevicePtr device = {};
-    throwIfFailed(resource->GetDevice(IID_PPV_ARGS(&device)));
-    device->CreateConstantBufferView(desc, descriptorsCbvSrvUav.getCpuHandle(0));
-}
-
-void Resource::createSrv(D3D12_SHADER_RESOURCE_VIEW_DESC *desc) {
-    ID3D12DevicePtr device = {};
-    throwIfFailed(resource->GetDevice(IID_PPV_ARGS(&device)));
-    device->CreateShaderResourceView(resource.Get(), desc, descriptorsCbvSrvUav.getCpuHandle(1));
-}
-
-void Resource::createUav(D3D12_UNORDERED_ACCESS_VIEW_DESC *desc) {
-    ID3D12DevicePtr device = {};
-    throwIfFailed(resource->GetDevice(IID_PPV_ARGS(&device)));
-    device->CreateUnorderedAccessView(resource.Get(), nullptr, desc, descriptorsCbvSrvUav.getCpuHandle(2));
-}
-
-void Resource::createDsv(D3D12_DEPTH_STENCIL_VIEW_DESC *desc) {
-    ID3D12DevicePtr device = {};
-    throwIfFailed(resource->GetDevice(IID_PPV_ARGS(&device)));
-    device->CreateDepthStencilView(resource.Get(), desc, descriptorsDsv.getCpuHandle());
-}
-
-void Resource::createRtv(D3D12_RENDER_TARGET_VIEW_DESC *desc) {
-    ID3D12DevicePtr device = {};
-    throwIfFailed(resource->GetDevice(IID_PPV_ARGS(&device)));
-    device->CreateRenderTargetView(resource.Get(), desc, descriptorsRtv.getCpuHandle());
-}
-
-ID3D12ResourcePtr Resource::createResource(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeapProperties, D3D12_HEAP_FLAGS heapFlags,
-                                           const D3D12_RESOURCE_DESC *pDesc, D3D12_RESOURCE_STATES initialResourceState, const D3D12_CLEAR_VALUE *pOptimizedClearValue) {
-    ID3D12ResourcePtr resource = {};
-    throwIfFailed(device->CreateCommittedResource(
-        pHeapProperties,
-        heapFlags,
-        pDesc,
-        initialResourceState,
-        pOptimizedClearValue,
-        IID_PPV_ARGS(&resource)));
-    return resource;
 }
 
 void Resource::waitOnGpuForGpuUpload(CommandQueue &queue) {
@@ -123,6 +99,46 @@ void Resource::recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &comm
 
     // Make intermediateResource tracked so it's not deleted while still being processed on the GPU
     commandList.addUsedResource(intermediateResource.getResource());
+}
+
+// ------------------------------------------------------------------------------------- Descriptors
+
+void Resource::createCbv(D3D12_CONSTANT_BUFFER_VIEW_DESC *desc) {
+    ID3D12DevicePtr device = {};
+    throwIfFailed(resource->GetDevice(IID_PPV_ARGS(&device)));
+    device->CreateConstantBufferView(desc, descriptorsCbvSrvUav.getCpuHandle(0));
+}
+
+void Resource::createSrv(D3D12_SHADER_RESOURCE_VIEW_DESC *desc) {
+    ID3D12DevicePtr device = {};
+    throwIfFailed(resource->GetDevice(IID_PPV_ARGS(&device)));
+    device->CreateShaderResourceView(resource.Get(), desc, descriptorsCbvSrvUav.getCpuHandle(1));
+}
+
+void Resource::createUav(D3D12_UNORDERED_ACCESS_VIEW_DESC *desc) {
+    ID3D12DevicePtr device = {};
+    throwIfFailed(resource->GetDevice(IID_PPV_ARGS(&device)));
+    device->CreateUnorderedAccessView(resource.Get(), nullptr, desc, descriptorsCbvSrvUav.getCpuHandle(2));
+}
+
+void Resource::createDsv(D3D12_DEPTH_STENCIL_VIEW_DESC *desc) {
+    ID3D12DevicePtr device = {};
+    throwIfFailed(resource->GetDevice(IID_PPV_ARGS(&device)));
+    device->CreateDepthStencilView(resource.Get(), desc, descriptorsDsv.getCpuHandle());
+}
+
+void Resource::createRtv(D3D12_RENDER_TARGET_VIEW_DESC *desc) {
+    ID3D12DevicePtr device = {};
+    throwIfFailed(resource->GetDevice(IID_PPV_ARGS(&device)));
+    device->CreateRenderTargetView(resource.Get(), desc, descriptorsRtv.getCpuHandle());
+}
+
+// ------------------------------------------------------------------------------------- Resource::ResourceState class
+
+Resource::ResourceState &Resource::ResourceState::operator=(D3D12_RESOURCE_STATES state) {
+    resourceState = state;
+    hasSubresourceSpecificState = false;
+    return *this;
 }
 
 void Resource::ResourceState::setState(D3D12_RESOURCE_STATES state, UINT subresource, BarriersCreationData *outBarriers) {
@@ -168,10 +184,6 @@ void Resource::ResourceState::setState(D3D12_RESOURCE_STATES state, UINT subreso
     };
 }
 
-bool Resource::ResourceState::areAllSubresourcesInState(D3D12_RESOURCE_STATES state) const {
-    return !hasSubresourceSpecificState && (resourceState == state);
-}
-
 D3D12_RESOURCE_STATES Resource::ResourceState::getState(UINT subresource) const {
     if (subresource == D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES) {
         assert(!this->hasSubresourceSpecificState);
@@ -182,4 +194,8 @@ D3D12_RESOURCE_STATES Resource::ResourceState::getState(UINT subresource) const 
         }
         return this->resourceState;
     }
+}
+
+bool Resource::ResourceState::areAllSubresourcesInState(D3D12_RESOURCE_STATES state) const {
+    return !hasSubresourceSpecificState && (resourceState == state);
 }

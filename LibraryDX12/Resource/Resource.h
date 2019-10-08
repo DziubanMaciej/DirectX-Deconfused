@@ -26,11 +26,7 @@ public:
         };
 
         explicit ResourceState(D3D12_RESOURCE_STATES state) : resourceState(state) {}
-        ResourceState &operator=(D3D12_RESOURCE_STATES state) {
-            resourceState = state;
-            hasSubresourceSpecificState = false;
-            return *this;
-        }
+        ResourceState &operator=(D3D12_RESOURCE_STATES state);
         D3D12_RESOURCE_STATES resourceState;
         bool hasSubresourceSpecificState = false;
         D3D12_RESOURCE_STATES subresourcesStates[maxSubresourcesCount] = {};
