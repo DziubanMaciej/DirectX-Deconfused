@@ -41,26 +41,25 @@ private:
         struct MeshCreationData {
             std::string name;
             std::wstring filePath;
-            bool loadNormals;
             bool loadTextures;
             bool computeTangents;
         };
 
         MeshCreationData meshesCreationData[] = {
-            {"cubeNormal", L"Resources/meshes/cube_normals.obj", true, false, false},
-            {"cubeNormalUv", L"Resources/meshes/cube_normals_uvs.obj", true, true, false},
-            {"cubeNormalUvTangents", L"Resources/meshes/cube_normals_uvs.obj", true, true, true},
-            {"teapot", L"Resources/meshes/teapot_normals.obj", true, false, false},
-            {"actor", L"Resources/meshes/dennis.obj", true, true, false},
-            {"dxd", L"Resources/meshes/dxd_comicsans.obj", true, false, false},
-            {"intelMesh", L"Resources/meshes/corei7.obj", true, false, false},
-            {"aventadorMesh", L"Resources/meshes/aventador.obj", true, false, false},
-            {"porsheMesh", L"Resources/meshes/porshe.obj", true, true, false}};
+            {"cubeNormal", L"Resources/meshes/cube_normals.obj", false, false},
+            {"cubeNormalUv", L"Resources/meshes/cube_normals_uvs.obj", true, false},
+            {"cubeNormalUvTangents", L"Resources/meshes/cube_normals_uvs.obj", true, true},
+            {"teapot", L"Resources/meshes/teapot_normals.obj", false, false},
+            {"actor", L"Resources/meshes/dennis.obj", true, false},
+            {"dxd", L"Resources/meshes/dxd_comicsans.obj", false, false},
+            {"intelMesh", L"Resources/meshes/corei7.obj", false, false},
+            {"aventadorMesh", L"Resources/meshes/aventador.obj", false, false},
+            {"porsheMesh", L"Resources/meshes/porshe.obj", true, false}};
 
         for (const auto &data : meshesCreationData) {
             const bool asynchronousLoading = true;
-            meshes[data.name] = DXD::Mesh::createFromObj(*application, data.filePath, data.loadNormals,
-                                                         data.loadTextures, data.computeTangents, asynchronousLoading);
+            meshes[data.name] = DXD::Mesh::createFromObj(*application, data.filePath, data.loadTextures,
+                                                         data.computeTangents, asynchronousLoading);
             assert(meshes[data.name]);
         }
     }

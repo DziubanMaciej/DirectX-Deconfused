@@ -16,7 +16,6 @@
 
 struct MeshCpuLoadArgs {
     const std::wstring filePath;
-    bool loadNormals;
     bool loadTextureCoordinates;
     bool computeTangents;
 };
@@ -53,7 +52,7 @@ public:
 
 protected:
     friend class DXD::Mesh;
-    MeshImpl(ApplicationImpl &application, const std::wstring &filePath, bool loadNormals,
+    MeshImpl(ApplicationImpl &application, const std::wstring &filePath,
              bool loadTextureCoordinates, bool computeTangents, bool asynchronousLoading);
     ~MeshImpl() override;
 
@@ -87,7 +86,7 @@ protected:
 private:
     // Helpers
     static MeshType computeMeshType(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates,
-                                    bool loadNormals, bool loadTextureCoordinates, bool computeTangents);
+                                    bool loadTextureCoordinates, bool computeTangents);
     static UINT computeVertexSize(MeshType meshType);
     static void processIndexToken(const std::string &indexToken, bool textures, bool normals,
                                   UINT *outVertexIndex, UINT *outTextureCoordinateIndex, UINT *outNormalIndex);
@@ -95,6 +94,7 @@ private:
     static XMFLOAT2 getTextureCoordinateVector(const std::vector<FLOAT> &textureCoordinates, UINT textureCoordinateIndex);
     static void computeVertexTangent(const std::vector<FLOAT> &vertices, const std::vector<FLOAT> &textureCoordinates,
                                      const UINT vertexIndices[3], UINT textureCoordinateIndices[3], XMFLOAT3 &outTangent);
+    static void computeVertexNormal(const std::vector<FLOAT> &vertexElements, const UINT vertexIndices[3], XMFLOAT3 &outNormal);
     static std::map<MeshType, PipelineStateController::Identifier> getPipelineStateIdentifierMap();
     static PipelineStateController::Identifier computePipelineStateIdentifier(MeshType meshType);
     static std::map<MeshType, PipelineStateController::Identifier> getShadowMapPipelineStateIdentifierMap();
