@@ -5,10 +5,8 @@ project("DXD")
 include(CMakeMacros.cmake)
 validate_parameters(CMAKE_BUILD_TYPE EXTERNAL_LIBS_BIN_PATH)
 
-set(TARGET_NAME "Application")
 add_subdirectory("Application")
-set_target_properties(${TARGET_NAME} PROPERTIES FOLDER Development)
-set_directory_properties(PROPERTIES VS_STARTUP_PROJECT ${TARGET_NAME})
+set_directory_properties(PROPERTIES VS_STARTUP_PROJECT ${DEFAULT_APP})
 
 set(TARGET_NAME "LibraryDX12")
 add_subdirectory("LibraryDX12")

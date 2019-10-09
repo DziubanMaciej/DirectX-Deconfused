@@ -1,5 +1,5 @@
 ﻿#define _USE_MATH_DEFINES
-#include "FpsCounter.h"
+#include "Common/FpsCounter.h"
 
 #include <DXD/DXD.h>
 #include <algorithm>
