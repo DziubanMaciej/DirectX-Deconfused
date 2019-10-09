@@ -5,7 +5,7 @@
 #include <atomic>
 #include <mutex>
 
-template <typename CpuLoadArgs, typename CpuLoadResult, typename GpuLoadArgs, typename GpuLoadResult>
+template <typename CpuLoadArgs, typename CpuLoadResult, typename GpuLoadArgs>
 class AsyncLoadableObject {
 protected:
     enum class AsyncLoadingStatus {
@@ -30,10 +30,8 @@ protected:
     virtual CpuLoadResult cpuLoad(const CpuLoadArgs &args) = 0;
     virtual bool isCpuLoadSuccessful(const CpuLoadResult &result) { return true; }
     virtual GpuLoadArgs createArgsForGpuLoad(const CpuLoadResult &cpuLoadResult) = 0;
-    virtual GpuLoadResult gpuLoad(const GpuLoadArgs &args) = 0;
-    virtual bool isGpuLoadSuccessful(const GpuLoadResult &result) { return true; }
+    virtual void gpuLoad(const GpuLoadArgs &args) = 0;
     virtual bool hasGpuLoadEnded() = 0;
-    virtual void writeCpuGpuLoadResults(CpuLoadResult &cpuLoadResult, GpuLoadResult &gpuLoadResult) {}
 
     void terminateBackgroundProcessing(bool blocking) {
         terminate.store(true);
@@ -86,15 +84,9 @@ private:
 
         GpuLoadArgs gpuLoadArgs = createArgsForGpuLoad(cpuLoadResult);
         std::unique_lock<std::mutex> gpuLoadLock{this->gpuLoadLock};
-        GpuLoadResult gpuLoadResult = gpuLoad(gpuLoadArgs);
+        gpuLoad(gpuLoadArgs);
         gpuLoadLock.unlock();
         status = AsyncLoadingStatus::GPU_LOAD;
-        if (!isGpuLoadSuccessful(gpuLoadResult)) {
-            this->status = AsyncLoadingStatus::FAIL;
-            return;
-        }
-
-        writeCpuGpuLoadResults(cpuLoadResult, gpuLoadResult);
     }
 
     std::mutex gpuLoadLock;

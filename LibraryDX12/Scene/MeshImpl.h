@@ -30,11 +30,7 @@ struct MeshGpuLoadArgs {
     const std::vector<UINT> &indices;
 };
 
-struct MeshGpuLoadResult {
-    std::unique_ptr<VertexBuffer> vertexBuffer = {};
-    std::unique_ptr<IndexBuffer> indexBuffer = {};
-};
-using MeshAsyncLoadableObject = AsyncLoadableObject<MeshCpuLoadArgs, MeshCpuLoadResult, MeshGpuLoadArgs, MeshGpuLoadResult>;
+using MeshAsyncLoadableObject = AsyncLoadableObject<MeshCpuLoadArgs, MeshCpuLoadResult, MeshGpuLoadArgs>;
 
 class MeshImpl : public DXD::Mesh, public MeshAsyncLoadableObject {
 public:
@@ -99,6 +95,6 @@ private:
     MeshCpuLoadResult cpuLoad(const MeshCpuLoadArgs &args) override;
     bool isCpuLoadSuccessful(const MeshCpuLoadResult &result) override;
     MeshGpuLoadArgs createArgsForGpuLoad(const MeshCpuLoadResult &cpuLoadResult) override;
-    MeshGpuLoadResult gpuLoad(const MeshGpuLoadArgs &args) override;
+    void gpuLoad(const MeshGpuLoadArgs &args) override;
     bool hasGpuLoadEnded() override;
 };

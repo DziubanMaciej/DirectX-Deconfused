@@ -197,8 +197,7 @@ MeshGpuLoadArgs MeshImpl::createArgsForGpuLoad(const MeshCpuLoadResult &cpuLoadR
         cpuLoadResult.indices});
 }
 
-MeshGpuLoadResult MeshImpl::gpuLoad(const MeshGpuLoadArgs &args) {
-    MeshGpuLoadResult results = {};
+void MeshImpl::gpuLoad(const MeshGpuLoadArgs &args) {
     const bool useIndexBuffer = args.indices.size() > 0;
 
     // Context
@@ -221,8 +220,6 @@ MeshGpuLoadResult MeshImpl::gpuLoad(const MeshGpuLoadArgs &args) {
     if (useIndexBuffer) {
         this->indexBuffer->addGpuDependency(commandQueue, fenceValue);
     }
-
-    return std::move(results);
 }
 
 bool MeshImpl::hasGpuLoadEnded() {

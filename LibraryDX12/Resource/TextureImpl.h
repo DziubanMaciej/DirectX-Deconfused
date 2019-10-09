@@ -27,11 +27,7 @@ struct TextureGpuLoadArgs {
     const DirectX::ScratchImage &scratchImage;
 };
 
-struct TextureGpuLoadResult {
-    D3D12_RESOURCE_DESC description;
-};
-
-using TextureAsyncLoadableObject = AsyncLoadableObject<TextureCpuLoadArgs, TextureCpuLoadResult, TextureGpuLoadArgs, TextureGpuLoadResult>;
+using TextureAsyncLoadableObject = AsyncLoadableObject<TextureCpuLoadArgs, TextureCpuLoadResult, TextureGpuLoadArgs>;
 
 // TODO if texture used as Albedo (Diffuse), make SRGB, e.g. convert DXGI_FORMAT_R8G8B8A8_UNORM to DXGI_FORMAT_R8G8B8A8_UNORM_SRGB
 // TODO mips
@@ -54,7 +50,7 @@ private:
     TextureCpuLoadResult cpuLoad(const TextureCpuLoadArgs &args) override;
     bool isCpuLoadSuccessful(const TextureCpuLoadResult &result) override;
     TextureGpuLoadArgs createArgsForGpuLoad(const TextureCpuLoadResult &cpuLoadResult) override;
-    TextureGpuLoadResult gpuLoad(const TextureGpuLoadArgs &args) override;
+    void gpuLoad(const TextureGpuLoadArgs &args) override;
     bool hasGpuLoadEnded() override;
 
     // Fields

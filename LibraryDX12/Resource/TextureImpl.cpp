@@ -86,9 +86,7 @@ TextureGpuLoadArgs TextureImpl::createArgsForGpuLoad(const TextureCpuLoadResult 
         cpuLoadResult.scratchImage});
 }
 
-TextureGpuLoadResult TextureImpl::gpuLoad(const TextureGpuLoadArgs &args) {
-    TextureGpuLoadResult result = {};
-
+void TextureImpl::gpuLoad(const TextureGpuLoadArgs &args) {
     // Create GPU resource
     this->setResource(createResource(ApplicationImpl::getInstance().getDevice(), &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
                                      &this->description, D3D12_RESOURCE_STATE_COPY_DEST, nullptr),
@@ -115,8 +113,6 @@ TextureGpuLoadResult TextureImpl::gpuLoad(const TextureGpuLoadArgs &args) {
         assert(this->description.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D);
         generateMips();
     }
-
-    return std::move(result);
 }
 
 void TextureImpl::generateMips() {
