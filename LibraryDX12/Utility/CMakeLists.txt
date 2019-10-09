@@ -1,5 +1,6 @@
 add_sources_and_cmake_file(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/AlternatingResources.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/DxgiFormatHelper.h
     ${CMAKE_CURRENT_SOURCE_DIR}/DxObjectNaming.h
     ${CMAKE_CURRENT_SOURCE_DIR}/FileHelper.h
     ${CMAKE_CURRENT_SOURCE_DIR}/GetComPtrRefCount.h

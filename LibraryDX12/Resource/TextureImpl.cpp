@@ -4,6 +4,7 @@
 #include "CommandList/CommandList.h"
 #include "CommandList/CommandQueue.h"
 #include "Resource/ConstantBuffers.h"
+#include "Utility/DxgiFormatHelper.h"
 #include "Utility/FileHelper.h"
 #include "Utility/MathHelper.h"
 #include "Utility/ThrowIfFailed.h"
@@ -229,9 +230,10 @@ void TextureImpl::createDescriptorsForMipMapGeneration(DescriptorAllocation &des
     device->CreateShaderResourceView(resource.Get(), &srvDescription, descriptorAllocation.getCpuHandle(0));
 
     // Real UAVs
+    const auto uavFormat = DxgiFormatHelper::convertToUavCompatibleFormat(format);
     for (auto i = 0u; i < outputMipsCount; i++) {
         D3D12_UNORDERED_ACCESS_VIEW_DESC uavDescription = {};
-        uavDescription.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // TODO
+        uavDescription.Format = uavFormat;
         uavDescription.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
         uavDescription.Texture2D.MipSlice = sourceMip + i + 1;
         uavDescription.Texture2D.PlaneSlice = 0;
@@ -241,7 +243,7 @@ void TextureImpl::createDescriptorsForMipMapGeneration(DescriptorAllocation &des
     // Null UAVs, required by the runtime to be bound
     for (auto i = outputMipsCount; i < maxOutputMipsCount; i++) {
         D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc = {};
-        uavDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM; // TODO
+        uavDesc.Format = uavFormat;
         uavDesc.ViewDimension = D3D12_UAV_DIMENSION_TEXTURE2D;
         uavDesc.Texture2D.MipSlice = 0;
         uavDesc.Texture2D.PlaneSlice = 0;
