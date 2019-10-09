@@ -21,18 +21,13 @@ struct MeshCpuLoadArgs {
 };
 
 struct MeshCpuLoadResult {
-    unsigned int meshType = 0; // TODO
     std::vector<FLOAT> vertexElements = {};
     std::vector<UINT> indices = {};
-    UINT verticesCount;
-    UINT vertexSizeInBytes;
 };
 
 struct MeshGpuLoadArgs {
     const std::vector<FLOAT> &vertexElements;
     const std::vector<UINT> &indices;
-    UINT verticesCount;
-    UINT vertexSizeInBytes;
 };
 
 struct MeshGpuLoadResult {
@@ -106,5 +101,4 @@ private:
     MeshGpuLoadArgs createArgsForGpuLoad(const MeshCpuLoadResult &cpuLoadResult) override;
     MeshGpuLoadResult gpuLoad(const MeshGpuLoadArgs &args) override;
     bool hasGpuLoadEnded() override;
-    void writeCpuGpuLoadResults(MeshCpuLoadResult &cpuLoadResult, MeshGpuLoadResult &gpuLoadResult) override;
 };

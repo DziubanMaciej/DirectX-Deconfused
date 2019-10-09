@@ -106,16 +106,16 @@ MeshCpuLoadResult MeshImpl::cpuLoad(const MeshCpuLoadArgs &args) {
 
     // Compute some fields based on lines that were read
     MeshCpuLoadResult result{};
-    result.meshType = MeshImpl::computeMeshType(normalCoordinates, textureCoordinates, args.loadTextureCoordinates, args.computeTangents);
-    result.vertexSizeInBytes = computeVertexSize(result.meshType);
-    if (result.meshType == MeshImpl::UNKNOWN) {
+    this->meshType = MeshImpl::computeMeshType(normalCoordinates, textureCoordinates, args.loadTextureCoordinates, args.computeTangents);
+    this->vertexSizeInBytes = computeVertexSize(this->meshType);
+    if (this->meshType == MeshImpl::UNKNOWN) {
         return std::move(MeshCpuLoadResult{});
     }
 
-    const bool hasTextureCoordinates = result.meshType & TEXTURE_COORDS;
+    const bool hasTextureCoordinates = this->meshType & TEXTURE_COORDS;
     const bool hasNormals = normalCoordinates.size() > 0;
-    const bool computeNormals = result.meshType & NORMALS && !hasNormals;
-    const bool computeTangents = result.meshType & TANGENTS;
+    const bool computeNormals = this->meshType & NORMALS && !hasNormals;
+    const bool computeTangents = this->meshType & TANGENTS;
     const bool usesIndexBuffer = !hasTextureCoordinates && !hasNormals && !computeNormals && !computeTangents;
     if (usesIndexBuffer) {
         // Index buffer path - vertices are unmodified, we push indices to index buffer to define polygons
@@ -180,20 +180,21 @@ MeshCpuLoadResult MeshImpl::cpuLoad(const MeshCpuLoadArgs &args) {
         }
     }
 
-    result.verticesCount = static_cast<UINT>(result.vertexElements.size() * sizeof(FLOAT) / result.vertexSizeInBytes);
+    this->verticesCount = static_cast<UINT>(result.vertexElements.size() * sizeof(FLOAT) / this->vertexSizeInBytes);
+    this->indicesCount = static_cast<UINT>(result.indices.size());
+    this->pipelineStateIdentifier = computePipelineStateIdentifier(this->meshType);
+    this->shadowMapPipelineStateIdentifier = computeShadowMapPipelineStateIdentifier(this->meshType);
     return std::move(result);
 }
 
 bool MeshImpl::isCpuLoadSuccessful(const MeshCpuLoadResult &result) {
-    return result.meshType != UNKNOWN;
+    return this->meshType != UNKNOWN && result.vertexElements.size() > 0;
 }
 
 MeshGpuLoadArgs MeshImpl::createArgsForGpuLoad(const MeshCpuLoadResult &cpuLoadResult) {
     return std::move(MeshGpuLoadArgs{
         cpuLoadResult.vertexElements,
-        cpuLoadResult.indices,
-        cpuLoadResult.verticesCount,
-        cpuLoadResult.vertexSizeInBytes});
+        cpuLoadResult.indices});
 }
 
 MeshGpuLoadResult MeshImpl::gpuLoad(const MeshGpuLoadArgs &args) {
@@ -206,9 +207,9 @@ MeshGpuLoadResult MeshImpl::gpuLoad(const MeshGpuLoadArgs &args) {
 
     // Record command list for GPU upload
     CommandList commandList{commandQueue};
-    results.vertexBuffer = std::make_unique<VertexBuffer>(device, commandList, args.vertexElements.data(), args.verticesCount, args.vertexSizeInBytes);
+    this->vertexBuffer = std::make_unique<VertexBuffer>(device, commandList, args.vertexElements.data(), this->verticesCount, this->vertexSizeInBytes);
     if (useIndexBuffer) {
-        results.indexBuffer = std::make_unique<IndexBuffer>(device, commandList, args.indices.data(), static_cast<UINT>(args.indices.size()));
+        this->indexBuffer = std::make_unique<IndexBuffer>(device, commandList, args.indices.data(), static_cast<UINT>(args.indices.size()));
     }
     commandList.close();
 
@@ -216,9 +217,9 @@ MeshGpuLoadResult MeshImpl::gpuLoad(const MeshGpuLoadArgs &args) {
     const uint64_t fenceValue = commandQueue.executeCommandListAndSignal(commandList);
 
     // Register upload status for buffers
-    results.vertexBuffer->addGpuDependency(commandQueue, fenceValue);
+    this->vertexBuffer->addGpuDependency(commandQueue, fenceValue);
     if (useIndexBuffer) {
-        results.indexBuffer->addGpuDependency(commandQueue, fenceValue);
+        this->indexBuffer->addGpuDependency(commandQueue, fenceValue);
     }
 
     return std::move(results);
@@ -229,17 +230,6 @@ bool MeshImpl::hasGpuLoadEnded() {
     const bool indexInProgress = this->indexBuffer != nullptr && this->indexBuffer->isWaitingForGpuDependencies();
     const bool bothEnded = !vertexInProgress && !indexInProgress;
     return bothEnded;
-}
-
-void MeshImpl::writeCpuGpuLoadResults(MeshCpuLoadResult &cpuLoadResult, MeshGpuLoadResult &gpuLoadResult) {
-    this->meshType = cpuLoadResult.meshType;
-    this->vertexSizeInBytes = cpuLoadResult.vertexSizeInBytes;
-    this->verticesCount = cpuLoadResult.verticesCount;
-    this->indicesCount = static_cast<UINT>(cpuLoadResult.indices.size());
-    this->pipelineStateIdentifier = computePipelineStateIdentifier(meshType);
-    this->shadowMapPipelineStateIdentifier = computeShadowMapPipelineStateIdentifier(meshType);
-    this->vertexBuffer = std::move(gpuLoadResult.vertexBuffer);
-    this->indexBuffer = std::move(gpuLoadResult.indexBuffer);
 }
 
 // ----------------------------------------------------------------- Helpers

@@ -33,7 +33,7 @@ protected:
     virtual GpuLoadResult gpuLoad(const GpuLoadArgs &args) = 0;
     virtual bool isGpuLoadSuccessful(const GpuLoadResult &result) { return true; }
     virtual bool hasGpuLoadEnded() = 0;
-    virtual void writeCpuGpuLoadResults(CpuLoadResult &cpuLoadResult, GpuLoadResult &gpuLoadResult) = 0;
+    virtual void writeCpuGpuLoadResults(CpuLoadResult &cpuLoadResult, GpuLoadResult &gpuLoadResult) {}
 
     void terminateBackgroundProcessing(bool blocking) {
         terminate.store(true);
