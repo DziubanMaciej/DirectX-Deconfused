@@ -68,6 +68,9 @@ TextureCpuLoadResult TextureImpl::cpuLoad(const TextureCpuLoadArgs &args) {
         UNREACHABLE_CODE();
     }
 
+    // Compute resource description
+    this->description = TextureImpl::createTextureDescription(result.metadata);
+
     // Return successfully
     result.success = true;
     return std::move(result);
@@ -87,11 +90,9 @@ TextureGpuLoadResult TextureImpl::gpuLoad(const TextureGpuLoadArgs &args) {
     TextureGpuLoadResult result = {};
 
     // Create GPU resource
-    result.description = TextureImpl::createTextureDescription(args.metadata);
-    result.description.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
     this->setResource(createResource(ApplicationImpl::getInstance().getDevice(), &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
-                                     &result.description, D3D12_RESOURCE_STATE_COPY_DEST, nullptr),
-                      D3D12_RESOURCE_STATE_COPY_DEST, result.description.MipLevels);
+                                     &this->description, D3D12_RESOURCE_STATE_COPY_DEST, nullptr),
+                      D3D12_RESOURCE_STATE_COPY_DEST, this->description.MipLevels);
 
     // Upload data to the GPU resource
     Resource::uploadToGPU(ApplicationImpl::getInstance(), args.scratchImage.GetPixels(),
@@ -101,24 +102,24 @@ TextureGpuLoadResult TextureImpl::gpuLoad(const TextureGpuLoadArgs &args) {
     // Create SRV
     DescriptorAllocation cpuDescriptors = ApplicationImpl::getInstance().getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1);
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDescription = {};
-    srvDescription.Format = result.description.Format;
+    srvDescription.Format = this->description.Format;
     srvDescription.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     srvDescription.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDescription.Texture2D.MipLevels = result.description.MipLevels;
+    srvDescription.Texture2D.MipLevels = this->description.MipLevels;
     srvDescription.Texture2D.MostDetailedMip = 0;
     srvDescription.Texture2D.PlaneSlice = 0;
     srvDescription.Texture2D.ResourceMinLODClamp = 0;
     this->createSrv(&srvDescription);
 
-    if (result.description.MipLevels > 1u) {
-        assert(result.description.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D);
-        generateMips(result.description);
+    if (this->description.MipLevels > 1u) {
+        assert(this->description.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D);
+        generateMips();
     }
 
     return std::move(result);
 }
 
-void TextureImpl::generateMips(D3D12_RESOURCE_DESC description) {
+void TextureImpl::generateMips() {
     // Create command list
     auto &queue = ApplicationImpl::getInstance().getDirectCommandQueue();
     CommandList commandList{queue};
@@ -174,10 +175,6 @@ bool TextureImpl::hasGpuLoadEnded() {
     return !isWaitingForGpuDependencies();
 }
 
-void TextureImpl::writeCpuGpuLoadResults(TextureCpuLoadResult &cpuLoadResult, TextureGpuLoadResult &gpuLoadResult) {
-    this->description = gpuLoadResult.description;
-}
-
 // ----------------------------------------------------------------- Helpers
 
 D3D12_RESOURCE_DESC TextureImpl::createTextureDescription(const DirectX::TexMetadata &metadata) {
@@ -206,6 +203,7 @@ D3D12_RESOURCE_DESC TextureImpl::createTextureDescription(const DirectX::TexMeta
     default:
         UNREACHABLE_CODE();
     }
+    textureDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
     textureDesc.MipLevels = computeMaxMipsCount(metadata.width, metadata.height);
     textureDesc.MipLevels = std::min(static_cast<UINT16>(Resource::maxSubresourcesCount), textureDesc.MipLevels);
     return textureDesc;

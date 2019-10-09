@@ -45,7 +45,7 @@ private:
     // Helpers
     static D3D12_RESOURCE_DESC createTextureDescription(const DirectX::TexMetadata &metadata);
     static uint16_t computeMaxMipsCount(size_t width, size_t height);
-    void generateMips(D3D12_RESOURCE_DESC description);
+    void generateMips();
     static void createDescriptorsForMipMapGeneration(DescriptorAllocation &descriptorAllocation, ID3D12ResourcePtr resource, DXGI_FORMAT format,
                                                      uint32_t sourceMip, uint32_t outputMipsCount, uint32_t maxOutputMipsCount);
     void transitionSubresourcesForMipMapGeneration(CommandList &commandList, uint32_t sourceMip, uint32_t outputMipsCount);
@@ -56,7 +56,6 @@ private:
     TextureGpuLoadArgs createArgsForGpuLoad(const TextureCpuLoadResult &cpuLoadResult) override;
     TextureGpuLoadResult gpuLoad(const TextureGpuLoadArgs &args) override;
     bool hasGpuLoadEnded() override;
-    void writeCpuGpuLoadResults(TextureCpuLoadResult &cpuLoadResult, TextureGpuLoadResult &gpuLoadResult) override;
 
     // Fields
     D3D12_RESOURCE_DESC description = {};
