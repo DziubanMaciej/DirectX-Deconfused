@@ -197,13 +197,13 @@ void RenderData::resize(int width, int height) {
 
     // Shadow maps
     D3D12_DEPTH_STENCIL_VIEW_DESC shadowMapDsvDesc = {};
-    shadowMapDsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+    shadowMapDsvDesc.Format = DXGI_FORMAT_D16_UNORM;
     shadowMapDsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
     shadowMapDsvDesc.Flags = D3D12_DSV_FLAG_NONE;
     shadowMapDsvDesc.Texture2D = D3D12_TEX2D_DSV{0};
     D3D12_SHADER_RESOURCE_VIEW_DESC shadowMapSrvDesc = {};
     shadowMapSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    shadowMapSrvDesc.Format = DXGI_FORMAT_R32_FLOAT;
+    shadowMapSrvDesc.Format = DXGI_FORMAT_R16_UNORM;
     shadowMapSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     shadowMapSrvDesc.Texture2D.MipLevels = 1;
     shadowMapSrvDesc.Texture2D.MostDetailedMip = 0;
@@ -214,9 +214,9 @@ void RenderData::resize(int width, int height) {
         shadowMap[i] = std::make_unique<Resource>(device,
                                                   &CD3DX12_HEAP_PROPERTIES{D3D12_HEAP_TYPE_DEFAULT},
                                                   D3D12_HEAP_FLAG_NONE,
-                                                  &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R32_TYPELESS, static_cast<uint32_t>(2048), static_cast<uint32_t>(2048), 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+                                                  &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16_TYPELESS, static_cast<uint32_t>(2048), static_cast<uint32_t>(2048), 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
                                                   D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-                                                  &CD3DX12_CLEAR_VALUE{DXGI_FORMAT_D32_FLOAT, 1.0f, 0});
+                                                  &CD3DX12_CLEAR_VALUE{DXGI_FORMAT_D16_UNORM, 1.0f, 0});
         shadowMap[i]->createDsv(&shadowMapDsvDesc);
         shadowMap[i]->createSrv(&shadowMapSrvDesc);
         SET_OBJECT_NAME(*shadowMap[i], L"ShadowMap%d", i);

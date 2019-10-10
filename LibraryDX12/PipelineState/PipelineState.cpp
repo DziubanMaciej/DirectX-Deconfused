@@ -49,6 +49,11 @@ GraphicsPipelineState &GraphicsPipelineState::setBlendDesc(const D3D12_BLEND_DES
     return *this;
 }
 
+GraphicsPipelineState &GraphicsPipelineState::setDsvFormat(DXGI_FORMAT format) {
+    description.DSVFormat = format;
+    return *this;
+}
+
 void GraphicsPipelineState::compile(ID3D12DevicePtr device, ID3D12PipelineStatePtr &pipelineState) {
     throwIfFailed(device->CreateGraphicsPipelineState(&description, IID_PPV_ARGS(&pipelineState)));
 }

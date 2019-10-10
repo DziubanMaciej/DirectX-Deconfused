@@ -41,6 +41,7 @@ public:
     GraphicsPipelineState &setRenderTargetsCount(UINT count);
     GraphicsPipelineState &setRenderTargetFormat(UINT idx, DXGI_FORMAT format);
     GraphicsPipelineState &setBlendDesc(const D3D12_BLEND_DESC &blendDesc);
+    GraphicsPipelineState &setDsvFormat(const DXGI_FORMAT format);
 
     void compile(ID3D12DevicePtr device, ID3D12PipelineStatePtr &pipelineState);
 

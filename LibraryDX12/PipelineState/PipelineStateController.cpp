@@ -205,6 +205,7 @@ void PipelineStateController::compilePipelineStateShadowMapNormal(RootSignature 
 
     // Pipeline state object
     GraphicsPipelineState{inputLayout, rootSignature}
+        .setDsvFormat(DXGI_FORMAT_D16_UNORM)
         .VS(L"ShadowMap/normal_VS.hlsl")
         .compile(device, pipelineState);
 }
@@ -224,6 +225,7 @@ void PipelineStateController::compilePipelineStateShadowMapTextureNormal(RootSig
 
     // Pipeline state object
     GraphicsPipelineState{inputLayout, rootSignature}
+        .setDsvFormat(DXGI_FORMAT_D16_UNORM)
         .VS(L"ShadowMap/normal_texture_VS.hlsl")
         .compile(device, pipelineState);
 }
@@ -244,6 +246,7 @@ void PipelineStateController::compilePipelineStateShadowMapTextureNormalMap(Root
 
     // Pipeline state object
     GraphicsPipelineState{inputLayout, rootSignature}
+        .setDsvFormat(DXGI_FORMAT_D16_UNORM)
         .VS(L"ShadowMap/texture_normal_map_VS.hlsl")
         .compile(device, pipelineState);
 }
