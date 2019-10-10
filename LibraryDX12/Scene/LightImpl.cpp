@@ -3,17 +3,13 @@
 #include "Utility/ThrowIfFailed.h"
 
 namespace DXD {
-std::unique_ptr<Light> Light::create() {
-    return std::unique_ptr<Light>{new LightImpl()};
+std::unique_ptr<Light> Light::create(LightType type) {
+    return std::unique_ptr<Light>{new LightImpl(type)};
 }
 } // namespace DXD
 
-LightImpl::LightImpl() {
-    position = XMFLOAT3(0, 0, 0);
-    color = XMFLOAT3(0, 0, 0);
-    direction = XMFLOAT3(0.001f, -1.0f, 0.001f);
-    power = 1;
-    type = DXD::LightType::SPOT_LIGHT;
+LightImpl::LightImpl(LightType type)
+    : type(type) {
 }
 
 void LightImpl::setPosition(FLOAT x, FLOAT y, FLOAT z) {
@@ -78,10 +74,10 @@ XMMATRIX LightImpl::getShadowMapViewMatrix() {
 XMMATRIX LightImpl::getShadowMapProjectionMatrix() {
     if (this->dirtyProj) {
         switch (this->type) {
-        case DXD::LightType::SPOT_LIGHT:
+        case LightType::SPOT_LIGHT:
             this->smProjectionMatrix = XMMatrixPerspectiveFovLH(90, 1, 0.1f, 160.0f);
             break;
-        case DXD::LightType::DIRECTIONAL_LIGHT:
+        case LightType::DIRECTIONAL_LIGHT:
             this->smProjectionMatrix = XMMatrixOrthographicLH(40, 40, 0.1f, 160.0f);
             break;
         default:

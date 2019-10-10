@@ -149,36 +149,40 @@ private:
     }
     void prepLights() {
         DXD::log("Loading lights...\n");
-        std::vector<std::string> lightNames = {
-            "sunLight",
-            "moonLight",
-            "redLight",
-            "blueLight"};
-        for (auto light : lightNames) {
-            lights.insert({light, DXD::Light::create()});
+
+        struct LightCreationData {
+            std::string name;
+            DXD::Light::LightType type;
+        };
+
+        std::vector<LightCreationData> lightNames = {
+            {"sunLight", DXD::Light::LightType::DIRECTIONAL_LIGHT},
+            {"moonLight", DXD::Light::LightType::SPOT_LIGHT},
+            {"redLight", DXD::Light::LightType::SPOT_LIGHT},
+            {"blueLight", DXD::Light::LightType::SPOT_LIGHT}};
+
+        for (const auto &data : lightNames) {
+            lights.insert({data.name, DXD::Light::create(data.type)});
         }
-        // LIGHT CONFIG
-        {
-            lights["sunLight"]->setColor(1.0f, 1.0f, 1.0f);
-            lights["sunLight"]->setPosition(-12, 12, 6);
-            lights["sunLight"]->setDirection(1, -1, -0.5);
-            lights["sunLight"]->setPower(12);
-            lights["sunLight"]->setType(DXD::LightType::DIRECTIONAL_LIGHT);
 
-            lights["moonLight"]->setColor(0.0f, 1.0f, 1.0f);
-            lights["moonLight"]->setPosition(7, 4, 6);
-            lights["moonLight"]->setPower(2);
+        lights["sunLight"]->setColor(1.0f, 1.0f, 1.0f);
+        lights["sunLight"]->setPosition(-12, 12, 6);
+        lights["sunLight"]->setDirection(1, -1, -0.5);
+        lights["sunLight"]->setPower(12);
 
-            lights["redLight"]->setColor(1.0f, 0.0f, 0.0f);
-            lights["redLight"]->setPosition(-12, 1, -12);
-            lights["redLight"]->setDirection(1, 0, 1);
-            lights["redLight"]->setPower(2);
+        lights["moonLight"]->setColor(0.0f, 1.0f, 1.0f);
+        lights["moonLight"]->setPosition(7, 4, 6);
+        lights["moonLight"]->setPower(2);
 
-            lights["blueLight"]->setColor(0.0f, 0.0f, 1.0f);
-            lights["blueLight"]->setPosition(12, 1, -12);
-            lights["blueLight"]->setDirection(-1, 0, 1);
-            lights["blueLight"]->setPower(2);
-        }
+        lights["redLight"]->setColor(1.0f, 0.0f, 0.0f);
+        lights["redLight"]->setPosition(-12, 1, -12);
+        lights["redLight"]->setDirection(1, 0, 1);
+        lights["redLight"]->setPower(2);
+
+        lights["blueLight"]->setColor(0.0f, 0.0f, 1.0f);
+        lights["blueLight"]->setPosition(12, 1, -12);
+        lights["blueLight"]->setDirection(-1, 0, 1);
+        lights["blueLight"]->setPower(2);
     }
     void prepTextures() {
         DXD::log("Loading textures...\n");

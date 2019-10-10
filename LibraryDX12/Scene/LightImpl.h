@@ -5,6 +5,7 @@
 class LightImpl : public DXD::Light {
 protected:
     friend class DXD::Light;
+    LightImpl(LightType type);
 
 public:
     void setPosition(FLOAT x, FLOAT y, FLOAT z) override;
@@ -22,21 +23,19 @@ public:
     void setPower(float pos) override;
     float getPower() const override;
 
-    void setType(DXD::LightType type) { this->type = type; }
-    DXD::LightType getType() { return type; }
-
-    LightImpl();
+    void setType(LightType type) { this->type = type; }
+    LightType getType() { return type; }
 
     XMMATRIX getShadowMapViewMatrix();
     XMMATRIX getShadowMapProjectionMatrix();
     XMMATRIX getShadowMapViewProjectionMatrix();
 
 protected:
-    XMFLOAT3 position;
-    float power;
-    XMFLOAT3 color;
-    XMFLOAT3 direction;
-    DXD::LightType type;
+    LightType type;
+    XMFLOAT3 position = { 0,0,0 };
+    XMFLOAT3 direction = { 0,0,1 };
+    XMFLOAT3 color = { 1,1,1 };
+    float power = 1.f;
 
     XMMATRIX smViewMatrix = {};
     XMMATRIX smProjectionMatrix = {};

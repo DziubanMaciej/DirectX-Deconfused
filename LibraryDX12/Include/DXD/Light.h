@@ -8,13 +8,14 @@
 #include <memory>
 
 namespace DXD {
-enum LightType {
-    SPOT_LIGHT,
-    DIRECTIONAL_LIGHT
-};
 
 class EXPORT Light : NonCopyableAndMovable {
 public:
+    enum class LightType {
+        SPOT_LIGHT,
+        DIRECTIONAL_LIGHT,
+    };
+
     virtual void setPosition(FLOAT x, FLOAT y, FLOAT z) = 0;
     virtual void setPosition(XMFLOAT3 pos) = 0;
     virtual XMFLOAT3 getPosition() const = 0;
@@ -34,7 +35,7 @@ public:
     virtual LightType getType() = 0;
 
     virtual ~Light() = default;
-    static std::unique_ptr<Light> create();
+    static std::unique_ptr<Light> create(LightType type);
 
 protected:
     Light() = default;

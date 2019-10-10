@@ -18,8 +18,7 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int s
     object->setPosition(0, 0, 0);
     object->setColor(0.2f, 0.2f, 0.2f);
 
-    auto light = DXD::Light::create();
-    light->setType(DXD::LightType::SPOT_LIGHT);
+    auto light = DXD::Light::create(DXD::Light::LightType::SPOT_LIGHT);
     light->setDirection(0, 0, 1);
     light->setPower(0.2f);
     light->setPosition(0, 0, -5);
