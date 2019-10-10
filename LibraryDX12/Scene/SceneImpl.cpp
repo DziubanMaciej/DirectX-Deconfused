@@ -162,18 +162,7 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
 
         // View projection matrix
         camera->setAspectRatio(1.0f);
-
-        const auto lightPosition = XMLoadFloat3(&light->getPosition());
-        const auto lightDirection = XMLoadFloat3(&light->getDirection());
-        const auto lightFocusPoint = XMVectorAdd(lightDirection, lightPosition);
-        const XMMATRIX smViewMatrix = XMMatrixLookAtLH(lightPosition, lightFocusPoint, XMVectorSet(0, 1, 0, 0.f));
-        if (light->getType() == DXD::LightType::SPOT_LIGHT) {
-            const XMMATRIX smProjectionMatrix = XMMatrixPerspectiveFovLH(90, 1, 0.1f, 160.0f);
-            light->smViewProjectionMatrix = XMMatrixMultiply(smViewMatrix, smProjectionMatrix);
-        } else {
-            const XMMATRIX smProjectionMatrix = XMMatrixOrthographicLH(40, 40, 0.1f, 160.0f);
-            light->smViewProjectionMatrix = XMMatrixMultiply(smViewMatrix, smProjectionMatrix);
-        }
+        const XMMATRIX smViewProjectionMatrix = light->getShadowMapViewProjectionMatrix();
 
         // Draw NORMAL
         commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SM_NORMAL);
@@ -181,7 +170,7 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
             MeshImpl &mesh = object->getMesh();
             if (mesh.getShadowMapPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
                 SMmvp smmvp;
-                smmvp.modelViewProjectionMatrix = XMMatrixMultiply(object->getModelMatrix(), light->smViewProjectionMatrix);
+                smmvp.modelViewProjectionMatrix = XMMatrixMultiply(object->getModelMatrix(), smViewProjectionMatrix);
                 commandList.setRoot32BitConstant(0, smmvp);
 
                 commandList.IASetVertexAndIndexBuffer(mesh);
@@ -195,7 +184,7 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
             MeshImpl &mesh = object->getMesh();
             if (mesh.getShadowMapPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
                 SMmvp smmvp;
-                smmvp.modelViewProjectionMatrix = XMMatrixMultiply(object->getModelMatrix(), light->smViewProjectionMatrix);
+                smmvp.modelViewProjectionMatrix = XMMatrixMultiply(object->getModelMatrix(), smViewProjectionMatrix);
                 commandList.setRoot32BitConstant(0, smmvp);
 
                 commandList.IASetVertexAndIndexBuffer(mesh);
@@ -241,7 +230,7 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
         lightCb->lightColor[lightCb->lightsSize] = XMFLOAT4(light->getColor().x, light->getColor().y, light->getColor().z, light->getPower());
         lightCb->lightPosition[lightCb->lightsSize] = XMFLOAT4(light->getPosition().x, light->getPosition().y, light->getPosition().z, 0);
         lightCb->lightDirection[lightCb->lightsSize] = XMFLOAT4(light->getDirection().x, light->getDirection().y, light->getDirection().z, 0);
-        lightCb->smViewProjectionMatrix[lightCb->lightsSize] = light->smViewProjectionMatrix;
+        lightCb->smViewProjectionMatrix[lightCb->lightsSize] = light->getShadowMapViewProjectionMatrix();
         lightCb->lightsSize++;
         if (lightCb->lightsSize >= 8) {
             break;

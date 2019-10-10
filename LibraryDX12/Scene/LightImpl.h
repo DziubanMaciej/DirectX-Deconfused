@@ -27,7 +27,9 @@ public:
 
     LightImpl();
 
-    XMMATRIX smViewProjectionMatrix;
+    XMMATRIX getShadowMapViewMatrix();
+    XMMATRIX getShadowMapProjectionMatrix();
+    XMMATRIX getShadowMapViewProjectionMatrix();
 
 protected:
     XMFLOAT3 position;
@@ -35,4 +37,11 @@ protected:
     XMFLOAT3 color;
     XMFLOAT3 direction;
     DXD::LightType type;
+
+    XMMATRIX smViewMatrix = {};
+    XMMATRIX smProjectionMatrix = {};
+    XMMATRIX smViewProjectionMatrix = {};
+
+    bool dirtyView = true;
+    bool dirtyProj = true;
 };
