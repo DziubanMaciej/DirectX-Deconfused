@@ -102,17 +102,9 @@ XMMATRIX CameraImpl::getProjectionMatrix() {
 }
 
 XMMATRIX CameraImpl::getInvViewMatrix() {
-    if (dirtyView) {
-        dirtyView = false;
-        viewMatrix = XMMatrixLookAtLH(eyePosition, focusPoint, upDirection);
-    }
-    return XMMatrixInverse(nullptr, viewMatrix);
+    return XMMatrixInverse(nullptr, getViewMatrix());
 }
 
 XMMATRIX CameraImpl::getInvProjectionMatrix() {
-    if (dirtyProj) {
-        dirtyProj = false;
-        projectionMatrix = XMMatrixPerspectiveFovLH(fovAngleY, aspectRatio, nearZ, farZ);
-    }
-    return XMMatrixInverse(nullptr, projectionMatrix);
+    return XMMatrixInverse(nullptr, getProjectionMatrix());
 }
