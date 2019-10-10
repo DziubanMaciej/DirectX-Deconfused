@@ -6,11 +6,7 @@ std::unique_ptr<Camera> Camera::create() {
 }
 } // namespace DXD
 
-CameraImpl::CameraImpl() {
-}
-
-CameraImpl::~CameraImpl() {
-}
+// ------------------------------------------------------------- Position and rotation in 3D space
 
 void CameraImpl::setEyePosition(float x, float y, float z) {
     this->eyePosition = XMVectorSet(x, y, z, 1.f);
@@ -54,6 +50,8 @@ XMFLOAT3 CameraImpl::getUpDirection() const {
     return XMStoreFloat3(this->upDirection);
 }
 
+// ------------------------------------------------------------- Other fields
+
 void CameraImpl::setFovAngleY(float val) {
     this->dirtyProj = true;
     this->fovAngleY = val;
@@ -68,11 +66,6 @@ float CameraImpl::getFovAngleYDeg() const {
     return XMConvertToRadians(fovAngleY);
 }
 
-void CameraImpl::setAspectRatio(float val) {
-    this->dirtyProj = true;
-    this->aspectRatio = val;
-}
-
 void CameraImpl::setNearZ(float val) {
     this->dirtyProj = true;
     this->nearZ = val;
@@ -82,6 +75,15 @@ void CameraImpl::setFarZ(float val) {
     this->dirtyProj = true;
     this->farZ = val;
 }
+
+// ------------------------------------------------------------- Internal fields
+
+void CameraImpl::setAspectRatio(float val) {
+    this->dirtyProj = true;
+    this->aspectRatio = val;
+}
+
+// ------------------------------------------------------------- Transformation matrices getters
 
 XMMATRIX CameraImpl::getViewMatrix() {
     if (dirtyView) {

@@ -5,7 +5,7 @@ struct Handler : DXD::CallbackHandler {
     void onUpdate(unsigned int deltaTimeMicroseconds) {
         static float rotation{};
         rotation += 0.000001f * deltaTimeMicroseconds;
-        object->setRotation(XMFLOAT3{ 0,1,0 }, rotation);
+        object->setRotation(XMFLOAT3{0, 1, 0}, rotation);
     }
 };
 
@@ -16,22 +16,18 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int s
 
     auto object = DXD::Object::create(*mesh);
     object->setPosition(0, 0, 0);
-    object->setColor(0.2, 0.2, 0.2);
+    object->setColor(0.2f, 0.2f, 0.2f);
 
     auto light = DXD::Light::create();
     light->setType(DXD::LightType::SPOT_LIGHT);
-    light->setDirection(0,0, 1);
-    light->setPower(0.2);
+    light->setDirection(0, 0, 1);
+    light->setPower(0.2f);
     light->setPosition(0, 0, -5);
     light->setColor(0.6f, 0.7f, 0.f);
 
     auto camera = DXD::Camera::create();
-    camera->setUpDirection(0, 1, 0);
     camera->setEyePosition(0, 0, -5);
     camera->setFocusPoint(0, 0, 0);
-    camera->setNearZ(0.001f);
-    camera->setFarZ(1000.0f);
-    camera->setFovAngleYDeg(80);
 
     auto handler = Handler{};
     handler.object = object.get();

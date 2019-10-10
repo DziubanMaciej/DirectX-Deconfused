@@ -5,8 +5,6 @@
 class CameraImpl : public DXD::Camera {
 protected:
     friend class DXD::Camera;
-    CameraImpl();
-    ~CameraImpl();
 
 public:
     void setEyePosition(float x, float y, float z) override;
@@ -26,14 +24,14 @@ public:
     float getFovAngleY() const override { return fovAngleY; }
     float getFovAngleYDeg() const override;
 
-    void setAspectRatio(float val);
-    float getAspectRatio() { return aspectRatio; }
-
     void setNearZ(float val) override;
     float getNearZ() const override { return nearZ; }
 
     void setFarZ(float val) override;
     float getFarZ() const override { return farZ; }
+
+    void setAspectRatio(float val);
+    float getAspectRatio() { return aspectRatio; }
 
     XMMATRIX getViewMatrix();
     XMMATRIX getProjectionMatrix();
@@ -41,15 +39,15 @@ public:
     XMMATRIX getInvProjectionMatrix();
 
 protected:
-    XMVECTOR eyePosition;
-    XMVECTOR focusPoint;
-    XMVECTOR upDirection;
-    float fovAngleY;
-    float aspectRatio;
-    float nearZ;
-    float farZ;
+    XMVECTOR eyePosition = {0, 0, 0};
+    XMVECTOR focusPoint = {0, 0, 1};
+    XMVECTOR upDirection = {0, 1, 0};
+    float fovAngleY = XM_PI / 2;
+    float aspectRatio = {};
+    float nearZ = 0.0001f;
+    float farZ = 1000.f;
     XMMATRIX viewMatrix;
     XMMATRIX projectionMatrix;
-    bool dirtyView;
-    bool dirtyProj;
+    bool dirtyView = false;
+    bool dirtyProj = false;
 };
