@@ -41,6 +41,7 @@ public:
 
     XMMATRIX getViewMatrix();
     XMMATRIX getProjectionMatrix();
+    XMMATRIX getViewProjectionMatrix();
     XMMATRIX getInvViewMatrix();
     XMMATRIX getInvProjectionMatrix();
 

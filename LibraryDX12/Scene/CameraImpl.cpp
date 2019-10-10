@@ -131,6 +131,10 @@ XMMATRIX CameraImpl::getProjectionMatrix() {
     return projectionMatrix;
 }
 
+XMMATRIX CameraImpl::getViewProjectionMatrix() {
+    return XMMatrixMultiply(getViewMatrix(), getProjectionMatrix());
+}
+
 XMMATRIX CameraImpl::getInvViewMatrix() {
     return XMMatrixInverse(nullptr, getViewMatrix());
 }
