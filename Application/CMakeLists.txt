@@ -26,4 +26,5 @@ macro(add_application TARGET_NAME DEFAULT_APP)
 endmacro()
 
 # Apps creations
-add_application(Application1 TRUE "Application1.cpp")
+add_application(Application1 TRUE  "Application1.cpp")
+add_application(Application2 FALSE "Application2.cpp")
