@@ -5,7 +5,7 @@ struct Handler : DXD::CallbackHandler {
     void onUpdate(unsigned int deltaTimeMicroseconds) {
         static float rotation{};
         rotation += 0.000001f * deltaTimeMicroseconds;
-        object->setRotation(XMFLOAT3{0, 1, 0}, rotation);
+        object->setRotation(XMFLOAT3{0, 1, 1}, rotation);
     }
 };
 
@@ -14,14 +14,19 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int s
 
     auto mesh = DXD::Mesh::createFromObj(*application, L"Resources/meshes/cube_normals.obj", false, false, true);
 
-    auto object = DXD::Object::create(*mesh);
-    object->setPosition(0, 0, 0);
-    object->setColor(0.2f, 0.2f, 0.2f);
+    auto cube = DXD::Object::create(*mesh);
+    cube->setPosition(0, 0, 0);
+    cube->setColor(0.2f, 0.2f, 0.2f);
+
+    auto wall = DXD::Object::create(*mesh);
+    wall->setPosition(0, 0, 5);
+    wall->setColor(0, 0.7f, 0.7f);
+    wall->setScale(200, 200, 0.01f);
 
     auto light = DXD::Light::create(DXD::Light::LightType::SPOT_LIGHT);
     light->setDirection(0, 0, 1);
-    light->setPower(0.2f);
-    light->setPosition(0, 0, -5);
+    light->setPower(1.2f);
+    light->setPosition(1, 1, -5);
     light->setColor(0.6f, 0.7f, 0.f);
 
     auto camera = DXD::Camera::create();
@@ -29,11 +34,12 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int s
     camera->setFocusPoint(0, 0, 0);
 
     auto handler = Handler{};
-    handler.object = object.get();
+    handler.object = cube.get();
 
     auto scene = DXD::Scene::create(*application);
     scene->setBackgroundColor(0, 0.2f, 0.2f);
-    scene->addObject(*object);
+    scene->addObject(*cube);
+    scene->addObject(*wall);
     scene->addLight(*light);
     scene->setCamera(*camera);
 
