@@ -17,6 +17,10 @@ public:
     virtual void setFocusPoint(XMFLOAT3 vec) = 0;
     virtual XMFLOAT3 getFocusPoint() const = 0;
 
+    virtual void setLookDirection(float x, float y, float z) = 0;
+    virtual void setLookDirection(XMFLOAT3 vec) = 0;
+    virtual XMFLOAT3 getLookDirection() const = 0;
+
     virtual void setUpDirection(float x, float y, float z) = 0;
     virtual void setUpDirection(XMFLOAT3 vec) = 0;
     virtual XMFLOAT3 getUpDirection() const = 0;

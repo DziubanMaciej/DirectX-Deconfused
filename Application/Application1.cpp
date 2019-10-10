@@ -306,12 +306,7 @@ private:
     void updateCamera() {
         auto camera = scene->getCamera();
         camera->setEyePosition(cameraPosition);
-
-        XMFLOAT3 focusPoint{cameraPosition};
-        focusPoint.x += focusDirection.x;
-        focusPoint.y += focusDirection.y;
-        focusPoint.z += focusDirection.z;
-        camera->setFocusPoint(focusPoint);
+        camera->setLookDirection(focusDirection);
     }
     void sceneMoveTick(unsigned int deltaTimeMicroseconds) {
         static float rotation = 0.f;

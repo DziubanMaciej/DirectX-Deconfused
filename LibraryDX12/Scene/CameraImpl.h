@@ -15,6 +15,10 @@ public:
     void setFocusPoint(XMFLOAT3 vec) override;
     XMFLOAT3 getFocusPoint() const override;
 
+    void setLookDirection(float x, float y, float z) override;
+    void setLookDirection(XMFLOAT3 vec) override;
+    XMFLOAT3 getLookDirection() const override;
+
     void setUpDirection(float x, float y, float z) override;
     void setUpDirection(XMFLOAT3 vec) override;
     XMFLOAT3 getUpDirection() const override;
@@ -33,6 +37,8 @@ public:
     void setAspectRatio(float val);
     float getAspectRatio() { return aspectRatio; }
 
+    XMVECTOR calculateFocusPoint() const;
+
     XMMATRIX getViewMatrix();
     XMMATRIX getProjectionMatrix();
     XMMATRIX getInvViewMatrix();
@@ -41,6 +47,7 @@ public:
 protected:
     XMVECTOR eyePosition = {0, 0, 0};
     XMVECTOR focusPoint = {0, 0, 1};
+    XMVECTOR lookDirection = {0, 0, 1};
     XMVECTOR upDirection = {0, 1, 0};
     float fovAngleY = XM_PI / 2;
     float aspectRatio = {};
@@ -50,4 +57,5 @@ protected:
     XMMATRIX projectionMatrix;
     bool dirtyView = false;
     bool dirtyProj = false;
+    bool usingFocusPoint = false; // either focusPoint or lookDirection is used
 };
