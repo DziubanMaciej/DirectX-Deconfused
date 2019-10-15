@@ -123,7 +123,7 @@ private:
         objects["flatMesh1"]->setSpecularity(0.2f);
         objects["flatMesh1"]->setScale(20, 0.5, 10);
 
-        objects["extraFlatMesh1"]->setTexture(textures["wood"].get());
+        objects["extraFlatMesh1"]->setTexture(textures["grass"].get());
         objects["extraFlatMesh1"]->setPosition(0, -4.0, 0);
         objects["extraFlatMesh1"]->setSpecularity(0.0f);
         objects["extraFlatMesh1"]->setScale(100, 1.0f, 100);
@@ -199,7 +199,7 @@ private:
             {"brickwall_normal", L"Resources/textures/brickwall_normal.jpg", false},
             {"porsche", L"Resources/textures/porsche.bmp", true},
             {"dennis", L"Resources/textures/dennis.jpg", true},
-            {"wood", L"Resources/textures/wood.jpg", true}};
+            {"grass", L"Resources/textures/grass.jpg", true}};
 
         for (const auto &data : texturesCreationData) {
             textures[data.name] = DXD::Texture::createFromFile(*application, data.path, data.asynchronousLoading);
@@ -278,7 +278,7 @@ private:
         }
 
         texts["fpsCounter"]->setAlignment(DXDTextHorizontalAlignment::LEFT, DXDTextVerticalAlignment::TOP);
-        texts["fpsCounter"]->setFontStyle(DXDFontStyle::ITALIC);
+        texts["fpsCounter"]->setFontStyle(DXDFontStyle::NORMAL);
         texts["fpsCounter"]->setFontWeight(DXDFontWeight::ULTRA_BLACK);
         texts["fpsCounter"]->setColor(0, 0, 0, 1);
         texts["fpsCounter"]->setFontSize(13.f);
