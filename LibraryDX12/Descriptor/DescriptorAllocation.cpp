@@ -49,6 +49,7 @@ DescriptorAllocation &DescriptorAllocation::operator=(DescriptorAllocation &&oth
     handlesCount = std::move(other.handlesCount);
     cpuHandle = std::move(other.cpuHandle);
     gpuHandle = std::move(other.gpuHandle);
+    isGpuVisible = std::move(other.isGpuVisible);
     descriptorIncrementSize = std::move(other.descriptorIncrementSize);
 
     other.heap = nullptr;

@@ -41,6 +41,11 @@ public:
         return *this;
     }
 
+    StaticSampler &mipLodBias(float bias) {
+        desc.MipLODBias = bias;
+        return *this;
+    }
+
     const D3D12_STATIC_SAMPLER_DESC get() const {
         return desc;
     }
