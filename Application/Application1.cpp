@@ -172,6 +172,7 @@ private:
 
         lights["moonLight"]->setColor(0.0f, 1.0f, 1.0f);
         lights["moonLight"]->setPosition(7, 4, 6);
+        lights["moonLight"]->setDirection(0, -1, 0);
         lights["moonLight"]->setPower(2);
 
         lights["redLight"]->setColor(1.0f, 0.0f, 0.0f);
@@ -252,10 +253,10 @@ private:
             {"crosshair", L"Resources/sprites/crosshair.png"}};
 
         SpriteCreationData spritesCreationData[] = {
-            {"shrek_right", "shrek", 368, 10, 250, -120, DXD::Sprite::HorizontalAlignment::RIGHT, DXD::Sprite::VerticalAlignment::BOTTOM},
-            {"shrek_left", "shrek", 368, -60, 250, -120, DXD::Sprite::HorizontalAlignment::LEFT, DXD::Sprite::VerticalAlignment::BOTTOM},
-            {"rectangle-alpha", "rectangle-alpha", 165, 0, 33, 0, DXD::Sprite::HorizontalAlignment::LEFT, DXD::Sprite::VerticalAlignment::TOP},
-            {"crosshair", "crosshair", 100, 0, 100, 0, DXD::Sprite::HorizontalAlignment::CENTER, DXD::Sprite::VerticalAlignment::CENTER}};
+            //{"shrek_right", "shrek", 368, 10, 250, -120, DXD::Sprite::HorizontalAlignment::RIGHT, DXD::Sprite::VerticalAlignment::BOTTOM},
+            //{"shrek_left", "shrek", 368, -60, 250, -120, DXD::Sprite::HorizontalAlignment::LEFT, DXD::Sprite::VerticalAlignment::BOTTOM},
+            {"rectangle-alpha", "rectangle-alpha", 165, 0, 33, 0, DXD::Sprite::HorizontalAlignment::LEFT, DXD::Sprite::VerticalAlignment::TOP}};
+        //{"crosshair", "crosshair", 100, 0, 100, 0, DXD::Sprite::HorizontalAlignment::CENTER, DXD::Sprite::VerticalAlignment::CENTER}};
 
         for (const auto &data : spriteTexturesCreationData) {
             spriteTextures[data.name] = DXD::Texture::createFromFile(*application, data.path, false);
@@ -279,7 +280,7 @@ private:
         texts["fpsCounter"]->setAlignment(DXDTextHorizontalAlignment::LEFT, DXDTextVerticalAlignment::TOP);
         texts["fpsCounter"]->setFontStyle(DXDFontStyle::ITALIC);
         texts["fpsCounter"]->setFontWeight(DXDFontWeight::ULTRA_BLACK);
-        texts["fpsCounter"]->setColor(0, 0.6f, 0, 1);
+        texts["fpsCounter"]->setColor(0, 0, 0, 1);
         texts["fpsCounter"]->setFontSize(13.f);
     }
 
@@ -321,7 +322,7 @@ private:
         objects["porshe"]->setPosition(7 * sinf(rotation) * 0.6f, -1.475f, 7 * cosf(rotation) * 0.6f);
         objects["teapotMesh2"]->setRotation(rotation, rotation, rotation);
 
-        lights["blueLight"]->setPosition(7 * sinf(rotation) * 0.6f, -2.5f, 7 * cosf(rotation) * 0.6f - 18);
+        //lights["blueLight"]->setPosition(7 * sinf(rotation) * 0.6f, -2.5f, 7 * cosf(rotation) * 0.6f - 18);
     }
 
     // Callbacks
@@ -350,7 +351,7 @@ private:
 
             updateCamera();
 
-            DXD::log("AngleX = %f\n", angleX);
+            //DXD::log("AngleX = %f\n", angleX);
         }
 
         lastMouseX = xPos;
