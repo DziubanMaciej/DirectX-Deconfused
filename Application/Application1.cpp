@@ -279,6 +279,7 @@ private:
         texts["fpsCounter"]->setAlignment(DXDTextHorizontalAlignment::LEFT, DXDTextVerticalAlignment::TOP);
         texts["fpsCounter"]->setFontStyle(DXDFontStyle::ITALIC);
         texts["fpsCounter"]->setFontWeight(DXDFontWeight::ULTRA_BLACK);
+        texts["fpsCounter"]->setColor(0, 0.6f, 0, 1);
         texts["fpsCounter"]->setFontSize(13.f);
     }
 

@@ -585,15 +585,9 @@ void SceneImpl::renderD2DTexts(SwapChain &swapChain) {
     d2dDeviceContext->SetTarget(d2dBackBuffer.Get());
     d2dDeviceContext->BeginDraw();
     d2dDeviceContext->SetTransform(D2D1::Matrix3x2F::Identity());
-    for (auto txt : texts) {
-        txt->updateText();
-        // TODO: this call as TextImpl method
-        d2dDeviceContext->DrawText(
-            txt->getText().c_str(),
-            static_cast<UINT>(txt->getText().size()),
-            txt->m_textFormat.Get(),
-            &textRect,
-            txt->m_textBrush.Get());
+    for (auto text : texts) {
+        text->update();
+        text->draw(textRect);
     }
     throwIfFailed(d2dDeviceContext->EndDraw());
 }
