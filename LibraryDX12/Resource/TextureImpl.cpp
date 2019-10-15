@@ -88,10 +88,13 @@ TextureGpuLoadArgs TextureImpl::createArgsForGpuLoad(const TextureCpuLoadResult 
 }
 
 void TextureImpl::gpuLoad(const TextureGpuLoadArgs &args) {
-    // Create GPU resource
+    // Create GPU resource with typeless format
+    const auto realFormat = this->description.Format;
+    this->description.Format = DxgiFormatHelper::convertToTypelessFormat(realFormat);
     this->setResource(createResource(ApplicationImpl::getInstance().getDevice(), &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
                                      &this->description, D3D12_RESOURCE_STATE_COPY_DEST, nullptr),
                       D3D12_RESOURCE_STATE_COPY_DEST, this->description.MipLevels);
+    this->description.Format = realFormat;
 
     // Upload data to the GPU resource
     Resource::uploadToGPU(ApplicationImpl::getInstance(), args.scratchImage.GetPixels(),
