@@ -441,8 +441,8 @@ void PipelineStateController::compilePipelineStateLighting(RootSignature &rootSi
         .appendSrvRange(t(2), 1)  // gbuffer specular
         .appendSrvRange(t(3), 1)  // gbuffer depth
         .appendSrvRange(t(4), 1)  // SSAO
-        .appendSrvRange(t(5), 1)  // SSR
-        .appendSrvRange(t(6), 8); // shadow maps
+        //.appendSrvRange(t(5), 1)  // SSR
+        .appendSrvRange(t(5), 8); // shadow maps
 
     rootSignature
         .appendStaticSampler(s(0), sampler)
@@ -460,7 +460,7 @@ void PipelineStateController::compilePipelineStateLighting(RootSignature &rootSi
         .VS(L"PostProcess/VS.hlsl")
         .PS(L"lighting_PS.hlsl")
         .disableDepthStencil()
-        .setRenderTargetsCount(3)
+        .setRenderTargetsCount(2)
         .compile(device, pipelineState);
 }
 
@@ -503,7 +503,7 @@ void PipelineStateController::compilePipelineStateSSR(RootSignature &rootSignatu
     table.appendSrvRange(t(0), 1) // gbuffer normal
         .appendSrvRange(t(1), 1)  // gbuffer depth
         .appendSrvRange(t(2), 1)  // gbuffer specular
-        .appendSrvRange(t(3), 1); // previous frame
+        .appendSrvRange(t(3), 1); // lighting output
 
     rootSignature
         .appendStaticSampler(s(0), sampler)

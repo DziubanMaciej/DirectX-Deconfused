@@ -2,7 +2,7 @@
 Texture2D gBufferNormal : register(t0);
 Texture2D gBufferDepth : register(t1);
 Texture2D gBufferSpecular : register(t2);
-Texture2D prevFrame : register(t3);
+Texture2D lightingOutput : register(t3);
 
 SamplerState g_sampler : register(s0);
 
@@ -51,10 +51,12 @@ float4 main(PixelShaderInput IN) : SV_Target {
         discard;
     }
 
+    float3 INlightingOutput = lightingOutput.Sample(g_sampler, float2(uBase, vBase)).xyz;
+
     float INspecularity = gBufferSpecular.Sample(g_sampler, float2(uBase, vBase)).r;
 
     if (INspecularity <= 0.0f) {
-        discard;
+        return float4(INlightingOutput, 1.0f);
     }
 
     float4 worldSpacePos = getPositionFromDepth(uBase, vBase, INdepth);
@@ -63,11 +65,13 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
     float3 INnormal = normalize(gBufferNormal.Sample(g_sampler, float2(uBase, vBase)).xyz);
 
-    //float3 jitt = lerp(float3(0.0f, 0.0f, 0.0f), hash(worldSpacePos.xyz), INspecularity) * 0.05f;
+    float3 jitt = lerp(float3(0.0f, 0.0f, 0.0f), hash(worldSpacePos.xyz), float3(INspecularity.x, INspecularity.x, INspecularity.x)) * 0.05f;
 
-    float3 reflectDir = normalize(reflect(cameraDirection, INnormal));
+    float3 reflectDir = normalize(reflect(cameraDirection, INnormal)) + jitt;
 
     float4 rayPoint = worldSpacePos;
+
+    float ssrPower = pow(INspecularity.x, 2.0f);
 
     [loop]
     for (int i = 0; i < 75; i++) {
@@ -96,10 +100,10 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
             // Screen test
             if (screenSpacePos.x < 0.0f || screenSpacePos.x > 1.0f) {
-                discard;
+                return float4(((INlightingOutput * (1 - ssrPower)) + (ssrPower * scb.clearColor.xyz)), 1.0f);
             }
             if (screenSpacePos.y < 0.0f || screenSpacePos.y > 1.0f) {
-                discard;
+                return float4(((INlightingOutput * (1 - ssrPower)) + (ssrPower * scb.clearColor.xyz)), 1.0f);
             }
 
             // Binary Search
@@ -130,12 +134,19 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
             float screenEdgefactor = smoothstep(0.0f, 0.4f, 1.0f - (distance(float2(0.5f, 0.5f), screenSpacePos.xy) * 2.0f));
 
-            float3 OUT_Color = screenEdgefactor * prevFrame.Sample(g_sampler, screenSpacePos.xy).xyz + (1.0f - screenEdgefactor) * scb.clearColor.xyz;
+            float3 OUTssr = screenEdgefactor * lightingOutput.Sample(g_sampler, screenSpacePos.xy).xyz + (1.0f - screenEdgefactor) * scb.clearColor.xyz;
 
-            return float4(OUT_Color, 1.0f);
+            //return float4(OUT_Color, 1.0f);
+
+            //float3 INssr = ssrMap.Sample(g_sampler, float2(uBase, vBase)).xyz;
+            
+            return float4(((INlightingOutput * (1 - ssrPower)) + (ssrPower * OUTssr)), 1.0f);
+            
+
+
+
         }
     }
 
-    discard;
-    return float4(0, 0, 0, 0);
+    return float4(((INlightingOutput * (1 - ssrPower)) + (ssrPower * scb.clearColor.xyz)), 1.0f);
 }

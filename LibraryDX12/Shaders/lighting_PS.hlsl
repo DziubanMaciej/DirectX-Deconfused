@@ -22,8 +22,7 @@ Texture2D gBufferNormal : register(t1);
 Texture2D gBufferSpecular : register(t2);
 Texture2D gBufferDepth : register(t3);
 Texture2D ssaoMap : register(t4);
-Texture2D ssrMap : register(t5);
-Texture2D shadowMaps[8] : register(t6);
+Texture2D shadowMaps[8] : register(t5);
 
 SamplerState g_sampler : register(s0);
 
@@ -32,7 +31,6 @@ struct PixelShaderInput {
 };
 
 struct PS_OUT {
-    float4 scene;
     float4 bloomMap;
     float4 lightingOutput;
 };
@@ -120,19 +118,19 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
 
     PS_OUT result;
 
-    if (INspecularity.x > 0.0f) {
+    /*if (INspecularity.x > 0.0f) {
         float3 INssr = ssrMap.Sample(g_sampler, float2(uBase, vBase)).xyz;
         float ssrPower = pow(INspecularity.x, 2.0f);
         result.scene = float4(((OUT_Color.xyz * (1 - ssrPower)) + (ssrPower * INssr)) * INssao, 1.0f);
     } else {
         result.scene = OUT_Color * INssao;
-    }
+    }*/
 
     result.lightingOutput = OUT_Color * INssao;
 
     const float brightness = dot(OUT_Color.rgb, float3(0.2126, 0.7152, 0.0722));
     if (brightness > 0.5) {
-        result.bloomMap = float4(result.scene.rgb * INspecularity.g, INspecularity.g);
+        result.bloomMap = float4(result.lightingOutput.rgb * INspecularity.g, INspecularity.g);
     } else {
         result.bloomMap = float4(0, 0, 0, 0);
     }
