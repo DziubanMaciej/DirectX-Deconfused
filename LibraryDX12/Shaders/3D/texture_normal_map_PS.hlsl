@@ -18,7 +18,7 @@ struct PixelShaderInput {
 struct PixelShaderOutput {
     float4 gBufferAlbedo;
     float4 gBufferNormal;
-    float4 gBufferSpecular;
+    float2 gBufferSpecular;
 };
 
 PixelShaderOutput main(PixelShaderInput IN) : SV_Target {
@@ -27,6 +27,6 @@ PixelShaderOutput main(PixelShaderInput IN) : SV_Target {
     PixelShaderOutput result;
     result.gBufferAlbedo = diffuseTexture.Sample(s_sampler, textureCoords);
     result.gBufferNormal = 2 * normalMap.Sample(s_sampler, textureCoords) - float4(1, 1, 1, 1);
-    result.gBufferSpecular = float4(op.specularity, op.bloomFactor, 0, 1);
+    result.gBufferSpecular = float2(op.specularity, op.bloomFactor);
     return result;
 }

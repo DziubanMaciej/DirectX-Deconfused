@@ -51,7 +51,7 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
     float4 INworldPosition = mul(invVP.viewMatrixInverse, (D / D.w));
 
     float4 INnormal = gBufferNormal.Sample(g_sampler, float2(uBase, vBase));
-    float4 INspecularity = gBufferSpecular.Sample(g_sampler, float2(uBase, vBase));
+    float2 INspecularity = gBufferSpecular.Sample(g_sampler, float2(uBase, vBase));
     float4 INalbedo = gBufferAlbedo.Sample(g_sampler, float2(uBase, vBase));
     float INssao = ssaoMap.Sample(g_sampler, float2(uBase, vBase)).r;
 

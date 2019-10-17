@@ -17,7 +17,7 @@ struct PixelShaderInput {
 struct PixelShaderOutput {
     float4 gBufferAlbedo;
     float4 gBufferNormal;
-    float4 gBufferSpecular;
+    float2 gBufferSpecular;
 };
 
 PixelShaderOutput main(PixelShaderInput IN) : SV_Target {
@@ -28,7 +28,7 @@ PixelShaderOutput main(PixelShaderInput IN) : SV_Target {
 
     result.gBufferAlbedo = objectTextureColor;
     result.gBufferNormal = normalize(IN.Normal);
-    result.gBufferSpecular = float4(op.specularity, op.bloomFactor, 0, 1);
+    result.gBufferSpecular = float2(op.specularity, op.bloomFactor);
 
     return result;
 }

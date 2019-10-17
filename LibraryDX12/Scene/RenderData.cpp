@@ -73,7 +73,7 @@ void RenderData::resize(int width, int height) {
     gBufferSpecularDesc.Height = height;
     gBufferSpecularDesc.DepthOrArraySize = 1;
     gBufferSpecularDesc.MipLevels = 0;
-    gBufferSpecularDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    gBufferSpecularDesc.Format = DXGI_FORMAT_R8G8_UNORM;
     gBufferSpecularDesc.SampleDesc.Count = 1;
     gBufferSpecularDesc.SampleDesc.Quality = 0;
     gBufferSpecularDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;

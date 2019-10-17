@@ -125,6 +125,7 @@ void PipelineStateController::compilePipelineStateNormal(RootSignature &rootSign
         .PS(L"3D/normal_PS.hlsl")
         .setRenderTargetsCount(3)
         .setRenderTargetFormat(1, DXGI_FORMAT_R16G16B16A16_SNORM)
+        .setRenderTargetFormat(2, DXGI_FORMAT_R8G8_UNORM)
         .compile(device, pipelineState);
 }
 
@@ -155,6 +156,7 @@ void PipelineStateController::compilePipelineStateTextureNormal(RootSignature &r
         .PS(L"3D/normal_texture_PS.hlsl")
         .setRenderTargetsCount(3)
         .setRenderTargetFormat(1, DXGI_FORMAT_R16G16B16A16_SNORM)
+        .setRenderTargetFormat(2, DXGI_FORMAT_R8G8_UNORM)
         .compile(device, pipelineState);
 }
 
@@ -186,6 +188,7 @@ void PipelineStateController::compilePipelineStateTextureNormalMap(RootSignature
         .PS(L"3D/texture_normal_map_PS.hlsl")
         .setRenderTargetsCount(3)
         .setRenderTargetFormat(1, DXGI_FORMAT_R16G16B16A16_SNORM)
+        .setRenderTargetFormat(2, DXGI_FORMAT_R8G8_UNORM)
         .compile(device, pipelineState);
 }
 
@@ -441,7 +444,6 @@ void PipelineStateController::compilePipelineStateLighting(RootSignature &rootSi
         .appendSrvRange(t(2), 1)  // gbuffer specular
         .appendSrvRange(t(3), 1)  // gbuffer depth
         .appendSrvRange(t(4), 1)  // SSAO
-        //.appendSrvRange(t(5), 1)  // SSR
         .appendSrvRange(t(5), 8); // shadow maps
 
     rootSignature
