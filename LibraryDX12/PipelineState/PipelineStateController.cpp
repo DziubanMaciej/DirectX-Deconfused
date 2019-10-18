@@ -440,6 +440,10 @@ void PipelineStateController::compilePipelineStateLighting(RootSignature &rootSi
 	StaticSampler sampler_bilinear{D3D12_SHADER_VISIBILITY_PIXEL};
     sampler_bilinear.filter(D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT);
 
+    StaticSampler sampler_sm{D3D12_SHADER_VISIBILITY_PIXEL};
+    sampler_sm.filter(D3D12_FILTER_MIN_MAG_MIP_POINT);
+    sampler_sm.addressModeBorder(D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE);
+
     DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
     table.appendCbvRange(b(0), 1) // light constant buffer
         .appendSrvRange(t(0), 1)  // gbuffer albedo
@@ -452,6 +456,7 @@ void PipelineStateController::compilePipelineStateLighting(RootSignature &rootSi
     rootSignature
         .appendStaticSampler(s(0), sampler)
         .appendStaticSampler(s(1), sampler_bilinear)
+        .appendStaticSampler(s(2), sampler_sm)
         .appendDescriptorTable(std::move(table))
         .append32bitConstant<InverseViewProj>(b(1), D3D12_SHADER_VISIBILITY_PIXEL)
         .compile(device);
