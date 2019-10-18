@@ -43,6 +43,11 @@ public:
 
     void render(SwapChain &swapChain, RenderData &renderData);
 
+	Microsoft::WRL::ComPtr<ID3D12QueryHeap> queryHeap;
+    std::unique_ptr<Resource> queryResult;
+
+
+
 protected:
     // Helpers
     void inspectObjectsNotReady();

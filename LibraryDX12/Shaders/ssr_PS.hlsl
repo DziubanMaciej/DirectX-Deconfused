@@ -65,7 +65,7 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
     float3 INnormal = normalize(gBufferNormal.Sample(g_sampler, float2(uBase, vBase)).xyz);
 
-    float3 jitt = lerp(float3(0.0f, 0.0f, 0.0f), hash(worldSpacePos.xyz), float3(INspecularity.x, INspecularity.x, INspecularity.x)) * 0.05f;
+    float3 jitt = lerp(float3(0.0f, 0.0f, 0.0f), hash(worldSpacePos.xyz), float3(1.0f - INspecularity.x, 1.0f - INspecularity.x, 1.0f - INspecularity.x)) * 0.03f;
 
     float3 reflectDir = normalize(reflect(cameraDirection, INnormal)) + jitt;
 
@@ -73,10 +73,11 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
     float ssrPower = pow(INspecularity.x, 2.0f);
 
-    [loop]
-    for (int i = 0; i < 75; i++) {
+    float marchingStep = 0.05f;
 
-        float marchingStep = 0.1f;
+    int marchQty = int(5.0f / marchingStep);
+
+    [loop] for (int i = 0; i < marchQty; i++) {
 
         rayPoint.xyz += reflectDir * marchingStep;
 
@@ -94,7 +95,7 @@ float4 main(PixelShaderInput IN) : SV_Target {
             // Too far Depth/Distance test
             float3 posFromDepth = getPositionFromDepth(screenSpacePos.x, screenSpacePos.y, pointDepth).xyz;
             float rayDistance = distance(posFromDepth, rayPoint);
-            if (rayDistance > 0.3f) {
+            if (rayDistance > 0.4f) {
                 continue;
             }
 
@@ -109,7 +110,7 @@ float4 main(PixelShaderInput IN) : SV_Target {
             // Binary Search
             bool lastHit = true;
 
-            for (int i = 0; i < 10; i++) {
+            for (int j = 0; j < 5; j++) {
 
                 if (lastHit == true) {
                     marchingStep = -(marchingStep / 2.0f);
@@ -136,15 +137,7 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
             float3 OUTssr = screenEdgefactor * lightingOutput.Sample(g_sampler, screenSpacePos.xy).xyz + (1.0f - screenEdgefactor) * scb.clearColor.xyz;
 
-            //return float4(OUT_Color, 1.0f);
-
-            //float3 INssr = ssrMap.Sample(g_sampler, float2(uBase, vBase)).xyz;
-            
             return float4(((INlightingOutput * (1 - ssrPower)) + (ssrPower * OUTssr)), 1.0f);
-            
-
-
-
         }
     }
 

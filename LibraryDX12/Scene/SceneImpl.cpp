@@ -36,6 +36,40 @@ SceneImpl::SceneImpl(ApplicationImpl &application)
 
     // Execute and register obtained allocator and lists to the manager
     const uint64_t fenceValue = commandQueue.executeCommandListAndSignal(commandList);
+
+	// QUERY!
+    D3D12_QUERY_HEAP_DESC queryHeapDesc = {};
+    queryHeapDesc.Count = 2;
+    queryHeapDesc.Type = D3D12_QUERY_HEAP_TYPE_TIMESTAMP;
+    queryHeapDesc.NodeMask = 0;
+    throwIfFailed(application.getDevice()->CreateQueryHeap(&queryHeapDesc, IID_PPV_ARGS(&queryHeap)));
+
+    // query desc
+    D3D12_RESOURCE_DESC queryDestDesc = {};
+    queryDestDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    queryDestDesc.Alignment = 0;
+    queryDestDesc.Width = 2 * sizeof(UINT64);
+    queryDestDesc.Height = 1;
+    queryDestDesc.DepthOrArraySize = 1;
+    queryDestDesc.MipLevels = 1;
+    queryDestDesc.Format = DXGI_FORMAT_UNKNOWN;
+    queryDestDesc.SampleDesc.Count = 1;
+    queryDestDesc.SampleDesc.Quality = 0;
+    queryDestDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    queryDestDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+
+    D3D12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT);
+    heapProps.Type = D3D12_HEAP_TYPE_CUSTOM;
+    heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_WRITE_COMBINE;
+    heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_L0;
+
+    queryResult = std::make_unique<Resource>(
+        device,
+        &heapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &queryDestDesc,
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        nullptr);
 }
 
 void SceneImpl::setBackgroundColor(float r, float g, float b) {
@@ -418,7 +452,12 @@ void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, 
 
     commandList.IASetVertexBuffer(fullscreenVB);
 
+    //commandList.getCommandList()->EndQuery(queryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0);
+
     commandList.draw(6u);
+
+    //commandList.getCommandList()->EndQuery(queryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 1);
+    //commandList.getCommandList()->ResolveQueryData(queryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0, 2, queryResult->getResource().Get(), 0);
 }
 
 void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList, VertexBuffer &fullscreenVB,
@@ -653,6 +692,14 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     renderSSRandMerge(swapChain, renderData, commandListSSR, renderLightingOutput, *postProcessVB);
     commandListSSR.close();
     commandQueue.executeCommandListAndSignal(commandListSSR);
+
+
+	// QUERY used in perf. measurement. 
+	//UINT64 *queryData = nullptr;
+    //queryResult->getResource().Get()->Map(0, nullptr, (void **)&queryData);
+    //DXD::log("Time: %d\n", int(queryData[1] - queryData[0]));
+    //queryResult->getResource().Get()->Unmap(0, nullptr);
+
 
     // Render post processes
     CommandList commandListPostProcess{commandQueue};

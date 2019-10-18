@@ -435,7 +435,10 @@ void PipelineStateController::compilePipelineStateSprite(RootSignature &rootSign
 void PipelineStateController::compilePipelineStateLighting(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
     StaticSampler sampler{D3D12_SHADER_VISIBILITY_PIXEL};
-    sampler.filter(D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT);
+    sampler.filter(D3D12_FILTER_MIN_MAG_MIP_POINT);
+
+	StaticSampler sampler_bilinear{D3D12_SHADER_VISIBILITY_PIXEL};
+    sampler_bilinear.filter(D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT);
 
     DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
     table.appendCbvRange(b(0), 1) // light constant buffer
@@ -448,6 +451,7 @@ void PipelineStateController::compilePipelineStateLighting(RootSignature &rootSi
 
     rootSignature
         .appendStaticSampler(s(0), sampler)
+        .appendStaticSampler(s(1), sampler_bilinear)
         .appendDescriptorTable(std::move(table))
         .append32bitConstant<InverseViewProj>(b(1), D3D12_SHADER_VISIBILITY_PIXEL)
         .compile(device);

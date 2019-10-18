@@ -25,6 +25,7 @@ Texture2D ssaoMap : register(t4);
 Texture2D shadowMaps[8] : register(t5);
 
 SamplerState g_sampler : register(s0);
+SamplerState g_sampler_bilinear : register(s1);
 
 struct PixelShaderInput {
     float4 Position : SV_Position;
@@ -53,7 +54,7 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
     float4 INnormal = gBufferNormal.Sample(g_sampler, float2(uBase, vBase));
     float2 INspecularity = gBufferSpecular.Sample(g_sampler, float2(uBase, vBase));
     float4 INalbedo = gBufferAlbedo.Sample(g_sampler, float2(uBase, vBase));
-    float INssao = ssaoMap.Sample(g_sampler, float2(uBase, vBase)).r;
+    float INssao = ssaoMap.Sample(g_sampler_bilinear, float2(uBase, vBase)).r;
 
     float4 OUT_Color = float4(0, 0, 0, 1);
 
@@ -117,14 +118,6 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
     OUT_Color.xyz = OUT_Color.xyz + ((INalbedo.xyz + ambientLightColor) * ambientLightPower * (INspecularity.x / 10.0f + 1.0f));
 
     PS_OUT result;
-
-    /*if (INspecularity.x > 0.0f) {
-        float3 INssr = ssrMap.Sample(g_sampler, float2(uBase, vBase)).xyz;
-        float ssrPower = pow(INspecularity.x, 2.0f);
-        result.scene = float4(((OUT_Color.xyz * (1 - ssrPower)) + (ssrPower * INssr)) * INssao, 1.0f);
-    } else {
-        result.scene = OUT_Color * INssao;
-    }*/
 
     result.lightingOutput = OUT_Color * INssao;
 

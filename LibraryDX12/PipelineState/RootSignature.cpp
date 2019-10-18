@@ -27,7 +27,9 @@ RootSignature &RootSignature::appendUnorderedAccessView(UavShaderRegister reg, D
 }
 
 RootSignature &RootSignature::appendStaticSampler(SamplerShaderRegister reg, const StaticSampler &staticSampler) {
-    samplerDescriptions.push_back(staticSampler.get());
+    D3D12_STATIC_SAMPLER_DESC desc = staticSampler.get();
+    desc.ShaderRegister = UINT(reg);
+    samplerDescriptions.push_back(desc);
     return *this;
 }
 
