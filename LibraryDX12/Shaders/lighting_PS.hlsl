@@ -75,7 +75,7 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
                 for (int ox = -2; ox < 3; ox++) {
                     for (int oy = -2; oy < 3; oy++) {
                         float2 offset = float2(float(ox) / 2048.0f, float(oy) / 2048.0f);
-                        smDepth = shadowMaps[i].SampleLevel(g_sampler_sm, smCoords.xy + offset, 0).r;
+                        smDepth = shadowMaps[i].Sample(g_sampler_sm, smCoords.xy + offset).r;
 
                         if (((smCoords.z / smCoords.w) - 0.001f) > smDepth) {
                             shadowFactor = shadowFactor - 1;

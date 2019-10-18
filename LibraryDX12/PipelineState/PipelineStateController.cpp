@@ -436,13 +436,16 @@ void PipelineStateController::compilePipelineStateLighting(RootSignature &rootSi
     // Root signature - crossthread data
     StaticSampler sampler{D3D12_SHADER_VISIBILITY_PIXEL};
     sampler.filter(D3D12_FILTER_MIN_MAG_MIP_POINT);
+    sampler.lodRange(0, 0);
 
 	StaticSampler sampler_bilinear{D3D12_SHADER_VISIBILITY_PIXEL};
     sampler_bilinear.filter(D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT);
+    sampler_bilinear.lodRange(0, 0);
 
     StaticSampler sampler_sm{D3D12_SHADER_VISIBILITY_PIXEL};
     sampler_sm.filter(D3D12_FILTER_MIN_MAG_MIP_POINT);
     sampler_sm.addressModeBorder(D3D12_STATIC_BORDER_COLOR_OPAQUE_WHITE);
+    sampler_sm.lodRange(0, 0);
 
     DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
     table.appendCbvRange(b(0), 1) // light constant buffer
