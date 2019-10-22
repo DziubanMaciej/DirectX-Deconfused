@@ -31,7 +31,7 @@ public:
     void flush(bool lockQueue);
     std::unique_lock<std::mutex> getLock(bool lockQueue);
 
-private:
+protected:
     static ID3D12CommandQueuePtr createCommandQueue(ID3D12DevicePtr &device, D3D12_COMMAND_LIST_TYPE type);
 
     std::mutex lock;

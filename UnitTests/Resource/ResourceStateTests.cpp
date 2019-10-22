@@ -1,12 +1,17 @@
 #include "Resource/Resource.h"
 
-#include "DXD/Application.h"
-
+#include <DXD/Application.h>
 #include <gtest/gtest.h>
+
+TEST(ResourceStateTests, givenDefaultConstructedStateThenItIsInvalid) {
+    ResourceState state{};
+    EXPECT_TRUE(state.areAllSubresourcesInState(D3D12_RESOURCE_STATE_UNKNOWN));
+}
 
 TEST(ResourceStateTests, givenSameStateForAllSubresourcesWhenGettingStateThanReturnCorrectValues) {
     ResourceState state{D3D12_RESOURCE_STATE_DEPTH_WRITE};
     EXPECT_TRUE(state.areAllSubresourcesInState(D3D12_RESOURCE_STATE_DEPTH_WRITE));
+    EXPECT_TRUE(state.areAllSubresourcesInSameState());
     EXPECT_FALSE(state.areAllSubresourcesInState(D3D12_RESOURCE_STATE_DEPTH_READ));
     EXPECT_EQ(D3D12_RESOURCE_STATE_DEPTH_WRITE, state.getState(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES));
     EXPECT_EQ(D3D12_RESOURCE_STATE_DEPTH_WRITE, state.getState(0));
@@ -19,6 +24,7 @@ TEST(ResourceStateTests, givenDifferentStatesForSubresourcesWhenGettingStateThan
     state.setState(D3D12_RESOURCE_STATE_COMMON, 0);
     state.setState(D3D12_RESOURCE_STATE_RENDER_TARGET, 3);
 
+    EXPECT_FALSE(state.areAllSubresourcesInSameState());
     EXPECT_FALSE(state.areAllSubresourcesInState(D3D12_RESOURCE_STATE_DEPTH_WRITE));
     EXPECT_FALSE(state.areAllSubresourcesInState(D3D12_RESOURCE_STATE_COMMON));
     EXPECT_FALSE(state.areAllSubresourcesInState(D3D12_RESOURCE_STATE_RENDER_TARGET));
@@ -35,6 +41,7 @@ TEST(ResourceStateTests, givenDifferentStatesForSubresourcesWhenSettingStateForA
     state.setState(D3D12_RESOURCE_STATE_COMMON, 2);
     state.setState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
 
+    EXPECT_TRUE(state.areAllSubresourcesInSameState());
     EXPECT_TRUE(state.areAllSubresourcesInState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
 }
 

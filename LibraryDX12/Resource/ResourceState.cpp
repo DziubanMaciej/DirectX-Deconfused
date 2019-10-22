@@ -3,6 +3,9 @@
 
 #include <cassert>
 
+ResourceState::ResourceState() : ResourceState(D3D12_RESOURCE_STATE_UNKNOWN) {
+}
+
 ResourceState::ResourceState(D3D12_RESOURCE_STATES state)
     : resourceState(state) {}
 
@@ -71,4 +74,8 @@ D3D12_RESOURCE_STATES ResourceState::getState(UINT subresource) const {
 
 bool ResourceState::areAllSubresourcesInState(D3D12_RESOURCE_STATES state) const {
     return !hasSubresourceSpecificState && (resourceState == state);
+}
+
+bool ResourceState::areAllSubresourcesInSameState() const {
+    return !hasSubresourceSpecificState;
 }

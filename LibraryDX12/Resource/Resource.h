@@ -13,6 +13,7 @@
 class ApplicationImpl;
 class CommandList;
 class AcquiredD2DWrappedResource;
+class ResourceStateController;
 
 class Resource : DXD::NonCopyable {
 public:
@@ -76,7 +77,9 @@ private:
     void setState(const ResourceState &state) { this->state = state; }
     friend class CommandList;
     friend class AcquiredD2DWrappedResource;
+    friend class ResourceStateController;
 
+protected:
     // Data
     ResourceState state;
     ID3D12ResourcePtr resource = {};

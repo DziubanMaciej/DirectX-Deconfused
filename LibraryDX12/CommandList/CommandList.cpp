@@ -36,7 +36,7 @@ void CommandList::transitionBarrier(Resource &resource, D3D12_RESOURCE_STATES ta
 }
 
 void CommandList::uavBarrier(Resource &resource) {
-    cachedResourceBarriers.push_back(CD3DX12_RESOURCE_BARRIER::UAV(resource.getResource().Get()));
+    addCachedResourceBarrier(CD3DX12_RESOURCE_BARRIER::UAV(resource.getResource().Get()));
     addUsedResource(resource.getResource());
 }
 
@@ -268,4 +268,8 @@ void CommandList::commitResourceBarriers() {
 
     commandList->ResourceBarrier(barriersCount, cachedResourceBarriers.data());
     cachedResourceBarriers.clear();
+}
+
+void CommandList::addCachedResourceBarrier(D3D12_RESOURCE_BARRIER &&barrier) {
+    cachedResourceBarriers.push_back(std::move(barrier));
 }

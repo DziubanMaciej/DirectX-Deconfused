@@ -8,6 +8,8 @@ add_sources_and_cmake_file(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/Resource.h
     ${CMAKE_CURRENT_SOURCE_DIR}/ResourceState.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ResourceState.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/ResourceStateController.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/ResourceStateController.h
     ${CMAKE_CURRENT_SOURCE_DIR}/ResourceUsageTracker.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ResourceUsageTracker.h
     ${CMAKE_CURRENT_SOURCE_DIR}/TextureImpl.cpp

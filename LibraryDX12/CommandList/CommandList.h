@@ -5,6 +5,7 @@
 #include "Descriptor/DescriptorController.h"
 #include "Descriptor/GpuDescriptorHeapController.h"
 #include "PipelineState/PipelineStateController.h"
+#include "Resource/ResourceStateController.h"
 #include "Resource/ResourceUsageTracker.h"
 
 #include "DXD/Utility/NonCopyableAndMovable.h"
@@ -92,6 +93,9 @@ public:
 private:
     void commitDescriptors();
     void commitResourceBarriers();
+
+    friend class ResourceStateController;
+    void addCachedResourceBarrier(D3D12_RESOURCE_BARRIER &&barrier);
 
     // Base CommandList data
     DescriptorController &descriptorController;
