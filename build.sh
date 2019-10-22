@@ -50,4 +50,5 @@ external_libs_flags="-DDXD_BIN_PATH=${build_path}/DXD -DDXD_MACROS_PATH=${root_d
 dxd_flags="-DEXTERNAL_LIBS_BIN_PATH=${build_path}"
 
 build_and_compile "ExternalLibraries/DirectXTex" "${build_path}/DirectXTex" ${architecture} $build_type ${external_libs_flags}
+build_and_compile "ExternalLibraries/gtest"      "${build_path}/gtest"      ${architecture} $build_type ${external_libs_flags} "-Dgtest_force_shared_crt=ON"
 build             "."                            "${build_path}/DXD"        ${architecture} $build_type ${dxd_flags}

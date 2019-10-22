@@ -8,6 +8,7 @@ validate_parameters(CMAKE_BUILD_TYPE EXTERNAL_LIBS_BIN_PATH)
 
 add_subdirectory("Application")
 add_subdirectory("LibraryDX12")
+add_subdirectory("UnitTests")
 
 set(TARGET_NAME "Documentation")
 add_subdirectory("Documentation")
