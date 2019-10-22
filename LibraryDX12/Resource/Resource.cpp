@@ -171,11 +171,13 @@ void Resource::ResourceState::setState(D3D12_RESOURCE_STATES state, UINT subreso
     // Setting state for only one subresource
     else {
         // Generate transition barrier
-        addBarrier(subresource);
+        if (outBarriers) {
+            addBarrier(subresource);
+        }
 
         // Set all subresources to correct state
         if (!this->hasSubresourceSpecificState) {
-            std::fill_n(this->subresourcesStates, outBarriers->resource.getSubresourcesCount(), this->resourceState);
+            std::fill_n(this->subresourcesStates, Resource::maxSubresourcesCount, this->resourceState);
             this->hasSubresourceSpecificState = true;
         }
 

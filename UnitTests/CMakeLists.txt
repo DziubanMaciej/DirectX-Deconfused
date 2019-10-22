@@ -5,10 +5,13 @@ set_output_directories()
 set_link_directory_to_lib()
 
 # Get Sources
-set(SOURCES main.cpp)
+set(TARGET_NAME "UnitTests")
+add_subdirectories()
+add_sources_and_cmake_file(${TARGET_NAME} "main.cpp")
+collect_sources(SOURCES ${TARGET_NAME})
+source_group (TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES})
 
 # Target definition
-set(TARGET_NAME UnitTests)
 add_executable (${TARGET_NAME} ${SOURCES})
 set_working_directory_to_bin(${TARGET_NAME})
 target_link_libraries(${TARGET_NAME} ${DXD_LIB_NAME}.lib ${DXD_LIBRARY_DEPENDENCIES} gtestd.lib gmockd.lib)
