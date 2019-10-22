@@ -2,6 +2,7 @@
 
 #include "CommandList/CommandList.h"
 #include "CommandList/CommandQueue.h"
+#include "Resource/ResourceState.h"
 #include "Utility/GpuDependency.h"
 
 #include "DXD/Utility/NonCopyableAndMovable.h"
@@ -15,26 +16,7 @@ class AcquiredD2DWrappedResource;
 
 class Resource : DXD::NonCopyable {
 public:
-    constexpr static UINT maxSubresourcesCount = 10;
-
-    struct ResourceState {
-        struct BarriersCreationData {
-            BarriersCreationData(Resource &resource) : resource(resource) {}
-            Resource &resource;
-            D3D12_RESOURCE_BARRIER barriers[maxSubresourcesCount] = {};
-            UINT barriersCount = 0u;
-        };
-
-        explicit ResourceState(D3D12_RESOURCE_STATES state) : resourceState(state) {}
-        ResourceState &operator=(D3D12_RESOURCE_STATES state);
-        D3D12_RESOURCE_STATES resourceState;
-        bool hasSubresourceSpecificState = false;
-        D3D12_RESOURCE_STATES subresourcesStates[maxSubresourcesCount] = {};
-
-        D3D12_RESOURCE_STATES getState(UINT subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES) const;
-        void setState(D3D12_RESOURCE_STATES state, UINT subresource, BarriersCreationData *outBarriers = nullptr);
-        bool areAllSubresourcesInState(D3D12_RESOURCE_STATES state) const;
-    };
+    constexpr static auto maxSubresourcesCount = ResourceState::maxSubresourcesCount;
 
     /// Base constructor initializing every member. It is called by every other constructor. It can also be used
     /// to wrap an existing ID3D12Resource, e.g. a back buffer allocated by SwapChain.

@@ -3,6 +3,7 @@
 #include "CommandList/CommandAllocatorController.h"
 #include "CommandList/CommandQueue.h"
 #include "Descriptor/DescriptorAllocation.h"
+#include "Resource/ResourceState.h"
 #include "Resource/VertexOrIndexBuffer.h"
 #include "Scene/MeshImpl.h"
 #include "Utility/ThrowIfFailed.h"
@@ -23,8 +24,8 @@ CommandList::~CommandList() {
 
 void CommandList::transitionBarrier(Resource &resource, D3D12_RESOURCE_STATES targetState, UINT subresource) {
     // Update internal Resource state and compute required resource barriers
-    Resource::ResourceState state = resource.getState();
-    Resource::ResourceState::BarriersCreationData barriers{resource};
+    ResourceState state = resource.getState();
+    ResourceState::BarriersCreationData barriers{resource};
     state.setState(targetState, subresource, &barriers);
     resource.setState(state);
 

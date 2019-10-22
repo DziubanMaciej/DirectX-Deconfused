@@ -5,7 +5,7 @@
 #include <gtest/gtest.h>
 
 TEST(ResourceStateTests, givenSameStateForAllSubresourcesWhenGettingStateThanReturnCorrectValues) {
-    Resource::ResourceState state{D3D12_RESOURCE_STATE_DEPTH_WRITE};
+    ResourceState state{D3D12_RESOURCE_STATE_DEPTH_WRITE};
     EXPECT_TRUE(state.areAllSubresourcesInState(D3D12_RESOURCE_STATE_DEPTH_WRITE));
     EXPECT_FALSE(state.areAllSubresourcesInState(D3D12_RESOURCE_STATE_DEPTH_READ));
     EXPECT_EQ(D3D12_RESOURCE_STATE_DEPTH_WRITE, state.getState(D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES));
@@ -15,7 +15,7 @@ TEST(ResourceStateTests, givenSameStateForAllSubresourcesWhenGettingStateThanRet
 }
 
 TEST(ResourceStateTests, givenDifferentStatesForSubresourcesWhenGettingStateThanReturnCorrectValues) {
-    Resource::ResourceState state{D3D12_RESOURCE_STATE_DEPTH_WRITE};
+    ResourceState state{D3D12_RESOURCE_STATE_DEPTH_WRITE};
     state.setState(D3D12_RESOURCE_STATE_COMMON, 0);
     state.setState(D3D12_RESOURCE_STATE_RENDER_TARGET, 3);
 
@@ -31,7 +31,7 @@ TEST(ResourceStateTests, givenDifferentStatesForSubresourcesWhenGettingStateThan
 }
 
 TEST(ResourceStateTests, givenDifferentStatesForSubresourcesWhenSettingStateForAllThenReturnCorrectValues) {
-    Resource::ResourceState state{D3D12_RESOURCE_STATE_DEPTH_WRITE};
+    ResourceState state{D3D12_RESOURCE_STATE_DEPTH_WRITE};
     state.setState(D3D12_RESOURCE_STATE_COMMON, 2);
     state.setState(D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES);
 
@@ -42,13 +42,13 @@ struct ResourceStateWithBarriersTests : ::testing::Test {
     void SetUp() override {
         resource = std::make_unique<Resource>();
         resource->setResource(nullptr, D3D12_RESOURCE_STATE_DEPTH_WRITE, 4u);
-        barriers = std::make_unique<Resource::ResourceState::BarriersCreationData>(*resource);
-        state = std::make_unique<Resource::ResourceState>(D3D12_RESOURCE_STATE_DEPTH_WRITE);
+        barriers = std::make_unique<ResourceState::BarriersCreationData>(*resource);
+        state = std::make_unique<ResourceState>(D3D12_RESOURCE_STATE_DEPTH_WRITE);
     }
 
     std::unique_ptr<Resource> resource;
-    std::unique_ptr<Resource::ResourceState::BarriersCreationData> barriers;
-    std::unique_ptr<Resource::ResourceState> state;
+    std::unique_ptr<ResourceState::BarriersCreationData> barriers;
+    std::unique_ptr<ResourceState> state;
 };
 
 TEST_F(ResourceStateWithBarriersTests, givenSameStateForSubresourceWhenTransitioningToTheSameStateThenNoBarriersAreMade) {
