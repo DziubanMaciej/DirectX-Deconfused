@@ -14,14 +14,14 @@ macro(add_application TARGET_NAME DEFAULT_APP)
     # Target definition
     add_executable (${TARGET_NAME} WIN32 ${SOURCES})
     set_working_directory_to_bin(${TARGET_NAME})
-    target_link_libraries(${TARGET_NAME} LibraryDX12.lib)
-    add_dependencies(${TARGET_NAME} "LibraryDX12")
+    target_link_libraries(${TARGET_NAME} ${DXD_DLL_NAME}.lib)
+    add_dependencies(${TARGET_NAME} ${DXD_TARGET_DLL})
     source_group (TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SOURCES})
 
     # Visual studio settings
-    set_target_properties(${TARGET_NAME} PROPERTIES FOLDER Development)
+    set_target_properties(${TARGET_NAME} PROPERTIES FOLDER Applications)
     if (${DEFAULT_APP})
-        set(DEFAULT_APP ${TARGET_NAME} PARENT_SCOPE)
+        set_directory_properties(PROPERTIES VS_STARTUP_PROJECT ${TARGET_NAME})
     endif()
 endmacro()
 

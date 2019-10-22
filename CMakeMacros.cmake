@@ -91,10 +91,7 @@ macro(set_link_directory_to_lib)
     link_directories(${CMAKE_ARCHIVE_OUTPUT_DIRECTORY})
 endmacro()
 
-set(DXD_SRC_DIR ${PROJECT_SOURCE_DIR}/LibraryDX12)
-set(DXD_INCLUDE_DIR ${DXD_SRC_DIR}/Include)
-
-macro(add_definitions_for_paths ${TARGET_NAME})
+macro(add_definitions_for_paths)
     add_definitions(-DSHADERS_PATH=L"${DXD_SRC_DIR}/Shaders/")
     add_definitions(-DRESOURCES_PATH=L"${PROJECT_SOURCE_DIR}/")
 endmacro()
