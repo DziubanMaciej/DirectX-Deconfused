@@ -23,9 +23,7 @@ public:
     void waitOnCpu(uint64_t fenceValue) const;
     void waitOnGpu(const CommandQueue &queueToWaitFor, uint64_t fenceValue);
 
-
-    uint64_t executeCommandListsAndSignal(std::vector<CommandList *> &commandLists);
-    uint64_t executeCommandListAndSignal(CommandList &commandList);
+    uint64_t executeCommandListsAndSignal(const std::vector<CommandList *> &commandLists);
     void performResourcesDeletion(bool lockQueue);
 
     void flush(bool lockQueue);

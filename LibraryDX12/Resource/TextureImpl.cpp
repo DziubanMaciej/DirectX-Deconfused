@@ -163,11 +163,10 @@ void TextureImpl::generateMips() {
 
     // Epilogue
     commandList.transitionBarrier(*this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    commandList.close();
 
     // Submit to gpu
     this->waitOnGpuForGpuUpload(queue);
-    const uint64_t fenceValue = queue.executeCommandListAndSignal(commandList);
+    const uint64_t fenceValue = queue.executeCommandListsAndSignal({ &commandList });
     this->addGpuDependency(queue, fenceValue);
 }
 

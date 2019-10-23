@@ -210,10 +210,9 @@ void MeshImpl::gpuLoad(const MeshGpuLoadArgs &args) {
     if (useIndexBuffer) {
         this->indexBuffer = std::make_unique<IndexBuffer>(device, commandList, args.indices.data(), static_cast<UINT>(args.indices.size()));
     }
-    commandList.close();
 
     // Execute and register obtained allocator and lists to the manager
-    const uint64_t fenceValue = commandQueue.executeCommandListAndSignal(commandList);
+    const uint64_t fenceValue = commandQueue.executeCommandListsAndSignal({ &commandList });
 
     // Register upload status for buffers
     this->vertexBuffer->addGpuDependency(commandQueue, fenceValue);

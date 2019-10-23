@@ -77,10 +77,9 @@ void Resource::uploadToGPU(ApplicationImpl &application, const void *data, UINT 
     // Record command list for GPU upload
     CommandList commandList{commandQueue};
     recordGpuUploadCommands(application.getDevice(), commandList, data, rowPitch, slicePitch);
-    commandList.close();
 
     // Execute on GPU
-    const auto fence = commandQueue.executeCommandListAndSignal(commandList);
+    const auto fence = commandQueue.executeCommandListsAndSignal({ &commandList });
     addGpuDependency(commandQueue, fence);
 }
 

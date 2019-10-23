@@ -45,11 +45,40 @@ void CommandQueue::waitOnGpu(const CommandQueue &queueToWaitFor, uint64_t fenceV
     this->commandQueue->Wait(queueToWaitFor.fence.getFence().Get(), fenceValue);
 }
 
-uint64_t CommandQueue::executeCommandListsAndSignal(std::vector<CommandList *> &commandLists) {
+uint64_t CommandQueue::executeCommandListsAndSignal(const std::vector<CommandList *> &commandLists) {
     std::unique_lock<std::mutex> lock = getLock(true);
+
+    std::unique_ptr<CommandList> preambleCommandList{};
+    for (auto commandListIndex = 0u; commandListIndex < commandLists.size(); commandListIndex++) {
+        auto preambleBarriers = commandLists[commandListIndex]->resourceStateController.generatePreambleBarriers();
+
+        // If there are any barriers to be made, append them to the previous list
+        if (preambleBarriers.size() > 0) {
+            // Get previous list
+            CommandList *previousCommandList = nullptr;
+            if (commandListIndex == 0) {
+                preambleCommandList = std::make_unique<CommandList>(*this);
+                previousCommandList = preambleCommandList.get();
+            } else {
+                previousCommandList = commandLists[commandListIndex - 1];
+            }
+
+            // append and close
+            previousCommandList->cachedResourceBarriers.insert(previousCommandList->cachedResourceBarriers.end(), preambleBarriers.begin(), preambleBarriers.end());
+            previousCommandList->close();
+        } else if (commandListIndex != 0) {
+            // close if not closed
+            commandLists[commandListIndex - 1]->close();
+        }
+        commandLists[commandListIndex]->resourceStateController.applyResourceTransitions();
+    }
+    commandLists[commandLists.size() - 1]->close();
 
     // Convert to vector of pointers to D3D command list objects
     std::vector<ID3D12CommandList *> commandListPtrs;
+    if (preambleCommandList) {
+        commandListPtrs.push_back(preambleCommandList->getCommandList().Get());
+    }
     for (auto &commandList : commandLists) {
         commandListPtrs.push_back(commandList->getCommandList().Get());
     }
@@ -59,24 +88,12 @@ uint64_t CommandQueue::executeCommandListsAndSignal(std::vector<CommandList *> &
     const uint64_t fenceValue = fence.signal(commandQueue);
 
     // Cleanup the CommandList objects, register child objects to GPU usage tracker
+    if (preambleCommandList) {
+        preambleCommandList->registerAllData(resourceUsageTracker, fenceValue);
+    }
     for (auto &commandList : commandLists) {
         commandList->registerAllData(resourceUsageTracker, fenceValue);
     }
-
-    // Return fence value used for waiting on this command list batch
-    return fenceValue;
-}
-
-uint64_t CommandQueue::executeCommandListAndSignal(CommandList &commandList) {
-    std::unique_lock<std::mutex> lock = getLock(true);
-
-    // Submit work to GPU and signal fence
-    ID3D12CommandList *commandListPtr = commandList.getCommandList().Get();
-    commandQueue->ExecuteCommandLists(1u, &commandListPtr);
-    const uint64_t fenceValue = fence.signal(commandQueue);
-
-    // Cleanup the CommandList object, register child objects to GPU usage tracker
-    commandList.registerAllData(resourceUsageTracker, fenceValue);
 
     // Return fence value used for waiting on this command list batch
     return fenceValue;

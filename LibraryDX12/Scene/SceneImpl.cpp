@@ -32,12 +32,11 @@ SceneImpl::SceneImpl(ApplicationImpl &application)
     CommandList commandList{commandQueue};
     postProcessVB = std::make_unique<VertexBuffer>(device, commandList, postProcessSquare, 6, 12);
     SET_OBJECT_NAME(*postProcessVB, L"PostProcessVB");
-    commandList.close();
 
     // Execute and register obtained allocator and lists to the manager
-    const uint64_t fenceValue = commandQueue.executeCommandListAndSignal(commandList);
+    const uint64_t fenceValue = commandQueue.executeCommandListsAndSignal({&commandList});
 
-	// QUERY!
+    // QUERY!
     D3D12_QUERY_HEAP_DESC queryHeapDesc = {};
     queryHeapDesc.Count = 2;
     queryHeapDesc.Type = D3D12_QUERY_HEAP_TYPE_TIMESTAMP;
@@ -655,31 +654,19 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
 
     // Render shadow maps
     CommandList commandListShadowMap{commandQueue};
-    SET_OBJECT_NAME(commandListShadowMap, L"cmdListShadowMap")
     renderShadowMaps(swapChain, renderData, commandListShadowMap);
-    commandListShadowMap.close();
-    commandQueue.executeCommandListAndSignal(commandListShadowMap);
 
     // GBuffer
     CommandList commandListGBuffer{commandQueue};
-    SET_OBJECT_NAME(commandListGBuffer, L"cmdListGBuffer");
     renderGBuffer(swapChain, renderData, commandListGBuffer, *postProcessVB);
-    commandListGBuffer.close();
-    commandQueue.executeCommandListAndSignal(commandListGBuffer);
 
     // SSAO
     CommandList commandListSSAO{commandQueue};
-    SET_OBJECT_NAME(commandListSSAO, L"cmdListSSAO");
     renderSSAO(swapChain, renderData, commandListSSAO, *postProcessVB);
-    commandListSSAO.close();
-    commandQueue.executeCommandListAndSignal(commandListSSAO);
 
     // Lighting
     CommandList commandListLighting{commandQueue};
-    SET_OBJECT_NAME(commandListLighting, L"cmdListLighting");
     renderLighting(swapChain, renderData, commandListLighting, *postProcessVB);
-    commandListLighting.close();
-    commandQueue.executeCommandListAndSignal(commandListLighting);
 
     // Identify output for the next step: if there are post processes, render to intermediate buffer
     const auto postProcessesCount = getEnabledPostProcessesCount();
@@ -688,18 +675,17 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
 
     // SSR
     CommandList commandListSSR{commandQueue};
-    SET_OBJECT_NAME(commandListSSR, L"cmdListSSR");
     renderSSRandMerge(swapChain, renderData, commandListSSR, renderLightingOutput, *postProcessVB);
-    commandListSSR.close();
-    commandQueue.executeCommandListAndSignal(commandListSSR);
 
+    // Push to the queue
+    commandQueue.executeCommandListsAndSignal({&commandListShadowMap, &commandListGBuffer,
+                                               &commandListSSAO, &commandListLighting, &commandListSSR});
 
-	// QUERY used in perf. measurement. 
-	//UINT64 *queryData = nullptr;
+    // QUERY used in perf. measurement.
+    //UINT64 *queryData = nullptr;
     //queryResult->getResource().Get()->Map(0, nullptr, (void **)&queryData);
     //DXD::log("Time: %d\n", int(queryData[1] - queryData[0]));
     //queryResult->getResource().Get()->Unmap(0, nullptr);
-
 
     // Render post processes
     CommandList commandListPostProcess{commandQueue};
@@ -722,8 +708,7 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     }
 
     // Close command list and submit it to the GPU
-    commandListPostProcess.close();
-    commandQueue.executeCommandListAndSignal(commandListPostProcess);
+    commandQueue.executeCommandListsAndSignal({&commandListPostProcess});
 
     CommandList commandListSprite{commandQueue};
     commandListSprite.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
@@ -732,8 +717,7 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     //auto &tex = DXD::Texture::createFromFile(this->application, L"Resources/textures/brickwall.jpg", false);
     for (auto &sprite : sprites)
         renderSprite(sprite, swapChain, commandListSprite, *postProcessVB);
-    commandListSprite.close();
-    const uint64_t fenceValue = commandQueue.executeCommandListAndSignal(commandListSprite);
+    const uint64_t fenceValue = commandQueue.executeCommandListsAndSignal({&commandListSprite});
 
     // D2D, additional command list is inserted
     if (!texts.empty()) {

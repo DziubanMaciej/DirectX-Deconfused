@@ -16,23 +16,16 @@ CommandList::CommandList(CommandQueue &commandQueue, ID3D12PipelineState *initia
       commandAllocator(commandAllocatorController.retrieveCommandAllocator()),
       commandList(commandAllocatorController.retrieveCommandList(commandAllocator, initialPipelineState)),
       gpuDescriptorHeapControllerCbvSrvUav(*this, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV),
-      gpuDescriptorHeapControllerSampler(*this, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER) {}
+      gpuDescriptorHeapControllerSampler(*this, D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER),
+      resourceStateController{*this} {}
 
 CommandList::~CommandList() {
     assert(!commandAllocator && !commandList); // registerAllData should be called
 }
 
 void CommandList::transitionBarrier(Resource &resource, D3D12_RESOURCE_STATES targetState, UINT subresource) {
-    // Update internal Resource state and compute required resource barriers
-    ResourceState state = resource.getState();
-    ResourceState::BarriersCreationData barriers{resource};
-    state.setState(targetState, subresource, &barriers);
-    resource.setState(state);
-
-    // Push barriers to the command list
-    const auto barriersStart = barriers.barriers;
-    const auto barriersEnd = barriers.barriers + barriers.barriersCount;
-    cachedResourceBarriers.insert(cachedResourceBarriers.end(), barriersStart, barriersEnd);
+    this->resourceStateController.transition(resource, targetState, subresource);
+    addUsedResource(resource.getResource());
 }
 
 void CommandList::uavBarrier(Resource &resource) {

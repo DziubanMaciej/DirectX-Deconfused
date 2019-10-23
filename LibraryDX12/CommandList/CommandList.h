@@ -94,6 +94,7 @@ private:
     void commitDescriptors();
     void commitResourceBarriers();
 
+    friend class CommandQueue;
     friend class ResourceStateController;
     void addCachedResourceBarrier(D3D12_RESOURCE_BARRIER &&barrier);
 
@@ -104,9 +105,10 @@ private:
     ID3D12GraphicsCommandListPtr commandList;
     ResourceBindingType::ResourceBindingType resourceBindingType;
 
-    // Descriptor controllers
+    // Owned controllers
     GpuDescriptorHeapController gpuDescriptorHeapControllerSampler;
     GpuDescriptorHeapController gpuDescriptorHeapControllerCbvSrvUav;
+    ResourceStateController resourceStateController;
 
     // Tracked resources
     ID3D12DescriptorHeapPtr descriptorHeapCbvSrvUav = {};
