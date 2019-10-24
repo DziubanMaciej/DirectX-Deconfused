@@ -46,12 +46,11 @@ private:
         };
 
         MeshCreationData meshesCreationData[] = {
-            {"cubeNormal", L"Resources/meshes/cube_normals.obj", false, false},
+            {"cubeNormalMesh", L"Resources/meshes/cube_normals.obj", false, false},
             {"cubeNormalUv", L"Resources/meshes/cube_normals_uvs.obj", true, false},
             {"cubeNormalUvTangents", L"Resources/meshes/cube_normals_uvs.obj", true, true},
             {"teapot", L"Resources/meshes/teapot_normals.obj", false, false},
-            {"actor", L"Resources/meshes/dennis.obj", true, false},
-            {"dxd", L"Resources/meshes/dxd_comicsans.obj", false, false},
+            {"dennisMesh", L"Resources/meshes/dennis.obj", true, false},
             {"intelMesh", L"Resources/meshes/corei7.obj", false, false},
             {"aventadorMesh", L"Resources/meshes/aventador.obj", false, false},
             {"porsheMesh", L"Resources/meshes/porshe.obj", true, false}};
@@ -67,56 +66,90 @@ private:
         DXD::log("Configuring objects...\n");
 
         std::unordered_map<std::string, std::string> meshObjectMap = {
-            {"cubeNormalMesh1", "cubeNormal"},
-            {"cubeNormalMesh2", "cubeNormal"},
-            {"glowingCube", "cubeNormal"},
-            {"flatMesh1", "cubeNormal"},
-            {"extraFlatMesh1", "cubeNormalUv"},
+            {"leftWall", "cubeNormalMesh"},
+            {"rightWall", "cubeNormalMesh"},
+            {"glowingCube1", "cubeNormalMesh"},
+            {"glowingCube2", "cubeNormalMesh"},
+            {"glowingCube3", "cubeNormalMesh"},
+            {"glowingCube4", "cubeNormalMesh"},
+            {"glowingBlue", "cubeNormalMesh"},
+            {"glowingRed", "cubeNormalMesh"},
+            {"stand", "cubeNormalMesh"},
+            {"ground", "cubeNormalUv"},
             {"aventador", "aventadorMesh"},
             {"porshe", "porsheMesh"},
-            {"actorMesh1", "actor"}};
+            {"dennis", "dennisMesh"}};
 
         for (auto object : meshObjectMap) {
             objects.insert({object.first, DXD::Object::create(*meshes[object.second])});
         }
 
-        objects["cubeNormalMesh1"]->setPosition(-8, -1, -5.5);
-        objects["cubeNormalMesh1"]->setScale(1, 1, 2);
-        objects["cubeNormalMesh1"]->setSpecularity(0.1f);
+        objects["leftWall"]->setPosition(-9, 0, 0);
+        objects["leftWall"]->setScale(0.5, 2, 10);
+        objects["leftWall"]->setSpecularity(0.2f);
+        objects["leftWall"]->setColor(0.2f, 0.2f, 0.2f);
 
-        objects["cubeNormalMesh2"]->setPosition(9, -1, -9);
+        objects["rightWall"]->setPosition(9, 0, 0);
+        objects["rightWall"]->setScale(0.5, 2, 10);
+        objects["rightWall"]->setSpecularity(0.2f);
+        objects["rightWall"]->setColor(0.2f, 0.2f, 0.2f);
 
-        objects["glowingCube"]->setPosition(-2.f, -1.f, 7.f);
-        objects["glowingCube"]->setRotation(45, 45, 45);
-        objects["glowingCube"]->setBloomFactor(1.f);
-        objects["glowingCube"]->setColor(0.9f, 0.9f, 0.9f);
+        objects["glowingCube1"]->setPosition(-9.0f, 0.0f, 3.0f);
+        objects["glowingCube1"]->setBloomFactor(1.0f);
+        objects["glowingCube1"]->setColor(0.9f, 0.9f, 0.9f);
+        objects["glowingCube1"]->setScale(0.75, 1.5f, 0.5f);
 
-        objects["flatMesh1"]->setPosition(0, -2.5, 0);
-        objects["flatMesh1"]->setSpecularity(0.2f);
-        objects["flatMesh1"]->setScale(20, 0.5, 10);
+        objects["glowingCube2"]->setPosition(9.0f, 0.0f, 3.0f);
+        objects["glowingCube2"]->setBloomFactor(1.0f);
+        objects["glowingCube2"]->setColor(0.9f, 0.9f, 0.9f);
+        objects["glowingCube2"]->setScale(0.75, 1.5f, 0.5f);
 
-        objects["extraFlatMesh1"]->setTexture(textures["grass"].get());
-        objects["extraFlatMesh1"]->setPosition(0, -4.0, 0);
-        objects["extraFlatMesh1"]->setSpecularity(0.0f);
-        objects["extraFlatMesh1"]->setScale(100, 1.0f, 100);
-        objects["extraFlatMesh1"]->setTextureScale(50, 50);
+        objects["glowingCube3"]->setPosition(-9.0f, 0.0f, -3.0f);
+        objects["glowingCube3"]->setBloomFactor(1.0f);
+        objects["glowingCube3"]->setColor(0.9f, 0.9f, 0.9f);
+        objects["glowingCube3"]->setScale(0.75, 1.5f, 0.5f);
 
-        objects["porshe"]->setPosition(4, -1.475, 0);
+        objects["glowingCube4"]->setPosition(9.0f, 0.0f, -3.0f);
+        objects["glowingCube4"]->setBloomFactor(1.0f);
+        objects["glowingCube4"]->setColor(0.9f, 0.9f, 0.9f);
+        objects["glowingCube4"]->setScale(0.75, 1.5f, 0.5f);
+
+        objects["glowingBlue"]->setPosition(-8.5f, 1.0f, -9.0f);
+        objects["glowingBlue"]->setBloomFactor(1.0f);
+        objects["glowingBlue"]->setColor(0.0f, 0.0f, 0.9f);
+        objects["glowingBlue"]->setScale(0.25f, 0.25f, 0.25f);
+
+        objects["glowingRed"]->setPosition(8.5f, 1.0f, -9.0f);
+        objects["glowingRed"]->setBloomFactor(1.0f);
+        objects["glowingRed"]->setColor(0.9f, 0.0f, 0.0f);
+        objects["glowingRed"]->setScale(0.25f, 0.25f, 0.25f);
+
+        objects["stand"]->setPosition(0, -2.5, 0);
+        objects["stand"]->setSpecularity(0.2f);
+        objects["stand"]->setScale(12, 0.5, 12);
+
+        objects["ground"]->setTexture(textures["grass"].get());
+        objects["ground"]->setPosition(0, -3.5, 0);
+        objects["ground"]->setSpecularity(0.0f);
+        objects["ground"]->setScale(100, 1.0f, 100);
+        objects["ground"]->setTextureScale(50, 50);
+
+        objects["porshe"]->setPosition(4.0f, -1.475f, 0.0f);
         objects["porshe"]->setSpecularity(0.4f);
         objects["porshe"]->setScale(0.9f, 0.9f, 0.9f);
         objects["porshe"]->setTexture(textures["porsche"].get());
-        objects["porshe"]->setRotation(XMFLOAT3(0, 1, 0), M_PI/4);
+        objects["porshe"]->setRotation(XMFLOAT3(0, 1, 0), float(M_PI/4));
 
         objects["aventador"]->setPosition(-4, -2, 0);
-        objects["aventador"]->setColor(0.0f, 113.0f / 255.0f, 197.0f / 255.0f);
+        objects["aventador"]->setColor(0.0f, 0.3f, 0.3f);
         objects["aventador"]->setSpecularity(0.4f);
         objects["aventador"]->setScale(0.9f, 0.9f, 0.9f);
-        objects["aventador"]->setRotation(XMFLOAT3(0, 1, 0), -M_PI / 4);
+        objects["aventador"]->setRotation(XMFLOAT3(0, 1, 0), float(-M_PI / 4));
 
-        objects["actorMesh1"]->setPosition(-2, -2, -8);
-        objects["actorMesh1"]->setScale(0.01f, 0.01f, 0.01f);
-        objects["actorMesh1"]->setRotation(XMFLOAT3(0, 1, 0), 90);
-        objects["actorMesh1"]->setTexture(textures["dennis"].get());
+        objects["dennis"]->setPosition(-2, -2, -8);
+        objects["dennis"]->setScale(0.01f, 0.01f, 0.01f);
+        objects["dennis"]->setRotation(XMFLOAT3(0, 1, 0), 90);
+        objects["dennis"]->setTexture(textures["dennis"].get());
     }
     void prepLights() {
         DXD::log("Loading lights...\n");
@@ -128,7 +161,6 @@ private:
 
         std::vector<LightCreationData> lightNames = {
             {"sunLight", DXD::Light::LightType::DIRECTIONAL_LIGHT},
-            {"moonLight", DXD::Light::LightType::SPOT_LIGHT},
             {"redLight", DXD::Light::LightType::SPOT_LIGHT},
             {"blueLight", DXD::Light::LightType::SPOT_LIGHT}};
 
@@ -141,19 +173,14 @@ private:
         lights["sunLight"]->setDirection(1, -1, -0.5);
         lights["sunLight"]->setPower(12);
 
-        lights["moonLight"]->setColor(0.0f, 1.0f, 1.0f);
-        lights["moonLight"]->setPosition(7, 4, 6);
-        lights["moonLight"]->setDirection(0, -1, 0);
-        lights["moonLight"]->setPower(2);
-
         lights["redLight"]->setColor(1.0f, 0.0f, 0.0f);
-        lights["redLight"]->setPosition(-12, 1, -12);
-        lights["redLight"]->setDirection(1, 0, 1);
+        lights["redLight"]->setPosition(8.5f, 1.0f, -9.0f);
+        lights["redLight"]->setDirection(-1, 0, 1);
         lights["redLight"]->setPower(2);
 
         lights["blueLight"]->setColor(0.0f, 0.0f, 1.0f);
-        lights["blueLight"]->setPosition(12, 1, -12);
-        lights["blueLight"]->setDirection(-1, 0, 1);
+        lights["blueLight"]->setPosition(-8.5f, 1.0f, -9.0f);
+        lights["blueLight"]->setDirection(1, 0, 1);
         lights["blueLight"]->setPower(2);
     }
     void prepTextures() {
