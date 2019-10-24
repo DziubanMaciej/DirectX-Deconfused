@@ -61,7 +61,7 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
     float4 worldSpacePos = getPositionFromDepth(uBase, vBase, INdepth);
 
-    float3 cameraDirection = worldSpacePos.xyz - scb.cameraPosition;
+    float3 cameraDirection = worldSpacePos.xyz - scb.cameraPosition.xyz;
 
     float3 INnormal = normalize(gBufferNormal.Sample(g_sampler, float2(uBase, vBase)).xyz);
 
@@ -86,7 +86,7 @@ float4 main(PixelShaderInput IN) : SV_Target {
         screenSpacePos.y = -screenSpacePos.y / screenSpacePos.w * 0.5f + 0.5f;
 
         // Depth test
-        float pointDepth = gBufferDepth.Sample(g_sampler, screenSpacePos.xy).r;
+        float pointDepth = gBufferDepth.SampleLevel(g_sampler, screenSpacePos.xy, 0).r;
 
         float deltaDepth = (screenSpacePos.z / screenSpacePos.w) - pointDepth;
 
@@ -94,7 +94,7 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
             // Too far Depth/Distance test
             float3 posFromDepth = getPositionFromDepth(screenSpacePos.x, screenSpacePos.y, pointDepth).xyz;
-            float rayDistance = distance(posFromDepth, rayPoint);
+            float rayDistance = distance(posFromDepth.xyz, rayPoint.xyz);
             if (rayDistance > 0.4f) {
                 continue;
             }
@@ -135,7 +135,7 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
             float screenEdgefactor = smoothstep(0.0f, 0.4f, 1.0f - (distance(float2(0.5f, 0.5f), screenSpacePos.xy) * 2.0f));
 
-            float3 OUTssr = screenEdgefactor * lightingOutput.Sample(g_sampler, screenSpacePos.xy).xyz + (1.0f - screenEdgefactor) * scb.clearColor.xyz;
+            float3 OUTssr = screenEdgefactor * lightingOutput.SampleLevel(g_sampler, screenSpacePos.xy, 0).xyz + (1.0f - screenEdgefactor) * scb.clearColor.xyz;
 
             return float4(((INlightingOutput * (1 - ssrPower)) + (ssrPower * OUTssr)), 1.0f);
         }

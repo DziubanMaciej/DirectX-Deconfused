@@ -53,7 +53,7 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
     float4 INworldPosition = mul(invVP.viewMatrixInverse, (D / D.w));
 
     float4 INnormal = gBufferNormal.Sample(g_sampler, float2(uBase, vBase));
-    float2 INspecularity = gBufferSpecular.Sample(g_sampler, float2(uBase, vBase));
+    float2 INspecularity = gBufferSpecular.Sample(g_sampler, float2(uBase, vBase)).xy;
     float4 INalbedo = gBufferAlbedo.Sample(g_sampler, float2(uBase, vBase));
     float INssao = ssaoMap.Sample(g_sampler_bilinear, float2(uBase, vBase)).r;
 
@@ -75,7 +75,7 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
                 for (int ox = -2; ox < 3; ox++) {
                     for (int oy = -2; oy < 3; oy++) {
                         float2 offset = float2(float(ox) / 2048.0f, float(oy) / 2048.0f);
-                        smDepth = shadowMaps[i].Sample(g_sampler_sm, smCoords.xy + offset).r;
+                        smDepth = shadowMaps[i].SampleLevel(g_sampler_sm, smCoords.xy + offset, 0).r;
 
                         if (((smCoords.z / smCoords.w) - 0.001f) > smDepth) {
                             shadowFactor = shadowFactor - 1;
