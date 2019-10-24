@@ -110,13 +110,13 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
         float3 lightDirNorm = normalize(lightDirection[i].xyz);
         float directionPower = pow(max((dot(-lightPositionNorm.xyz, lightDirNorm.xyz)), 0.0), 4);
 
-        OUT_Color.xyz = OUT_Color.xyz + (tempLightColor.xyz + INalbedo.xyz) * tempLightPower * (normalPower + specularPower) * directionPower * shadowFactor;
+        OUT_Color.xyz = OUT_Color.xyz + ((tempLightColor.xyz * (1.0f - INspecularity.x)) + INalbedo.xyz) * tempLightPower * (normalPower + specularPower) * directionPower * shadowFactor;
     }
 
     float3 ambientLightColor = ambientLight.xyz / 4;
-    float ambientLightPower = distance(float3(0, 0, 0), ambientLight.xyz) * 0.25f;
+    float ambientLightPower = distance(float3(0, 0, 0), ambientLight.xyz) * 0.5f;
 
-    OUT_Color.xyz = OUT_Color.xyz + ((INalbedo.xyz + ambientLightColor) * ambientLightPower * (INspecularity.x / 10.0f + 1.0f));
+    OUT_Color.xyz = OUT_Color.xyz + ((INalbedo.xyz + (ambientLightColor * (1.0f - INspecularity.x))) * ambientLightPower * (INspecularity.x / 10.0f + 1.0f));
 
     PS_OUT result;
 

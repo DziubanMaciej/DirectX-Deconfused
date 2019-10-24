@@ -135,14 +135,14 @@ private:
         objects["ground"]->setTextureScale(50, 50);
 
         objects["porshe"]->setPosition(4.0f, -1.475f, 0.0f);
-        objects["porshe"]->setSpecularity(0.4f);
+        objects["porshe"]->setSpecularity(0.6f);
         objects["porshe"]->setScale(0.9f, 0.9f, 0.9f);
         objects["porshe"]->setTexture(textures["porsche"].get());
         objects["porshe"]->setRotation(XMFLOAT3(0, 1, 0), float(M_PI/4));
 
         objects["aventador"]->setPosition(-4, -2, 0);
-        objects["aventador"]->setColor(0.0f, 0.3f, 0.3f);
-        objects["aventador"]->setSpecularity(0.4f);
+        objects["aventador"]->setColor(0.0f, 0.0f, 0.0f);
+        objects["aventador"]->setSpecularity(0.6f);
         objects["aventador"]->setScale(0.9f, 0.9f, 0.9f);
         objects["aventador"]->setRotation(XMFLOAT3(0, 1, 0), float(-M_PI / 4));
 
