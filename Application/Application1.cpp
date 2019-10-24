@@ -76,8 +76,10 @@ private:
             {"glowingRed", "cubeNormalMesh"},
             {"stand", "cubeNormalMesh"},
             {"ground", "cubeNormalUv"},
-            {"aventador", "aventadorMesh"},
-            {"porshe", "porsheMesh"},
+            {"aventador1", "aventadorMesh"},
+            {"porshe1", "porsheMesh"},
+            {"aventador2", "aventadorMesh"},
+            {"porshe2", "porsheMesh"},
             {"dennis", "dennisMesh"}};
 
         for (auto object : meshObjectMap) {
@@ -134,17 +136,29 @@ private:
         objects["ground"]->setScale(100, 1.0f, 100);
         objects["ground"]->setTextureScale(50, 50);
 
-        objects["porshe"]->setPosition(4.0f, -1.475f, 0.0f);
-        objects["porshe"]->setSpecularity(0.6f);
-        objects["porshe"]->setScale(0.9f, 0.9f, 0.9f);
-        objects["porshe"]->setTexture(textures["porsche"].get());
-        objects["porshe"]->setRotation(XMFLOAT3(0, 1, 0), float(M_PI/4));
+        objects["porshe1"]->setPosition(4.0f, -1.475f, 2.0f);
+        objects["porshe1"]->setSpecularity(0.6f);
+        objects["porshe1"]->setScale(0.9f, 0.9f, 0.9f);
+        objects["porshe1"]->setTexture(textures["porsche"].get());
+        objects["porshe1"]->setRotation(XMFLOAT3(0, 1, 0), float(M_PI/4));
 
-        objects["aventador"]->setPosition(-4, -2, 0);
-        objects["aventador"]->setColor(0.0f, 0.0f, 0.0f);
-        objects["aventador"]->setSpecularity(0.6f);
-        objects["aventador"]->setScale(0.9f, 0.9f, 0.9f);
-        objects["aventador"]->setRotation(XMFLOAT3(0, 1, 0), float(-M_PI / 4));
+        objects["aventador1"]->setPosition(-4.0f, -2.0f, 2.0f);
+        objects["aventador1"]->setColor(0.0f, 0.0f, 0.0f);
+        objects["aventador1"]->setSpecularity(0.6f);
+        objects["aventador1"]->setScale(0.9f, 0.9f, 0.9f);
+        objects["aventador1"]->setRotation(XMFLOAT3(0, 1, 0), float(-M_PI / 4));
+
+        objects["porshe2"]->setPosition(-4.0f, -1.475f, -2.0f);
+        objects["porshe2"]->setSpecularity(0.6f);
+        objects["porshe2"]->setScale(0.9f, 0.9f, 0.9f);
+        objects["porshe2"]->setTexture(textures["porsche"].get());
+        objects["porshe2"]->setRotation(XMFLOAT3(0, 1, 0), float(M_PI / 4));
+
+        objects["aventador2"]->setPosition(4.0f, -2.0f, -2.0f);
+        objects["aventador2"]->setColor(0.0f, 0.0f, 0.0f);
+        objects["aventador2"]->setSpecularity(0.6f);
+        objects["aventador2"]->setScale(0.9f, 0.9f, 0.9f);
+        objects["aventador2"]->setRotation(XMFLOAT3(0, 1, 0), float(-M_PI / 4));
 
         objects["dennis"]->setPosition(-2, -2, -8);
         objects["dennis"]->setScale(0.01f, 0.01f, 0.01f);
