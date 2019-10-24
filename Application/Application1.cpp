@@ -67,15 +67,10 @@ private:
         DXD::log("Configuring objects...\n");
 
         std::unordered_map<std::string, std::string> meshObjectMap = {
-            {"teapotMesh1", "teapot"},
-            {"teapotMesh2", "teapot"},
-            {"teapotMesh3", "teapot"},
             {"cubeNormalMesh1", "cubeNormal"},
             {"cubeNormalMesh2", "cubeNormal"},
-            {"cubeNormalMesh3", "cubeNormal"},
             {"glowingCube", "cubeNormal"},
             {"flatMesh1", "cubeNormal"},
-            {"intel", "intelMesh"},
             {"extraFlatMesh1", "cubeNormalUv"},
             {"aventador", "aventadorMesh"},
             {"porshe", "porsheMesh"},
@@ -85,39 +80,16 @@ private:
             objects.insert({object.first, DXD::Object::create(*meshes[object.second])});
         }
 
-        objects["teapotMesh1"]->setPosition(8, -1.25, 0);
-        objects["teapotMesh1"]->setScale(0.1f, 0.1f, 0.1f);
-        objects["teapotMesh1"]->setColor(0.0f, 0.8f, 0.0f);
-        objects["teapotMesh1"]->setSpecularity(0.2f);
-
-        objects["teapotMesh2"]->setPosition(0, 1, 0);
-        objects["teapotMesh2"]->setScale(0.1f, 0.1f, 0.1f);
-        objects["teapotMesh2"]->setColor(0.3f, 0.0f, 0.0f);
-        objects["teapotMesh2"]->setSpecularity(0.2f);
-
-        objects["teapotMesh3"]->setPosition(-8, -1.25, 0);
-        objects["teapotMesh3"]->setScale(0.1f, 0.1f, 0.1f);
-        objects["teapotMesh3"]->setColor(0.0f, 0.0f, 0.8f);
-        objects["teapotMesh3"]->setSpecularity(0.2f);
-
         objects["cubeNormalMesh1"]->setPosition(-8, -1, -5.5);
         objects["cubeNormalMesh1"]->setScale(1, 1, 2);
         objects["cubeNormalMesh1"]->setSpecularity(0.1f);
 
         objects["cubeNormalMesh2"]->setPosition(9, -1, -9);
 
-        objects["cubeNormalMesh3"]->setPosition(0, -1.9f, 0);
-        objects["cubeNormalMesh3"]->setScale(2, 0.1f, 2);
-        objects["cubeNormalMesh3"]->setSpecularity(0.1f);
-
         objects["glowingCube"]->setPosition(-2.f, -1.f, 7.f);
         objects["glowingCube"]->setRotation(45, 45, 45);
         objects["glowingCube"]->setBloomFactor(1.f);
         objects["glowingCube"]->setColor(0.9f, 0.9f, 0.9f);
-
-        objects["intel"]->setPosition(0, -1.9f, -8);
-        objects["intel"]->setScale(0.1f, 0.1f, 0.1f);
-        objects["intel"]->setSpecularity(0.4f);
 
         objects["flatMesh1"]->setPosition(0, -2.5, 0);
         objects["flatMesh1"]->setSpecularity(0.2f);
@@ -129,22 +101,21 @@ private:
         objects["extraFlatMesh1"]->setScale(100, 1.0f, 100);
         objects["extraFlatMesh1"]->setTextureScale(50, 50);
 
-        objects["porshe"]->setPosition(0, -1, -4);
+        objects["porshe"]->setPosition(4, -1.475, 0);
         objects["porshe"]->setSpecularity(0.4f);
         objects["porshe"]->setScale(0.9f, 0.9f, 0.9f);
         objects["porshe"]->setTexture(textures["porsche"].get());
+        objects["porshe"]->setRotation(XMFLOAT3(0, 1, 0), M_PI/4);
 
-        objects["aventador"]->setPosition(-14, -2, 0);
+        objects["aventador"]->setPosition(-4, -2, 0);
         objects["aventador"]->setColor(0.0f, 113.0f / 255.0f, 197.0f / 255.0f);
         objects["aventador"]->setSpecularity(0.4f);
         objects["aventador"]->setScale(0.9f, 0.9f, 0.9f);
-        objects["aventador"]->setRotation(XMFLOAT3(0, 1, 0), -90);
+        objects["aventador"]->setRotation(XMFLOAT3(0, 1, 0), -M_PI / 4);
 
         objects["actorMesh1"]->setPosition(-2, -2, -8);
         objects["actorMesh1"]->setScale(0.01f, 0.01f, 0.01f);
         objects["actorMesh1"]->setRotation(XMFLOAT3(0, 1, 0), 90);
-        objects["actorMesh1"]->setSpecularity(0.0f);
-        objects["actorMesh1"]->setColor(1, 224.0f / 255.0f, 189.0f / 255.0f);
         objects["actorMesh1"]->setTexture(textures["dennis"].get());
     }
     void prepLights() {
@@ -253,10 +224,7 @@ private:
             {"crosshair", L"Resources/sprites/crosshair.png"}};
 
         SpriteCreationData spritesCreationData[] = {
-            //{"shrek_right", "shrek", 368, 10, 250, -120, DXD::Sprite::HorizontalAlignment::RIGHT, DXD::Sprite::VerticalAlignment::BOTTOM},
-            //{"shrek_left", "shrek", 368, -60, 250, -120, DXD::Sprite::HorizontalAlignment::LEFT, DXD::Sprite::VerticalAlignment::BOTTOM},
             {"rectangle-alpha", "rectangle-alpha", 165, 0, 33, 0, DXD::Sprite::HorizontalAlignment::LEFT, DXD::Sprite::VerticalAlignment::TOP}};
-        //{"crosshair", "crosshair", 100, 0, 100, 0, DXD::Sprite::HorizontalAlignment::CENTER, DXD::Sprite::VerticalAlignment::CENTER}};
 
         for (const auto &data : spriteTexturesCreationData) {
             spriteTextures[data.name] = DXD::Texture::createFromFile(*application, data.path, false);
@@ -317,12 +285,6 @@ private:
     void sceneMoveTick(unsigned int deltaTimeMicroseconds) {
         static float rotation = 0.f;
         rotation += 0.000001f * deltaTimeMicroseconds;
-
-        objects["porshe"]->setRotation(XMFLOAT3(0, 1, 0), rotation - 45); // +180 for aventador
-        objects["porshe"]->setPosition(7 * sinf(rotation) * 0.6f, -1.475f, 7 * cosf(rotation) * 0.6f);
-        objects["teapotMesh2"]->setRotation(rotation, rotation, rotation);
-
-        //lights["blueLight"]->setPosition(7 * sinf(rotation) * 0.6f, -2.5f, 7 * cosf(rotation) * 0.6f - 18);
     }
 
     // Callbacks
