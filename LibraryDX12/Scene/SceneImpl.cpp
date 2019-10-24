@@ -497,6 +497,7 @@ void SceneImpl::renderBloom(SwapChain &swapChain, CommandList &commandList, Post
     cb.screenWidth = static_cast<float>(swapChain.getWidth());
     cb.screenHeight = static_cast<float>(swapChain.getHeight());
     commandList.transitionBarrier(bloomMap, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_APPLY_BLOOM);
     commandList.setRoot32BitConstant(0, cb);
     commandList.setSrvInDescriptorTable(1, 0, bloomMap);
@@ -654,19 +655,35 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
 
     // Render shadow maps
     CommandList commandListShadowMap{commandQueue};
-    renderShadowMaps(swapChain, renderData, commandListShadowMap);
-
-    // GBuffer
     CommandList commandListGBuffer{commandQueue};
-    renderGBuffer(swapChain, renderData, commandListGBuffer, *postProcessVB);
-
-    // SSAO
     CommandList commandListSSAO{commandQueue};
-    renderSSAO(swapChain, renderData, commandListSSAO, *postProcessVB);
-
-    // Lighting
     CommandList commandListLighting{commandQueue};
-    renderLighting(swapChain, renderData, commandListLighting, *postProcessVB);
+    Event events[4] = {};
+    auto &workers = ApplicationImpl::getInstance().getBackgroundWorkerController();
+
+    workers.pushTask([&]() {
+        renderShadowMaps(swapChain, renderData, commandListShadowMap);
+    },
+                     events[0]);
+    workers.pushTask([&]() {
+        renderGBuffer(swapChain, renderData, commandListGBuffer, *postProcessVB);
+    },
+                     events[1]);
+    workers.pushTask([&]() {
+        renderSSAO(swapChain, renderData, commandListSSAO, *postProcessVB);
+    },
+                     events[2]);
+    workers.pushTask([&]() {
+        renderLighting(swapChain, renderData, commandListLighting, *postProcessVB);
+    },
+                     events[3]);
+
+    events[0].wait();
+    events[1].wait();
+    events[2].wait();
+    events[3].wait();
+
+    commandQueue.executeCommandListsAndSignal({&commandListShadowMap, &commandListGBuffer, &commandListSSAO, &commandListLighting});
 
     // Identify output for the next step: if there are post processes, render to intermediate buffer
     const auto postProcessesCount = getEnabledPostProcessesCount();
@@ -676,10 +693,7 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     // SSR
     CommandList commandListSSR{commandQueue};
     renderSSRandMerge(swapChain, renderData, commandListSSR, renderLightingOutput, *postProcessVB);
-
-    // Push to the queue
-    commandQueue.executeCommandListsAndSignal({&commandListShadowMap, &commandListGBuffer,
-                                               &commandListSSAO, &commandListLighting, &commandListSSR});
+    commandQueue.executeCommandListsAndSignal({&commandListSSR});
 
     // QUERY used in perf. measurement.
     //UINT64 *queryData = nullptr;

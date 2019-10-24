@@ -12,9 +12,9 @@ class BackgroundWorker {
 public:
     using Task = std::function<void()>;
     struct TaskData {
-        Task task;
-        Event *completedEvent;
-        std::atomic_bool *completed;
+        Task task = {};
+        Event *completedEvent = {};
+        std::atomic_bool *completed = {};
     };
     using TaskQueue = BlockingQueue<TaskData>;
 
