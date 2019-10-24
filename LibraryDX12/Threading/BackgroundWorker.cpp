@@ -1,5 +1,7 @@
 #include "BackgroundWorker.h"
 
+#include "Synchronization/Event.h"
+
 #include <Objbase.h>
 
 BackgroundWorker::BackgroundWorker(TaskQueue &taskQueue, const std::atomic_bool &terminate)
@@ -28,8 +30,8 @@ void BackgroundWorker::work(TaskQueue &taskQueue, const std::atomic_bool &termin
             if (taskData.completed) {
                 taskData.completed->store(true);
             }
-            if (taskData.completeCV) {
-                taskData.completeCV->notify_one();
+            if (taskData.completedEvent) {
+                taskData.completedEvent->signal();
             }
         }
     }

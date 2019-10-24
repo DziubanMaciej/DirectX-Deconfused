@@ -27,13 +27,13 @@ void BackgroundWorkerController::pushTask(BackgroundWorker::Task task, std::atom
     pushTask(taskData);
 }
 
-void BackgroundWorkerController::pushTask(BackgroundWorker::Task task, std::condition_variable &completed) {
-    BackgroundWorker::TaskData taskData{task, &completed, nullptr};
+void BackgroundWorkerController::pushTask(BackgroundWorker::Task task, Event &completedEvent) {
+    BackgroundWorker::TaskData taskData{task, &completedEvent, nullptr};
     pushTask(taskData);
 }
 
-void BackgroundWorkerController::pushTask(BackgroundWorker::Task task, std::atomic_bool &completed, std::condition_variable &completedCV) {
-    BackgroundWorker::TaskData taskData{task, &completedCV, &completed};
+void BackgroundWorkerController::pushTask(BackgroundWorker::Task task, std::atomic_bool &completed, Event &completedEvent) {
+    BackgroundWorker::TaskData taskData{task, &completedEvent, &completed};
     pushTask(taskData);
 }
 
