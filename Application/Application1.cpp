@@ -72,6 +72,7 @@ private:
             {"glowingCube2", "cubeNormalMesh"},
             {"glowingCube3", "cubeNormalMesh"},
             {"glowingCube4", "cubeNormalMesh"},
+            {"wood", "cubeNormalUv"},
             {"glowingBlue", "cubeNormalMesh"},
             {"glowingRed", "cubeNormalMesh"},
             {"stand", "cubeNormalMesh"},
@@ -129,6 +130,11 @@ private:
         objects["stand"]->setPosition(0, -2.5, 0);
         objects["stand"]->setSpecularity(0.2f);
         objects["stand"]->setScale(12, 0.5, 12);
+
+        objects["wood"]->setPosition(0, -2.4f, 0);
+        objects["wood"]->setScale(1.5f, 0.5f, 11);
+        objects["wood"]->setTexture(textures["wood"].get());
+        objects["wood"]->setTextureScale(3, 22);
 
         objects["ground"]->setTexture(textures["grass"].get());
         objects["ground"]->setPosition(0, -3.5, 0);
@@ -211,6 +217,7 @@ private:
             {"brickwall_normal", L"Resources/textures/brickwall_normal.jpg", false},
             {"porsche", L"Resources/textures/porsche.bmp", true},
             {"dennis", L"Resources/textures/dennis.jpg", true},
+            {"wood", L"Resources/textures/wood.jpg", true},
             {"grass", L"Resources/textures/grass.jpg", true}};
 
         for (const auto &data : texturesCreationData) {
