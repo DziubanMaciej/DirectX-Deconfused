@@ -36,3 +36,7 @@ void Event::wait(DWORD milliseconds) const {
 void Event::wait(std::chrono::milliseconds duration) const {
     wait(static_cast<DWORD>(duration.count()));
 }
+
+void Event::signal() {
+    ::SetEvent(this->handle);
+}

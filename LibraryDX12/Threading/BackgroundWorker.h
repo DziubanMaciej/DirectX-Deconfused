@@ -6,12 +6,14 @@
 #include <thread>
 #include <functional>
 
+class Event;
+
 class BackgroundWorker {
 public:
     using Task = std::function<void()>;
     struct TaskData {
         Task task;
-        std::condition_variable *completeCV;
+        Event *completedEvent;
         std::atomic_bool *completed;
     };
     using TaskQueue = BlockingQueue<TaskData>;

@@ -16,6 +16,7 @@ public:
     void wait() const;
     void wait(DWORD milliseconds) const;
     void wait(std::chrono::milliseconds duration) const;
+    void signal();
 
     HANDLE getHandle() const { return handle; }
 
