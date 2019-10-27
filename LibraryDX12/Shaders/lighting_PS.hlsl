@@ -37,6 +37,25 @@ struct PS_OUT {
     float4 lightingOutput;
 };
 
+static float2 poissonDisk[16] =
+    {
+        float2(0.2770745f, 0.6951455f),
+        float2(0.1874257f, -0.02561589f),
+        float2(-0.3381929f, 0.8713168f),
+        float2(0.5867746f, 0.1087471f),
+        float2(-0.3078699f, 0.188545f),
+        float2(0.7993396f, 0.4595091f),
+        float2(-0.09242552f, 0.5260149f),
+        float2(0.3657553f, -0.5329605f),
+        float2(-0.3829718f, -0.2476171f),
+        float2(-0.01085108f, -0.6966301f),
+        float2(0.8404155f, -0.3543923f),
+        float2(-0.5186161f, -0.7624033f),
+        float2(-0.8135794f, 0.2328489f),
+        float2(-0.784665f, -0.2434929f),
+        float2(0.9920505f, 0.0855163f),
+        float2(-0.687256f, 0.6711345f)};
+
 PS_OUT main(PixelShaderInput IN) : SV_Target {
 
     const float uBase = IN.Position.x / screenWidth;
@@ -66,20 +85,18 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
         smCoords.x = smCoords.x / smCoords.w / 2.0f + 0.5f;
         smCoords.y = -smCoords.y / smCoords.w / 2.0f + 0.5f;
 
-        float shadowFactor = 25;
+        float shadowFactor = 16;
         float smDepth = 0;
 
         if (smCoords.x >= 0 && smCoords.x <= 1) {
             if (smCoords.y >= 0 && smCoords.y <= 1) {
 
-                for (int ox = -2; ox < 3; ox++) {
-                    for (int oy = -2; oy < 3; oy++) {
-                        float2 offset = float2(float(ox) / 2048.0f, float(oy) / 2048.0f);
-                        smDepth = shadowMaps[i].SampleLevel(g_sampler_sm, smCoords.xy + offset, 0).r;
+                for (int oxy = 0; oxy < 16; oxy++) {
+                    float2 offset = (poissonDisk[oxy] * 2.0f) / float2(2048.0f, 2048.0f);
+                    smDepth = shadowMaps[i].SampleLevel(g_sampler_sm, smCoords.xy + offset, 0).r;
 
-                        if (((smCoords.z / smCoords.w) - 0.001f) > smDepth) {
-                            shadowFactor = shadowFactor - 1;
-                        }
+                    if (((smCoords.z / smCoords.w) - 0.001f) > smDepth) {
+                        shadowFactor = shadowFactor - 1;
                     }
                 }
                 if (shadowFactor == 0) {
@@ -88,7 +105,7 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
             }
         }
 
-        shadowFactor = shadowFactor / 25;
+        shadowFactor = shadowFactor / 16;
 
         //Light color
         float3 tempLightColor = lightColor[i].xyz / 3;
