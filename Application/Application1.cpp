@@ -89,12 +89,10 @@ private:
 
         objects["leftWall"]->setPosition(-9, 0, 0);
         objects["leftWall"]->setScale(0.5, 2, 10);
-        objects["leftWall"]->setSpecularity(0.2f);
         objects["leftWall"]->setColor(0.2f, 0.2f, 0.2f);
 
         objects["rightWall"]->setPosition(9, 0, 0);
         objects["rightWall"]->setScale(0.5, 2, 10);
-        objects["rightWall"]->setSpecularity(0.2f);
         objects["rightWall"]->setColor(0.2f, 0.2f, 0.2f);
 
         objects["glowingCube1"]->setPosition(-9.0f, 0.0f, 3.0f);
@@ -306,6 +304,7 @@ private:
         scene->setBackgroundColor(0.7f, 1.0f, 1.0f);
         scene->setAmbientLight(1.0f, 1.0f, 250.0f / 255.0f);
         scene->setCamera(*camera);
+        scene->setSSR(enableSSR);
 
         for (auto &object : objects) {
             scene->addObject(*object.second);
@@ -412,6 +411,10 @@ private:
         case 'V':
             application->getSettings().setVerticalSyncEnabled(!application->getSettings().getVerticalSyncEnabled());
             break;
+        case '6':
+            enableSSR = !enableSSR;
+            scene->setSSR(enableSSR);
+            break;
         case '7':
             postProcesses["blackBars"]->setEnabled(!postProcesses["blackBars"]->isEnabled());
             break;
@@ -459,6 +462,7 @@ private:
     bool lookingAroundEnabled = false;
     bool fullscreen = false;
     bool toggleSceneMovement = true;
+    bool enableSSR = false;
     float angleX = 0.f;
     float angleY = 0.f;
     XMFLOAT3 cameraPosition{0, 4, -20};

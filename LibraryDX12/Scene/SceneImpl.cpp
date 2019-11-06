@@ -34,10 +34,12 @@ SceneImpl::SceneImpl(ApplicationImpl &application)
     SET_OBJECT_NAME(*postProcessVB, L"PostProcessVB");
     commandList.close();
 
+    enableSSR = true;
+
     // Execute and register obtained allocator and lists to the manager
     const uint64_t fenceValue = commandQueue.executeCommandListAndSignal(commandList);
 
-	// QUERY!
+    // QUERY!
     D3D12_QUERY_HEAP_DESC queryHeapDesc = {};
     queryHeapDesc.Count = 2;
     queryHeapDesc.Type = D3D12_QUERY_HEAP_TYPE_TIMESTAMP;
@@ -70,6 +72,10 @@ SceneImpl::SceneImpl(ApplicationImpl &application)
         &queryDestDesc,
         D3D12_RESOURCE_STATE_COPY_DEST,
         nullptr);
+}
+
+void SceneImpl::setSSR(bool enable) {
+    this->enableSSR = enable;
 }
 
 void SceneImpl::setBackgroundColor(float r, float g, float b) {
@@ -353,7 +359,7 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
 }
 
 void SceneImpl::renderSSAO(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, VertexBuffer &fullscreenVB) {
-    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(std::max(swapChain.getWidth()/2, 1u)), static_cast<float>(std::max(swapChain.getHeight()/2, 1u)));
+    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(std::max(swapChain.getWidth() / 2, 1u)), static_cast<float>(std::max(swapChain.getHeight() / 2, 1u)));
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
@@ -368,8 +374,8 @@ void SceneImpl::renderSSAO(SwapChain &swapChain, RenderData &renderData, Command
     commandList.setSrvInDescriptorTable(0, 1, renderData.getDepthStencilBuffer());
 
     SsaoCB ssaoCB;
-    ssaoCB.screenWidth = static_cast<float>(std::max(swapChain.getWidth()/2, 1u));
-    ssaoCB.screenHeight = static_cast<float>(std::max(swapChain.getHeight()/2, 1u));
+    ssaoCB.screenWidth = static_cast<float>(std::max(swapChain.getWidth() / 2, 1u));
+    ssaoCB.screenHeight = static_cast<float>(std::max(swapChain.getHeight() / 2, 1u));
     ssaoCB.viewMatrixInverse = camera->getInvViewMatrix();
     ssaoCB.projMatrixInverse = camera->getInvProjectionMatrix();
     commandList.setRoot32BitConstant(1, ssaoCB);
@@ -381,7 +387,7 @@ void SceneImpl::renderSSAO(SwapChain &swapChain, RenderData &renderData, Command
     commandList.transitionBarrier(renderData.getSsaoMap(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 }
 
-void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, VertexBuffer &fullscreenVB) {
+void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output, VertexBuffer &fullscreenVB) {
 
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     commandList.RSSetScissorRectNoScissor();
@@ -389,13 +395,13 @@ void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, Com
 
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_LIGHTING);
 
-    commandList.transitionBarrier(renderData.getLightingOutput(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+    commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.transitionBarrier(renderData.getBloomMap(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     commandList.clearRenderTargetView(renderData.getBloomMap(), blackColor);
-    commandList.clearRenderTargetView(renderData.getLightingOutput(), backgroundColor);
+    commandList.clearRenderTargetView(output, backgroundColor);
 
-    const Resource *lightingRts[] = {&renderData.getBloomMap(), &renderData.getLightingOutput()};
+    const Resource *lightingRts[] = {&renderData.getBloomMap(), &output};
     commandList.OMSetRenderTargetsNoDepth(lightingRts);
 
     commandList.setCbvInDescriptorTable(0, 0, lightConstantBuffer);
@@ -416,8 +422,6 @@ void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, Com
     commandList.IASetVertexBuffer(fullscreenVB);
 
     commandList.draw(6u);
-
-    commandList.transitionBarrier(renderData.getLightingOutput(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 }
 
 void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output, VertexBuffer &fullscreenVB) {
@@ -428,6 +432,7 @@ void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, 
 
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SSR);
 
+    commandList.transitionBarrier(renderData.getLightingOutput(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     const Resource *ssrRts[] = {&output};
@@ -629,6 +634,7 @@ void SceneImpl::renderD2DTexts(SwapChain &swapChain) {
     }
     throwIfFailed(d2dDeviceContext->EndDraw());
 }
+
 void SceneImpl::renderSprite(SpriteImpl *sprite, SwapChain &swapChain, CommandList &commandList, VertexBuffer &fullscreenVB) {
     auto &tex = sprite->getTextureImpl();
     auto &backBuffer = swapChain.getCurrentBackBuffer();
@@ -674,32 +680,41 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     commandListSSAO.close();
     commandQueue.executeCommandListAndSignal(commandListSSAO);
 
-    // Lighting
-    CommandList commandListLighting{commandQueue};
-    SET_OBJECT_NAME(commandListLighting, L"cmdListLighting");
-    renderLighting(swapChain, renderData, commandListLighting, *postProcessVB);
-    commandListLighting.close();
-    commandQueue.executeCommandListAndSignal(commandListLighting);
-
     // Identify output for the next step: if there are post processes, render to intermediate buffer
     const auto postProcessesCount = getEnabledPostProcessesCount();
     const bool shouldRenderPostProcesses = (postProcessesCount > 0);
     auto &renderLightingOutput = shouldRenderPostProcesses ? renderData.getPostProcessRenderTargets().getDestination() : backBuffer;
 
-    // SSR
-    CommandList commandListSSR{commandQueue};
-    SET_OBJECT_NAME(commandListSSR, L"cmdListSSR");
-    renderSSRandMerge(swapChain, renderData, commandListSSR, renderLightingOutput, *postProcessVB);
-    commandListSSR.close();
-    commandQueue.executeCommandListAndSignal(commandListSSR);
+    //renderData.getLightingOutput()
 
+    if (enableSSR) {
+        // Lighting
+        CommandList commandListLighting{commandQueue};
+        SET_OBJECT_NAME(commandListLighting, L"cmdListLighting");
+        renderLighting(swapChain, renderData, commandListLighting, renderData.getLightingOutput(), *postProcessVB);
+        commandListLighting.close();
+        commandQueue.executeCommandListAndSignal(commandListLighting);
 
-	// QUERY used in perf. measurement. 
-	//UINT64 *queryData = nullptr;
+        // SSR
+        CommandList commandListSSR{commandQueue};
+        SET_OBJECT_NAME(commandListSSR, L"cmdListSSR");
+        renderSSRandMerge(swapChain, renderData, commandListSSR, renderLightingOutput, *postProcessVB);
+        commandListSSR.close();
+        commandQueue.executeCommandListAndSignal(commandListSSR);
+    } else {
+        // Lighting
+        CommandList commandListLighting{commandQueue};
+        SET_OBJECT_NAME(commandListLighting, L"cmdListLighting");
+        renderLighting(swapChain, renderData, commandListLighting, renderLightingOutput, *postProcessVB);
+        commandListLighting.close();
+        commandQueue.executeCommandListAndSignal(commandListLighting);
+    }
+
+    // QUERY used in perf. measurement.
+    //UINT64 *queryData = nullptr;
     //queryResult->getResource().Get()->Map(0, nullptr, (void **)&queryData);
     //DXD::log("Time: %d\n", int(queryData[1] - queryData[0]));
     //queryResult->getResource().Get()->Unmap(0, nullptr);
-
 
     // Render post processes
     CommandList commandListPostProcess{commandQueue};

@@ -39,6 +39,7 @@ public:
     void addObject(DXD::Object &object) override;
     bool removeObject(DXD::Object &object) override;
     void setCamera(DXD::Camera &camera) override;
+    void setSSR(bool enable) override;
     virtual DXD::Camera *getCamera() override;
 
     void render(SwapChain &swapChain, RenderData &renderData);
@@ -60,7 +61,7 @@ protected:
     void renderShadowMaps(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
     void renderGBuffer(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, VertexBuffer &fullscreenVB);
     void renderSSAO(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, VertexBuffer &fullscreenVB);
-    void renderLighting(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, VertexBuffer &fullscreenVB);
+    void renderLighting(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output, VertexBuffer &fullscreenVB);
     void renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output, VertexBuffer &fullscreenVB);
     static void renderPostProcess(PostProcessImpl &postProcess, CommandList &commandList, VertexBuffer &fullscreenVB,
                                   Resource *input, PostProcessRenderTargets &renderTargets, Resource *output,
@@ -89,6 +90,7 @@ protected:
     std::vector<TextImpl *> texts;
     std::vector<PostProcessImpl *> postProcesses = {};
     std::vector<SpriteImpl *> sprites = {};
+    bool enableSSR;
 
     CameraImpl *camera;
 

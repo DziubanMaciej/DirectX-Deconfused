@@ -26,6 +26,7 @@ public:
     virtual void addSprite(DXD::Sprite &sprite) = 0;
     virtual bool removeObject(DXD::Object &object) = 0;
     virtual void setCamera(DXD::Camera &camera) = 0;
+    virtual void setSSR(bool enable) = 0;
     virtual DXD::Camera *getCamera() = 0;
 
     virtual ~Scene() = default;
