@@ -125,7 +125,7 @@ void RenderData::resize(int width, int height) {
     ssaoMapDesc.Height = std::max(height/2, 1);
     ssaoMapDesc.DepthOrArraySize = 1;
     ssaoMapDesc.MipLevels = 0;
-    ssaoMapDesc.Format = DXGI_FORMAT_R8G8_UNORM;
+    ssaoMapDesc.Format = DXGI_FORMAT_R8_UNORM;
     ssaoMapDesc.SampleDesc.Count = 1;
     ssaoMapDesc.SampleDesc.Quality = 0;
     ssaoMapDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;

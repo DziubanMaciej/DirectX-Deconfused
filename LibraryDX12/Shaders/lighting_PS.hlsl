@@ -74,7 +74,7 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
     float4 INnormal = gBufferNormal.Sample(g_sampler, float2(uBase, vBase));
     float2 INspecularity = gBufferSpecular.Sample(g_sampler, float2(uBase, vBase)).xy;
     float4 INalbedo = gBufferAlbedo.Sample(g_sampler, float2(uBase, vBase));
-    float2 INssao = ssaoMap.Sample(g_sampler_bilinear, float2(uBase, vBase));
+    float INssao = ssaoMap.Sample(g_sampler_bilinear, float2(uBase, vBase)).r;
 
     float4 OUT_Color = float4(0, 0, 0, 1);
 
@@ -137,7 +137,7 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
 
     PS_OUT result;
 
-    result.lightingOutput = OUT_Color * INssao.r;
+    result.lightingOutput = OUT_Color * INssao;
     //result.lightingOutput = float4(INssao.r, INssao.r, INssao.r, 1.0f); //TEMP
 
     const float brightness = dot(OUT_Color.rgb, float3(0.2126, 0.7152, 0.0722));

@@ -506,7 +506,7 @@ void PipelineStateController::compilePipelineStateSSAO(RootSignature &rootSignat
         .PS(L"ssao_PS.hlsl")
         .disableDepthStencil()
         .setRenderTargetsCount(1)
-        .setRenderTargetFormat(0, DXGI_FORMAT_R8G8_UNORM)
+        .setRenderTargetFormat(0, DXGI_FORMAT_R8_UNORM)
         .compile(device, pipelineState);
 }
 

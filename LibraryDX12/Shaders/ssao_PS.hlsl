@@ -50,7 +50,7 @@ static float2 poissonDisk[16] = {
     float2(0.9920505f, 0.0855163f),
     float2(-0.687256f, 0.6711345f)};
 
-float2 main(PixelShaderInput IN) : SV_Target {
+float main(PixelShaderInput IN) : SV_Target {
 
     const float uBase = IN.Position.x / scb.screenWidth;
     const float vBase = IN.Position.y / scb.screenHeight;
@@ -76,5 +76,5 @@ float2 main(PixelShaderInput IN) : SV_Target {
 
     ao = 1.0f - abs(ao / float(sampleCount));
 
-    return float2(ao, INdepth);
+    return ao;
 }
