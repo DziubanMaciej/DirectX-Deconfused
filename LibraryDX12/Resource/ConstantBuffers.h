@@ -99,9 +99,10 @@ struct SMmvp {
     XMMATRIX modelViewProjectionMatrix;
 };
 
-struct InverseViewProj {
+struct LightingCB {
     XMMATRIX viewMatrixInverse;
     XMMATRIX projMatrixInverse;
+    bool enableSSAO;
 };
 
 struct SpriteCB {

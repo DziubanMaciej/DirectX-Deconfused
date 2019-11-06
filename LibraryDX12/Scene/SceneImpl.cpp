@@ -34,7 +34,8 @@ SceneImpl::SceneImpl(ApplicationImpl &application)
     SET_OBJECT_NAME(*postProcessVB, L"PostProcessVB");
     commandList.close();
 
-    enableSSR = true;
+    enableSSAO = false;
+    enableSSR = false;
 
     // Execute and register obtained allocator and lists to the manager
     const uint64_t fenceValue = commandQueue.executeCommandListAndSignal(commandList);
@@ -76,6 +77,10 @@ SceneImpl::SceneImpl(ApplicationImpl &application)
 
 void SceneImpl::setSSR(bool enable) {
     this->enableSSR = enable;
+}
+
+void SceneImpl::setSSAO(bool enable) {
+    this->enableSSAO = enable;
 }
 
 void SceneImpl::setBackgroundColor(float r, float g, float b) {
@@ -414,10 +419,11 @@ void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, Com
         commandList.setSrvInDescriptorTable(0, shadowMapIndex + 6, renderData.getShadowMap(shadowMapIndex));
     }
 
-    InverseViewProj invVP;
-    invVP.viewMatrixInverse = camera->getInvViewMatrix();
-    invVP.projMatrixInverse = camera->getInvProjectionMatrix();
-    commandList.setRoot32BitConstant(1, invVP);
+    LightingCB lcb;
+    lcb.viewMatrixInverse = camera->getInvViewMatrix();
+    lcb.projMatrixInverse = camera->getInvProjectionMatrix();
+    lcb.enableSSAO = enableSSAO;
+    commandList.setRoot32BitConstant(1, lcb);
 
     commandList.IASetVertexBuffer(fullscreenVB);
 
@@ -673,12 +679,14 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     commandListGBuffer.close();
     commandQueue.executeCommandListAndSignal(commandListGBuffer);
 
-    // SSAO
-    CommandList commandListSSAO{commandQueue};
-    SET_OBJECT_NAME(commandListSSAO, L"cmdListSSAO");
-    renderSSAO(swapChain, renderData, commandListSSAO, *postProcessVB);
-    commandListSSAO.close();
-    commandQueue.executeCommandListAndSignal(commandListSSAO);
+    if (enableSSAO) {
+        // SSAO
+        CommandList commandListSSAO{commandQueue};
+        SET_OBJECT_NAME(commandListSSAO, L"cmdListSSAO");
+        renderSSAO(swapChain, renderData, commandListSSAO, *postProcessVB);
+        commandListSSAO.close();
+        commandQueue.executeCommandListAndSignal(commandListSSAO);
+    }
 
     // Identify output for the next step: if there are post processes, render to intermediate buffer
     const auto postProcessesCount = getEnabledPostProcessesCount();

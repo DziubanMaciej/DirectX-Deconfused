@@ -305,6 +305,7 @@ private:
         scene->setAmbientLight(1.0f, 1.0f, 250.0f / 255.0f);
         scene->setCamera(*camera);
         scene->setSSR(enableSSR);
+        scene->setSSAO(enableSSAO);
 
         for (auto &object : objects) {
             scene->addObject(*object.second);
@@ -411,6 +412,10 @@ private:
         case 'V':
             application->getSettings().setVerticalSyncEnabled(!application->getSettings().getVerticalSyncEnabled());
             break;
+        case '5':
+            enableSSAO = !enableSSAO;
+            scene->setSSAO(enableSSAO);
+            break;
         case '6':
             enableSSR = !enableSSR;
             scene->setSSR(enableSSR);
@@ -463,6 +468,7 @@ private:
     bool fullscreen = false;
     bool toggleSceneMovement = true;
     bool enableSSR = false;
+    bool enableSSAO = false;
     float angleX = 0.f;
     float angleY = 0.f;
     XMFLOAT3 cameraPosition{0, 4, -20};

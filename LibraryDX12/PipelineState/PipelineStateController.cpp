@@ -461,7 +461,7 @@ void PipelineStateController::compilePipelineStateLighting(RootSignature &rootSi
         .appendStaticSampler(s(1), sampler_bilinear)
         .appendStaticSampler(s(2), sampler_sm)
         .appendDescriptorTable(std::move(table))
-        .append32bitConstant<InverseViewProj>(b(1), D3D12_SHADER_VISIBILITY_PIXEL)
+        .append32bitConstant<LightingCB>(b(1), D3D12_SHADER_VISIBILITY_PIXEL)
         .compile(device);
 
     // Input layout - per vertex data

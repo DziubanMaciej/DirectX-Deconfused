@@ -40,6 +40,7 @@ public:
     bool removeObject(DXD::Object &object) override;
     void setCamera(DXD::Camera &camera) override;
     void setSSR(bool enable) override;
+    void setSSAO(bool enable) override;
     virtual DXD::Camera *getCamera() override;
 
     void render(SwapChain &swapChain, RenderData &renderData);
@@ -91,6 +92,7 @@ protected:
     std::vector<PostProcessImpl *> postProcesses = {};
     std::vector<SpriteImpl *> sprites = {};
     bool enableSSR;
+    bool enableSSAO;
 
     CameraImpl *camera;
 
