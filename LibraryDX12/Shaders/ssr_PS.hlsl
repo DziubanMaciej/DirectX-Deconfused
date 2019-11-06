@@ -53,6 +53,7 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
     float3 INlightingOutput = lightingOutput.Sample(g_sampler, float2(uBase, vBase)).xyz;
 
+    //return float4(INlightingOutput, 1.0f);// TEMP
     float INspecularity = gBufferSpecular.Sample(g_sampler, float2(uBase, vBase)).r;
 
     if (INspecularity <= 0.0f) {

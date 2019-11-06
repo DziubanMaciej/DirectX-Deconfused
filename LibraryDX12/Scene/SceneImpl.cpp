@@ -353,7 +353,7 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
 }
 
 void SceneImpl::renderSSAO(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, VertexBuffer &fullscreenVB) {
-    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(std::max(swapChain.getWidth()/2, 1u)), static_cast<float>(std::max(swapChain.getHeight()/2, 1u)));
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
@@ -368,8 +368,8 @@ void SceneImpl::renderSSAO(SwapChain &swapChain, RenderData &renderData, Command
     commandList.setSrvInDescriptorTable(0, 1, renderData.getDepthStencilBuffer());
 
     SsaoCB ssaoCB;
-    ssaoCB.screenWidth = static_cast<float>(swapChain.getWidth());
-    ssaoCB.screenHeight = static_cast<float>(swapChain.getHeight());
+    ssaoCB.screenWidth = static_cast<float>(std::max(swapChain.getWidth()/2, 1u));
+    ssaoCB.screenHeight = static_cast<float>(std::max(swapChain.getHeight()/2, 1u));
     ssaoCB.viewMatrixInverse = camera->getInvViewMatrix();
     ssaoCB.projMatrixInverse = camera->getInvProjectionMatrix();
     commandList.setRoot32BitConstant(1, ssaoCB);

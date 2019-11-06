@@ -37,24 +37,24 @@ struct PS_OUT {
     float4 lightingOutput;
 };
 
-static float2 poissonDisk[16] =
-    {
-        float2(0.2770745f, 0.6951455f),
-        float2(0.1874257f, -0.02561589f),
-        float2(-0.3381929f, 0.8713168f),
-        float2(0.5867746f, 0.1087471f),
-        float2(-0.3078699f, 0.188545f),
-        float2(0.7993396f, 0.4595091f),
-        float2(-0.09242552f, 0.5260149f),
-        float2(0.3657553f, -0.5329605f),
-        float2(-0.3829718f, -0.2476171f),
-        float2(-0.01085108f, -0.6966301f),
-        float2(0.8404155f, -0.3543923f),
-        float2(-0.5186161f, -0.7624033f),
-        float2(-0.8135794f, 0.2328489f),
-        float2(-0.784665f, -0.2434929f),
-        float2(0.9920505f, 0.0855163f),
-        float2(-0.687256f, 0.6711345f)};
+static float2 poissonDisk[16] = {
+    float2(0.2770745f, 0.6951455f),
+    float2(0.1874257f, -0.02561589f),
+    float2(-0.3381929f, 0.8713168f),
+    float2(0.5867746f, 0.1087471f),
+    float2(-0.3078699f, 0.188545f),
+    float2(0.7993396f, 0.4595091f),
+    float2(-0.09242552f, 0.5260149f),
+    float2(0.3657553f, -0.5329605f),
+    float2(-0.3829718f, -0.2476171f),
+    float2(-0.01085108f, -0.6966301f),
+    float2(0.8404155f, -0.3543923f),
+    float2(-0.5186161f, -0.7624033f),
+    float2(-0.8135794f, 0.2328489f),
+    float2(-0.784665f, -0.2434929f),
+    float2(0.9920505f, 0.0855163f),
+    float2(-0.687256f, 0.6711345f)
+};
 
 PS_OUT main(PixelShaderInput IN) : SV_Target {
 
@@ -74,7 +74,7 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
     float4 INnormal = gBufferNormal.Sample(g_sampler, float2(uBase, vBase));
     float2 INspecularity = gBufferSpecular.Sample(g_sampler, float2(uBase, vBase)).xy;
     float4 INalbedo = gBufferAlbedo.Sample(g_sampler, float2(uBase, vBase));
-    float INssao = ssaoMap.Sample(g_sampler_bilinear, float2(uBase, vBase)).r;
+    float2 INssao = ssaoMap.Sample(g_sampler_bilinear, float2(uBase, vBase));
 
     float4 OUT_Color = float4(0, 0, 0, 1);
 
@@ -137,7 +137,8 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
 
     PS_OUT result;
 
-    result.lightingOutput = OUT_Color * INssao;
+    result.lightingOutput = OUT_Color * INssao.r;
+    //result.lightingOutput = float4(INssao.r, INssao.r, INssao.r, 1.0f); //TEMP
 
     const float brightness = dot(OUT_Color.rgb, float3(0.2126, 0.7152, 0.0722));
     if (brightness > 0.5) {
@@ -145,6 +146,6 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
     } else {
         result.bloomMap = float4(0, 0, 0, 0);
     }
-
+    //result.bloomMap = float4(0, 0, 0, 0); //TEMP
     return result;
 }
