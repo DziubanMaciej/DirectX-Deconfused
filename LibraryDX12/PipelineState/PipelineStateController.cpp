@@ -481,6 +481,8 @@ void PipelineStateController::compilePipelineStateLighting(RootSignature &rootSi
 void PipelineStateController::compilePipelineStateSSAO(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
     StaticSampler sampler{D3D12_SHADER_VISIBILITY_PIXEL};
+    sampler.filter(D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT);
+    sampler.addressMode(D3D12_TEXTURE_ADDRESS_MODE_MIRROR);
     sampler.lodRange(0, 0);
 
     DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
