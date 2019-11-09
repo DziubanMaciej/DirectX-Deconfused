@@ -18,7 +18,7 @@ public:
     };
     struct Data {
         bool verticalSyncEnabled = false;
-        bool ssaoEnabled = true;
+        bool ssaoEnabled = false;
         bool ssrEnabled = false;
     };
     using SettingsChangeHandler = std::function<void(const Data &)>;

@@ -102,7 +102,7 @@ struct SMmvp {
 struct LightingCB {
     XMMATRIX viewMatrixInverse;
     XMMATRIX projMatrixInverse;
-    bool enableSSAO;
+    UINT enableSSAO;
 };
 
 struct SpriteCB {
