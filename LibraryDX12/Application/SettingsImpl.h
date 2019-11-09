@@ -3,44 +3,69 @@
 #include "DXD/Settings.h"
 
 #include <bitset>
+#include <cassert>
 #include <functional>
 
+/// Allows dynamically changing various settings from API. Setting can be of any type.
+/// Their values can be queried at any time or you can set a callback function which
+/// will be executed upon change.
 class SettingsImpl : public DXD::Settings {
 public:
-    ~SettingsImpl() override;
-
-    enum Setting {
-        VERTICAL_SYNC_ENABLED,
-        SSAO_ENABLED,
-        SSR_ENABLED,
-
-        COUNT // This should be the last entry
-    };
-    struct Data {
-        bool verticalSyncEnabled = false;
-        bool ssaoEnabled = false;
-        bool ssrEnabled = false;
-    };
+    // Callback called upon setting change
+    struct Data;
     using SettingsChangeHandler = std::function<void(const Data &)>;
 
+    // Generic class for defining a setting, id is needed to distinguish settings with same type and default value
+    template <int id, typename _Type, _Type _defaultValue>
+    struct Setting {
+        using Type = _Type;
+        constexpr static Type defaultValue = _defaultValue;
+        Type value = defaultValue;
+        SettingsChangeHandler handler = nullptr;
+    };
+
+    // All settings definition
+    using VerticalSyncEnabled = Setting<0, bool, false>;
+    using SsaoEnabled = Setting<1, bool, false>;
+    using SsrEnabled = Setting<2, bool, false>;
+    struct Data : std::tuple<VerticalSyncEnabled, SsaoEnabled, SsrEnabled> {};
+
     // Registering handlers
-    void registerHandler(Setting setting, SettingsChangeHandler handler);
-    void unregisterHandler(Setting setting);
+    template <typename _Setting>
+    void registerHandler(SettingsChangeHandler handler) {
+        _Setting &setting = std::get<_Setting>(data);
+        assert(setting.handler == nullptr); // cannot overwrite handler
+        setting.handler = handler;
+    }
+    template <typename _Setting>
+    void unregisterHandler() {
+        _Setting &setting = std::get<_Setting>(data);
+        assert(setting.handler != nullptr); // unregister only if registered previously
+        setting.handler = nullptr;
+    }
 
-    // Setters
-    void setVerticalSyncEnabled(bool value) override;
-    void setSsaoEnabled(bool value) override;
-    void setSsrEnabled(bool value) override;
+    // Api accessors
+    void setVerticalSyncEnabled(bool value) override { set<VerticalSyncEnabled>(value); }
+    void setSsaoEnabled(bool value) override { set<SsaoEnabled>(value); }
+    void setSsrEnabled(bool value) override { set<SsrEnabled>(value); }
+    bool getVerticalSyncEnabled() const override { return get<VerticalSyncEnabled>(); }
+    bool getSsaoEnabled() const override { return get<SsaoEnabled>(); }
+    bool getSsrEnabled() const override { return get<SsrEnabled>(); }
 
-    // Getters
-    bool getVerticalSyncEnabled() const override;
-    bool getSsaoEnabled() const override;
-    bool getSsrEnabled() const override;
+    template <typename _Setting>
+    void set(typename _Setting::Type value) {
+        _Setting &setting = std::get<_Setting>(data);
+        setting.value = value;
+        if (setting.handler != nullptr) {
+            setting.handler(data);
+        }
+    }
+    template <typename _Setting>
+    typename _Setting::Type get() const {
+        const _Setting &setting = std::get<_Setting>(data);
+        return setting.value;
+    }
 
 private:
-    void callHandler(Setting setting);
-
-    SettingsChangeHandler handlers[Setting::COUNT] = {};
-    std::bitset<Setting::COUNT> registeredHandlers = {};
     Data data = {};
 };
