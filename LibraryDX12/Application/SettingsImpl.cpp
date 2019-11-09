@@ -33,6 +33,24 @@ void SettingsImpl::setVerticalSyncEnabled(bool value) {
     callHandler(VERTICAL_SYNC_ENABLED);
 }
 
-bool SettingsImpl::getVerticalSyncEnabled() {
+void SettingsImpl::setSsaoEnabled(bool value) {
+    data.ssaoEnabled = value;
+    callHandler(SSAO_ENABLED);
+}
+
+void SettingsImpl::setSsrEnabled(bool value) {
+    data.ssrEnabled = value;
+    callHandler(SSR_ENABLED);
+}
+
+bool SettingsImpl::getVerticalSyncEnabled() const {
     return data.verticalSyncEnabled;
+}
+
+bool SettingsImpl::getSsaoEnabled() const {
+    return data.ssaoEnabled;
+}
+
+bool SettingsImpl::getSsrEnabled() const {
+    return data.ssrEnabled;
 }

@@ -34,9 +34,6 @@ SceneImpl::SceneImpl(ApplicationImpl &application)
     SET_OBJECT_NAME(*postProcessVB, L"PostProcessVB");
     commandList.close();
 
-    enableSSAO = false;
-    enableSSR = false;
-
     // Execute and register obtained allocator and lists to the manager
     const uint64_t fenceValue = commandQueue.executeCommandListAndSignal(commandList);
 
@@ -73,14 +70,6 @@ SceneImpl::SceneImpl(ApplicationImpl &application)
         &queryDestDesc,
         D3D12_RESOURCE_STATE_COPY_DEST,
         nullptr);
-}
-
-void SceneImpl::setSSR(bool enable) {
-    this->enableSSR = enable;
-}
-
-void SceneImpl::setSSAO(bool enable) {
-    this->enableSSAO = enable;
 }
 
 void SceneImpl::setBackgroundColor(float r, float g, float b) {
@@ -422,7 +411,7 @@ void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, Com
     LightingCB lcb;
     lcb.viewMatrixInverse = camera->getInvViewMatrix();
     lcb.projMatrixInverse = camera->getInvProjectionMatrix();
-    lcb.enableSSAO = enableSSAO;
+    lcb.enableSSAO = ApplicationImpl::getInstance().getSettings().getSsaoEnabled();
     commandList.setRoot32BitConstant(1, lcb);
 
     commandList.IASetVertexBuffer(fullscreenVB);
@@ -679,7 +668,7 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     commandListGBuffer.close();
     commandQueue.executeCommandListAndSignal(commandListGBuffer);
 
-    if (enableSSAO) {
+    if (ApplicationImpl::getInstance().getSettings().getSsaoEnabled()) {
         // SSAO
         CommandList commandListSSAO{commandQueue};
         SET_OBJECT_NAME(commandListSSAO, L"cmdListSSAO");
@@ -695,7 +684,7 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
 
     //renderData.getLightingOutput()
 
-    if (enableSSR) {
+    if (ApplicationImpl::getInstance().getSettings().getSsrEnabled()) {
         // Lighting
         CommandList commandListLighting{commandQueue};
         SET_OBJECT_NAME(commandListLighting, L"cmdListLighting");

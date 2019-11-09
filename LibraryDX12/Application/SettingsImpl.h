@@ -11,11 +11,15 @@ public:
 
     enum Setting {
         VERTICAL_SYNC_ENABLED,
+        SSAO_ENABLED,
+        SSR_ENABLED,
 
         COUNT // This should be the last entry
     };
     struct Data {
         bool verticalSyncEnabled = false;
+        bool ssaoEnabled = true;
+        bool ssrEnabled = false;
     };
     using SettingsChangeHandler = std::function<void(const Data &)>;
 
@@ -25,9 +29,13 @@ public:
 
     // Setters
     void setVerticalSyncEnabled(bool value) override;
+    void setSsaoEnabled(bool value) override;
+    void setSsrEnabled(bool value) override;
 
     // Getters
-    bool getVerticalSyncEnabled() override;
+    bool getVerticalSyncEnabled() const override;
+    bool getSsaoEnabled() const override;
+    bool getSsrEnabled() const override;
 
 private:
     void callHandler(Setting setting);
