@@ -1,6 +1,7 @@
 #pragma once
 
 // Has to be the first include
+#include <DXD/ExternalHeadersWrappers/windows.h>
 #include <wrl.h>
 
 // Then the libraries

@@ -1,3 +1,6 @@
+#pragma once
+
+#include <DXD/ExternalHeadersWrappers/windows.h>
 #include <dwrite.h>
 
 enum class DXDFontWeight {

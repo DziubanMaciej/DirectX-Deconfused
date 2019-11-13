@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Utility/MathHelper.h"
+
 #include "DXD/Settings.h"
 
 #include <bitset>
@@ -15,20 +17,27 @@ public:
     struct Data;
     using SettingsChangeHandler = std::function<void(const Data &)>;
 
-    // Generic class for defining a setting, id is needed to distinguish settings with same type and default value
+    // Generic classes for defining a setting, id is needed to distinguish settings with same type and default value
     template <int id, typename _Type, _Type _defaultValue>
     struct Setting {
         using Type = _Type;
         constexpr static Type defaultValue = _defaultValue;
         Type value = defaultValue;
         SettingsChangeHandler handler = nullptr;
+        virtual void setValue(Type value) { this->value = value; }
+    };
+    template <int id, typename _Type, _Type _defaultValue, _Type _minimumValue, _Type _maximumValue>
+    struct NumericalSetting : Setting<id, _Type, _defaultValue> {
+        constexpr static Type minimumValue = _minimumValue;
+        constexpr static Type maximumValue = _maximumValue;
+        void setValue(Type value) override { this->value = MathHelper::clamp(value, minimumValue, maximumValue); }
     };
 
     // All settings definition
     using VerticalSyncEnabled = Setting<0, bool, false>;
     using SsaoEnabled = Setting<1, bool, false>;
     using SsrEnabled = Setting<2, bool, false>;
-    using ShadowsQuality = Setting<3, unsigned int, 8u>;
+    using ShadowsQuality = NumericalSetting<3, unsigned int, 8u, 0u, 10u>;
     struct Data : std::tuple<VerticalSyncEnabled, SsaoEnabled, SsrEnabled, ShadowsQuality> {};
 
     // Registering handlers
@@ -58,7 +67,7 @@ public:
     template <typename _Setting>
     void set(typename _Setting::Type value) {
         _Setting &setting = std::get<_Setting>(data);
-        setting.value = value;
+        setting.setValue(value);
         if (setting.handler != nullptr) {
             setting.handler(data);
         }

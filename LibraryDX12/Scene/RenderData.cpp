@@ -210,6 +210,7 @@ void RenderData::createShadowMaps(unsigned int shadowsQuality) {
         for (int i = 0; i < 8; i++) {
             shadowMap[i].reset();
         }
+        return;
     }
 
     D3D12_DEPTH_STENCIL_VIEW_DESC shadowMapDsvDesc = {};

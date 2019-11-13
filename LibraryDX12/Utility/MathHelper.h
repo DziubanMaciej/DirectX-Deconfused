@@ -2,6 +2,8 @@
 
 #include "DXD/ExternalHeadersWrappers/windows.h"
 
+#include <algorithm>
+
 namespace MathHelper {
 
 constexpr inline bool isPowerOfTwo(UINT arg) {
@@ -22,6 +24,11 @@ constexpr inline static UINT alignUp(UINT arg) {
 template <typename T>
 constexpr inline T divideByMultiple(T value, size_t alignment) {
     return (T)((value + alignment - 1) / alignment);
+}
+
+template <typename T>
+constexpr inline T clamp(const T &n, const T &lower, const T &upper) {
+    return std::max(lower, std::min(n, upper));
 }
 
 } // namespace MathHelper
