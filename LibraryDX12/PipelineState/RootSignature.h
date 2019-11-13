@@ -21,6 +21,7 @@ public:
     RootSignature &appendStaticSampler(SamplerShaderRegister reg, const StaticSampler &staticSampler);
     RootSignature &appendDescriptorTable(DescriptorTable &&table);
 
+    void reset();
     RootSignature &compile(ID3D12DevicePtr device);
 
     auto getRootSignature() { return rootSignature; }

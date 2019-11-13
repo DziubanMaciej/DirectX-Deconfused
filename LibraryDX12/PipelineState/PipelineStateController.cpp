@@ -23,6 +23,11 @@ void PipelineStateController::compileAll() {
     }
 }
 
+void PipelineStateController::recompile(Identifier identifier) {
+    reset(identifier);
+    compile(identifier);
+}
+
 ID3D12PipelineStatePtr PipelineStateController::getPipelineState(Identifier identifier) {
     compile(identifier);
     return pipelineStates[static_cast<int>(identifier)];
@@ -102,6 +107,11 @@ void PipelineStateController::compile(Identifier identifier) {
     default:
         UNREACHABLE_CODE();
     }
+}
+
+void PipelineStateController::reset(Identifier identifier) {
+    pipelineStates[static_cast<int>(identifier)].Reset();
+    rootSignatures[static_cast<int>(identifier)].reset();
 }
 
 // --------------------------------------------------------------------------------------------- 3D
@@ -438,7 +448,7 @@ void PipelineStateController::compilePipelineStateLighting(RootSignature &rootSi
     sampler.filter(D3D12_FILTER_MIN_MAG_MIP_POINT);
     sampler.lodRange(0, 0);
 
-	StaticSampler sampler_bilinear{D3D12_SHADER_VISIBILITY_PIXEL};
+    StaticSampler sampler_bilinear{D3D12_SHADER_VISIBILITY_PIXEL};
     sampler_bilinear.filter(D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT);
     sampler_bilinear.lodRange(0, 0);
 

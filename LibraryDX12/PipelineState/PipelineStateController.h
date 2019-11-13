@@ -45,11 +45,13 @@ public:
     PipelineStateController(ID3D12DevicePtr device);
 
     void compileAll();
+    void recompile(Identifier identifier);
     ID3D12PipelineStatePtr getPipelineState(Identifier identifier);
     RootSignature &getRootSignature(Identifier identifier);
 
 private:
     void compile(Identifier identifier);
+    void reset(Identifier identifier);
 
     // 3D
     void compilePipelineStateNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);

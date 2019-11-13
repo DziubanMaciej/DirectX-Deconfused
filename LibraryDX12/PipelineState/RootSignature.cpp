@@ -48,6 +48,13 @@ D3D_ROOT_SIGNATURE_VERSION RootSignature::getHighestRootSignatureVersion(ID3D12D
     return featureData.HighestVersion;
 }
 
+void RootSignature::reset() {
+    descriptorTables.clear();
+    rootParameters.clear();
+    samplerDescriptions.clear();
+    rootSignature.Reset();
+}
+
 RootSignature &RootSignature::compile(ID3D12DevicePtr device) {
     const D3D_ROOT_SIGNATURE_VERSION highestVersion = getHighestRootSignatureVersion(device);
     const D3D12_ROOT_SIGNATURE_FLAGS rootSignatureFlags =
