@@ -16,11 +16,13 @@ struct PostProcessRenderTargets : AlternatingResources {
 class RenderData {
 public:
     RenderData(ID3D12DevicePtr &device, DescriptorController &descriptorController, int width, int height);
+    ~RenderData();
     void resize(int width, int height);
 
     // Getters
     PostProcessRenderTargets &getPostProcessRenderTargets() { return postProcessRenderTargets; }
     Resource &getShadowMap(int i) { return *shadowMap[i]; }
+    UINT getShadowMapSize() { return shadowMapSize; }
     Resource &getDepthStencilBuffer() { return *depthStencilBuffer; };
     Resource &getLightingOutput() { return *lightingOutput; }
     Resource &getSsaoMap() { return *ssaoMap; }
@@ -31,6 +33,8 @@ public:
     PostProcessImpl &getPostProcessForBloom() { return *static_cast<PostProcessImpl*>(postProcessForBloom.get()); }
 
 private:
+    void createShadowMaps(unsigned int shadowsQuality);
+
     // Base objects
     ID3D12DevicePtr device = {};
 
@@ -44,6 +48,9 @@ private:
     std::unique_ptr<Resource> lightingOutput;
     std::unique_ptr<Resource> shadowMap[8] = {};
     std::unique_ptr<Resource> depthStencilBuffer = {};
+
+    // Numerical state
+    UINT shadowMapSize{};
 
     // Misc
     std::unique_ptr<DXD::PostProcess> postProcessForBloom;

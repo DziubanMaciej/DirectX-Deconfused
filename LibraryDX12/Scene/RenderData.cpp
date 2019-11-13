@@ -1,5 +1,6 @@
 #include "RenderData.h"
 
+#include "Application/ApplicationImpl.h"
 #include "Resource/ConstantBuffers.h"
 #include "Utility/DxObjectNaming.h"
 
@@ -8,6 +9,13 @@ RenderData::RenderData(ID3D12DevicePtr &device, DescriptorController &descriptor
       postProcessRenderTargets(device),
       postProcessForBloom(DXD::PostProcess::create()) {
     postProcessForBloom->setGaussianBlur(3, 5);
+    ApplicationImpl::getInstance().getSettingsImpl().registerHandler<SettingsImpl::ShadowsQuality>([this](const SettingsData &data) {
+        this->createShadowMaps(std::get<SettingsImpl::ShadowsQuality>(data).value);
+    });
+}
+
+RenderData::~RenderData() {
+    ApplicationImpl::getInstance().getSettingsImpl().unregisterHandler<SettingsImpl::ShadowsQuality>();
 }
 
 void RenderData::resize(int width, int height) {
@@ -121,8 +129,8 @@ void RenderData::resize(int width, int height) {
     D3D12_RESOURCE_DESC ssaoMapDesc = {};
     ssaoMapDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
     ssaoMapDesc.Alignment = 0;
-    ssaoMapDesc.Width = std::max(width/2, 1);
-    ssaoMapDesc.Height = std::max(height/2, 1);
+    ssaoMapDesc.Width = std::max(width / 2, 1);
+    ssaoMapDesc.Height = std::max(height / 2, 1);
     ssaoMapDesc.DepthOrArraySize = 1;
     ssaoMapDesc.MipLevels = 0;
     ssaoMapDesc.Format = DXGI_FORMAT_R8_UNORM;
@@ -169,32 +177,8 @@ void RenderData::resize(int width, int height) {
     lightingOutput->getResource()->SetName(L"LO");
     SET_OBJECT_NAME(*lightingOutput, L"LO");
 
-    // Shadow maps
-    D3D12_DEPTH_STENCIL_VIEW_DESC shadowMapDsvDesc = {};
-    shadowMapDsvDesc.Format = DXGI_FORMAT_D16_UNORM;
-    shadowMapDsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
-    shadowMapDsvDesc.Flags = D3D12_DSV_FLAG_NONE;
-    shadowMapDsvDesc.Texture2D = D3D12_TEX2D_DSV{0};
-    D3D12_SHADER_RESOURCE_VIEW_DESC shadowMapSrvDesc = {};
-    shadowMapSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    shadowMapSrvDesc.Format = DXGI_FORMAT_R16_UNORM;
-    shadowMapSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    shadowMapSrvDesc.Texture2D.MipLevels = 1;
-    shadowMapSrvDesc.Texture2D.MostDetailedMip = 0;
-    shadowMapSrvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-    shadowMapSrvDesc.Texture2D.PlaneSlice = 0;
-    for (int i = 0; i < 8; i++) {
-        // Resource
-        shadowMap[i] = std::make_unique<Resource>(device,
-                                                  &CD3DX12_HEAP_PROPERTIES{D3D12_HEAP_TYPE_DEFAULT},
-                                                  D3D12_HEAP_FLAG_NONE,
-                                                  &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16_TYPELESS, static_cast<uint32_t>(2048), static_cast<uint32_t>(2048), 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
-                                                  D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
-                                                  &CD3DX12_CLEAR_VALUE{DXGI_FORMAT_D16_UNORM, 1.0f, 0});
-        shadowMap[i]->createDsv(&shadowMapDsvDesc);
-        shadowMap[i]->createSrv(&shadowMapSrvDesc);
-        SET_OBJECT_NAME(*shadowMap[i], L"ShadowMap%d", i);
-    }
+    const int shadowsQuality = ApplicationImpl::getInstance().getSettingsImpl().getShadowsQuality();
+    createShadowMaps(shadowsQuality);
 
     // Depth stencil buffer
     depthStencilBuffer = std::make_unique<Resource>(device,
@@ -219,6 +203,41 @@ void RenderData::resize(int width, int height) {
     depthStencilBuffer->createDsv(&depthStencilBufferDesc);
     depthStencilBuffer->createSrv(&depthStencilBufferSrvDesc);
     SET_OBJECT_NAME(*depthStencilBuffer, L"DepthStencilBuffer");
+}
+
+void RenderData::createShadowMaps(unsigned int shadowsQuality) {
+    if (shadowsQuality == 0) {
+        for (int i = 0; i < 8; i++) {
+            shadowMap[i].reset();
+        }
+    }
+
+    D3D12_DEPTH_STENCIL_VIEW_DESC shadowMapDsvDesc = {};
+    shadowMapDsvDesc.Format = DXGI_FORMAT_D16_UNORM;
+    shadowMapDsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+    shadowMapDsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+    shadowMapDsvDesc.Texture2D = D3D12_TEX2D_DSV{0};
+    D3D12_SHADER_RESOURCE_VIEW_DESC shadowMapSrvDesc = {};
+    shadowMapSrvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    shadowMapSrvDesc.Format = DXGI_FORMAT_R16_UNORM;
+    shadowMapSrvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    shadowMapSrvDesc.Texture2D.MipLevels = 1;
+    shadowMapSrvDesc.Texture2D.MostDetailedMip = 0;
+    shadowMapSrvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+    shadowMapSrvDesc.Texture2D.PlaneSlice = 0;
+    for (int i = 0; i < 8; i++) {
+        const UINT sizes[] = {0, 256, 512, 768, 1024, 1280, 1536, 1792, 2048, 2560, 3072};
+        this->shadowMapSize = sizes[shadowsQuality];
+        shadowMap[i] = std::make_unique<Resource>(device,
+                                                  &CD3DX12_HEAP_PROPERTIES{D3D12_HEAP_TYPE_DEFAULT},
+                                                  D3D12_HEAP_FLAG_NONE,
+                                                  &CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16_TYPELESS, shadowMapSize, shadowMapSize, 1, 0, 1, 0, D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL),
+                                                  D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+                                                  &CD3DX12_CLEAR_VALUE{DXGI_FORMAT_D16_UNORM, 1.0f, 0});
+        shadowMap[i]->createDsv(&shadowMapDsvDesc);
+        shadowMap[i]->createSrv(&shadowMapSrvDesc);
+        SET_OBJECT_NAME(*shadowMap[i], L"ShadowMap%d", i);
+    }
 }
 
 void PostProcessRenderTargets::resize(int width, int height) {

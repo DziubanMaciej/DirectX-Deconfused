@@ -184,7 +184,8 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
         commandList.transitionBarrier(renderData.getShadowMap(i), D3D12_RESOURCE_STATE_DEPTH_WRITE);
     }
 
-    commandList.RSSetViewport(0.f, 0.f, 2048.f, 2048.f);
+    const auto shadowMapSize = static_cast<float>(renderData.getShadowMapSize());
+    commandList.RSSetViewport(0.f, 0.f, shadowMapSize, shadowMapSize);
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 

@@ -10,9 +10,11 @@ public:
     virtual void setVerticalSyncEnabled(bool value) = 0;
     virtual void setSsaoEnabled(bool value) = 0;
     virtual void setSsrEnabled(bool value) = 0;
+    virtual void setShadowsQuality(unsigned int value) = 0;
 
     virtual bool getVerticalSyncEnabled() const = 0;
     virtual bool getSsaoEnabled() const = 0;
     virtual bool getSsrEnabled() const = 0;
+    virtual unsigned int getShadowsQuality() const = 0;
 };
 } // namespace DXD

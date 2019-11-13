@@ -410,6 +410,12 @@ private:
         case 'V':
             application->getSettings().setVerticalSyncEnabled(!application->getSettings().getVerticalSyncEnabled());
             break;
+        case '3':
+            application->getSettings().setShadowsQuality(application->getSettings().getShadowsQuality() - 1);
+            break;
+        case '4':
+            application->getSettings().setShadowsQuality(application->getSettings().getShadowsQuality() + 1);
+            break;
         case '5':
             application->getSettings().setSsaoEnabled(!application->getSettings().getSsaoEnabled());
             break;

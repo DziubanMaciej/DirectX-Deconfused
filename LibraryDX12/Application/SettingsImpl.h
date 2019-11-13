@@ -28,7 +28,8 @@ public:
     using VerticalSyncEnabled = Setting<0, bool, false>;
     using SsaoEnabled = Setting<1, bool, false>;
     using SsrEnabled = Setting<2, bool, false>;
-    struct Data : std::tuple<VerticalSyncEnabled, SsaoEnabled, SsrEnabled> {};
+    using ShadowsQuality = Setting<3, unsigned int, 8u>;
+    struct Data : std::tuple<VerticalSyncEnabled, SsaoEnabled, SsrEnabled, ShadowsQuality> {};
 
     // Registering handlers
     template <typename _Setting>
@@ -48,9 +49,11 @@ public:
     void setVerticalSyncEnabled(bool value) override { set<VerticalSyncEnabled>(value); }
     void setSsaoEnabled(bool value) override { set<SsaoEnabled>(value); }
     void setSsrEnabled(bool value) override { set<SsrEnabled>(value); }
+    void setShadowsQuality(unsigned int value) override { set<ShadowsQuality>(value); }
     bool getVerticalSyncEnabled() const override { return get<VerticalSyncEnabled>(); }
     bool getSsaoEnabled() const override { return get<SsaoEnabled>(); }
     bool getSsrEnabled() const override { return get<SsrEnabled>(); }
+    unsigned int getShadowsQuality() const override { return get<ShadowsQuality>(); }
 
     template <typename _Setting>
     void set(typename _Setting::Type value) {
@@ -69,3 +72,5 @@ public:
 private:
     Data data = {};
 };
+
+using SettingsData = SettingsImpl::Data;
