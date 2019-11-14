@@ -58,58 +58,62 @@ static float2 poissonDisk[16] = {
     float2(0.9920505f, 0.0855163f),
     float2(-0.687256f, 0.6711345f)};
 
-PS_OUT main(PixelShaderInput IN) : SV_Target {
+float calculateShadowFactor(float4 smCoords, int shadowMapIndex) {
+    if (shadowMapSize == 0.f) {
+        return 1.f;
+    }
 
+    float shadowFactor = 16;
+    float smDepth = 0;
+
+    if (smCoords.x >= 0 && smCoords.x <= 1) {
+        if (smCoords.y >= 0 && smCoords.y <= 1) {
+
+            for (int oxy = 0; oxy < 16; oxy++) {
+                float2 offset = (poissonDisk[oxy] * 2.0f) / float2(shadowMapSize, shadowMapSize);
+                smDepth = shadowMaps[shadowMapIndex].SampleLevel(g_sampler_sm, smCoords.xy + offset, 0).r;
+
+                if (((smCoords.z / smCoords.w) - 0.001f) > smDepth) {
+                    shadowFactor = shadowFactor - 1;
+                }
+            }
+        }
+    }
+    shadowFactor = shadowFactor / 16;
+    return shadowFactor;
+}
+
+PS_OUT main(PixelShaderInput IN) : SV_Target {
     const float uBase = IN.Position.x / screenWidth;
     const float vBase = IN.Position.y / screenHeight;
 
-    float INdepth = gBufferDepth.Sample(g_sampler, float2(uBase, vBase)).r;
-
+    // Depth test
+    const float INdepth = gBufferDepth.Sample(g_sampler, float2(uBase, vBase)).r;
     if (INdepth >= 1) {
         discard;
     }
 
-    float4 H = float4((uBase)*2 - 1, (1 - vBase) * 2 - 1, INdepth, 1.0);
-    float4 D = mul(invVP.projMatrixInverse, H);
-    float4 INworldPosition = mul(invVP.viewMatrixInverse, (D / D.w));
+    // World position
+    const float4 H = float4((uBase)*2 - 1, (1 - vBase) * 2 - 1, INdepth, 1.0);
+    const float4 D = mul(invVP.projMatrixInverse, H);
+    const float4 INworldPosition = mul(invVP.viewMatrixInverse, (D / D.w));
 
-    float4 INnormal = gBufferNormal.Sample(g_sampler, float2(uBase, vBase));
-    float2 INspecularity = gBufferSpecular.Sample(g_sampler, float2(uBase, vBase)).xy;
-    float4 INalbedo = gBufferAlbedo.Sample(g_sampler, float2(uBase, vBase));
+    // Sample gbuffers
+    const float4 INnormal = gBufferNormal.Sample(g_sampler, float2(uBase, vBase));
+    const float2 INspecularity = gBufferSpecular.Sample(g_sampler, float2(uBase, vBase)).xy;
+    const float4 INalbedo = gBufferAlbedo.Sample(g_sampler, float2(uBase, vBase));
 
+    // Result
     float4 OUT_Color = float4(0, 0, 0, 1);
 
     for (int i = 0; i < lightsSize; i++) {
-
         //Check for shadow
         float4 smCoords = (mul(smVpMatrix[i], INworldPosition)).xyzw;
         smCoords.x = smCoords.x / smCoords.w / 2.0f + 0.5f;
         smCoords.y = -smCoords.y / smCoords.w / 2.0f + 0.5f;
-
-        float shadowFactor = 16;
-        float smDepth = 0;
-
-        if (shadowMapSize == 0) {
-            shadowFactor = 1;
-        } else {
-            if (smCoords.x >= 0 && smCoords.x <= 1) {
-                if (smCoords.y >= 0 && smCoords.y <= 1) {
-
-                    for (int oxy = 0; oxy < 16; oxy++) {
-                        float2 offset = (poissonDisk[oxy] * 2.0f) / float2(shadowMapSize, shadowMapSize);
-                        smDepth = shadowMaps[i].SampleLevel(g_sampler_sm, smCoords.xy + offset, 0).r;
-
-                        if (((smCoords.z / smCoords.w) - 0.001f) > smDepth) {
-                            shadowFactor = shadowFactor - 1;
-                        }
-                    }
-                    if (shadowFactor == 0) {
-                        continue;
-                    }
-                }
-            }
-
-            shadowFactor = shadowFactor / 16;
+        const float shadowFactor = calculateShadowFactor(smCoords, i);
+        if (shadowFactor == 0) {
+            continue;
         }
 
         //Light color
@@ -132,30 +136,31 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
         float3 lightDirNorm = normalize(lightDirection[i].xyz);
         float directionPower = pow(max((dot(-lightPositionNorm.xyz, lightDirNorm.xyz)), 0.0), 4);
 
-        OUT_Color.xyz = OUT_Color.xyz + ((tempLightColor.xyz * (1.0f - INspecularity.x)) + INalbedo.xyz) * tempLightPower * (normalPower + specularPower) * directionPower * shadowFactor;
+        OUT_Color.xyz += ((tempLightColor.xyz * (1.0f - INspecularity.x)) + INalbedo.xyz) * tempLightPower * (normalPower + specularPower) * directionPower * shadowFactor;
     }
 
-    float3 ambientLightColor = ambientLight.xyz / 4;
-    float ambientLightPower = distance(float3(0, 0, 0), ambientLight.xyz) * 0.5f;
-
-    OUT_Color.xyz = OUT_Color.xyz + ((INalbedo.xyz + (ambientLightColor * (1.0f - INspecularity.x))) * ambientLightPower * (INspecularity.x / 10.0f + 1.0f));
+    // Ambient lighting
+    const float3 ambientLightColor = ambientLight.rgb / 4;
+    const float ambientLightPower = length(ambientLight.rgb) * 0.5f;
+    OUT_Color.xyz += ((INalbedo.xyz + (ambientLightColor * (1.0f - INspecularity.x))) * ambientLightPower * (INspecularity.x / 10.0f + 1.0f));
 
     PS_OUT result;
 
+    // Shader output - regular scene
     if (invVP.enableSSAO) {
-        float INssao = ssaoMap.Sample(g_sampler_bilinear, float2(uBase, vBase)).r;
+        const float INssao = ssaoMap.Sample(g_sampler_bilinear, float2(uBase, vBase)).r;
         result.lightingOutput = OUT_Color * INssao;
     } else {
         result.lightingOutput = OUT_Color;
     }
-    //result.lightingOutput = float4(INssao.r, INssao.r, INssao.r, 1.0f); //TEMP
 
+    // Shader output - bloom map
     const float brightness = dot(OUT_Color.rgb, float3(0.2126, 0.7152, 0.0722));
     if (brightness > 0.5) {
         result.bloomMap = float4(result.lightingOutput.rgb * INspecularity.g, INspecularity.g);
     } else {
         result.bloomMap = float4(0, 0, 0, 0);
     }
-    //result.bloomMap = float4(0, 0, 0, 0); //TEMP
+
     return result;
 }
