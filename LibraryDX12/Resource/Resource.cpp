@@ -103,6 +103,11 @@ void Resource::recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &comm
 
 // ------------------------------------------------------------------------------------- Descriptors
 
+void Resource::createNullSrv(D3D12_SHADER_RESOURCE_VIEW_DESC *desc) {
+    ID3D12DevicePtr device = ApplicationImpl::getInstance().getDevice();
+    device->CreateShaderResourceView(nullptr, desc, descriptorsCbvSrvUav.getCpuHandle(1));
+}
+
 void Resource::createCbv(D3D12_CONSTANT_BUFFER_VIEW_DESC *desc) {
     ID3D12DevicePtr device = {};
     throwIfFailed(resource->GetDevice(IID_PPV_ARGS(&device)));

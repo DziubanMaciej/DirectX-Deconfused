@@ -206,13 +206,6 @@ void RenderData::resize(int width, int height) {
 }
 
 void RenderData::createShadowMaps(unsigned int shadowsQuality) {
-    if (shadowsQuality == 0) {
-        for (int i = 0; i < 8; i++) {
-            shadowMap[i].reset();
-        }
-        return;
-    }
-
     D3D12_DEPTH_STENCIL_VIEW_DESC shadowMapDsvDesc = {};
     shadowMapDsvDesc.Format = DXGI_FORMAT_D16_UNORM;
     shadowMapDsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
@@ -226,9 +219,19 @@ void RenderData::createShadowMaps(unsigned int shadowsQuality) {
     shadowMapSrvDesc.Texture2D.MostDetailedMip = 0;
     shadowMapSrvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
     shadowMapSrvDesc.Texture2D.PlaneSlice = 0;
+
+    const UINT sizes[] = { 0, 256, 512, 768, 1024, 1280, 1536, 1792, 2048, 2560, 3072 };
+    this->shadowMapSize = sizes[shadowsQuality];
+
+    if (shadowMapSize == 0) {
+        for (int i = 0; i < 8; i++) {
+            shadowMap[i] = std::make_unique<Resource>();
+            shadowMap[i]->createNullSrv(&shadowMapSrvDesc);
+        }
+        return;
+    }
+
     for (int i = 0; i < 8; i++) {
-        const UINT sizes[] = {0, 256, 512, 768, 1024, 1280, 1536, 1792, 2048, 2560, 3072};
-        this->shadowMapSize = sizes[shadowsQuality];
         shadowMap[i] = std::make_unique<Resource>(device,
                                                   &CD3DX12_HEAP_PROPERTIES{D3D12_HEAP_TYPE_DEFAULT},
                                                   D3D12_HEAP_FLAG_NONE,

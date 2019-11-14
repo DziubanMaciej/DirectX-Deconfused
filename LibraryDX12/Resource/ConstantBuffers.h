@@ -85,14 +85,16 @@ struct ObjectProperties {
 
 struct LightingConstantBuffer {
     XMFLOAT4 cameraPosition;
-    int lightsSize;
     XMFLOAT3 ambientLight;
+    float padding[1];
+    float shadowMapSize;
+    float screenWidth;
+    float screenHeight;
+    int lightsSize;
     XMFLOAT4 lightPosition[8];
     XMFLOAT4 lightColor[8];
     XMFLOAT4 lightDirection[8];
     XMMATRIX smViewProjectionMatrix[8];
-    float screenWidth;
-    float screenHeight;
 };
 
 struct SMmvp {

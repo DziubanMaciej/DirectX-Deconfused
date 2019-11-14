@@ -67,6 +67,7 @@ public:
     void addGpuDependency(CommandQueue &queue, uint64_t fenceValue);
 
     // Descriptors
+    void createNullSrv(D3D12_SHADER_RESOURCE_VIEW_DESC *desc);
     void createCbv(D3D12_CONSTANT_BUFFER_VIEW_DESC *desc);
     void createSrv(D3D12_SHADER_RESOURCE_VIEW_DESC *desc);
     void createUav(D3D12_UNORDERED_ACCESS_VIEW_DESC *desc);

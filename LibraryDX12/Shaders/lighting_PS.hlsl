@@ -1,13 +1,15 @@
 cbuffer SimpleConstantBuffer : register(b0) {
     float4 cameraPosition;
-    int lightsSize;
     float3 ambientLight;
+    float _padding;
+    float shadowMapSize;
+    float screenWidth;
+    float screenHeight;
+    int lightsSize;
     float4 lightPosition[8];
     float4 lightColor[8];
     float4 lightDirection[8];
     matrix smVpMatrix[8];
-    float screenWidth;
-    float screenHeight;
 };
 
 struct InverseViewProj {
@@ -54,8 +56,7 @@ static float2 poissonDisk[16] = {
     float2(-0.8135794f, 0.2328489f),
     float2(-0.784665f, -0.2434929f),
     float2(0.9920505f, 0.0855163f),
-    float2(-0.687256f, 0.6711345f)
-};
+    float2(-0.687256f, 0.6711345f)};
 
 PS_OUT main(PixelShaderInput IN) : SV_Target {
 
@@ -88,24 +89,28 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
         float shadowFactor = 16;
         float smDepth = 0;
 
-        if (smCoords.x >= 0 && smCoords.x <= 1) {
-            if (smCoords.y >= 0 && smCoords.y <= 1) {
+        if (shadowMapSize == 0) {
+            shadowFactor = 1;
+        } else {
+            if (smCoords.x >= 0 && smCoords.x <= 1) {
+                if (smCoords.y >= 0 && smCoords.y <= 1) {
 
-                for (int oxy = 0; oxy < 16; oxy++) {
-                    float2 offset = (poissonDisk[oxy] * 2.0f) / float2(2048.0f, 2048.0f);
-                    smDepth = shadowMaps[i].SampleLevel(g_sampler_sm, smCoords.xy + offset, 0).r;
+                    for (int oxy = 0; oxy < 16; oxy++) {
+                        float2 offset = (poissonDisk[oxy] * 2.0f) / float2(shadowMapSize, shadowMapSize);
+                        smDepth = shadowMaps[i].SampleLevel(g_sampler_sm, smCoords.xy + offset, 0).r;
 
-                    if (((smCoords.z / smCoords.w) - 0.001f) > smDepth) {
-                        shadowFactor = shadowFactor - 1;
+                        if (((smCoords.z / smCoords.w) - 0.001f) > smDepth) {
+                            shadowFactor = shadowFactor - 1;
+                        }
+                    }
+                    if (shadowFactor == 0) {
+                        continue;
                     }
                 }
-                if (shadowFactor == 0) {
-                    continue;
-                }
             }
-        }
 
-        shadowFactor = shadowFactor / 16;
+            shadowFactor = shadowFactor / 16;
+        }
 
         //Light color
         float3 tempLightColor = lightColor[i].xyz / 3;

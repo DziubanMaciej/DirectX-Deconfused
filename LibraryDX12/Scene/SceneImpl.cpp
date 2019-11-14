@@ -258,6 +258,7 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
     auto lightCb = lightConstantBuffer.getData<LightingConstantBuffer>();
     lightCb->cameraPosition = XMFLOAT4(camera->getEyePosition().x, camera->getEyePosition().y, camera->getEyePosition().z, 1);
     lightCb->lightsSize = 0;
+    lightCb->shadowMapSize = static_cast<float>(renderData.getShadowMapSize());
     lightCb->ambientLight = XMFLOAT3(ambientLight[0], ambientLight[1], ambientLight[2]);
     lightCb->screenWidth = static_cast<float>(swapChain.getWidth());
     lightCb->screenHeight = static_cast<float>(swapChain.getHeight());
@@ -656,11 +657,14 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     inspectObjectsNotReady();
 
     // Render shadow maps
-    CommandList commandListShadowMap{commandQueue};
-    SET_OBJECT_NAME(commandListShadowMap, L"cmdListShadowMap")
-    renderShadowMaps(swapChain, renderData, commandListShadowMap);
-    commandListShadowMap.close();
-    commandQueue.executeCommandListAndSignal(commandListShadowMap);
+    const bool shadowsEnabled = ApplicationImpl::getInstance().getSettingsImpl().getShadowsQuality() > 0;
+    if (shadowsEnabled) {
+        CommandList commandListShadowMap{commandQueue};
+        SET_OBJECT_NAME(commandListShadowMap, L"cmdListShadowMap")
+        renderShadowMaps(swapChain, renderData, commandListShadowMap);
+        commandListShadowMap.close();
+        commandQueue.executeCommandListAndSignal(commandListShadowMap);
+    }
 
     // GBuffer
     CommandList commandListGBuffer{commandQueue};
