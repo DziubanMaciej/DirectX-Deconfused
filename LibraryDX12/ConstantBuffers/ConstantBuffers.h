@@ -7,6 +7,8 @@
 #include "ConstantBuffers/ConstantBuffersDefs.inl"
 // clang-format on
 
+// ---------------------------------------------------- Buffers for 3D shaders
+
 struct ModelMvp {
     matrix modelMatrix;
     matrix modelViewProjectionMatrix;
@@ -16,6 +18,19 @@ struct NormalTextureCB {
     matrix modelMatrix;
     matrix modelViewProjectionMatrix;
     float2 textureScale;
+};
+
+struct ObjectPropertiesCB {
+    float3 albedoColor;
+    float specularity;
+    float bloomFactor;
+};
+
+// ---------------------------------------------------- Buffers for post processes
+
+struct PostProcessApplyBloomCB {
+    float screenWidth;
+    float screenHeight;
 };
 
 struct PostProcessBlackBarsCB {
@@ -34,8 +49,7 @@ struct PostProcessConvolutionCB {
     float divider;
 };
 
-struct PostProcessLinearColorCorrectionCB {
-    XMFLOAT4X3 colorMatrix; // We actually use 3x3, but 4x3 is required due to HLSL packing
+struct PostProcessGaussianBlurComputeCB {
     float screenWidth;
     float screenHeight;
 };
@@ -45,47 +59,25 @@ struct PostProcessGaussianBlurCB {
     float screenHeight;
     uint samplingRange;
     bool horizontal;
-    bool padding[3];
 };
 
-struct PostProcessApplyBloomCB {
+struct PostProcessLinearColorCorrectionCB {
+    XMFLOAT4X3 colorMatrix; // We actually use 3x3, but 4x3 is required due to HLSL packing
     float screenWidth;
     float screenHeight;
 };
 
-using PostProcessGaussianBlurComputeCB = PostProcessApplyBloomCB;
+// ---------------------------------------------------- Buffers for shadow maps
+
+struct ShadowMapCB {
+    matrix mvp;
+};
+
+// ---------------------------------------------------- Buffers for shadow maps
 
 struct GenerateMipsCB {
     float2 texelSize;
     uint sourceMipLevel;
-};
-
-struct SsaoCB {
-    float screenWidth;
-    float screenHeight;
-    matrix viewMatrixInverse;
-    matrix projMatrixInverse;
-};
-
-struct SsrCB {
-    float4 cameraPosition;
-    float screenWidth;
-    float screenHeight;
-    matrix viewMatrixInverse;
-    matrix projMatrixInverse;
-    matrix viewProjectionMatrix;
-    float4 clearColor;
-};
-
-struct PostProcessGaussianBlurData {
-    PostProcessGaussianBlurComputeCB cb;
-    uint passCount;
-};
-
-struct ObjectPropertiesCB {
-    float3 albedoColor;
-    float specularity;
-    float bloomFactor;
 };
 
 struct LightingHeapCB {
@@ -100,10 +92,6 @@ struct LightingHeapCB {
     float4 lightColor[8];
     float4 lightDirection[8];
     matrix smViewProjectionMatrix[8];
-};
-
-struct SMmvp {
-    matrix modelViewProjectionMatrix;
 };
 
 struct LightingCB {
@@ -121,6 +109,23 @@ struct SpriteCB {
     float textureOffsetY;
     uint horizontalAlignment;
     uint verticalAlignment;
+};
+
+struct SsaoCB {
+    float screenWidth;
+    float screenHeight;
+    matrix viewMatrixInverse;
+    matrix projMatrixInverse;
+};
+
+struct SsrCB {
+    float4 cameraPosition;
+    float screenWidth;
+    float screenHeight;
+    matrix viewMatrixInverse;
+    matrix projMatrixInverse;
+    matrix viewProjectionMatrix;
+    float4 clearColor;
 };
 
 #include "ConstantBuffers/ConstantBuffersUndefs.inl"

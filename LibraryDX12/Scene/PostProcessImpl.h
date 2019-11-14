@@ -48,6 +48,11 @@ private:
     bool enabled = false;
     Type type = Type::UNDEFINED;
 
+    struct PostProcessGaussianBlurData {
+        PostProcessGaussianBlurComputeCB cb;
+        UINT passCount;
+    };
+
     union Data {
         PostProcessBlackBarsCB blackBars;
         PostProcessConvolutionCB convolution;

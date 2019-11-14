@@ -1,4 +1,4 @@
-struct PostProcessCB {
+struct PostProcessBlackBarsCB {
     float screenWidth;
     float screenHeight;
     float leftMarginPercent;
@@ -7,7 +7,7 @@ struct PostProcessCB {
     float bottomMarginPercent;
 };
 
-ConstantBuffer<PostProcessCB> cb : register(b0);
+ConstantBuffer<PostProcessBlackBarsCB> cb : register(b0);
 Texture2D scene : register(t0);
 SamplerState g_sampler : register(s0);
 

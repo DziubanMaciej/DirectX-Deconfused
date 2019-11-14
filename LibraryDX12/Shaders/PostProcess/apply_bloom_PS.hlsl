@@ -1,9 +1,9 @@
-struct PostProcessCB {
+struct PostProcessApplyBloomCB {
     float screenWidth;
     float screenHeight;
 };
 
-ConstantBuffer<PostProcessCB> cb : register(b0);
+ConstantBuffer<PostProcessApplyBloomCB> cb : register(b0);
 Texture2D bloomMap : register(t0);
 SamplerState g_sampler : register(s0);
 

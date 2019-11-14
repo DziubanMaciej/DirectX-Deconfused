@@ -204,9 +204,9 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
         for (ObjectImpl *object : objects) {
             MeshImpl &mesh = object->getMesh();
             if (mesh.getShadowMapPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
-                SMmvp smmvp;
-                smmvp.modelViewProjectionMatrix = XMMatrixMultiply(object->getModelMatrix(), smViewProjectionMatrix);
-                commandList.setRoot32BitConstant(0, smmvp);
+                ShadowMapCB cb;
+                cb.mvp = XMMatrixMultiply(object->getModelMatrix(), smViewProjectionMatrix);
+                commandList.setRoot32BitConstant(0, cb);
 
                 commandList.IASetVertexAndIndexBuffer(mesh);
                 commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
@@ -218,9 +218,9 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
         for (ObjectImpl *object : objects) {
             MeshImpl &mesh = object->getMesh();
             if (mesh.getShadowMapPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
-                SMmvp smmvp;
-                smmvp.modelViewProjectionMatrix = XMMatrixMultiply(object->getModelMatrix(), smViewProjectionMatrix);
-                commandList.setRoot32BitConstant(0, smmvp);
+                ShadowMapCB cb;
+                cb.mvp = XMMatrixMultiply(object->getModelMatrix(), smViewProjectionMatrix);
+                commandList.setRoot32BitConstant(0, cb);
 
                 commandList.IASetVertexAndIndexBuffer(mesh);
                 commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));

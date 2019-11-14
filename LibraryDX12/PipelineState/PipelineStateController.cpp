@@ -207,7 +207,7 @@ void PipelineStateController::compilePipelineStateTextureNormalMap(RootSignature
 void PipelineStateController::compilePipelineStateShadowMapNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
     rootSignature
-        .append32bitConstant<SMmvp>(b(0), D3D12_SHADER_VISIBILITY_VERTEX) // register(b0)
+        .append32bitConstant<ShadowMapCB>(b(0), D3D12_SHADER_VISIBILITY_VERTEX) // register(b0)
         .compile(device);
 
     // Input layout - per vertex data
@@ -226,7 +226,7 @@ void PipelineStateController::compilePipelineStateShadowMapNormal(RootSignature 
 void PipelineStateController::compilePipelineStateShadowMapTextureNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
     rootSignature
-        .append32bitConstant<SMmvp>(b(0), D3D12_SHADER_VISIBILITY_VERTEX) // register(b0)
+        .append32bitConstant<ShadowMapCB>(b(0), D3D12_SHADER_VISIBILITY_VERTEX) // register(b0)
         .compile(device);
 
     // Input layout - per vertex data
@@ -246,7 +246,7 @@ void PipelineStateController::compilePipelineStateShadowMapTextureNormal(RootSig
 void PipelineStateController::compilePipelineStateShadowMapTextureNormalMap(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
     // Root signature - crossthread data
     rootSignature
-        .append32bitConstant<SMmvp>(b(0), D3D12_SHADER_VISIBILITY_VERTEX) // register(b0)
+        .append32bitConstant<ShadowMapCB>(b(0), D3D12_SHADER_VISIBILITY_VERTEX) // register(b0)
         .compile(device);
 
     // Input layout - per vertex data
