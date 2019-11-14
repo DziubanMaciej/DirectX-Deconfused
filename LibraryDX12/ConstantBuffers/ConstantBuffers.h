@@ -43,7 +43,7 @@ struct PostProcessBlackBarsCB {
 };
 
 struct PostProcessConvolutionCB {
-    XMFLOAT4X3 kernel; // We actually use 3x3, but 4x3 is required due to HLSL packing
+    float4x3 kernel; // We actually use 3x3, but 4x3 is required due to HLSL packing
     float screenWidth;
     float screenHeight;
     float divider;
@@ -62,7 +62,7 @@ struct PostProcessGaussianBlurCB {
 };
 
 struct PostProcessLinearColorCorrectionCB {
-    XMFLOAT4X3 colorMatrix; // We actually use 3x3, but 4x3 is required due to HLSL packing
+    float4x3 colorMatrix; // We actually use 3x3, but 4x3 is required due to HLSL packing
     float screenWidth;
     float screenHeight;
 };
