@@ -23,7 +23,7 @@ std::unique_ptr<Scene> Scene::create(DXD::Application &application) {
 
 SceneImpl::SceneImpl(ApplicationImpl &application)
     : application(application),
-      lightConstantBuffer(application.getDevice(), application.getDescriptorController(), sizeof(LightingConstantBuffer)) {
+      lightConstantBuffer(application.getDevice(), application.getDescriptorController(), sizeof(LightingHeapCB)) {
 
     ID3D12DevicePtr device = application.getDevice();
     auto &commandQueue = application.getDirectCommandQueue();
@@ -255,7 +255,7 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
     const XMMATRIX vpMatrix = camera->getViewProjectionMatrix();
 
     // LightingConstantBuffer
-    auto lightCb = lightConstantBuffer.getData<LightingConstantBuffer>();
+    auto lightCb = lightConstantBuffer.getData<LightingHeapCB>();
     lightCb->cameraPosition = XMFLOAT4(camera->getEyePosition().x, camera->getEyePosition().y, camera->getEyePosition().z, 1);
     lightCb->lightsSize = 0;
     lightCb->shadowMapSize = static_cast<float>(renderData.getShadowMapSize());
@@ -288,7 +288,7 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
             mmvp.modelViewProjectionMatrix = XMMatrixMultiply(mmvp.modelMatrix, vpMatrix);
             commandList.setRoot32BitConstant(0, mmvp);
 
-            ObjectProperties op = {};
+            ObjectPropertiesCB op = {};
             op.albedoColor = object->getColor();
             op.specularity = object->getSpecularity();
             op.bloomFactor = object->getBloomFactor();
@@ -312,7 +312,7 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
             cb.textureScale = object->getTextureScale();
             commandList.setRoot32BitConstant(0, cb);
 
-            ObjectProperties op = {};
+            ObjectPropertiesCB op = {};
             op.albedoColor = object->getColor();
             op.specularity = object->getSpecularity();
             op.bloomFactor = object->getBloomFactor();
@@ -335,7 +335,7 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
             cb.textureScale = object->getTextureScale();
             commandList.setRoot32BitConstant(0, cb);
 
-            ObjectProperties op = {};
+            ObjectPropertiesCB op = {};
             op.albedoColor = object->getColor();
             op.specularity = object->getSpecularity();
             op.bloomFactor = object->getBloomFactor();
