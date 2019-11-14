@@ -1,7 +1,6 @@
 add_sources_and_cmake_file(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/ConstantBuffer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ConstantBuffer.h
-    ${CMAKE_CURRENT_SOURCE_DIR}/ConstantBuffers.h
     ${CMAKE_CURRENT_SOURCE_DIR}/D2DWrappedResource.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/D2DWrappedResource.h
     ${CMAKE_CURRENT_SOURCE_DIR}/Resource.cpp

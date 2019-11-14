@@ -1,7 +1,7 @@
 #pragma once
 
+#include "ConstantBuffers/ConstantBuffers.h"
 #include "Resource/ConstantBuffer.h"
-#include "Resource/ConstantBuffers.h"
 
 #include "DXD/Sprite.h"
 #include "DXD/Texture.h"

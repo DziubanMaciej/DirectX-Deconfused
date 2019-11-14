@@ -3,7 +3,7 @@
 #include "Application/ApplicationImpl.h"
 #include "CommandList/CommandList.h"
 #include "CommandList/CommandQueue.h"
-#include "Resource/ConstantBuffers.h"
+#include "ConstantBuffers/ConstantBuffers.h"
 #include "Utility/DxgiFormatHelper.h"
 #include "Utility/FileHelper.h"
 #include "Utility/MathHelper.h"

@@ -3,7 +3,7 @@
 #include "Application/ApplicationImpl.h"
 #include "CommandList/CommandList.h"
 #include "CommandList/CommandQueue.h"
-#include "Resource/ConstantBuffers.h"
+#include "ConstantBuffers/ConstantBuffers.h"
 #include "Scene/RenderData.h"
 #include "Utility/DxObjectNaming.h"
 #include "Utility/ThrowIfFailed.h"

@@ -1,7 +1,7 @@
 #include "RenderData.h"
 
 #include "Application/ApplicationImpl.h"
-#include "Resource/ConstantBuffers.h"
+#include "ConstantBuffers/ConstantBuffers.h"
 #include "Utility/DxObjectNaming.h"
 
 RenderData::RenderData(ID3D12DevicePtr &device, DescriptorController &descriptorController, int width, int height)
@@ -220,7 +220,7 @@ void RenderData::createShadowMaps(unsigned int shadowsQuality) {
     shadowMapSrvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
     shadowMapSrvDesc.Texture2D.PlaneSlice = 0;
 
-    const UINT sizes[] = { 0, 256, 512, 768, 1024, 1280, 1536, 1792, 2048, 2560, 3072 };
+    const UINT sizes[] = {0, 256, 512, 768, 1024, 1280, 1536, 1792, 2048, 2560, 3072};
     this->shadowMapSize = sizes[shadowsQuality];
 
     if (shadowMapSize == 0) {

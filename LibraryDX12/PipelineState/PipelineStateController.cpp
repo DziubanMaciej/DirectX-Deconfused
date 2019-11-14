@@ -1,11 +1,11 @@
 #include "PipelineStateController.h"
 
+#include "ConstantBuffers/ConstantBuffers.h"
 #include "PipelineState/DescriptorTable.h"
 #include "PipelineState/PipelineState.h"
 #include "PipelineState/RootSignature.h"
 #include "PipelineState/ShaderRegister.h"
 #include "PipelineState/StaticSampler.h"
-#include "Resource/ConstantBuffers.h"
 #include "Utility/ThrowIfFailed.h"
 
 #include <DXD/ExternalHeadersWrappers/DirectXMath.h>

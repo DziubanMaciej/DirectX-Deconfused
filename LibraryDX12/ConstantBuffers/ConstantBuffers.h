@@ -1,6 +1,7 @@
 #pragma once
 
 #include <DXD/ExternalHeadersWrappers/DirectXMath.h>
+#include <DXD/ExternalHeadersWrappers/windows.h>
 
 struct ModelMvp {
     XMMATRIX modelMatrix;
