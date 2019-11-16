@@ -151,6 +151,58 @@ void RenderData::resize(int width, int height) {
     ssaoMap->getResource()->SetName(L"SSAO map");
     SET_OBJECT_NAME(*ssaoMap, L"SsaoMap");
 
+    // SSR map
+    D3D12_RESOURCE_DESC ssrMapDesc = {};
+    ssrMapDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    ssrMapDesc.Alignment = 0;
+    ssrMapDesc.Width = std::max(width / 2, 1);
+    ssrMapDesc.Height = std::max(height / 2, 1);
+    ssrMapDesc.DepthOrArraySize = 1;
+    ssrMapDesc.MipLevels = 0;
+    ssrMapDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    ssrMapDesc.SampleDesc.Count = 1;
+    ssrMapDesc.SampleDesc.Quality = 0;
+    ssrMapDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    ssrMapDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+    ssrMap = std::make_unique<Resource>(
+        device,
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &ssrMapDesc,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        nullptr);
+    ssrMap->createSrv(nullptr);
+    ssrMap->createRtv(nullptr);
+    ssrMap->getResource()->SetName(L"SSR map");
+    SET_OBJECT_NAME(*ssrMap, L"SsrMap");
+
+    // SSR blurred map
+    D3D12_RESOURCE_DESC ssrBlurredMapDesc = {};
+    ssrBlurredMapDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    ssrBlurredMapDesc.Alignment = 0;
+    ssrBlurredMapDesc.Width = width;
+    ssrBlurredMapDesc.Height = height;
+    ssrBlurredMapDesc.DepthOrArraySize = 1;
+    ssrBlurredMapDesc.MipLevels = 0;
+    ssrBlurredMapDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    ssrBlurredMapDesc.SampleDesc.Count = 1;
+    ssrBlurredMapDesc.SampleDesc.Quality = 0;
+    ssrBlurredMapDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    ssrBlurredMapDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+    ssrBlurredMap = std::make_unique<Resource>(
+        device,
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &ssrBlurredMapDesc,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        nullptr);
+    ssrBlurredMap->createSrv(nullptr);
+    ssrBlurredMap->createRtv(nullptr);
+    ssrBlurredMap->getResource()->SetName(L"SSR blurred map");
+    SET_OBJECT_NAME(*ssrBlurredMap, L"SsrBlurredMap");
+
     // Lighting output
     D3D12_RESOURCE_DESC loDesc = {};
     loDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;

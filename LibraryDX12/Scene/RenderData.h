@@ -26,6 +26,8 @@ public:
     Resource &getDepthStencilBuffer() { return *depthStencilBuffer; };
     Resource &getLightingOutput() { return *lightingOutput; }
     Resource &getSsaoMap() { return *ssaoMap; }
+    Resource &getSsrMap() { return *ssrMap; }
+    Resource &getSsrBlurredMap() { return *ssrBlurredMap; }
     Resource &getBloomMap() { return *bloomMap; }
     Resource &getGBufferAlbedo() { return *gBufferAlbedo; }
     Resource &getGBufferNormal() { return *gBufferNormal; }
@@ -41,6 +43,8 @@ private:
     // Resources
     PostProcessRenderTargets postProcessRenderTargets;
     std::unique_ptr<Resource> ssaoMap;
+    std::unique_ptr<Resource> ssrMap;
+    std::unique_ptr<Resource> ssrBlurredMap;
     std::unique_ptr<Resource> gBufferAlbedo;
     std::unique_ptr<Resource> gBufferNormal;
     std::unique_ptr<Resource> gBufferSpecular;

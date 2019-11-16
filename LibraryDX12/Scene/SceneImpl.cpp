@@ -423,19 +423,19 @@ void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, Com
 
 void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output, VertexBuffer &fullscreenVB) {
 
-    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(std::max(swapChain.getWidth(), 1u)), static_cast<float>(std::max(swapChain.getHeight(), 1u)));
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SSR);
 
     commandList.transitionBarrier(renderData.getLightingOutput(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    commandList.transitionBarrier(renderData.getSsrMap(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-    const Resource *ssrRts[] = {&output};
+    const Resource *ssrRts[] = {&renderData.getSsrMap()};
     commandList.OMSetRenderTargetsNoDepth(ssrRts);
 
-    commandList.clearRenderTargetView(output, backgroundColor);
+    commandList.clearRenderTargetView(renderData.getSsrMap(), backgroundColor);
 
     commandList.setSrvInDescriptorTable(0, 0, renderData.getGBufferNormal());
     commandList.setSrvInDescriptorTable(0, 1, renderData.getDepthStencilBuffer());
@@ -444,8 +444,8 @@ void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, 
 
     SsrCB ssrCB;
     ssrCB.cameraPosition = XMFLOAT4(camera->getEyePosition().x, camera->getEyePosition().y, camera->getEyePosition().z, 1);
-    ssrCB.screenWidth = static_cast<float>(swapChain.getWidth());
-    ssrCB.screenHeight = static_cast<float>(swapChain.getHeight());
+    ssrCB.screenWidth = static_cast<float>(std::max(swapChain.getWidth()/2, 1u));
+    ssrCB.screenHeight = static_cast<float>(std::max(swapChain.getHeight()/2, 1u));
     ssrCB.viewMatrixInverse = camera->getInvViewMatrix();
     ssrCB.projMatrixInverse = camera->getInvProjectionMatrix();
     ssrCB.viewProjectionMatrix = camera->getViewProjectionMatrix();
@@ -454,12 +454,62 @@ void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, 
 
     commandList.IASetVertexBuffer(fullscreenVB);
 
-    //commandList.getCommandList()->EndQuery(queryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0);
+    ///commandList.getCommandList()->EndQuery(queryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0);
 
     commandList.draw(6u);
 
-    //commandList.getCommandList()->EndQuery(queryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 1);
-    //commandList.getCommandList()->ResolveQueryData(queryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0, 2, queryResult->getResource().Get(), 0);
+    ///commandList.getCommandList()->EndQuery(queryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 1);
+    ///commandList.getCommandList()->ResolveQueryData(queryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0, 2, queryResult->getResource().Get(), 0);
+
+    // SSR Blur
+    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+    commandList.RSSetScissorRectNoScissor();
+    commandList.IASetPrimitiveTopologyTriangleList();
+
+    commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SSR_BLUR);
+
+    commandList.transitionBarrier(renderData.getSsrMap(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    commandList.transitionBarrier(renderData.getSsrBlurredMap(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+    const Resource *ssrMergeRts[] = {&renderData.getSsrBlurredMap()};
+    commandList.OMSetRenderTargetsNoDepth(ssrMergeRts);
+
+    commandList.setSrvInDescriptorTable(0, 0, renderData.getGBufferSpecular());
+    commandList.setSrvInDescriptorTable(0, 1, renderData.getDepthStencilBuffer());
+    commandList.setSrvInDescriptorTable(0, 2, renderData.getSsrMap());
+
+    SsrMergeCB ssrMergeCB;
+    ssrMergeCB.screenWidth = static_cast<float>(swapChain.getWidth());
+    ssrMergeCB.screenHeight = static_cast<float>(swapChain.getHeight());
+    commandList.setRoot32BitConstant(1, ssrMergeCB);
+
+    commandList.IASetVertexBuffer(fullscreenVB);
+
+    commandList.draw(6u);
+
+    // SSR Merge
+    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+    commandList.RSSetScissorRectNoScissor();
+    commandList.IASetPrimitiveTopologyTriangleList();
+
+    commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SSR_MERGE);
+
+    commandList.transitionBarrier(renderData.getSsrBlurredMap(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+    const Resource *ssrBlurRts[] = {&output};
+    commandList.OMSetRenderTargetsNoDepth(ssrBlurRts);
+
+    commandList.setSrvInDescriptorTable(0, 0, renderData.getGBufferSpecular());
+    commandList.setSrvInDescriptorTable(0, 1, renderData.getDepthStencilBuffer());
+    commandList.setSrvInDescriptorTable(0, 2, renderData.getSsrBlurredMap());
+    commandList.setSrvInDescriptorTable(0, 3, renderData.getLightingOutput());
+
+    commandList.setRoot32BitConstant(1, ssrMergeCB);
+
+    commandList.IASetVertexBuffer(fullscreenVB);
+
+    commandList.draw(6u);
 }
 
 void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList, VertexBuffer &fullscreenVB,
@@ -673,8 +723,8 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     commandListGBuffer.close();
     commandQueue.executeCommandListAndSignal(commandListGBuffer);
 
+    // SSAO
     if (ApplicationImpl::getInstance().getSettings().getSsaoEnabled()) {
-        // SSAO
         CommandList commandListSSAO{commandQueue};
         SET_OBJECT_NAME(commandListSSAO, L"cmdListSSAO");
         renderSSAO(swapChain, renderData, commandListSSAO, *postProcessVB);
@@ -687,8 +737,7 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     const bool shouldRenderPostProcesses = (postProcessesCount > 0);
     auto &renderLightingOutput = shouldRenderPostProcesses ? renderData.getPostProcessRenderTargets().getDestination() : backBuffer;
 
-    //renderData.getLightingOutput()
-
+    // SSR and merge
     if (ApplicationImpl::getInstance().getSettings().getSsrEnabled()) {
         // Lighting
         CommandList commandListLighting{commandQueue};
@@ -712,11 +761,11 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
         commandQueue.executeCommandListAndSignal(commandListLighting);
     }
 
-    // QUERY used in perf. measurement.
-    //UINT64 *queryData = nullptr;
-    //queryResult->getResource().Get()->Map(0, nullptr, (void **)&queryData);
-    //DXD::log("Time: %d\n", int(queryData[1] - queryData[0]));
-    //queryResult->getResource().Get()->Unmap(0, nullptr);
+    /// QUERY used in perf. measurement.
+    ///UINT64 *queryData = nullptr;
+    ///queryResult->getResource().Get()->Map(0, nullptr, (void **)&queryData);
+    ///DXD::log("Time: %d\n", int(queryData[1] - queryData[0]));
+    ///queryResult->getResource().Get()->Unmap(0, nullptr);
 
     // Render post processes
     CommandList commandListPostProcess{commandQueue};

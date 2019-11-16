@@ -148,7 +148,7 @@ private:
 
         objects["aventador1"]->setPosition(-4.0f, -2.0f, 2.0f);
         objects["aventador1"]->setColor(0.0f, 0.0f, 0.0f);
-        objects["aventador1"]->setSpecularity(0.6f);
+        objects["aventador1"]->setSpecularity(0.2f);
         objects["aventador1"]->setScale(0.9f, 0.9f, 0.9f);
         objects["aventador1"]->setRotation(XMFLOAT3(0, 1, 0), float(-M_PI / 4));
 
@@ -160,7 +160,7 @@ private:
 
         objects["aventador2"]->setPosition(4.0f, -2.0f, -2.0f);
         objects["aventador2"]->setColor(0.0f, 0.0f, 0.0f);
-        objects["aventador2"]->setSpecularity(0.6f);
+        objects["aventador2"]->setSpecularity(0.2f);
         objects["aventador2"]->setScale(0.9f, 0.9f, 0.9f);
         objects["aventador2"]->setRotation(XMFLOAT3(0, 1, 0), float(-M_PI / 4));
 

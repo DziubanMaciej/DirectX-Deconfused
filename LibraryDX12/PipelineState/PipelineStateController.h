@@ -26,6 +26,10 @@ public:
         PIPELINE_STATE_SSAO,
         // SSR
         PIPELINE_STATE_SSR,
+        // SSR
+        PIPELINE_STATE_SSR_BLUR,
+        // SSR
+        PIPELINE_STATE_SSR_MERGE,
         // Lighting
         PIPELINE_STATE_LIGHTING,
         // Post Processes
@@ -63,6 +67,10 @@ private:
     void compilePipelineStateSSAO(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     // SSR
     void compilePipelineStateSSR(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    // SSR Merge
+    void compilePipelineStateSSRBlur(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    // SSR Merge
+    void compilePipelineStateSSRMerge(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     // Lighting
     void compilePipelineStateLighting(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     // Shadow maps
