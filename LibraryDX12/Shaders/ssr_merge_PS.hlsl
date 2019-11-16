@@ -71,15 +71,7 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
     ssrOutput /= float(samplesCount);
 
-    //float screenEdgefactor = smoothstep(0.0f, 0.4f, 1.0f - (distance(float2(0.5f, 0.5f), screenSpacePos.xy) * 2.0f));
-
-    //float3 OUTssr = screenEdgefactor * lightingOutput.SampleLevel(g_sampler, screenSpacePos.xy, 0).xyz + (1.0f - screenEdgefactor) * scb.clearColor.xyz;
-
     float ssrPower = pow(INspecularity, 2.0f);
 
     return float4(((INlightingOutput * (1 - ssrPower)) + (ssrPower * ssrOutput)), 1.0f);
-
-
-
-    //return float4(INssrOutput.xyz, 1.0f);
 }

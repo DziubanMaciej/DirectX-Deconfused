@@ -70,23 +70,5 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
     INssrOutput /= float(samplesCount);
 
-    
-    /*INssrOutput += ssrOutput.Sample(g_sampler, float2(uBase + 1.0f / scb.screenWidth, vBase + 1.0f / scb.screenHeight)).xyz;
-    INssrOutput += ssrOutput.Sample(g_sampler, float2(uBase + 1.0f / scb.screenWidth, vBase - 1.0f / scb.screenHeight)).xyz;
-    INssrOutput += ssrOutput.Sample(g_sampler, float2(uBase - 1.0f / scb.screenWidth, vBase + 1.0f / scb.screenHeight)).xyz;
-    INssrOutput += ssrOutput.Sample(g_sampler, float2(uBase - 1.0f / scb.screenWidth, vBase - 1.0f / scb.screenHeight)).xyz;
-
-    INssrOutput /= 5.0f;*/
-
-    //float3 INssrOutput = ssrOutput.Sample(g_sampler, float2(uBase, vBase)).xyz;
-
-    //float screenEdgefactor = smoothstep(0.0f, 0.4f, 1.0f - (distance(float2(0.5f, 0.5f), screenSpacePos.xy) * 2.0f));
-
-    //float3 OUTssr = screenEdgefactor * lightingOutput.SampleLevel(g_sampler, screenSpacePos.xy, 0).xyz + (1.0f - screenEdgefactor) * scb.clearColor.xyz;
-
-    //return float4(((INlightingOutput * (1 - ssrPower)) + (ssrPower * OUTssr)), 1.0f);
-
-
-
     return float4(INssrOutput.xyz, 1.0f);
 }
