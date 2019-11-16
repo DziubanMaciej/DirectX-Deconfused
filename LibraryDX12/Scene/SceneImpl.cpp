@@ -254,26 +254,6 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
     camera->setAspectRatio(aspectRatio);
     const XMMATRIX vpMatrix = camera->getViewProjectionMatrix();
 
-    // LightingConstantBuffer
-    auto lightCb = lightConstantBuffer.getData<LightingHeapCB>();
-    lightCb->cameraPosition = XMFLOAT4(camera->getEyePosition().x, camera->getEyePosition().y, camera->getEyePosition().z, 1);
-    lightCb->lightsSize = 0;
-    lightCb->shadowMapSize = static_cast<float>(renderData.getShadowMapSize());
-    lightCb->ambientLight = XMFLOAT3(ambientLight[0], ambientLight[1], ambientLight[2]);
-    lightCb->screenWidth = static_cast<float>(swapChain.getWidth());
-    lightCb->screenHeight = static_cast<float>(swapChain.getHeight());
-    for (LightImpl *light : lights) {
-        lightCb->lightColor[lightCb->lightsSize] = XMFLOAT4(light->getColor().x, light->getColor().y, light->getColor().z, light->getPower());
-        lightCb->lightPosition[lightCb->lightsSize] = XMFLOAT4(light->getPosition().x, light->getPosition().y, light->getPosition().z, 0);
-        lightCb->lightDirection[lightCb->lightsSize] = XMFLOAT4(light->getDirection().x, light->getDirection().y, light->getDirection().z, 0);
-        lightCb->smViewProjectionMatrix[lightCb->lightsSize] = light->getShadowMapViewProjectionMatrix();
-        lightCb->lightsSize++;
-        if (lightCb->lightsSize >= 8) {
-            break;
-        }
-    }
-    lightConstantBuffer.upload();
-
     const Resource *rts[] = {&renderData.getGBufferAlbedo(), &renderData.getGBufferNormal(), &renderData.getGBufferSpecular()};
     commandList.OMSetRenderTargets(rts, renderData.getDepthStencilBuffer());
 
@@ -399,6 +379,26 @@ void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, Com
 
     const Resource *lightingRts[] = {&renderData.getBloomMap(), &output};
     commandList.OMSetRenderTargetsNoDepth(lightingRts);
+
+    // LightingConstantBuffer
+    auto lightCb = lightConstantBuffer.getData<LightingHeapCB>();
+    lightCb->cameraPosition = XMFLOAT4(camera->getEyePosition().x, camera->getEyePosition().y, camera->getEyePosition().z, 1);
+    lightCb->lightsSize = 0;
+    lightCb->shadowMapSize = static_cast<float>(renderData.getShadowMapSize());
+    lightCb->ambientLight = XMFLOAT3(ambientLight[0], ambientLight[1], ambientLight[2]);
+    lightCb->screenWidth = static_cast<float>(swapChain.getWidth());
+    lightCb->screenHeight = static_cast<float>(swapChain.getHeight());
+    for (LightImpl *light : lights) {
+        lightCb->lightColor[lightCb->lightsSize] = XMFLOAT4(light->getColor().x, light->getColor().y, light->getColor().z, light->getPower());
+        lightCb->lightPosition[lightCb->lightsSize] = XMFLOAT4(light->getPosition().x, light->getPosition().y, light->getPosition().z, 0);
+        lightCb->lightDirection[lightCb->lightsSize] = XMFLOAT4(light->getDirection().x, light->getDirection().y, light->getDirection().z, 0);
+        lightCb->smViewProjectionMatrix[lightCb->lightsSize] = light->getShadowMapViewProjectionMatrix();
+        lightCb->lightsSize++;
+        if (lightCb->lightsSize >= 8) {
+            break;
+        }
+    }
+    lightConstantBuffer.upload();
 
     commandList.setCbvInDescriptorTable(0, 0, lightConstantBuffer);
     commandList.setSrvInDescriptorTable(0, 1, renderData.getGBufferAlbedo());
