@@ -135,7 +135,7 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
         smCoords.x = smCoords.x / smCoords.w / 2.0f + 0.5f;
         smCoords.y = -smCoords.y / smCoords.w / 2.0f + 0.5f;
         const float shadowFactor = calculateShadowFactor(smCoords, i);
-        if (shadowFactor == 0) {
+        if (shadowFactor == 0.0f) {
             continue;
         }
 

@@ -435,8 +435,6 @@ void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, 
     const Resource *ssrRts[] = {&renderData.getSsrMap()};
     commandList.OMSetRenderTargetsNoDepth(ssrRts);
 
-    commandList.clearRenderTargetView(renderData.getSsrMap(), backgroundColor);
-
     commandList.setSrvInDescriptorTable(0, 0, renderData.getGBufferNormal());
     commandList.setSrvInDescriptorTable(0, 1, renderData.getDepthStencilBuffer());
     commandList.setSrvInDescriptorTable(0, 2, renderData.getGBufferSpecular());
@@ -454,12 +452,7 @@ void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, 
 
     commandList.IASetVertexBuffer(fullscreenVB);
 
-    ///commandList.getCommandList()->EndQuery(queryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0);
-
     commandList.draw(6u);
-
-    ///commandList.getCommandList()->EndQuery(queryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 1);
-    ///commandList.getCommandList()->ResolveQueryData(queryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0, 2, queryResult->getResource().Get(), 0);
 
     // SSR Blur
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
@@ -509,7 +502,12 @@ void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, 
 
     commandList.IASetVertexBuffer(fullscreenVB);
 
+    ///commandList.getCommandList()->EndQuery(queryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0);
+
     commandList.draw(6u);
+
+    ///commandList.getCommandList()->EndQuery(queryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 1);
+    ///commandList.getCommandList()->ResolveQueryData(queryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0, 2, queryResult->getResource().Get(), 0);
 }
 
 void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList, VertexBuffer &fullscreenVB,
@@ -764,7 +762,19 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     /// QUERY used in perf. measurement.
     ///UINT64 *queryData = nullptr;
     ///queryResult->getResource().Get()->Map(0, nullptr, (void **)&queryData);
-    ///DXD::log("Time: %d\n", int(queryData[1] - queryData[0]));
+    ///
+    ///static int fpsTab[100];
+    ///static int fpsTabIter;
+    ///fpsTabIter++;
+    ///
+    ///fpsTab[fpsTabIter % 100] = int(queryData[1] - queryData[0]);
+    ///
+    ///int fpsSum = 0;
+    ///for (int i = 0; i < 100; i++) {
+    ///    fpsSum += fpsTab[i];
+    ///}
+    ///
+    ///DXD::log("Time: %d\n", fpsSum/100);
     ///queryResult->getResource().Get()->Unmap(0, nullptr);
 
     // Render post processes
