@@ -30,7 +30,7 @@ void RenderData::resize(int width, int height) {
     gBufferAlbedoDesc.Width = width;
     gBufferAlbedoDesc.Height = height;
     gBufferAlbedoDesc.DepthOrArraySize = 1;
-    gBufferAlbedoDesc.MipLevels = 0;
+    gBufferAlbedoDesc.MipLevels = 1;
     gBufferAlbedoDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     gBufferAlbedoDesc.SampleDesc.Count = 1;
     gBufferAlbedoDesc.SampleDesc.Quality = 0;
@@ -55,7 +55,7 @@ void RenderData::resize(int width, int height) {
     gBufferNormalDesc.Width = width;
     gBufferNormalDesc.Height = height;
     gBufferNormalDesc.DepthOrArraySize = 1;
-    gBufferNormalDesc.MipLevels = 0;
+    gBufferNormalDesc.MipLevels = 1;
     gBufferNormalDesc.Format = DXGI_FORMAT_R16G16B16A16_SNORM;
     gBufferNormalDesc.SampleDesc.Count = 1;
     gBufferNormalDesc.SampleDesc.Quality = 0;
@@ -80,7 +80,7 @@ void RenderData::resize(int width, int height) {
     gBufferSpecularDesc.Width = width;
     gBufferSpecularDesc.Height = height;
     gBufferSpecularDesc.DepthOrArraySize = 1;
-    gBufferSpecularDesc.MipLevels = 0;
+    gBufferSpecularDesc.MipLevels = 1;
     gBufferSpecularDesc.Format = DXGI_FORMAT_R8G8_UNORM;
     gBufferSpecularDesc.SampleDesc.Count = 1;
     gBufferSpecularDesc.SampleDesc.Quality = 0;
@@ -105,7 +105,7 @@ void RenderData::resize(int width, int height) {
     renderTargetDesc.Width = width;
     renderTargetDesc.Height = height;
     renderTargetDesc.DepthOrArraySize = 1;
-    renderTargetDesc.MipLevels = 0;
+    renderTargetDesc.MipLevels = 1;
     renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     renderTargetDesc.SampleDesc.Count = 1;
     renderTargetDesc.SampleDesc.Quality = 0;
@@ -132,7 +132,7 @@ void RenderData::resize(int width, int height) {
     ssaoMapDesc.Width = std::max(width / 2, 1);
     ssaoMapDesc.Height = std::max(height / 2, 1);
     ssaoMapDesc.DepthOrArraySize = 1;
-    ssaoMapDesc.MipLevels = 0;
+    ssaoMapDesc.MipLevels = 1;
     ssaoMapDesc.Format = DXGI_FORMAT_R8_UNORM;
     ssaoMapDesc.SampleDesc.Count = 1;
     ssaoMapDesc.SampleDesc.Quality = 0;
@@ -158,7 +158,7 @@ void RenderData::resize(int width, int height) {
     ssrMapDesc.Width = std::max(width / 2, 1);
     ssrMapDesc.Height = std::max(height / 2, 1);
     ssrMapDesc.DepthOrArraySize = 1;
-    ssrMapDesc.MipLevels = 0;
+    ssrMapDesc.MipLevels = 1;
     ssrMapDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     ssrMapDesc.SampleDesc.Count = 1;
     ssrMapDesc.SampleDesc.Quality = 0;
@@ -184,7 +184,7 @@ void RenderData::resize(int width, int height) {
     ssrBlurredMapDesc.Width = width;
     ssrBlurredMapDesc.Height = height;
     ssrBlurredMapDesc.DepthOrArraySize = 1;
-    ssrBlurredMapDesc.MipLevels = 0;
+    ssrBlurredMapDesc.MipLevels = 1;
     ssrBlurredMapDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     ssrBlurredMapDesc.SampleDesc.Count = 1;
     ssrBlurredMapDesc.SampleDesc.Quality = 0;
@@ -210,7 +210,7 @@ void RenderData::resize(int width, int height) {
     loDesc.Width = width;
     loDesc.Height = height;
     loDesc.DepthOrArraySize = 1;
-    loDesc.MipLevels = 0;
+    loDesc.MipLevels = 1;
     loDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     loDesc.SampleDesc.Count = 1;
     loDesc.SampleDesc.Quality = 0;
@@ -304,7 +304,7 @@ void PostProcessRenderTargets::resize(int width, int height) {
     renderTargetDesc.Width = width;
     renderTargetDesc.Height = height;
     renderTargetDesc.DepthOrArraySize = 1;
-    renderTargetDesc.MipLevels = 0;
+    renderTargetDesc.MipLevels = 1;
     renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     renderTargetDesc.SampleDesc.Count = 1;
     renderTargetDesc.SampleDesc.Quality = 0;
