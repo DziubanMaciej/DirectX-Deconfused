@@ -3,6 +3,7 @@
 #include "DXD/Utility/Export.h"
 
 namespace DXD {
+/// @cond
 struct EXPORT NonCopyable {
     NonCopyable() = default;
     NonCopyable(const NonCopyable &) = delete;
@@ -26,4 +27,5 @@ struct EXPORT NonCopyableAndMovable {
     NonCopyableAndMovable(NonCopyableAndMovable &&) = delete;
     NonCopyableAndMovable &operator=(NonCopyableAndMovable &&) = delete;
 };
+/// @endcond
 } // namespace DXD

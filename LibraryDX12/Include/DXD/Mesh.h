@@ -29,6 +29,7 @@ public:
     /// enable normal mapping
     /// \param asynchronousLoading when set to true, handles object loading in a separate thread
     /// managed by the engine
+    /// \return created mesh
     static std::unique_ptr<Mesh> createFromObj(DXD::Application &application, const std::wstring &filePath,
                                                bool loadTextureCoordinates, bool computeTangents, bool asynchronousLoading);
     virtual ~Mesh() = default;

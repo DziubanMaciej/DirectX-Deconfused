@@ -10,10 +10,9 @@
 
 namespace DXD {
 
+/// \brief Text displayed on screen
 class EXPORT Text : NonCopyableAndMovable {
 public:
-    static std::unique_ptr<Text> create();
-
     virtual void setText(std::wstring text) = 0;
     virtual void setColor(float r, float g, float b, float a) = 0;
     virtual void setFontFamily(std::wstring text) = 0;
@@ -26,6 +25,7 @@ public:
     virtual void setVerticalAlignment(DXDTextVerticalAlignment va) = 0;
     virtual void setHorizontalAlignment(DXDTextHorizontalAlignment ha) = 0;
 
+    static std::unique_ptr<Text> create();
     virtual ~Text() = default;
 
 protected:

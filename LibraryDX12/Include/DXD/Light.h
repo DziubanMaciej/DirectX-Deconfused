@@ -9,7 +9,7 @@
 
 namespace DXD {
 
-/// \brief Light source description
+/// \brief %Light source description
 ///
 /// Data of light source to place in 3D scene. Light can be in focus mode or direction
 /// mode just like the Camera class.
