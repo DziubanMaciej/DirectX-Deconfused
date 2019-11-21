@@ -22,8 +22,7 @@ ApplicationImpl::ApplicationImpl(bool debugLayer)
       descriptorController(device),
       copyCommandQueue(device, D3D12_COMMAND_LIST_TYPE_COPY),
       directCommandQueue(device, D3D12_COMMAND_LIST_TYPE_DIRECT),
-      backgroundWorkerController(),
-      d2dContext(device, directCommandQueue.getCommandQueue()) {
+      backgroundWorkerController() {
     instance = this;
     pipelineStateController.compileAll();
     CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
@@ -122,4 +121,14 @@ void ApplicationImpl::flushAllResources() {
 
     copyCommandQueue.performResourcesDeletion(false);
     directCommandQueue.performResourcesDeletion(false);
+}
+
+D2DContext &ApplicationImpl::getD2DContext() {
+    struct Tag {};
+    static const auto create = [&]() { return new D2DContext(device, directCommandQueue.getCommandQueue()); };
+    return LazyLoadHelper::getLazy<Tag>(this->d2dContext, create);
+}
+
+bool ApplicationImpl::isD2DContextInitialized() {
+    return this->d2dContext != nullptr;
 }

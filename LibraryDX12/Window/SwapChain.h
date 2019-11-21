@@ -34,15 +34,16 @@ public:
 
     uint64_t getFenceValueForCurrentBackBuffer() const;
     auto &getCurrentBackBuffer() { return backBufferEntries[this->currentBackBufferIndex].backBuffer; };
-    auto &getCurrentD2DWrappedBackBuffer() { return backBufferEntries[this->currentBackBufferIndex].d2dWrappedBackBuffer; }
+    D2DWrappedResource &getCurrentD2DWrappedBackBuffer();
 
 private:
     static bool checkTearingSupport(IDXGIFactoryPtr &factory);
     static IDXGISwapChainPtr createSwapChain(HWND hwnd, IDXGIFactoryPtr &factory, CommandQueue &commandQueue, uint32_t width, uint32_t height, uint32_t bufferCount);
 
     void resetRenderTargetViews();
-    void updateRenderTargetViews();
     void resizeRenderTargets(uint32_t desiredWidth, uint32_t desiredHeight);
+    void updateRenderTargetViews();
+    void updateD2DWrappedBackBuffers();
 
     // DX12 data
     std::vector<BackBufferEntry> backBufferEntries;
@@ -56,4 +57,5 @@ private:
     uint32_t width;
     uint32_t height;
     UINT currentBackBufferIndex;
+    bool initializedD2D = false;
 };

@@ -69,8 +69,17 @@ void SwapChain::updateRenderTargetViews() {
         // Update DX12 back buffer data
         backBufferEntry.backBuffer.setResource(backBuffer, D3D12_RESOURCE_STATE_PRESENT, 1u);
         backBufferEntry.backBuffer.createRtv(nullptr);
+    }
 
-        // Update DX11/D2D back buffer data
+    // Update DX11/D2D back buffer data
+    if (initializedD2D) {
+        updateD2DWrappedBackBuffers();
+    }
+}
+
+void SwapChain::updateD2DWrappedBackBuffers() {
+    for (auto i = 0u; i < backBufferEntries.size(); i++) {
+        BackBufferEntry &backBufferEntry = backBufferEntries[i];
         backBufferEntry.d2dWrappedBackBuffer.wrap(static_cast<float>(windowDpi));
     }
 }
@@ -104,9 +113,12 @@ void SwapChain::resetRenderTargetViews() {
         backBufferEntry.d2dWrappedBackBuffer.reset();
         backBufferEntry.lastFence = currentBackBufferIndex;
     }
-    auto d2dContext = ApplicationImpl::getInstance().getD2DContext();
-    d2dContext.getD2DDeviceContext()->SetTarget(nullptr);
-    d2dContext.getD3D11DeviceContext()->Flush();
+
+    if (initializedD2D) {
+        auto d2dContext = ApplicationImpl::getInstance().getD2DContext();
+        d2dContext.getD2DDeviceContext()->SetTarget(nullptr);
+        d2dContext.getD3D11DeviceContext()->Flush();
+    }
 }
 
 void SwapChain::resizeRenderTargets(uint32_t desiredWidth, uint32_t desiredHeight) {
@@ -122,4 +134,12 @@ void SwapChain::resizeRenderTargets(uint32_t desiredWidth, uint32_t desiredHeigh
 
 uint64_t SwapChain::getFenceValueForCurrentBackBuffer() const {
     return backBufferEntries[this->currentBackBufferIndex].lastFence;
+}
+
+D2DWrappedResource &SwapChain::getCurrentD2DWrappedBackBuffer() {
+    if (!initializedD2D && ApplicationImpl::getInstance().isD2DContextInitialized()) {
+        updateD2DWrappedBackBuffers();
+        this->initializedD2D = true;
+    }
+    return backBufferEntries[this->currentBackBufferIndex].d2dWrappedBackBuffer;
 }

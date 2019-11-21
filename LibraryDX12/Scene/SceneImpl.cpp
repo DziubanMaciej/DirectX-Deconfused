@@ -741,11 +741,6 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     renderBloom(swapChain, commandListPostProcess, renderData.getPostProcessForBloom(), *postProcessVB,
                 renderData.getBloomMap(), renderData.getPostProcessRenderTargets(), backBuffer);
 
-    // If there are no D2D content to render, there will be no implicit transition to present, hence the manual barrier
-    if (texts.empty()) {
-        commandListPostProcess.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_PRESENT);
-    }
-
     // Close command list and submit it to the GPU
     commandListPostProcess.close();
     commandQueue.executeCommandListAndSignal(commandListPostProcess);
@@ -757,6 +752,12 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     //auto &tex = DXD::Texture::createFromFile(this->application, L"Resources/textures/brickwall.jpg", false);
     for (auto &sprite : sprites)
         renderSprite(sprite, swapChain, commandListSprite, *postProcessVB);
+
+    // If there are no D2D content to render, there will be no implicit transition to present, hence the manual barrier
+    if (texts.empty()) {
+        commandListSprite.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_PRESENT);
+    }
+
     commandListSprite.close();
     const uint64_t fenceValue = commandQueue.executeCommandListAndSignal(commandListSprite);
 

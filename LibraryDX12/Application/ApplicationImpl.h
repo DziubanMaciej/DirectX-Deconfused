@@ -6,6 +6,7 @@
 #include "Descriptor/DescriptorController.h"
 #include "PipelineState/PipelineStateController.h"
 #include "Threading/BackgroundWorkerController.h"
+#include "Utility/LazyLoadHelper.h"
 
 #include "DXD/Application.h"
 
@@ -34,12 +35,13 @@ public:
     auto getFactory() { return factory; }
     auto getAdapter() { return adapter; }
     auto getDevice() { return device; }
-    auto &getD2DContext() { return d2dContext; }
     auto &getPipelineStateController() { return pipelineStateController; }
     auto &getDescriptorController() { return descriptorController; }
     auto &getBackgroundWorkerController() { return backgroundWorkerController; }
     auto &getDirectCommandQueue() { return directCommandQueue; }
     auto &getCopyCommandQueue() { return copyCommandQueue; }
+    D2DContext &getD2DContext();
+    bool isD2DContextInitialized();
 
 protected:
     // Creation helpers
@@ -69,5 +71,5 @@ protected:
     BackgroundWorkerController backgroundWorkerController;
 
     // DX11 context
-    D2DContext d2dContext;
+    std::unique_ptr<D2DContext> d2dContext;
 };
