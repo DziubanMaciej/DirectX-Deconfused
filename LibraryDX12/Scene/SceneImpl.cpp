@@ -88,18 +88,6 @@ void SceneImpl::addLight(DXD::Light &light) {
     lights.push_back(static_cast<LightImpl *>(&light));
 }
 
-void SceneImpl::addSprite(DXD::Sprite &sprite) {
-    sprites.push_back(static_cast<SpriteImpl *>(&sprite));
-}
-
-void SceneImpl::addText(DXD::Text &text) {
-    texts.push_back(static_cast<TextImpl *>(&text));
-}
-
-void SceneImpl::addPostProcess(DXD::PostProcess &postProcess) {
-    postProcesses.push_back(static_cast<PostProcessImpl *>(&postProcess));
-}
-
 bool SceneImpl::removeLight(DXD::Light &light) {
     for (auto it = lights.begin(); it != lights.end(); it++) {
         if (*it == &light) {
@@ -108,6 +96,30 @@ bool SceneImpl::removeLight(DXD::Light &light) {
         }
     }
     return 0;
+}
+
+void SceneImpl::addSprite(DXD::Sprite &sprite) {
+    sprites.push_back(static_cast<SpriteImpl *>(&sprite));
+}
+
+bool SceneImpl::removeSprite(DXD::Sprite &sprite) {
+    return false;
+}
+
+void SceneImpl::addText(DXD::Text &text) {
+    texts.push_back(static_cast<TextImpl *>(&text));
+}
+
+bool SceneImpl::removeText(DXD::Text &text) {
+    return false;
+}
+
+void SceneImpl::addPostProcess(DXD::PostProcess &postProcess) {
+    postProcesses.push_back(static_cast<PostProcessImpl *>(&postProcess));
+}
+
+bool SceneImpl::removePostProcess(DXD::PostProcess &postProcess) {
+    return false;
 }
 
 void SceneImpl::addObject(DXD::Object &object) {

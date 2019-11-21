@@ -31,22 +31,29 @@ protected:
 public:
     void setBackgroundColor(float r, float g, float b) override;
     void setAmbientLight(float r, float g, float b) override;
+
     void addLight(DXD::Light &light) override;
-    void addSprite(DXD::Sprite &sprite) override;
-    void addText(DXD::Text &text) override;
-    void addPostProcess(DXD::PostProcess &postProcess) override;
     bool removeLight(DXD::Light &light) override;
+
+    void addPostProcess(DXD::PostProcess &postProcess) override;
+    bool removePostProcess(DXD::PostProcess &postProcess) override;
+
     void addObject(DXD::Object &object) override;
     bool removeObject(DXD::Object &object) override;
+
+    void addText(DXD::Text &text) override;
+    bool removeText(DXD::Text &text) override;
+
+    void addSprite(DXD::Sprite &sprite) override;
+    bool removeSprite(DXD::Sprite &sprite) override;
+
     void setCamera(DXD::Camera &camera) override;
     virtual DXD::Camera *getCamera() override;
 
     void render(SwapChain &swapChain, RenderData &renderData);
 
-	Microsoft::WRL::ComPtr<ID3D12QueryHeap> queryHeap;
+    Microsoft::WRL::ComPtr<ID3D12QueryHeap> queryHeap;
     std::unique_ptr<Resource> queryResult;
-
-
 
 protected:
     // Helpers
