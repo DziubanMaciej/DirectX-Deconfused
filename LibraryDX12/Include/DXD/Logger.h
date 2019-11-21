@@ -10,6 +10,7 @@
 
 namespace DXD {
 
+//! @cond Doxygen_Suppress
 class EXPORT std::mutex;
 
 class EXPORT LoggerData : NonCopyableAndMovable {
@@ -29,6 +30,7 @@ inline void log(const std::string &format, Args &&... args) {
     sprintf_s(LoggerData::buffer, format.c_str(), std::forward<Args>(args)...);
     log(LoggerData::buffer);
 }
+//! @endcond
 
 inline void log(const std::string &message) {
     log(message.c_str());

@@ -9,10 +9,16 @@
 
 namespace DXD {
 
+/// \brief Light source description
+///
+/// Data of light source to place in 3D scene
 class EXPORT Light : NonCopyableAndMovable {
 public:
+    /// Shape of light emitted by the light source
     enum class LightType {
+        /// Conical shape of light emitted
         SPOT_LIGHT,
+        /// Collumnar shape of light emitted
         DIRECTIONAL_LIGHT,
     };
 
