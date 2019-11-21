@@ -1,6 +1,6 @@
 macro(add_documentation_target TARGET_NAME DOC_DIR SRC_DIR)
     # Constants
-    set(DOXYGEN_LOG_NAME "doxygen_log.txt")
+    set(DOXYGEN_LOG_FILE "${DOC_DIR}/doxygen_log.txt")
     set(DOXYFILE_NAME "Doxyfile.txt")
     set(LOGOFILE_NAME "logo.png")
 
@@ -27,8 +27,9 @@ macro(add_documentation_target TARGET_NAME DOC_DIR SRC_DIR)
     # Run doxygen to generate docs
     add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
         COMMAND echo Generating documentation...
-        COMMAND doxygen.exe ${DOXYFILE_NAME} >${DOXYGEN_LOG_NAME} 2>&1
-        COMMAND echo Done. Log redirected to ${DOXYGEN_LOG_NAME}.
+        COMMAND doxygen.exe ${DOXYFILE_NAME} >${DOXYGEN_LOG_FILE} 2>&1
+        COMMAND echo Done. Log redirected to ${DOXYGEN_LOG_FILE}.
+        COMMAND echo Generated documentation in ${DOC_DIR}/output/html/index.html
         WORKING_DIRECTORY ${DOC_DIR}
     )
 endmacro()
