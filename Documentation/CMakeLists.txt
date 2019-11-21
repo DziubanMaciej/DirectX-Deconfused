@@ -1,53 +1,38 @@
-set_output_directories()
-add_custom_target (${TARGET_NAME})
+macro(add_documentation_target TARGET_NAME DOC_DIR SRC_DIR)
+    # Constants
+    set(DOXYGEN_LOG_NAME "doxygen_log.txt")
+    set(DOXYFILE_NAME "Doxyfile.txt")
+    set(LOGOFILE_NAME "logo.png")
 
-# Doxygen log file
-set(DOXYGEN_LOG_NAME "doxygen_log.txt")
-set(LOG_REDIRECTION >${DOXYGEN_LOG_NAME} 2>&1)
+    # Define custom target
+    add_custom_target (${TARGET_NAME})
+    set_target_properties(${TARGET_NAME} PROPERTIES FOLDER Documentation)
 
-# Input files: source, configuration file, logo
-set(INPUT_DIR_API ${PROJECT_SOURCE_DIR}/LibraryDX12/Include/DXD)
-set(INPUT_DIR_INTERNAL ${PROJECT_SOURCE_DIR}/LibraryDX12/)
-set(DOXYFILE_NAME "Doxyfile.txt")
-set(LOGOFILE_NAME "logo.png")
+    # Copy all required files to doc dir
+    add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+        COMMAND echo Creating documentation of "${SRC_DIR}" in "${DOC_DIR}..."
+        COMMAND echo Creating doc directory...
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${DOC_DIR}
 
-# Output directories
+        COMMAND echo Copying doxyfile and logo to doc directory...
+        COMMAND ${CMAKE_COMMAND} -E copy ${DOXYFILE_NAME} ${DOC_DIR}
+        COMMAND ${CMAKE_COMMAND} -E copy ${LOGOFILE_NAME} ${DOC_DIR}
+
+        COMMAND echo Copying source files to doc directory...
+        COMMAND ${CMAKE_COMMAND} -E copy_directory ${SRC_DIR} ${DOC_DIR}
+
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+
+    # Run doxygen to generate docs
+    add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
+        COMMAND echo Generating documentation...
+        COMMAND doxygen.exe ${DOXYFILE_NAME} >${DOXYGEN_LOG_NAME} 2>&1
+        COMMAND echo Done. Log redirected to ${DOXYGEN_LOG_NAME}.
+        WORKING_DIRECTORY ${DOC_DIR}
+    )
+endmacro()
+
 set(DOC_DIR_ROOT ${CMAKE_BINARY_DIR}/doc)
-set(DOC_DIR_API ${DOC_DIR_ROOT}/api)
-set(DOC_DIR_INTERNAL ${DOC_DIR_ROOT}/internal)
-
-add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-    COMMAND echo DOC_DIR_ROOT=${DOC_DIR_ROOT}
-    COMMAND echo Creating required directories
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${DOC_DIR_ROOT}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${DOC_DIR_API}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${DOC_DIR_INTERNAL}
-
-    COMMAND echo Copying ${DOXYFILE_NAME}...
-    COMMAND ${CMAKE_COMMAND} -E copy ${DOXYFILE_NAME} ${DOC_DIR_API}
-    COMMAND ${CMAKE_COMMAND} -E copy ${DOXYFILE_NAME} ${DOC_DIR_INTERNAL}
-
-    COMMAND echo Copying ${LOGOFILE_NAME}...
-    COMMAND ${CMAKE_COMMAND} -E copy ${LOGOFILE_NAME} ${DOC_DIR_API}
-    COMMAND ${CMAKE_COMMAND} -E copy ${LOGOFILE_NAME} ${DOC_DIR_INTERNAL}
-
-    COMMAND echo Copying files from ${INPUT_DIR_API} to ${DOC_DIR_API}
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${INPUT_DIR_API} ${DOC_DIR_API}
-
-    COMMAND echo Copying files from ${INPUT_DIR_INTERNAL} to ${DOC_DIR_INTERNAL}
-    COMMAND ${CMAKE_COMMAND} -E copy_directory ${INPUT_DIR_INTERNAL} ${DOC_DIR_INTERNAL}
-
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-)
-
-add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-    COMMAND echo Generating api documentation, log redirected to ${DOXYGEN_LOG_NAME}
-    COMMAND doxygen.exe ${DOXYFILE_NAME} ${LOG_REDIRECTION}
-    WORKING_DIRECTORY ${DOC_DIR_API}
-)
-
-add_custom_command(TARGET ${TARGET_NAME} POST_BUILD
-    COMMAND echo Generating internal documentation, log redirected to ${DOXYGEN_LOG_NAME}
-    COMMAND doxygen.exe ${DOXYFILE_NAME} ${LOG_REDIRECTION}
-    WORKING_DIRECTORY ${DOC_DIR_INTERNAL}
-)
+add_documentation_target(ApiDocumentation      ${DOC_DIR_ROOT}/api      ${DXD_SRC_DIR}/Include/DXD)
+add_documentation_target(InternalDocumentation ${DOC_DIR_ROOT}/internal ${DXD_SRC_DIR})
