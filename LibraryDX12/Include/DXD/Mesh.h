@@ -18,8 +18,6 @@ class Application;
 /// ignores objects with meshes that have not been loaded properly or are still loading.
 class EXPORT Mesh : NonCopyableAndMovable {
 public:
-    virtual ~Mesh() = default;
-
     /// Factory function for loading geometry from wavefront obj file. Internally handles
     /// getting the geometry to the GPU memory and all operations associated with setting
     /// it up.
@@ -33,6 +31,7 @@ public:
     /// managed by the engine
     static std::unique_ptr<Mesh> createFromObj(DXD::Application &application, const std::wstring &filePath,
                                                bool loadTextureCoordinates, bool computeTangents, bool asynchronousLoading);
+    virtual ~Mesh() = default;
 
 protected:
     Mesh() = default;

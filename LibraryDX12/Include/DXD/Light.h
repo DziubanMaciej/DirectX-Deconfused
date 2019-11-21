@@ -64,8 +64,11 @@ public:
     virtual LightType getType() = 0;
     /// @}
 
-    virtual ~Light() = default;
+    /// Factory method used to create Light instances
+    /// \param type type of light shape to create. Can be changed later
+    /// \return Light instance
     static std::unique_ptr<Light> create(LightType type);
+    virtual ~Light() = default;
 
 protected:
     Light() = default;

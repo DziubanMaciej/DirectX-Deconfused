@@ -88,11 +88,10 @@ public:
     virtual float getFarZ() const = 0;
     ///@}
 
-    virtual ~Camera() = default;
-
     /// Factory function used to create Camera instance.
     /// \return Application instance
     static std::unique_ptr<Camera> create();
+    virtual ~Camera() = default;
 
 protected:
     Camera() = default;
