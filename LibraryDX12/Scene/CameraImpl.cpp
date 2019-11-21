@@ -9,54 +9,45 @@ std::unique_ptr<Camera> Camera::create() {
 // ------------------------------------------------------------- Position and rotation in 3D space
 
 void CameraImpl::setEyePosition(float x, float y, float z) {
-    this->eyePosition = XMVectorSet(x, y, z, 1.f);
+    this->lookAtHandler.setPosition(x, y, z);
     this->dirtyView = true;
 }
 
 void CameraImpl::setEyePosition(XMFLOAT3 vec) {
+    this->lookAtHandler.setPosition(vec.x, vec.y, vec.z);
     this->dirtyView = true;
-    this->eyePosition = XMLoadFloat3(&vec);
 }
 
 XMFLOAT3 CameraImpl::getEyePosition() const {
-    return XMStoreFloat3(this->eyePosition);
+    return XMStoreFloat3(this->lookAtHandler.getPosition());
 }
 
 void CameraImpl::setFocusPoint(float x, float y, float z) {
+    this->lookAtHandler.setFocusPoint(x, y, z);
     this->dirtyView = true;
-    this->usingFocusPoint = true;
-    this->focusPoint = XMVectorSet(x, y, z, 1.f);
 }
 
 void CameraImpl::setFocusPoint(XMFLOAT3 vec) {
+    this->lookAtHandler.setFocusPoint(vec.x, vec.y, vec.z);
     this->dirtyView = true;
-    this->usingFocusPoint = true;
-    this->focusPoint = XMLoadFloat3(&vec);
 }
 
 XMFLOAT3 CameraImpl::getFocusPoint() const {
-    auto focusPoint = calculateFocusPoint();
-    return XMStoreFloat3(focusPoint);
+    return XMStoreFloat3(this->lookAtHandler.getFocusPoint());
 }
 
 void CameraImpl::setLookDirection(float x, float y, float z) {
+    this->lookAtHandler.setLookDirection(x, y, z);
     this->dirtyView = true;
-    this->usingFocusPoint = false;
-    this->lookDirection = XMVectorSet(x, y, z, 0.f);
 }
 
 void CameraImpl::setLookDirection(XMFLOAT3 vec) {
+    this->lookAtHandler.setLookDirection(vec.x, vec.y, vec.z);
     this->dirtyView = true;
-    this->usingFocusPoint = false;
-    this->lookDirection = XMLoadFloat3(&vec);
 }
 
 XMFLOAT3 CameraImpl::getLookDirection() const {
-    if (this->usingFocusPoint) {
-        auto direction = XMVector3Normalize(XMVectorSubtract(this->focusPoint, this->eyePosition));
-        return XMStoreFloat3(direction);
-    }
-    return XMStoreFloat3(this->lookDirection);
+    return XMStoreFloat3(this->lookAtHandler.getLookDirection());
 }
 
 void CameraImpl::setUpDirection(float x, float y, float z) {
@@ -106,19 +97,12 @@ void CameraImpl::setAspectRatio(float val) {
     this->aspectRatio = val;
 }
 
-XMVECTOR CameraImpl::calculateFocusPoint() const {
-    if (this->usingFocusPoint) {
-        return this->focusPoint;
-    }
-    return XMVectorAdd(this->eyePosition, this->lookDirection);
-}
-
 // ------------------------------------------------------------- Transformation matrices getters
 
 XMMATRIX CameraImpl::getViewMatrix() {
     if (dirtyView) {
         dirtyView = false;
-        viewMatrix = XMMatrixLookAtLH(eyePosition, calculateFocusPoint(), upDirection);
+        viewMatrix = XMMatrixLookAtLH(lookAtHandler.getPosition(), lookAtHandler.getFocusPoint(), upDirection);
     }
     return viewMatrix;
 }

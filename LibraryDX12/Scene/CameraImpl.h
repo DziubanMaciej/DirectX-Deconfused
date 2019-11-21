@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Utility/LookAtHandler.h"
+
 #include "DXD/Camera.h"
 
 class CameraImpl : public DXD::Camera {
@@ -37,8 +39,6 @@ public:
     void setAspectRatio(float val);
     float getAspectRatio() { return aspectRatio; }
 
-    XMVECTOR calculateFocusPoint() const;
-
     XMMATRIX getViewMatrix();
     XMMATRIX getProjectionMatrix();
     XMMATRIX getViewProjectionMatrix();
@@ -46,9 +46,7 @@ public:
     XMMATRIX getInvProjectionMatrix();
 
 protected:
-    XMVECTOR eyePosition = {0, 0, 0};
-    XMVECTOR focusPoint = {0, 0, 1};
-    XMVECTOR lookDirection = {0, 0, 1};
+    mutable LookAtHandler lookAtHandler{};
     XMVECTOR upDirection = {0, 1, 0};
     float fovAngleY = XM_PI / 2;
     float aspectRatio = {};
@@ -58,5 +56,4 @@ protected:
     XMMATRIX projectionMatrix;
     bool dirtyView = false;
     bool dirtyProj = false;
-    bool usingFocusPoint = false; // either focusPoint or lookDirection is used
 };
