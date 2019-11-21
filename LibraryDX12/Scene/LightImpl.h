@@ -2,6 +2,8 @@
 
 #include "DXD/Light.h"
 
+#include "Utility/LookAtHandler.h"
+
 class LightImpl : public DXD::Light {
 protected:
     friend class DXD::Light;
@@ -20,6 +22,10 @@ public:
     void setDirection(XMFLOAT3 xyz) override;
     XMFLOAT3 getDirection() const override;
 
+    void setFocusPoint(float x, float y, float z) override;
+    void setFocusPoint(XMFLOAT3 vec) override;
+    XMFLOAT3 getFocusPoint() const override;
+
     void setPower(float pos) override;
     float getPower() const override;
 
@@ -32,8 +38,7 @@ public:
 
 protected:
     LightType type;
-    XMFLOAT3 position = { 0,0,0 };
-    XMFLOAT3 direction = { 0,0,1 };
+    mutable LookAtHandler lookAtHandler;
     XMFLOAT3 color = { 1,1,1 };
     float power = 1.f;
 
