@@ -28,27 +28,32 @@ public:
 
     /// @{
     virtual void addLight(DXD::Light &light) = 0;
-    virtual bool removeLight(DXD::Light &light) = 0;
+    /// \return number of removed lights
+    virtual unsigned int removeLight(DXD::Light &light) = 0;
     /// @}
 
     /// @{
     virtual void addPostProcess(DXD::PostProcess &postProcess) = 0;
-    virtual bool removePostProcess(DXD::PostProcess &postProcess) = 0;
+    /// \return number of removed post-processes
+    virtual unsigned int removePostProcess(DXD::PostProcess &postProcess) = 0;
     /// @}
 
     /// @{
     virtual void addObject(DXD::Object &object) = 0;
-    virtual bool removeObject(DXD::Object &object) = 0;
+    /// \return number of removed objects
+    virtual unsigned int removeObject(DXD::Object &object) = 0;
     /// @}
 
     /// @{
     virtual void addText(DXD::Text &text) = 0;
-    virtual bool removeText(DXD::Text &text) = 0;
+    /// \return number of removed texts
+    virtual unsigned int removeText(DXD::Text &text) = 0;
     /// @}
 
     /// @{
     virtual void addSprite(DXD::Sprite &sprite) = 0;
-    virtual bool removeSprite(DXD::Sprite &sprite) = 0;
+    /// \return number of removed sprites
+    virtual unsigned int removeSprite(DXD::Sprite &sprite) = 0;
     /// @}
 
     /// @{

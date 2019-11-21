@@ -33,19 +33,19 @@ public:
     void setAmbientLight(float r, float g, float b) override;
 
     void addLight(DXD::Light &light) override;
-    bool removeLight(DXD::Light &light) override;
+    unsigned int removeLight(DXD::Light &light) override;
 
     void addPostProcess(DXD::PostProcess &postProcess) override;
-    bool removePostProcess(DXD::PostProcess &postProcess) override;
+    unsigned int removePostProcess(DXD::PostProcess &postProcess) override;
 
     void addObject(DXD::Object &object) override;
-    bool removeObject(DXD::Object &object) override;
+    unsigned int removeObject(DXD::Object &object) override;
 
     void addText(DXD::Text &text) override;
-    bool removeText(DXD::Text &text) override;
+    unsigned int removeText(DXD::Text &text) override;
 
     void addSprite(DXD::Sprite &sprite) override;
-    bool removeSprite(DXD::Sprite &sprite) override;
+    unsigned int removeSprite(DXD::Sprite &sprite) override;
 
     void setCamera(DXD::Camera &camera) override;
     virtual DXD::Camera *getCamera() override;
@@ -56,6 +56,16 @@ public:
     std::unique_ptr<Resource> queryResult;
 
 protected:
+    // Helper for scene management
+    template <typename Type, typename TypeImpl>
+    uint32_t removeFromScene(std::vector<TypeImpl *> &vector, Type &object) {
+        TypeImpl *objectImpl = static_cast<TypeImpl *>(&object);
+        const auto sizeBefore = vector.size();
+        auto removeIterator = std::remove(vector.begin(), vector.end(), objectImpl);
+        vector.erase(removeIterator, vector.end());
+        return static_cast<uint32_t>(sizeBefore - vector.size());
+    }
+
     // Helpers
     void inspectObjectsNotReady();
     size_t getEnabledPostProcessesCount() const;

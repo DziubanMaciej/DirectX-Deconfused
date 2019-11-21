@@ -13,8 +13,6 @@
 #include <algorithm>
 #include <cassert>
 
-// --------------------------------------------------------------------------- API
-
 namespace DXD {
 std::unique_ptr<Scene> Scene::create(DXD::Application &application) {
     return std::unique_ptr<Scene>{new SceneImpl(*static_cast<ApplicationImpl *>(&application))};
@@ -72,6 +70,8 @@ SceneImpl::SceneImpl(ApplicationImpl &application)
         nullptr);
 }
 
+// --------------------------------------------------------------------------- Global colors
+
 void SceneImpl::setBackgroundColor(float r, float g, float b) {
     backgroundColor[0] = r;
     backgroundColor[1] = g;
@@ -84,49 +84,45 @@ void SceneImpl::setAmbientLight(float r, float g, float b) {
     ambientLight[2] = b;
 }
 
+// --------------------------------------------------------------------------- Scene management
+
 void SceneImpl::addLight(DXD::Light &light) {
     lights.push_back(static_cast<LightImpl *>(&light));
 }
 
-bool SceneImpl::removeLight(DXD::Light &light) {
-    for (auto it = lights.begin(); it != lights.end(); it++) {
-        if (*it == &light) {
-            lights.erase(it);
-            return 1;
-        }
-    }
-    return 0;
-}
-
-void SceneImpl::addSprite(DXD::Sprite &sprite) {
-    sprites.push_back(static_cast<SpriteImpl *>(&sprite));
-}
-
-bool SceneImpl::removeSprite(DXD::Sprite &sprite) {
-    return false;
-}
-
-void SceneImpl::addText(DXD::Text &text) {
-    texts.push_back(static_cast<TextImpl *>(&text));
-}
-
-bool SceneImpl::removeText(DXD::Text &text) {
-    return false;
+unsigned int SceneImpl::removeLight(DXD::Light &light) {
+    return removeFromScene(lights, light);
 }
 
 void SceneImpl::addPostProcess(DXD::PostProcess &postProcess) {
     postProcesses.push_back(static_cast<PostProcessImpl *>(&postProcess));
 }
 
-bool SceneImpl::removePostProcess(DXD::PostProcess &postProcess) {
-    return false;
+unsigned int SceneImpl::removePostProcess(DXD::PostProcess &postProcess) {
+    return removeFromScene(postProcesses, postProcess);
+}
+
+void SceneImpl::addSprite(DXD::Sprite &sprite) {
+    sprites.push_back(static_cast<SpriteImpl *>(&sprite));
+}
+
+unsigned int SceneImpl::removeSprite(DXD::Sprite &sprite) {
+    return removeFromScene(sprites, sprite);
+}
+
+void SceneImpl::addText(DXD::Text &text) {
+    texts.push_back(static_cast<TextImpl *>(&text));
+}
+
+unsigned int SceneImpl::removeText(DXD::Text &text) {
+    return removeFromScene(texts, text);
 }
 
 void SceneImpl::addObject(DXD::Object &object) {
     objectsNotReady.insert(static_cast<ObjectImpl *>(&object));
 }
 
-bool SceneImpl::removeObject(DXD::Object &object) {
+unsigned int SceneImpl::removeObject(DXD::Object &object) {
     const auto toErase = static_cast<ObjectImpl *>(&object);
     const auto elementsRemoved = objects.erase(toErase) + objectsNotReady.erase(toErase);
     assert(elementsRemoved == 0u || elementsRemoved == 1u);
