@@ -58,7 +58,7 @@ float main(PixelShaderInput IN) : SV_Target {
     float INdepth = gBufferDepth.Sample(g_sampler, float2(uBase, vBase)).r;
 
     if (INdepth >= 1.0f) {
-        discard;
+        return 1.0f;
     }
 
     float3 INposition = getPositionFromDepth(uBase, vBase, INdepth).xyz;

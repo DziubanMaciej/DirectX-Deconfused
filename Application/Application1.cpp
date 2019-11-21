@@ -68,6 +68,10 @@ private:
         std::unordered_map<std::string, std::string> meshObjectMap = {
             {"leftWall", "cubeNormalMesh"},
             {"rightWall", "cubeNormalMesh"},
+            {"longBlock1", "cubeNormalMesh"},
+            {"longBlock2", "cubeNormalMesh"},
+            {"longBlock3", "cubeNormalMesh"},
+            {"longBlock4", "cubeNormalMesh"},
             {"glowingCube1", "cubeNormalMesh"},
             {"glowingCube2", "cubeNormalMesh"},
             {"glowingCube3", "cubeNormalMesh"},
@@ -94,6 +98,22 @@ private:
         objects["rightWall"]->setPosition(9, 0, 0);
         objects["rightWall"]->setScale(0.5, 2, 10);
         objects["rightWall"]->setColor(0.2f, 0.2f, 0.2f);
+
+        objects["longBlock1"]->setPosition(0, 2.5f, 9.5f);
+        objects["longBlock1"]->setScale(9.5f, 0.5f, 0.5f);
+        objects["longBlock1"]->setColor(0.2f, 0.2f, 0.2f);
+
+        objects["longBlock2"]->setPosition(0, 2.5f, -9.5f);
+        objects["longBlock2"]->setScale(9.5f, 0.5f, 0.5f);
+        objects["longBlock2"]->setColor(0.2f, 0.2f, 0.2f);
+
+        objects["longBlock3"]->setPosition(0, 2.5f, 4.5f);
+        objects["longBlock3"]->setScale(9.5f, 0.5f, 0.5f);
+        objects["longBlock3"]->setColor(0.2f, 0.2f, 0.2f);
+
+        objects["longBlock4"]->setPosition(0, 2.5f, -4.5f);
+        objects["longBlock4"]->setScale(9.5f, 0.5f, 0.5f);
+        objects["longBlock4"]->setColor(0.2f, 0.2f, 0.2f);
 
         objects["glowingCube1"]->setPosition(-9.0f, 0.0f, 3.0f);
         objects["glowingCube1"]->setBloomFactor(1.0f);
@@ -148,7 +168,7 @@ private:
 
         objects["aventador1"]->setPosition(-4.0f, -2.0f, 2.0f);
         objects["aventador1"]->setColor(0.0f, 0.0f, 0.0f);
-        objects["aventador1"]->setSpecularity(0.6f);
+        objects["aventador1"]->setSpecularity(0.2f);
         objects["aventador1"]->setScale(0.9f, 0.9f, 0.9f);
         objects["aventador1"]->setRotation(XMFLOAT3(0, 1, 0), float(-M_PI / 4));
 
@@ -160,7 +180,7 @@ private:
 
         objects["aventador2"]->setPosition(4.0f, -2.0f, -2.0f);
         objects["aventador2"]->setColor(0.0f, 0.0f, 0.0f);
-        objects["aventador2"]->setSpecularity(0.6f);
+        objects["aventador2"]->setSpecularity(0.2f);
         objects["aventador2"]->setScale(0.9f, 0.9f, 0.9f);
         objects["aventador2"]->setRotation(XMFLOAT3(0, 1, 0), float(-M_PI / 4));
 

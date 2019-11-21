@@ -63,24 +63,47 @@ float calculateShadowFactor(float4 smCoords, int shadowMapIndex) {
         return 1.f;
     }
 
-    float shadowFactor = 16;
-    float smDepth = 0;
+    if (shadowMapSize > 2000.0f) {
+        float shadowFactor = 16;
+        float smDepth = 0;
 
-    if (smCoords.x >= 0 && smCoords.x <= 1) {
-        if (smCoords.y >= 0 && smCoords.y <= 1) {
+        if (smCoords.x >= 0 && smCoords.x <= 1) {
+            if (smCoords.y >= 0 && smCoords.y <= 1) {
 
-            for (int oxy = 0; oxy < 16; oxy++) {
-                float2 offset = (poissonDisk[oxy] * 2.0f) / float2(shadowMapSize, shadowMapSize);
-                smDepth = shadowMaps[shadowMapIndex].SampleLevel(g_sampler_sm, smCoords.xy + offset, 0).r;
+                for (int oxy = 0; oxy < 16; oxy++) {
+                    float2 offset = (poissonDisk[oxy] * 2.0f) / float2(shadowMapSize, shadowMapSize);
+                    smDepth = shadowMaps[shadowMapIndex].SampleLevel(g_sampler_sm, smCoords.xy + offset, 0).r;
 
-                if (((smCoords.z / smCoords.w) - 0.001f) > smDepth) {
-                    shadowFactor = shadowFactor - 1;
+                    if (((smCoords.z / smCoords.w) - 0.001f) > smDepth) {
+                        shadowFactor = shadowFactor - 1;
+                    }
                 }
             }
         }
+        shadowFactor = shadowFactor / 16;
+        return shadowFactor;
+    } else {
+        float shadowFactor = 9;
+        float smDepth = 0;
+
+        if (smCoords.x >= 0 && smCoords.x <= 1) {
+            if (smCoords.y >= 0 && smCoords.y <= 1) {
+
+                for (int ox = -1; ox <= 1; ox++) {
+                    for (int oy = -1; oy <= 1; oy++) {
+                        float2 offset = float2(ox, oy) / float2(shadowMapSize, shadowMapSize);
+                        smDepth = shadowMaps[shadowMapIndex].SampleLevel(g_sampler_sm, smCoords.xy + offset, 0).r;
+
+                        if (((smCoords.z / smCoords.w) - 0.003f) > smDepth) {
+                            shadowFactor = shadowFactor - 1;
+                        }
+                    }
+                }
+            }
+        }
+        shadowFactor = shadowFactor / 9;
+        return shadowFactor;
     }
-    shadowFactor = shadowFactor / 16;
-    return shadowFactor;
 }
 
 PS_OUT main(PixelShaderInput IN) : SV_Target {
@@ -112,7 +135,7 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
         smCoords.x = smCoords.x / smCoords.w / 2.0f + 0.5f;
         smCoords.y = -smCoords.y / smCoords.w / 2.0f + 0.5f;
         const float shadowFactor = calculateShadowFactor(smCoords, i);
-        if (shadowFactor == 0) {
+        if (shadowFactor == 0.0f) {
             continue;
         }
 

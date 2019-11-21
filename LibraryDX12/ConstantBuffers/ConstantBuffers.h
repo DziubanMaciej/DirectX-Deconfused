@@ -128,4 +128,9 @@ struct SsrCB {
     float4 clearColor;
 };
 
+struct SsrMergeCB {
+    float screenWidth;
+    float screenHeight;
+};
+
 #include "ConstantBuffers/ConstantBuffersUndefs.inl"

@@ -26,4 +26,6 @@ add_shaders_and_cmake_file(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/sprite_sampler_PS.hlsl      Pixel
     ${CMAKE_CURRENT_SOURCE_DIR}/ssao_PS.hlsl                Pixel
     ${CMAKE_CURRENT_SOURCE_DIR}/ssr_PS.hlsl                 Pixel
+    ${CMAKE_CURRENT_SOURCE_DIR}/ssr_blur_PS.hlsl            Pixel
+    ${CMAKE_CURRENT_SOURCE_DIR}/ssr_merge_PS.hlsl           Pixel
 )

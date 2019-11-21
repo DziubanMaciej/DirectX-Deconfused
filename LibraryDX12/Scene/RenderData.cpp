@@ -30,7 +30,7 @@ void RenderData::resize(int width, int height) {
     gBufferAlbedoDesc.Width = width;
     gBufferAlbedoDesc.Height = height;
     gBufferAlbedoDesc.DepthOrArraySize = 1;
-    gBufferAlbedoDesc.MipLevels = 0;
+    gBufferAlbedoDesc.MipLevels = 1;
     gBufferAlbedoDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     gBufferAlbedoDesc.SampleDesc.Count = 1;
     gBufferAlbedoDesc.SampleDesc.Quality = 0;
@@ -55,7 +55,7 @@ void RenderData::resize(int width, int height) {
     gBufferNormalDesc.Width = width;
     gBufferNormalDesc.Height = height;
     gBufferNormalDesc.DepthOrArraySize = 1;
-    gBufferNormalDesc.MipLevels = 0;
+    gBufferNormalDesc.MipLevels = 1;
     gBufferNormalDesc.Format = DXGI_FORMAT_R16G16B16A16_SNORM;
     gBufferNormalDesc.SampleDesc.Count = 1;
     gBufferNormalDesc.SampleDesc.Quality = 0;
@@ -80,7 +80,7 @@ void RenderData::resize(int width, int height) {
     gBufferSpecularDesc.Width = width;
     gBufferSpecularDesc.Height = height;
     gBufferSpecularDesc.DepthOrArraySize = 1;
-    gBufferSpecularDesc.MipLevels = 0;
+    gBufferSpecularDesc.MipLevels = 1;
     gBufferSpecularDesc.Format = DXGI_FORMAT_R8G8_UNORM;
     gBufferSpecularDesc.SampleDesc.Count = 1;
     gBufferSpecularDesc.SampleDesc.Quality = 0;
@@ -105,7 +105,7 @@ void RenderData::resize(int width, int height) {
     renderTargetDesc.Width = width;
     renderTargetDesc.Height = height;
     renderTargetDesc.DepthOrArraySize = 1;
-    renderTargetDesc.MipLevels = 0;
+    renderTargetDesc.MipLevels = 1;
     renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     renderTargetDesc.SampleDesc.Count = 1;
     renderTargetDesc.SampleDesc.Quality = 0;
@@ -132,7 +132,7 @@ void RenderData::resize(int width, int height) {
     ssaoMapDesc.Width = std::max(width / 2, 1);
     ssaoMapDesc.Height = std::max(height / 2, 1);
     ssaoMapDesc.DepthOrArraySize = 1;
-    ssaoMapDesc.MipLevels = 0;
+    ssaoMapDesc.MipLevels = 1;
     ssaoMapDesc.Format = DXGI_FORMAT_R8_UNORM;
     ssaoMapDesc.SampleDesc.Count = 1;
     ssaoMapDesc.SampleDesc.Quality = 0;
@@ -151,6 +151,58 @@ void RenderData::resize(int width, int height) {
     ssaoMap->getResource()->SetName(L"SSAO map");
     SET_OBJECT_NAME(*ssaoMap, L"SsaoMap");
 
+    // SSR map
+    D3D12_RESOURCE_DESC ssrMapDesc = {};
+    ssrMapDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    ssrMapDesc.Alignment = 0;
+    ssrMapDesc.Width = std::max(width / 2, 1);
+    ssrMapDesc.Height = std::max(height / 2, 1);
+    ssrMapDesc.DepthOrArraySize = 1;
+    ssrMapDesc.MipLevels = 1;
+    ssrMapDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    ssrMapDesc.SampleDesc.Count = 1;
+    ssrMapDesc.SampleDesc.Quality = 0;
+    ssrMapDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    ssrMapDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+    ssrMap = std::make_unique<Resource>(
+        device,
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &ssrMapDesc,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        nullptr);
+    ssrMap->createSrv(nullptr);
+    ssrMap->createRtv(nullptr);
+    ssrMap->getResource()->SetName(L"SSR map");
+    SET_OBJECT_NAME(*ssrMap, L"SsrMap");
+
+    // SSR blurred map
+    D3D12_RESOURCE_DESC ssrBlurredMapDesc = {};
+    ssrBlurredMapDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    ssrBlurredMapDesc.Alignment = 0;
+    ssrBlurredMapDesc.Width = width;
+    ssrBlurredMapDesc.Height = height;
+    ssrBlurredMapDesc.DepthOrArraySize = 1;
+    ssrBlurredMapDesc.MipLevels = 1;
+    ssrBlurredMapDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    ssrBlurredMapDesc.SampleDesc.Count = 1;
+    ssrBlurredMapDesc.SampleDesc.Quality = 0;
+    ssrBlurredMapDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    ssrBlurredMapDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+
+    ssrBlurredMap = std::make_unique<Resource>(
+        device,
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &ssrBlurredMapDesc,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        nullptr);
+    ssrBlurredMap->createSrv(nullptr);
+    ssrBlurredMap->createRtv(nullptr);
+    ssrBlurredMap->getResource()->SetName(L"SSR blurred map");
+    SET_OBJECT_NAME(*ssrBlurredMap, L"SsrBlurredMap");
+
     // Lighting output
     D3D12_RESOURCE_DESC loDesc = {};
     loDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
@@ -158,7 +210,7 @@ void RenderData::resize(int width, int height) {
     loDesc.Width = width;
     loDesc.Height = height;
     loDesc.DepthOrArraySize = 1;
-    loDesc.MipLevels = 0;
+    loDesc.MipLevels = 1;
     loDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     loDesc.SampleDesc.Count = 1;
     loDesc.SampleDesc.Quality = 0;
@@ -252,7 +304,7 @@ void PostProcessRenderTargets::resize(int width, int height) {
     renderTargetDesc.Width = width;
     renderTargetDesc.Height = height;
     renderTargetDesc.DepthOrArraySize = 1;
-    renderTargetDesc.MipLevels = 0;
+    renderTargetDesc.MipLevels = 1;
     renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     renderTargetDesc.SampleDesc.Count = 1;
     renderTargetDesc.SampleDesc.Quality = 0;
