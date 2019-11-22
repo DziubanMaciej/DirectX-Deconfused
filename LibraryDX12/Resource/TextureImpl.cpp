@@ -4,6 +4,7 @@
 #include "CommandList/CommandList.h"
 #include "CommandList/CommandQueue.h"
 #include "ConstantBuffers/ConstantBuffers.h"
+#include "Threading/EventImpl.inl"
 #include "Utility/DxgiFormatHelper.h"
 #include "Utility/FileHelper.h"
 #include "Utility/MathHelper.h"
@@ -17,15 +18,28 @@
 // ----------------------------------------------------------------- Creation and destruction
 
 namespace DXD {
-std::unique_ptr<Texture> Texture::createFromFile(const std::wstring &filePath, bool asynchronousLoading) {
-    return std::unique_ptr<Texture>(new TextureImpl(filePath, asynchronousLoading));
+
+std::unique_ptr<Texture> Texture::loadFromFileSynchronously(const std::wstring &filePath, Texture::TextureLoadResult *loadResult) {
+    return std::unique_ptr<Texture>(new TextureImpl(filePath, loadResult));
 }
+
+std::unique_ptr<Texture> Texture::loadFromFileAsynchronously(const std::wstring &filePath, Texture::TextureLoadEvent *loadEvent) {
+    return std::unique_ptr<Texture>(new TextureImpl(filePath, loadEvent));
+}
+
+template std::unique_ptr<Event<Texture::TextureLoadResult>> Event<Texture::TextureLoadResult>::create();
 } // namespace DXD
 
-TextureImpl::TextureImpl(const std::wstring &filePath, bool asynchronousLoading)
+TextureImpl::TextureImpl(const std::wstring &filePath, TextureLoadEvent *loadEvent)
     : loadOperation(*this) {
-    const TextureCpuLoadArgs cpuLoadArgs{filePath};
-    loadOperation.run(cpuLoadArgs, asynchronousLoading);
+    const TextureCpuLoadArgs args{filePath};
+    loadOperation.runAsynchronously(args);
+}
+
+TextureImpl::TextureImpl(const std::wstring &filePath, TextureLoadResult *loadResult)
+    : loadOperation(*this) {
+    const TextureCpuLoadArgs args{filePath};
+    loadOperation.runSynchronously(args);
 }
 
 TextureImpl::~TextureImpl() {

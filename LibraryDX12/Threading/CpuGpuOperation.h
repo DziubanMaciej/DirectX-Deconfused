@@ -20,15 +20,17 @@ public:
         SUCCESS,
     };
 
-    /// Main entrypoint to start the operation.
-    /// \param runAsync if true, executes on different thread and returns immediately
-    void run(const CpuLoadArgs &args, bool runAsync) {
-        if (runAsync) {
-            auto task = [this, args]() { runImpl(args); };
-            ApplicationImpl::getInstance().getBackgroundWorkerController().pushTask(task);
-        } else {
-            runImpl(args);
-        }
+    /// Main entrypoint to start the synchronous operation.
+    /// \param implementation-defined arguments for the operation
+    void runSynchronously(const CpuLoadArgs &args) {
+        runImpl(args);
+    }
+
+    /// Main entrypoint to start the synchronous operation.
+    /// \param implementation-defined arguments for the operation
+    void runAsynchronously(const CpuLoadArgs &args) {
+        auto task = [this, args]() { runImpl(args); };
+        ApplicationImpl::getInstance().getBackgroundWorkerController().pushTask(task);
     }
 
     /// Used by to check whether both CPU and GPU phase has ended successfuly.

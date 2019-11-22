@@ -2,6 +2,7 @@
 
 #include "Application/ApplicationImpl.h"
 #include "CommandList/CommandList.h"
+#include "Threading/EventImpl.inl"
 #include "Utility/ThrowIfFailed.h"
 
 #include <algorithm>
@@ -10,21 +11,32 @@
 #include <sstream>
 #include <string>
 
-namespace DXD {
-
 // ----------------------------------------------------------------- Creation and destruction
 
-std::unique_ptr<Mesh> Mesh::createFromObj(const std::wstring &filePath, bool loadTextureCoordinates,
-                                          bool computeTangents, bool asynchronousLoading) {
-    return std::unique_ptr<Mesh>(new MeshImpl(filePath, loadTextureCoordinates, computeTangents, asynchronousLoading));
+namespace DXD {
+
+std::unique_ptr<Mesh> Mesh::createFromObjSynchronously(const std::wstring &filePath, bool loadTextureCoordinates,
+                                                       bool computeTangents, Mesh::ObjLoadResult *loadResult) {
+    return std::unique_ptr<Mesh>(new MeshImpl(filePath, loadTextureCoordinates, computeTangents, loadResult));
 }
+std::unique_ptr<Mesh> Mesh::createFromObjAsynchronously(const std::wstring &filePath, bool loadTextureCoordinates,
+                                                        bool computeTangents, Mesh::ObjLoadEvent *loadEvent) {
+    return std::unique_ptr<Mesh>(new MeshImpl(filePath, loadTextureCoordinates, computeTangents, loadEvent));
+}
+
+template std::unique_ptr<Event<Mesh::ObjLoadResult>> Event<Mesh::ObjLoadResult>::create();
 } // namespace DXD
 
-MeshImpl::MeshImpl(const std::wstring &filePath, bool loadTextureCoordinates,
-                   bool computeTangents, bool asynchronousLoading)
+MeshImpl::MeshImpl(const std::wstring &filePath, bool loadTextureCoordinates, bool computeTangents, DXD::Mesh::ObjLoadResult *loadResult)
     : loadOperation(*this) {
     const MeshCpuLoadArgs args{filePath, loadTextureCoordinates, computeTangents};
-    loadOperation.run(args, asynchronousLoading);
+    loadOperation.runSynchronously(args);
+}
+
+MeshImpl::MeshImpl(const std::wstring &filePath, bool loadTextureCoordinates, bool computeTangents, DXD::Mesh::ObjLoadEvent *loadEvent)
+    : loadOperation(*this) {
+    const MeshCpuLoadArgs args{filePath, loadTextureCoordinates, computeTangents};
+    loadOperation.runAsynchronously(args);
 }
 
 MeshImpl::~MeshImpl() {

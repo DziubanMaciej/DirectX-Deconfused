@@ -56,9 +56,7 @@ private:
             {"porsheMesh", L"Resources/meshes/porshe.obj", true, false}};
 
         for (const auto &data : meshesCreationData) {
-            const bool asynchronousLoading = true;
-            meshes[data.name] = DXD::Mesh::createFromObj(data.filePath, data.loadTextures,
-                                                         data.computeTangents, asynchronousLoading);
+            meshes[data.name] = DXD::Mesh::createFromObjAsynchronously(data.filePath, data.loadTextures, data.computeTangents, nullptr);
             assert(meshes[data.name]);
         }
     }
@@ -227,19 +225,21 @@ private:
         struct TextureCreationData {
             std::string name;
             std::wstring path;
-            bool asynchronousLoading;
         };
 
         TextureCreationData texturesCreationData[] = {
-            {"brickwall", L"Resources/textures/brickwall.jpg", true},
-            {"brickwall_normal", L"Resources/textures/brickwall_normal.jpg", false},
-            {"porsche", L"Resources/textures/porsche.bmp", true},
-            {"dennis", L"Resources/textures/dennis.jpg", true},
-            {"wood", L"Resources/textures/wood.jpg", true},
-            {"grass", L"Resources/textures/grass.jpg", true}};
+            {"brickwall", L"Resources/textures/brickwall.jpg"},
+            {"brickwall_normal", L"Resources/textures/brickwall_normal.jpg"},
+            {"porsche", L"Resources/textures/porsche.bmp"},
+            {"dennis", L"Resources/textures/dennis.jpg"},
+            {
+                "wood",
+                L"Resources/textures/wood.jpg",
+            },
+            {"grass", L"Resources/textures/grass.jpg"}};
 
         for (const auto &data : texturesCreationData) {
-            textures[data.name] = DXD::Texture::createFromFile(data.path, data.asynchronousLoading);
+            textures[data.name] = DXD::Texture::loadFromFileAsynchronously(data.path, nullptr);
             assert(textures[data.name]);
         }
     }
@@ -293,7 +293,7 @@ private:
             {"rectangle-alpha", "rectangle-alpha", 165, 0, 33, 0, DXD::Sprite::HorizontalAlignment::LEFT, DXD::Sprite::VerticalAlignment::TOP}};
 
         for (const auto &data : spriteTexturesCreationData) {
-            spriteTextures[data.name] = DXD::Texture::createFromFile(data.path, false);
+            spriteTextures[data.name] = DXD::Texture::loadFromFileSynchronously(data.path, nullptr);
             assert(spriteTextures[data.name]);
         }
         for (const auto &data : spritesCreationData) {

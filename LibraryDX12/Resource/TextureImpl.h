@@ -19,7 +19,8 @@ public:
 
 protected:
     friend class DXD::Texture;
-    TextureImpl(const std::wstring &filePath, bool asynchronousLoading);
+    TextureImpl(const std::wstring &filePath, TextureLoadEvent *loadEvent);
+    TextureImpl(const std::wstring &filePath, TextureLoadResult *loadResult);
     ~TextureImpl() override;
 
 private:

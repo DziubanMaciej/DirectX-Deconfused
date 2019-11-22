@@ -60,8 +60,8 @@ public:
 
 protected:
     friend class DXD::Mesh;
-    MeshImpl(const std::wstring &filePath, bool loadTextureCoordinates,
-             bool computeTangents, bool asynchronousLoading);
+    MeshImpl(const std::wstring &filePath, bool loadTextureCoordinates, bool computeTangents, DXD::Mesh::ObjLoadResult *loadResult);
+    MeshImpl(const std::wstring &filePath, bool loadTextureCoordinates, bool computeTangents, DXD::Mesh::ObjLoadEvent *loadEvent);
     ~MeshImpl() override;
 
 public:

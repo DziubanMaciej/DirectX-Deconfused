@@ -12,7 +12,9 @@ struct Handler : DXD::CallbackHandler {
 int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int show) {
     auto application = DXD::Application::create(true);
 
-    auto mesh = DXD::Mesh::createFromObj(L"Resources/meshes/cube_normals.obj", false, false, true);
+    auto mesh = DXD::Mesh::createFromObjAsynchronously(L"Resources/meshes/dennis.obj", false, false, nullptr);
+
+    auto cubeLoadEvent = DXD::Mesh::ObjLoadEvent::create();
 
     auto cube = DXD::Object::create(*mesh);
     cube->setPosition(0, 0, 0);
