@@ -12,9 +12,12 @@ RenderData::RenderData(ID3D12DevicePtr &device, DescriptorController &descriptor
       postProcessRenderTargets(device),
       postProcessForBloom(DXD::PostProcess::create()),
       lightingConstantBuffer(ApplicationImpl::getInstance().getDevice(), ApplicationImpl::getInstance().getDescriptorController(), sizeof(LightingHeapCB)) {
+    // Configure bloom blur
     postProcessForBloom->setGaussianBlur(3, 5);
 
     // Register handler for reallocating shadow maps when shadows quality changes
+    const int shadowsQuality = ApplicationImpl::getInstance().getSettingsImpl().getShadowsQuality();
+    createShadowMaps(shadowsQuality);
     ApplicationImpl::getInstance().getSettingsImpl().registerHandler<SettingsImpl::ShadowsQuality>([this](const SettingsData &data) {
         this->createShadowMaps(std::get<SettingsImpl::ShadowsQuality>(data).value);
     });
@@ -224,9 +227,6 @@ void RenderData::createLightingOutputBuffers(int width, int height) {
     lightingOutput->createSrv(nullptr);
     lightingOutput->createRtv(nullptr);
     SET_OBJECT_NAME(*lightingOutput, L"LightingOutput");
-
-    const int shadowsQuality = ApplicationImpl::getInstance().getSettingsImpl().getShadowsQuality();
-    createShadowMaps(shadowsQuality);
 }
 
 void RenderData::createDepthBuffer(int width, int height) {
