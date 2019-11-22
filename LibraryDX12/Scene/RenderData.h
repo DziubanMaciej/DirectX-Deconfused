@@ -37,8 +37,16 @@ public:
     ConstantBuffer &getLightingConstantBuffer() { return lightingConstantBuffer; }
 
 private:
+    // Buffer creations
     void createShadowMaps(unsigned int shadowsQuality);
+    void createGBuffers(int width, int height);
+    void createBloomBuffers(int width, int height);
+    void createSsaoBuffers(int width, int height);
+    void createSsrBuffers(int width, int height);
+    void createLightingOutputBuffers(int width, int height);
+    void createDepthBuffer(int width, int height);
 
+    // Helpers
     static D3D12_RESOURCE_DESC getBaseDescForFullscreenTexture(int width, int height);
 
     // Base objects
