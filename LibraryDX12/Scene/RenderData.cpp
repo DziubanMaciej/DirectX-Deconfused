@@ -245,23 +245,14 @@ inline D3D12_RESOURCE_DESC RenderData::getBaseDescForFullscreenTexture(int width
     return desc;
 }
 
-void PostProcessRenderTargets::resize(int width, int height) {
+void RenderData::PostProcessRenderTargets::resize(int width, int height) {
 
     //Description
-    D3D12_RESOURCE_DESC renderTargetDesc;
-    renderTargetDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    renderTargetDesc.Alignment = 0;
-    renderTargetDesc.Width = width;
-    renderTargetDesc.Height = height;
-    renderTargetDesc.DepthOrArraySize = 1;
-    renderTargetDesc.MipLevels = 1;
+    D3D12_RESOURCE_DESC renderTargetDesc = getBaseDescForFullscreenTexture(width, height);
     renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    renderTargetDesc.SampleDesc.Count = 1;
-    renderTargetDesc.SampleDesc.Quality = 0;
-    renderTargetDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
     renderTargetDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
-    for (int i = 0; i <= 1; i++) { // Initialize resource0 and resource1 the same way
+    for (int i = 0; i <= 1; i++) { // Initialize resource0 and resource1 in the same way
         resources[i] = std::make_unique<Resource>(
             device,
             &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),

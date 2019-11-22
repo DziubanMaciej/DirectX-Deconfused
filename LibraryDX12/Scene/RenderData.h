@@ -8,19 +8,19 @@
 
 #include <vector>
 
-struct PostProcessRenderTargets : AlternatingResources {
-    using AlternatingResources::AlternatingResources;
-    void resize(int width, int height) override;
-};
-
 class RenderData {
 public:
+    struct PostProcessRenderTargets : AlternatingResources {
+        using AlternatingResources::AlternatingResources;
+        void resize(int width, int height) override;
+    };
+
     RenderData(ID3D12DevicePtr &device, DescriptorController &descriptorController, int width, int height);
     ~RenderData();
     void resize(int width, int height);
 
     // Getters
-    PostProcessRenderTargets &getPostProcessRenderTargets() { return postProcessRenderTargets; }
+    AlternatingResources &getPostProcessRenderTargets() { return postProcessRenderTargets; }
     Resource &getShadowMap(int i) { return *shadowMap[i]; }
     UINT getShadowMapSize() { return shadowMapSize; }
     Resource &getDepthStencilBuffer() { return *depthStencilBuffer; };

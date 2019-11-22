@@ -150,7 +150,7 @@ size_t SceneImpl::getEnabledPostProcessesCount() const {
 }
 
 void SceneImpl::getAndPrepareSourceAndDestinationForPostProcess(CommandList &commandList,
-                                                                PostProcessRenderTargets &renderTargets,
+                                                                AlternatingResources &renderTargets,
                                                                 bool first, bool last,
                                                                 Resource *initialInput, Resource *finalOutput,
                                                                 Resource *&outSource, Resource *&outDestination, bool compute) {
@@ -507,7 +507,7 @@ void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, 
 }
 
 void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList, VertexBuffer &fullscreenVB,
-                                    Resource *input, PostProcessRenderTargets &renderTargets, Resource *output,
+                                    Resource *input, AlternatingResources &renderTargets, Resource *output,
                                     size_t enabledPostProcessesCount, float screenWidth, float screenHeight) {
     commandList.RSSetViewport(0.f, 0.f, screenWidth, screenHeight);
     commandList.IASetPrimitiveTopologyTriangleList();
@@ -533,7 +533,7 @@ void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesse
 }
 
 void SceneImpl::renderBloom(SwapChain &swapChain, CommandList &commandList, PostProcessImpl &bloomBlurEffect, VertexBuffer &fullscreenVB,
-                            Resource &bloomMap, PostProcessRenderTargets &renderTargets, Resource &output) {
+                            Resource &bloomMap, AlternatingResources &renderTargets, Resource &output) {
     // Blur the bloom map
     renderPostProcess(bloomBlurEffect, commandList, fullscreenVB,
                       &bloomMap, renderTargets, &bloomMap,
@@ -553,7 +553,7 @@ void SceneImpl::renderBloom(SwapChain &swapChain, CommandList &commandList, Post
 }
 
 void SceneImpl::renderPostProcess(PostProcessImpl &postProcess, CommandList &commandList, VertexBuffer &fullscreenVB,
-                                  Resource *input, PostProcessRenderTargets &renderTargets, Resource *output,
+                                  Resource *input, AlternatingResources &renderTargets, Resource *output,
                                   float screenWidth, float screenHeight) {
     assert(postProcess.isEnabled());
     Resource *source{}, *destination{};
