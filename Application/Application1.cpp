@@ -57,7 +57,7 @@ private:
 
         for (const auto &data : meshesCreationData) {
             const bool asynchronousLoading = true;
-            meshes[data.name] = DXD::Mesh::createFromObj(*application, data.filePath, data.loadTextures,
+            meshes[data.name] = DXD::Mesh::createFromObj(data.filePath, data.loadTextures,
                                                          data.computeTangents, asynchronousLoading);
             assert(meshes[data.name]);
         }
@@ -239,7 +239,7 @@ private:
             {"grass", L"Resources/textures/grass.jpg", true}};
 
         for (const auto &data : texturesCreationData) {
-            textures[data.name] = DXD::Texture::createFromFile(*application, data.path, data.asynchronousLoading);
+            textures[data.name] = DXD::Texture::createFromFile(data.path, data.asynchronousLoading);
             assert(textures[data.name]);
         }
     }
@@ -293,7 +293,7 @@ private:
             {"rectangle-alpha", "rectangle-alpha", 165, 0, 33, 0, DXD::Sprite::HorizontalAlignment::LEFT, DXD::Sprite::VerticalAlignment::TOP}};
 
         for (const auto &data : spriteTexturesCreationData) {
-            spriteTextures[data.name] = DXD::Texture::createFromFile(*application, data.path, false);
+            spriteTextures[data.name] = DXD::Texture::createFromFile(data.path, false);
             assert(spriteTextures[data.name]);
         }
         for (const auto &data : spritesCreationData) {

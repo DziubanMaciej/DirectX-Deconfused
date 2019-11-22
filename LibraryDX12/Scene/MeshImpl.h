@@ -43,8 +43,8 @@ public:
 
 protected:
     friend class DXD::Mesh;
-    MeshImpl(ApplicationImpl &application, const std::wstring &filePath,
-             bool loadTextureCoordinates, bool computeTangents, bool asynchronousLoading);
+    MeshImpl(const std::wstring &filePath, bool loadTextureCoordinates,
+             bool computeTangents, bool asynchronousLoading);
     ~MeshImpl() override;
 
 public:
@@ -59,9 +59,6 @@ public:
     auto &getIndexBuffer() { return indexBuffer; }
 
 protected:
-    // Context
-    ApplicationImpl &application;
-
     // CPU data, set during load time
     MeshType meshType = UNKNOWN;
     UINT vertexSizeInBytes = 0;

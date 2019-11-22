@@ -34,7 +34,7 @@ using TextureAsyncLoadableObject = AsyncLoadableObject<TextureCpuLoadArgs, Textu
 class TextureImpl : public DXD::Texture, public Resource, public TextureAsyncLoadableObject {
 protected:
     friend class DXD::Texture;
-    TextureImpl(ApplicationImpl &application, const std::wstring &filePath, bool asynchronousLoading);
+    TextureImpl(const std::wstring &filePath, bool asynchronousLoading);
     ~TextureImpl() override;
 
 private:

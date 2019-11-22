@@ -17,12 +17,12 @@
 // ----------------------------------------------------------------- Creation and destruction
 
 namespace DXD {
-std::unique_ptr<Texture> Texture::createFromFile(Application &application, const std::wstring &filePath, bool asynchronousLoading) {
-    return std::unique_ptr<Texture>(new TextureImpl(*static_cast<ApplicationImpl *>(&application), filePath, asynchronousLoading));
+std::unique_ptr<Texture> Texture::createFromFile(const std::wstring &filePath, bool asynchronousLoading) {
+    return std::unique_ptr<Texture>(new TextureImpl(filePath, asynchronousLoading));
 }
 } // namespace DXD
 
-TextureImpl::TextureImpl(ApplicationImpl &application, const std::wstring &filePath, bool asynchronousLoading) {
+TextureImpl::TextureImpl(const std::wstring &filePath, bool asynchronousLoading) {
     const TextureCpuLoadArgs cpuLoadArgs{filePath};
     this->cpuGpuLoad(cpuLoadArgs, asynchronousLoading);
 }

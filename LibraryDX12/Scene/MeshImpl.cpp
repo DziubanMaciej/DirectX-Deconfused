@@ -14,17 +14,14 @@ namespace DXD {
 
 // ----------------------------------------------------------------- Creation and destruction
 
-std::unique_ptr<Mesh> Mesh::createFromObj(DXD::Application &application, const std::wstring &filePath,
-                                          bool loadTextureCoordinates, bool computeTangents,
-                                          bool asynchronousLoading) {
-    return std::unique_ptr<Mesh>(new MeshImpl(*static_cast<ApplicationImpl *>(&application),
-                                              filePath, loadTextureCoordinates, computeTangents, asynchronousLoading));
+std::unique_ptr<Mesh> Mesh::createFromObj(const std::wstring &filePath, bool loadTextureCoordinates,
+                                          bool computeTangents, bool asynchronousLoading) {
+    return std::unique_ptr<Mesh>(new MeshImpl(filePath, loadTextureCoordinates, computeTangents, asynchronousLoading));
 }
 } // namespace DXD
 
-MeshImpl::MeshImpl(ApplicationImpl &application, const std::wstring &filePath,
-                   bool loadTextureCoordinates, bool computeTangents, bool asynchronousLoading)
-    : application(application) {
+MeshImpl::MeshImpl(const std::wstring &filePath, bool loadTextureCoordinates,
+                   bool computeTangents, bool asynchronousLoading) {
     const MeshCpuLoadArgs cpuLoadArgs{filePath, loadTextureCoordinates, computeTangents};
     cpuGpuLoad(cpuLoadArgs, asynchronousLoading);
 }
@@ -201,8 +198,9 @@ void MeshImpl::gpuLoad(const MeshGpuLoadArgs &args) {
     const bool useIndexBuffer = args.indices.size() > 0;
 
     // Context
+    ApplicationImpl &application = ApplicationImpl::getInstance();
     ID3D12DevicePtr device = application.getDevice();
-    auto &commandQueue = application.getCopyCommandQueue();
+    CommandQueue &commandQueue = application.getCopyCommandQueue();
 
     // Record command list for GPU upload
     CommandList commandList{commandQueue};
