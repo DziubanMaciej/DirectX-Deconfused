@@ -39,6 +39,8 @@ public:
 private:
     void createShadowMaps(unsigned int shadowsQuality);
 
+    static D3D12_RESOURCE_DESC getBaseDescForFullscreenTexture(int width, int height);
+
     // Base objects
     ID3D12DevicePtr device = {};
 

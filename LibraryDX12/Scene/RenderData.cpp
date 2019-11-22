@@ -42,19 +42,9 @@ void RenderData::resize(int width, int height) {
     postProcessRenderTargets.resize(width, height);
 
     // GBuffer Albedo
-    D3D12_RESOURCE_DESC gBufferAlbedoDesc = {};
-    gBufferAlbedoDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    gBufferAlbedoDesc.Alignment = 0;
-    gBufferAlbedoDesc.Width = width;
-    gBufferAlbedoDesc.Height = height;
-    gBufferAlbedoDesc.DepthOrArraySize = 1;
-    gBufferAlbedoDesc.MipLevels = 1;
+    D3D12_RESOURCE_DESC gBufferAlbedoDesc = getBaseDescForFullscreenTexture(width, height);
     gBufferAlbedoDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    gBufferAlbedoDesc.SampleDesc.Count = 1;
-    gBufferAlbedoDesc.SampleDesc.Quality = 0;
-    gBufferAlbedoDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
     gBufferAlbedoDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-
     gBufferAlbedo = std::make_unique<Resource>(
         device,
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
@@ -64,22 +54,12 @@ void RenderData::resize(int width, int height) {
         nullptr);
     gBufferAlbedo->createSrv(nullptr);
     gBufferAlbedo->createRtv(nullptr);
-    gBufferAlbedo->getResource()->SetName(L"GBuffer Albedo");
+    SET_OBJECT_NAME(*gBufferAlbedo, L"GBuffer Albedo");
 
     // GBuffer Normal
-    D3D12_RESOURCE_DESC gBufferNormalDesc = {};
-    gBufferNormalDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    gBufferNormalDesc.Alignment = 0;
-    gBufferNormalDesc.Width = width;
-    gBufferNormalDesc.Height = height;
-    gBufferNormalDesc.DepthOrArraySize = 1;
-    gBufferNormalDesc.MipLevels = 1;
+    D3D12_RESOURCE_DESC gBufferNormalDesc = getBaseDescForFullscreenTexture(width, height);
     gBufferNormalDesc.Format = DXGI_FORMAT_R16G16B16A16_SNORM;
-    gBufferNormalDesc.SampleDesc.Count = 1;
-    gBufferNormalDesc.SampleDesc.Quality = 0;
-    gBufferNormalDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
     gBufferNormalDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-
     gBufferNormal = std::make_unique<Resource>(
         device,
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
@@ -89,22 +69,12 @@ void RenderData::resize(int width, int height) {
         nullptr);
     gBufferNormal->createSrv(nullptr);
     gBufferNormal->createRtv(nullptr);
-    gBufferNormal->getResource()->SetName(L"GBuffer Normal");
+    SET_OBJECT_NAME(*gBufferNormal, L"GBuffer Normal");
 
-    //GBuffer Specular
-    D3D12_RESOURCE_DESC gBufferSpecularDesc = {};
-    gBufferSpecularDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    gBufferSpecularDesc.Alignment = 0;
-    gBufferSpecularDesc.Width = width;
-    gBufferSpecularDesc.Height = height;
-    gBufferSpecularDesc.DepthOrArraySize = 1;
-    gBufferSpecularDesc.MipLevels = 1;
+    // GBuffer Specular
+    D3D12_RESOURCE_DESC gBufferSpecularDesc = getBaseDescForFullscreenTexture(width, height);
     gBufferSpecularDesc.Format = DXGI_FORMAT_R8G8_UNORM;
-    gBufferSpecularDesc.SampleDesc.Count = 1;
-    gBufferSpecularDesc.SampleDesc.Quality = 0;
-    gBufferSpecularDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
     gBufferSpecularDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-
     gBufferSpecular = std::make_unique<Resource>(
         device,
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
@@ -114,49 +84,28 @@ void RenderData::resize(int width, int height) {
         nullptr);
     gBufferSpecular->createSrv(nullptr);
     gBufferSpecular->createRtv(nullptr);
-    gBufferSpecular->getResource()->SetName(L"GBuffer Specular");
+    SET_OBJECT_NAME(*gBufferSpecular, L"GBuffer Specular");
 
     // Bloom map
-    D3D12_RESOURCE_DESC renderTargetDesc = {};
-    renderTargetDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    renderTargetDesc.Alignment = 0;
-    renderTargetDesc.Width = width;
-    renderTargetDesc.Height = height;
-    renderTargetDesc.DepthOrArraySize = 1;
-    renderTargetDesc.MipLevels = 1;
-    renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    renderTargetDesc.SampleDesc.Count = 1;
-    renderTargetDesc.SampleDesc.Quality = 0;
-    renderTargetDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    renderTargetDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-
+    D3D12_RESOURCE_DESC bloomMapDesc = getBaseDescForFullscreenTexture(width, height);
+    bloomMapDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    bloomMapDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
     bloomMap = std::make_unique<Resource>(
         device,
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
-        &renderTargetDesc,
+        &bloomMapDesc,
         D3D12_RESOURCE_STATE_RENDER_TARGET,
         nullptr);
     bloomMap->createSrv(nullptr);
     bloomMap->createRtv(nullptr);
     bloomMap->createUav(nullptr);
-    bloomMap->getResource()->SetName(L"Bloom map");
     SET_OBJECT_NAME(*bloomMap, L"BloomMap");
 
     // SSAO map
-    D3D12_RESOURCE_DESC ssaoMapDesc = {};
-    ssaoMapDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    ssaoMapDesc.Alignment = 0;
-    ssaoMapDesc.Width = std::max(width / 2, 1);
-    ssaoMapDesc.Height = std::max(height / 2, 1);
-    ssaoMapDesc.DepthOrArraySize = 1;
-    ssaoMapDesc.MipLevels = 1;
+    D3D12_RESOURCE_DESC ssaoMapDesc = getBaseDescForFullscreenTexture(width, height);
     ssaoMapDesc.Format = DXGI_FORMAT_R8_UNORM;
-    ssaoMapDesc.SampleDesc.Count = 1;
-    ssaoMapDesc.SampleDesc.Quality = 0;
-    ssaoMapDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
     ssaoMapDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-
     ssaoMap = std::make_unique<Resource>(
         device,
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
@@ -166,23 +115,12 @@ void RenderData::resize(int width, int height) {
         nullptr);
     ssaoMap->createSrv(nullptr);
     ssaoMap->createRtv(nullptr);
-    ssaoMap->getResource()->SetName(L"SSAO map");
     SET_OBJECT_NAME(*ssaoMap, L"SsaoMap");
 
     // SSR map
-    D3D12_RESOURCE_DESC ssrMapDesc = {};
-    ssrMapDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    ssrMapDesc.Alignment = 0;
-    ssrMapDesc.Width = std::max(width / 2, 1);
-    ssrMapDesc.Height = std::max(height / 2, 1);
-    ssrMapDesc.DepthOrArraySize = 1;
-    ssrMapDesc.MipLevels = 1;
+    D3D12_RESOURCE_DESC ssrMapDesc = getBaseDescForFullscreenTexture(width, height);
     ssrMapDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    ssrMapDesc.SampleDesc.Count = 1;
-    ssrMapDesc.SampleDesc.Quality = 0;
-    ssrMapDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
     ssrMapDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-
     ssrMap = std::make_unique<Resource>(
         device,
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
@@ -192,23 +130,12 @@ void RenderData::resize(int width, int height) {
         nullptr);
     ssrMap->createSrv(nullptr);
     ssrMap->createRtv(nullptr);
-    ssrMap->getResource()->SetName(L"SSR map");
     SET_OBJECT_NAME(*ssrMap, L"SsrMap");
 
     // SSR blurred map
-    D3D12_RESOURCE_DESC ssrBlurredMapDesc = {};
-    ssrBlurredMapDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    ssrBlurredMapDesc.Alignment = 0;
-    ssrBlurredMapDesc.Width = width;
-    ssrBlurredMapDesc.Height = height;
-    ssrBlurredMapDesc.DepthOrArraySize = 1;
-    ssrBlurredMapDesc.MipLevels = 1;
+    D3D12_RESOURCE_DESC ssrBlurredMapDesc = getBaseDescForFullscreenTexture(width, height);
     ssrBlurredMapDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    ssrBlurredMapDesc.SampleDesc.Count = 1;
-    ssrBlurredMapDesc.SampleDesc.Quality = 0;
-    ssrBlurredMapDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
     ssrBlurredMapDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-
     ssrBlurredMap = std::make_unique<Resource>(
         device,
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
@@ -218,34 +145,22 @@ void RenderData::resize(int width, int height) {
         nullptr);
     ssrBlurredMap->createSrv(nullptr);
     ssrBlurredMap->createRtv(nullptr);
-    ssrBlurredMap->getResource()->SetName(L"SSR blurred map");
     SET_OBJECT_NAME(*ssrBlurredMap, L"SsrBlurredMap");
 
     // Lighting output
-    D3D12_RESOURCE_DESC loDesc = {};
-    loDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    loDesc.Alignment = 0;
-    loDesc.Width = width;
-    loDesc.Height = height;
-    loDesc.DepthOrArraySize = 1;
-    loDesc.MipLevels = 1;
-    loDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    loDesc.SampleDesc.Count = 1;
-    loDesc.SampleDesc.Quality = 0;
-    loDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    loDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
-
+    D3D12_RESOURCE_DESC lightingOutputDesc = getBaseDescForFullscreenTexture(width, height);
+    lightingOutputDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    lightingOutputDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
     lightingOutput = std::make_unique<Resource>(
         device,
         &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
         D3D12_HEAP_FLAG_NONE,
-        &loDesc,
+        &lightingOutputDesc,
         D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
         nullptr);
     lightingOutput->createSrv(nullptr);
     lightingOutput->createRtv(nullptr);
-    lightingOutput->getResource()->SetName(L"LO");
-    SET_OBJECT_NAME(*lightingOutput, L"LO");
+    SET_OBJECT_NAME(*lightingOutput, L"LightingOutput");
 
     const int shadowsQuality = ApplicationImpl::getInstance().getSettingsImpl().getShadowsQuality();
     createShadowMaps(shadowsQuality);
@@ -314,7 +229,24 @@ void RenderData::createShadowMaps(unsigned int shadowsQuality) {
     }
 }
 
+inline D3D12_RESOURCE_DESC RenderData::getBaseDescForFullscreenTexture(int width, int height) {
+    D3D12_RESOURCE_DESC desc = {};
+    desc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    desc.Alignment = 0;
+    desc.Width = width;
+    desc.Height = height;
+    desc.DepthOrArraySize = 1;
+    desc.MipLevels = 1;
+    desc.Format = DXGI_FORMAT_UNKNOWN;
+    desc.SampleDesc.Count = 1;
+    desc.SampleDesc.Quality = 0;
+    desc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    desc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    return desc;
+}
+
 void PostProcessRenderTargets::resize(int width, int height) {
+
     //Description
     D3D12_RESOURCE_DESC renderTargetDesc;
     renderTargetDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
