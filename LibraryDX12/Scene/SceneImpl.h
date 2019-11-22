@@ -26,7 +26,7 @@ struct PostProcessRenderTargets;
 class SceneImpl : public DXD::Scene {
 protected:
     friend class DXD::Scene;
-    SceneImpl(ApplicationImpl &application);
+    SceneImpl();
 
 public:
     void setBackgroundColor(float r, float g, float b) override;
@@ -75,10 +75,10 @@ protected:
 
     // Render methods
     void renderShadowMaps(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
-    void renderGBuffer(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, VertexBuffer &fullscreenVB);
-    void renderSSAO(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, VertexBuffer &fullscreenVB);
-    void renderLighting(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output, VertexBuffer &fullscreenVB);
-    void renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output, VertexBuffer &fullscreenVB);
+    void renderGBuffer(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
+    void renderSSAO(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
+    void renderLighting(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output);
+    void renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output);
     static void renderPostProcess(PostProcessImpl &postProcess, CommandList &commandList, VertexBuffer &fullscreenVB,
                                   Resource *input, PostProcessRenderTargets &renderTargets, Resource *output,
                                   float screenWidth, float screenHeight);
@@ -88,14 +88,7 @@ protected:
     static void renderBloom(SwapChain &swapChain, CommandList &commandList, PostProcessImpl &bloomBlurEffect, VertexBuffer &fullscreenVB,
                             Resource &bloomMap, PostProcessRenderTargets &renderTargets, Resource &output);
     void renderD2DTexts(SwapChain &swapChain);
-    void renderSprite(SpriteImpl *sprite, SwapChain &swapChain, CommandList &commandList, VertexBuffer &fullscreenVB);
-
-    // Context
-    ApplicationImpl &application;
-
-    // Buffers
-    ConstantBuffer lightConstantBuffer;
-    std::unique_ptr<VertexBuffer> postProcessVB;
+    void renderSprite(SwapChain &swapChain, CommandList &commandList, SpriteImpl *sprite, VertexBuffer &fullscreenVB);
 
     // Data set by user
     FLOAT backgroundColor[3] = {};
@@ -106,15 +99,5 @@ protected:
     std::vector<TextImpl *> texts;
     std::vector<PostProcessImpl *> postProcesses = {};
     std::vector<SpriteImpl *> sprites = {};
-
     CameraImpl *camera;
-
-    XMFLOAT3 postProcessSquare[6] =
-        {
-            {-1.0f, -1.0f, 0.0f},
-            {-1.0f, 1.0f, 0.0f},
-            {1.0f, 1.0f, 0.0f},
-            {-1.0f, -1.0f, 0.0f},
-            {1.0f, 1.0f, 0.0f},
-            {1.0f, -1.0f, 0.0f}};
 };

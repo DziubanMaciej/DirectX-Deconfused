@@ -14,33 +14,20 @@
 #include <cassert>
 
 namespace DXD {
-std::unique_ptr<Scene> Scene::create(DXD::Application &application) {
-    return std::unique_ptr<Scene>{new SceneImpl(*static_cast<ApplicationImpl *>(&application))};
+std::unique_ptr<Scene> Scene::create() {
+    return std::unique_ptr<Scene>{new SceneImpl()};
 }
 } // namespace DXD
 
-SceneImpl::SceneImpl(ApplicationImpl &application)
-    : application(application),
-      lightConstantBuffer(application.getDevice(), application.getDescriptorController(), sizeof(LightingHeapCB)) {
-
-    ID3D12DevicePtr device = application.getDevice();
-    auto &commandQueue = application.getDirectCommandQueue();
-
-    // Record command list for GPU upload
-    CommandList commandList{commandQueue};
-    postProcessVB = std::make_unique<VertexBuffer>(device, commandList, postProcessSquare, 6, 12);
-    SET_OBJECT_NAME(*postProcessVB, L"PostProcessVB");
-    commandList.close();
-
-    // Execute and register obtained allocator and lists to the manager
-    const uint64_t fenceValue = commandQueue.executeCommandListAndSignal(commandList);
+SceneImpl::SceneImpl() {
+    auto device = ApplicationImpl::getInstance().getDevice();
 
     // QUERY!
     D3D12_QUERY_HEAP_DESC queryHeapDesc = {};
     queryHeapDesc.Count = 2;
     queryHeapDesc.Type = D3D12_QUERY_HEAP_TYPE_TIMESTAMP;
     queryHeapDesc.NodeMask = 0;
-    throwIfFailed(application.getDevice()->CreateQueryHeap(&queryHeapDesc, IID_PPV_ARGS(&queryHeap)));
+    throwIfFailed(device->CreateQueryHeap(&queryHeapDesc, IID_PPV_ARGS(&queryHeap)));
 
     // query desc
     D3D12_RESOURCE_DESC queryDestDesc = {};
@@ -243,7 +230,7 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
     }
 }
 
-void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, VertexBuffer &fullscreenVB) {
+void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, CommandList &commandList) {
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
@@ -342,7 +329,7 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
     commandList.transitionBarrier(renderData.getDepthStencilBuffer(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 }
 
-void SceneImpl::renderSSAO(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, VertexBuffer &fullscreenVB) {
+void SceneImpl::renderSSAO(SwapChain &swapChain, RenderData &renderData, CommandList &commandList) {
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(std::max(swapChain.getWidth() / 2, 1u)), static_cast<float>(std::max(swapChain.getHeight() / 2, 1u)));
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
@@ -364,14 +351,14 @@ void SceneImpl::renderSSAO(SwapChain &swapChain, RenderData &renderData, Command
     ssaoCB.projMatrixInverse = camera->getInvProjectionMatrix();
     commandList.setRoot32BitConstant(1, ssaoCB);
 
-    commandList.IASetVertexBuffer(fullscreenVB);
+    commandList.IASetVertexBuffer(renderData.getFullscreenVB());
 
     commandList.draw(6u);
 
     commandList.transitionBarrier(renderData.getSsaoMap(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 }
 
-void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output, VertexBuffer &fullscreenVB) {
+void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output) {
 
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     commandList.RSSetScissorRectNoScissor();
@@ -389,6 +376,7 @@ void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, Com
     commandList.OMSetRenderTargetsNoDepth(lightingRts);
 
     // LightingConstantBuffer
+    ConstantBuffer &lightConstantBuffer = renderData.getLightingConstantBuffer();
     auto lightCb = lightConstantBuffer.getData<LightingHeapCB>();
     lightCb->cameraPosition = XMFLOAT4(camera->getEyePosition().x, camera->getEyePosition().y, camera->getEyePosition().z, 1);
     lightCb->lightsSize = 0;
@@ -424,12 +412,12 @@ void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, Com
     lcb.enableSSAO = ApplicationImpl::getInstance().getSettings().getSsaoEnabled();
     commandList.setRoot32BitConstant(1, lcb);
 
-    commandList.IASetVertexBuffer(fullscreenVB);
+    commandList.IASetVertexBuffer(renderData.getFullscreenVB());
 
     commandList.draw(6u);
 }
 
-void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output, VertexBuffer &fullscreenVB) {
+void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output) {
 
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(std::max(swapChain.getWidth(), 1u)), static_cast<float>(std::max(swapChain.getHeight(), 1u)));
     commandList.RSSetScissorRectNoScissor();
@@ -450,15 +438,15 @@ void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, 
 
     SsrCB ssrCB;
     ssrCB.cameraPosition = XMFLOAT4(camera->getEyePosition().x, camera->getEyePosition().y, camera->getEyePosition().z, 1);
-    ssrCB.screenWidth = static_cast<float>(std::max(swapChain.getWidth()/2, 1u));
-    ssrCB.screenHeight = static_cast<float>(std::max(swapChain.getHeight()/2, 1u));
+    ssrCB.screenWidth = static_cast<float>(std::max(swapChain.getWidth() / 2, 1u));
+    ssrCB.screenHeight = static_cast<float>(std::max(swapChain.getHeight() / 2, 1u));
     ssrCB.viewMatrixInverse = camera->getInvViewMatrix();
     ssrCB.projMatrixInverse = camera->getInvProjectionMatrix();
     ssrCB.viewProjectionMatrix = camera->getViewProjectionMatrix();
     ssrCB.clearColor = XMFLOAT4(backgroundColor[0], backgroundColor[1], backgroundColor[2], 1.0f);
     commandList.setRoot32BitConstant(1, ssrCB);
 
-    commandList.IASetVertexBuffer(fullscreenVB);
+    commandList.IASetVertexBuffer(renderData.getFullscreenVB());
 
     commandList.draw(6u);
 
@@ -484,7 +472,7 @@ void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, 
     ssrMergeCB.screenHeight = static_cast<float>(swapChain.getHeight());
     commandList.setRoot32BitConstant(1, ssrMergeCB);
 
-    commandList.IASetVertexBuffer(fullscreenVB);
+    commandList.IASetVertexBuffer(renderData.getFullscreenVB());
 
     commandList.draw(6u);
 
@@ -508,7 +496,7 @@ void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, 
 
     commandList.setRoot32BitConstant(1, ssrMergeCB);
 
-    commandList.IASetVertexBuffer(fullscreenVB);
+    commandList.IASetVertexBuffer(renderData.getFullscreenVB());
 
     ///commandList.getCommandList()->EndQuery(queryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0);
 
@@ -688,7 +676,7 @@ void SceneImpl::renderD2DTexts(SwapChain &swapChain) {
     throwIfFailed(d2dDeviceContext->EndDraw());
 }
 
-void SceneImpl::renderSprite(SpriteImpl *sprite, SwapChain &swapChain, CommandList &commandList, VertexBuffer &fullscreenVB) {
+void SceneImpl::renderSprite(SwapChain &swapChain, CommandList &commandList, SpriteImpl *sprite, VertexBuffer &fullscreenVB) {
     auto &tex = sprite->getTextureImpl();
     auto &backBuffer = swapChain.getCurrentBackBuffer();
     // Prepare constant buffer
@@ -707,6 +695,7 @@ void SceneImpl::renderSprite(SpriteImpl *sprite, SwapChain &swapChain, CommandLi
 }
 
 void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
+    auto &application = ApplicationImpl::getInstance();
     auto &commandQueue = application.getDirectCommandQueue();
     auto &backBuffer = swapChain.getCurrentBackBuffer();
     application.flushAllResources();
@@ -725,7 +714,7 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     // GBuffer
     CommandList commandListGBuffer{commandQueue};
     SET_OBJECT_NAME(commandListGBuffer, L"cmdListGBuffer");
-    renderGBuffer(swapChain, renderData, commandListGBuffer, *postProcessVB);
+    renderGBuffer(swapChain, renderData, commandListGBuffer);
     commandListGBuffer.close();
     commandQueue.executeCommandListAndSignal(commandListGBuffer);
 
@@ -733,7 +722,7 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     if (ApplicationImpl::getInstance().getSettings().getSsaoEnabled()) {
         CommandList commandListSSAO{commandQueue};
         SET_OBJECT_NAME(commandListSSAO, L"cmdListSSAO");
-        renderSSAO(swapChain, renderData, commandListSSAO, *postProcessVB);
+        renderSSAO(swapChain, renderData, commandListSSAO);
         commandListSSAO.close();
         commandQueue.executeCommandListAndSignal(commandListSSAO);
     }
@@ -748,21 +737,21 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
         // Lighting
         CommandList commandListLighting{commandQueue};
         SET_OBJECT_NAME(commandListLighting, L"cmdListLighting");
-        renderLighting(swapChain, renderData, commandListLighting, renderData.getLightingOutput(), *postProcessVB);
+        renderLighting(swapChain, renderData, commandListLighting, renderData.getLightingOutput());
         commandListLighting.close();
         commandQueue.executeCommandListAndSignal(commandListLighting);
 
         // SSR
         CommandList commandListSSR{commandQueue};
         SET_OBJECT_NAME(commandListSSR, L"cmdListSSR");
-        renderSSRandMerge(swapChain, renderData, commandListSSR, renderLightingOutput, *postProcessVB);
+        renderSSRandMerge(swapChain, renderData, commandListSSR, renderLightingOutput);
         commandListSSR.close();
         commandQueue.executeCommandListAndSignal(commandListSSR);
     } else {
         // Lighting
         CommandList commandListLighting{commandQueue};
         SET_OBJECT_NAME(commandListLighting, L"cmdListLighting");
-        renderLighting(swapChain, renderData, commandListLighting, renderLightingOutput, *postProcessVB);
+        renderLighting(swapChain, renderData, commandListLighting, renderLightingOutput);
         commandListLighting.close();
         commandQueue.executeCommandListAndSignal(commandListLighting);
     }
@@ -793,11 +782,11 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     commandListPostProcess.IASetPrimitiveTopologyTriangleList();
     if (shouldRenderPostProcesses) {
         renderData.getPostProcessRenderTargets().swapResources();
-        renderPostProcesses(postProcesses, commandListPostProcess, *postProcessVB,
+        renderPostProcesses(postProcesses, commandListPostProcess, renderData.getFullscreenVB(),
                             &renderData.getPostProcessRenderTargets().getSource(), renderData.getPostProcessRenderTargets(), &backBuffer,
                             postProcessesCount, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     }
-    renderBloom(swapChain, commandListPostProcess, renderData.getPostProcessForBloom(), *postProcessVB,
+    renderBloom(swapChain, commandListPostProcess, renderData.getPostProcessForBloom(), renderData.getFullscreenVB(),
                 renderData.getBloomMap(), renderData.getPostProcessRenderTargets(), backBuffer);
 
     // Close command list and submit it to the GPU
@@ -810,7 +799,7 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     commandListSprite.IASetPrimitiveTopologyTriangleList();
     //auto &tex = DXD::Texture::createFromFile(this->application, L"Resources/textures/brickwall.jpg", false);
     for (auto &sprite : sprites)
-        renderSprite(sprite, swapChain, commandListSprite, *postProcessVB);
+        renderSprite(swapChain, commandListSprite, sprite, renderData.getFullscreenVB());
 
     // If there are no D2D content to render, there will be no implicit transition to present, hence the manual barrier
     if (texts.empty()) {

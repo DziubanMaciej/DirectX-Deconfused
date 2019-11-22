@@ -320,7 +320,7 @@ private:
 
     void prepScene() {
         DXD::log("Preparing scene...\n");
-        scene = DXD::Scene::create(*application);
+        scene = DXD::Scene::create();
         scene->setBackgroundColor(0.7f, 1.0f, 1.0f);
         scene->setAmbientLight(1.0f, 1.0f, 250.0f / 255.0f);
         scene->setCamera(*camera);

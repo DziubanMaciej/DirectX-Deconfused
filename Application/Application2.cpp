@@ -36,7 +36,7 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int s
     auto handler = Handler{};
     handler.object = cube.get();
 
-    auto scene = DXD::Scene::create(*application);
+    auto scene = DXD::Scene::create();
     scene->setBackgroundColor(0, 0.2f, 0.2f);
     scene->addObject(*cube);
     scene->addObject(*wall);

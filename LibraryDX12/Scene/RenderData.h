@@ -32,7 +32,9 @@ public:
     Resource &getGBufferAlbedo() { return *gBufferAlbedo; }
     Resource &getGBufferNormal() { return *gBufferNormal; }
     Resource &getGBufferSpecular() { return *gBufferSpecular; }
-    PostProcessImpl &getPostProcessForBloom() { return *static_cast<PostProcessImpl*>(postProcessForBloom.get()); }
+    PostProcessImpl &getPostProcessForBloom() { return *static_cast<PostProcessImpl *>(postProcessForBloom.get()); }
+    VertexBuffer &getFullscreenVB() { return *fullscreenVB; }
+    ConstantBuffer &getLightingConstantBuffer() { return lightingConstantBuffer; }
 
 private:
     void createShadowMaps(unsigned int shadowsQuality);
@@ -52,6 +54,8 @@ private:
     std::unique_ptr<Resource> lightingOutput;
     std::unique_ptr<Resource> shadowMap[8] = {};
     std::unique_ptr<Resource> depthStencilBuffer = {};
+    std::unique_ptr<VertexBuffer> fullscreenVB;
+    ConstantBuffer lightingConstantBuffer;
 
     // Numerical state
     UINT shadowMapSize{};

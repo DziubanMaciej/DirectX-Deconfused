@@ -62,8 +62,8 @@ public:
     /// @}
 
     /// Factory function for creating the Scene instance
-    /// \param application execution for the object
-    static std::unique_ptr<Scene> create(DXD::Application &application);
+    /// \return Created scene
+    static std::unique_ptr<Scene> create();
     virtual ~Scene() = default;
 
 protected:

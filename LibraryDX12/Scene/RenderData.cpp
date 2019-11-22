@@ -2,16 +2,34 @@
 
 #include "Application/ApplicationImpl.h"
 #include "ConstantBuffers/ConstantBuffers.h"
+#include "Resource/VertexOrIndexBuffer.h"
 #include "Utility/DxObjectNaming.h"
 
 RenderData::RenderData(ID3D12DevicePtr &device, DescriptorController &descriptorController, int width, int height)
     : device(device),
       postProcessRenderTargets(device),
-      postProcessForBloom(DXD::PostProcess::create()) {
+      postProcessForBloom(DXD::PostProcess::create()),
+      lightingConstantBuffer(ApplicationImpl::getInstance().getDevice(), ApplicationImpl::getInstance().getDescriptorController(), sizeof(LightingHeapCB)) {
     postProcessForBloom->setGaussianBlur(3, 5);
     ApplicationImpl::getInstance().getSettingsImpl().registerHandler<SettingsImpl::ShadowsQuality>([this](const SettingsData &data) {
         this->createShadowMaps(std::get<SettingsImpl::ShadowsQuality>(data).value);
     });
+
+    // Record command list for GPU upload and submit to gpu
+    auto &commandQueue = ApplicationImpl::getInstance().getDirectCommandQueue();
+    XMFLOAT3 postProcessSquare[6] =
+        {
+            {-1.0f, -1.0f, 0.0f},
+            {-1.0f, 1.0f, 0.0f},
+            {1.0f, 1.0f, 0.0f},
+            {-1.0f, -1.0f, 0.0f},
+            {1.0f, 1.0f, 0.0f},
+            {1.0f, -1.0f, 0.0f}};
+    CommandList commandList{commandQueue};
+    fullscreenVB = std::make_unique<VertexBuffer>(device, commandList, postProcessSquare, 6, 12);
+    SET_OBJECT_NAME(*fullscreenVB, L"FullscreenVB");
+    commandList.close();
+    const uint64_t fenceValue = commandQueue.executeCommandListAndSignal(commandList);
 }
 
 RenderData::~RenderData() {
