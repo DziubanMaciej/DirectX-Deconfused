@@ -329,7 +329,8 @@ void WindowImpl::messageLoop() {
 }
 
 void WindowImpl::destroy() {
-    ::DestroyWindow(windowHandle);
+    // Pushes close event to the message queue. DestroyWindow works synchronously and fails if called during onUpdate()
+    ::PostMessage(windowHandle, WM_CLOSE, 0, 0);
 }
 
 HINSTANCE WindowImpl::getInstance() const {
