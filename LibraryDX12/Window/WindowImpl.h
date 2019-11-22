@@ -14,7 +14,7 @@ class SceneImpl;
 class WindowImpl : public DXD::Window {
 protected:
     friend class DXD::Window;
-    WindowImpl(DXD::Application &application, const std::wstring &windowClassName, const std::wstring &windowTitle, HINSTANCE hInstanc, Bounds bounds);
+    WindowImpl(const std::wstring &windowTitle, HINSTANCE hInstanc, Bounds bounds);
 
 public:
     ~WindowImpl() override;
@@ -64,15 +64,20 @@ protected:
 
     using Clock = std::chrono::high_resolution_clock;
 
+    // Window data
     ApplicationImpl &application;
     const std::wstring windowClassName;
     const HINSTANCE hInstance;
     const HWND windowHandle;
+    Clock::time_point lastFrameTime;
+    FullscreenData fullscreenData = {}; // Used to restore position and size after exiting fullscreen mode
+
+    // Subobjects
     SwapChain swapChain;
     RenderData renderData;
-    Clock::time_point lastFrameTime;
+
+    // Set by user
     SceneImpl *scene = nullptr;
-    FullscreenData fullscreenData = {}; // Used to restore position and size after exiting fullscreen mode
 
     static constexpr uint32_t swapChainBufferCount = 3u; // TODO make this configurable from api?
 };

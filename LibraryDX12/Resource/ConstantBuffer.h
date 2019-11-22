@@ -12,7 +12,7 @@ class DescriptorController;
 // TODO: buffer versioning
 class ConstantBuffer : public Resource {
 public:
-    ConstantBuffer(ID3D12DevicePtr device, DescriptorController &descriptorController, UINT size);
+    ConstantBuffer(UINT size);
     ~ConstantBuffer() override;
 
     template <typename CbType>

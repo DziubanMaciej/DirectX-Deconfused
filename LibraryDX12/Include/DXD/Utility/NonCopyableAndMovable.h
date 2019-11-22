@@ -8,8 +8,8 @@ struct EXPORT NonCopyable {
     NonCopyable() = default;
     NonCopyable(const NonCopyable &) = delete;
     NonCopyable &operator=(const NonCopyable &) = delete;
-    NonCopyable(NonCopyable&&) = default;
-    NonCopyable &operator=(NonCopyable&&) = default;
+    NonCopyable(NonCopyable &&) = default;
+    NonCopyable &operator=(NonCopyable &&) = default;
 };
 
 struct EXPORT NonMovable {
@@ -27,5 +27,14 @@ struct EXPORT NonCopyableAndMovable {
     NonCopyableAndMovable(NonCopyableAndMovable &&) = delete;
     NonCopyableAndMovable &operator=(NonCopyableAndMovable &&) = delete;
 };
+
+struct EXPORT NonInstantiatable {
+    NonInstantiatable() = delete;
+    NonInstantiatable(const NonInstantiatable &) = delete;
+    NonInstantiatable &operator=(const NonInstantiatable &) = delete;
+    NonInstantiatable(NonInstantiatable &&) = delete;
+    NonInstantiatable &operator=(NonInstantiatable &&) = delete;
+};
+
 /// @endcond
 } // namespace DXD

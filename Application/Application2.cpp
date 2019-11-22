@@ -43,7 +43,7 @@ int __stdcall WinMain(HINSTANCE hInstance, HINSTANCE hprev, LPSTR cmdline, int s
     scene->addLight(*light);
     scene->setCamera(*camera);
 
-    auto window = DXD::Window::create(*application, L"myWindow", L"myWindow", hInstance, 800, 600);
+    auto window = DXD::Window::create(L"myWindow", hInstance, 800, 600);
     window->setScene(*scene);
     application->setCallbackHandler(&handler);
     window->show();

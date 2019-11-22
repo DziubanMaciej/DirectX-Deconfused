@@ -13,7 +13,7 @@ class Game : DXD::CallbackHandler {
 public:
     Game(HINSTANCE hInstance) {
         application = DXD::Application::create(true);
-        window = DXD::Window::create(*application, L"myClass", L"myWindow", hInstance, 1240, 720);
+        window = DXD::Window::create(L"myWindow", hInstance, 1240, 720);
         prepTextures();
         prepMeshes();
         prepObjects();

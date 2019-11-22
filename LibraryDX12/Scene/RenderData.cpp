@@ -7,11 +7,11 @@
 
 // ------------------------------------------------------------------------------- General
 
-RenderData::RenderData(ID3D12DevicePtr &device, DescriptorController &descriptorController, int width, int height)
-    : device(device),
+RenderData::RenderData(int width, int height)
+    : device(ApplicationImpl::getInstance().getDevice()),
       postProcessRenderTargets(device),
       postProcessForBloom(DXD::PostProcess::create()),
-      lightingConstantBuffer(ApplicationImpl::getInstance().getDevice(), ApplicationImpl::getInstance().getDescriptorController(), sizeof(LightingHeapCB)) {
+      lightingConstantBuffer(sizeof(LightingHeapCB)) {
     // Configure bloom blur
     postProcessForBloom->setGaussianBlur(3, 5);
 

@@ -15,7 +15,7 @@ public:
         void resize(int width, int height) override;
     };
 
-    RenderData(ID3D12DevicePtr &device, DescriptorController &descriptorController, int width, int height);
+    RenderData(int width, int height);
     ~RenderData();
     void resize(int width, int height);
 

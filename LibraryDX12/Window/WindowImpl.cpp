@@ -2,6 +2,7 @@
 
 #include "Application/ApplicationImpl.h"
 #include "Scene/SceneImpl.h"
+#include "Window/WindowClassFactory.h"
 
 #include "DXD/CallbackHandler.h"
 #include "DXD/Logger.h"
@@ -13,13 +14,11 @@
 // -------------------------------------------------------------------------------- Creating
 
 namespace DXD {
-std::unique_ptr<Window> Window::create(Application &application, const std::wstring &windowClassName, const std::wstring &windowTitle,
-                                       HINSTANCE hInstance, Bounds bounds) {
-    return std::unique_ptr<Window>{new WindowImpl(application, windowClassName, windowTitle, hInstance, bounds)};
+std::unique_ptr<Window> Window::create(const std::wstring &windowTitle, HINSTANCE hInstance, Bounds bounds) {
+    return std::unique_ptr<Window>{new WindowImpl(windowTitle, hInstance, bounds)};
 }
 
-std::unique_ptr<Window> Window::create(Application &application, const std::wstring &windowClassName, const std::wstring &windowTitle,
-                                       HINSTANCE hInstance, int width, int height) {
+std::unique_ptr<Window> Window::create(const std::wstring &windowTitle, HINSTANCE hInstance, int width, int height) {
     const auto screenWidth = ::GetSystemMetrics(SM_CXSCREEN);
     const auto screenHeight = ::GetSystemMetrics(SM_CYSCREEN);
 
@@ -32,17 +31,18 @@ std::unique_ptr<Window> Window::create(Application &application, const std::wstr
     const auto windowTop = std::max<int>(0, (screenHeight - windowHeight) / 2);
 
     Window::Bounds bounds{windowLeft, windowTop, windowWidth, windowHeight};
-    return Window::create(application, windowClassName, windowTitle, hInstance, bounds);
+    return Window::create(windowTitle, hInstance, bounds);
 }
 } // namespace DXD
 
-WindowImpl::WindowImpl(DXD::Application &application, const std::wstring &windowClassName, const std::wstring &windowTitle, HINSTANCE hInstance, Bounds bounds)
-    : application(*static_cast<ApplicationImpl *>(&application)), windowClassName(windowClassName), hInstance(hInstance),
+WindowImpl::WindowImpl(const std::wstring &windowTitle, HINSTANCE hInstance, Bounds bounds)
+    : application(ApplicationImpl::getInstance()),
+      windowClassName(WindowClassFactory::createWindowClassName()),
+      hInstance(hInstance),
       windowHandle(registerClassAndCreateWindow(windowTitle, bounds)),
-      swapChain(windowHandle, this->application.getDirectCommandQueue(), bounds.width, bounds.height, swapChainBufferCount),
-      renderData(this->application.getDevice(), this->application.getDescriptorController(), bounds.width, bounds.height),
-      lastFrameTime(Clock::now()) {
-}
+      lastFrameTime(Clock::now()),
+      swapChain(windowHandle, application.getDirectCommandQueue(), bounds.width, bounds.height, swapChainBufferCount),
+      renderData(bounds.width, bounds.height) {}
 
 HWND WindowImpl::registerClassAndCreateWindow(const std::wstring &windowTitle, Bounds bounds) {
     registerClass();

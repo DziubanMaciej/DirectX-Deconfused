@@ -47,21 +47,17 @@ public:
     /// @{
 
     /// Creates window with given position and size at the center of screen
-    /// \param application execution context for a window
-    /// \param windowClassName name of your window class, should be unique in operating system
     /// \param windowTitle title displayed at the top of the window
     /// \param hInstance handle to the win32 application
     /// \param bounds position and size of created window
-    static std::unique_ptr<Window> create(Application &application, const std::wstring &windowClassName, const std::wstring &windowTitle, HINSTANCE hInstance, Bounds bounds);
+    static std::unique_ptr<Window> create(const std::wstring &windowTitle, HINSTANCE hInstance, Bounds bounds);
 
     /// Creates window with given size at the center of screen
-    /// \param application execution context for a window
-    /// \param windowClassName name of your window class, should be unique in operating system
     /// \param windowTitle title displayed at the top of the window
     /// \hInstance handle to the win32 application
     /// \param width window width
     /// \param height window height
-    static std::unique_ptr<Window> create(Application &application, const std::wstring &windowClassName, const std::wstring &windowTitle, HINSTANCE hInstance, int width, int height);
+    static std::unique_ptr<Window> create(const std::wstring &windowTitle, HINSTANCE hInstance, int width, int height);
     /// @}
     virtual ~Window() = default;
 
