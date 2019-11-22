@@ -2,7 +2,7 @@
 
 #include "CommandList/CommandAllocatorController.h"
 #include "Resource/ResourceUsageTracker.h"
-#include "Synchronization/Event.h"
+#include "Synchronization/KernelEvent.h"
 #include "Synchronization/Fence.h"
 
 #include <DXD/ExternalHeadersWrappers/d3d12.h>

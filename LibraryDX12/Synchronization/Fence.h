@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Synchronization/Event.h"
+#include "Synchronization/KernelEvent.h"
 
 #include "DXD/Utility/NonCopyableAndMovable.h"
 
@@ -24,6 +24,6 @@ public:
 
 private:
     ID3D12FencePtr fence;
-    Event event;
+    KernelEvent event;
     uint64_t lastSignalledFence = 0ull;
 };

@@ -5,13 +5,13 @@
 #include <DXD/ExternalHeadersWrappers/windows.h>
 #include <chrono>
 
-class Event : DXD::NonCopyable {
+class KernelEvent : DXD::NonCopyable {
 public:
-    Event();
-    explicit Event(BOOL initialValue);
-    ~Event();
-    Event(Event &&other) noexcept;
-    Event &operator=(Event &&other) noexcept;
+    KernelEvent();
+    explicit KernelEvent(BOOL initialValue);
+    ~KernelEvent();
+    KernelEvent(KernelEvent &&other) noexcept;
+    KernelEvent &operator=(KernelEvent &&other) noexcept;
 
     void wait() const;
     void wait(DWORD milliseconds) const;
