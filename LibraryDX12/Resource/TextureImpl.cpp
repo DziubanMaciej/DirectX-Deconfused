@@ -33,13 +33,13 @@ template std::unique_ptr<Event<Texture::TextureLoadResult>> Event<Texture::Textu
 TextureImpl::TextureImpl(const std::wstring &filePath, TextureLoadEvent *loadEvent)
     : loadOperation(*this) {
     const TextureCpuLoadArgs args{filePath};
-    loadOperation.runAsynchronously(args);
+    loadOperation.runAsynchronously(args, loadEvent);
 }
 
 TextureImpl::TextureImpl(const std::wstring &filePath, TextureLoadResult *loadResult)
     : loadOperation(*this) {
     const TextureCpuLoadArgs args{filePath};
-    loadOperation.runSynchronously(args);
+    loadOperation.runSynchronously(args, loadResult);
 }
 
 TextureImpl::~TextureImpl() {
@@ -58,7 +58,7 @@ TextureImpl::TextureCpuLoadResult TextureImpl::TextureLoadCpuGpuOperation::cpuLo
     // Validate path
     const auto fullFilePath = std::wstring{RESOURCES_PATH} + args.filePath;
     if (!FileHelper::exists(fullFilePath)) {
-        return std::move(TextureCpuLoadResult{});
+        return TextureCpuLoadResult{DXD::Texture::TextureLoadResult::WRONG_FILENAME};
     }
 
     // Load image
@@ -94,12 +94,11 @@ TextureImpl::TextureCpuLoadResult TextureImpl::TextureLoadCpuGpuOperation::cpuLo
     texture.description = TextureImpl::createTextureDescription(result.metadata);
 
     // Return successfully
-    result.success = true;
     return std::move(result);
 }
 
 bool TextureImpl::TextureLoadCpuGpuOperation::isCpuLoadSuccessful(const TextureImpl::TextureCpuLoadResult &cpuLoadResult) {
-    return cpuLoadResult.success;
+    return cpuLoadResult.result == DXD::Texture::TextureLoadResult::SUCCESS;
 }
 
 void TextureImpl::TextureLoadCpuGpuOperation::gpuLoad(const TextureImpl::TextureCpuLoadResult &args) {
@@ -139,6 +138,10 @@ void TextureImpl::TextureLoadCpuGpuOperation::gpuLoad(const TextureImpl::Texture
 
 bool TextureImpl::TextureLoadCpuGpuOperation::hasGpuLoadEnded() {
     return !texture.isWaitingForGpuDependencies();
+}
+
+DXD::Texture::TextureLoadResult TextureImpl::TextureLoadCpuGpuOperation::getOperationResult(const TextureCpuLoadResult &cpuLoadResult) const {
+    return cpuLoadResult.result;
 }
 
 // ----------------------------------------------------------------- Helpers

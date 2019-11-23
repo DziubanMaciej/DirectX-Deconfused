@@ -1,13 +1,14 @@
 #pragma once
 
 #include "Application/ApplicationImpl.h"
+#include "Threading/EventImpl.h"
 #include "Utility/ThrowIfFailed.h"
 
 #include <atomic>
 #include <cassert>
 #include <mutex>
 
-template <typename CpuLoadArgs, typename CpuLoadResult>
+template <typename CpuLoadArgs, typename CpuLoadResult, typename OperationResult>
 class CpuGpuOperation {
 public:
     enum class AsyncLoadingStatus {
@@ -22,14 +23,26 @@ public:
 
     /// Main entrypoint to start the synchronous operation.
     /// \param implementation-defined arguments for the operation
-    void runSynchronously(const CpuLoadArgs &args) {
-        runImpl(args);
+    /// \param operationResult optional result of CPU load returned to the client
+    void runSynchronously(const CpuLoadArgs &args, OperationResult *operationResult) {
+        CpuLoadResult cpuLoadResult{};
+        runImpl(args, cpuLoadResult);
+        if (operationResult) {
+            *operationResult = getOperationResult(cpuLoadResult);
+        }
     }
 
     /// Main entrypoint to start the synchronous operation.
     /// \param implementation-defined arguments for the operation
-    void runAsynchronously(const CpuLoadArgs &args) {
-        auto task = [this, args]() { runImpl(args); };
+    /// \param operationEvent optional event tied to the asynchronous CPU load return to the client
+    void runAsynchronously(const CpuLoadArgs &args, DXD::Event<OperationResult> *operationEvent) {
+        auto task = [this, args, operationEvent]() {
+            CpuLoadResult cpuLoadResult{};
+            runImpl(args, cpuLoadResult);
+            if (operationEvent) {
+                operationEvent->signal(getOperationResult(cpuLoadResult));
+            }
+        };
         ApplicationImpl::getInstance().getBackgroundWorkerController().pushTask(task);
     }
 
@@ -96,8 +109,15 @@ protected:
     /// \param cpuLoadResult results returned by cpuLoad
     virtual void gpuLoad(const CpuLoadResult &args) = 0;
 
-    /// Implementation-defined check to see if asynchronous GPU processing is done.
+    /// Implementation-defined check to see if asynchronous GPU processing is done. It is
+    /// called only if GPU load has started, implementations do not need to check that.
+    /// \return true if GPU phase is complete
     virtual bool hasGpuLoadEnded() = 0;
+
+    /// Implementation-defined conversion of available operation data to final result
+    /// presented to the client.
+    /// \return implementation-defined operation result
+    virtual OperationResult getOperationResult(const CpuLoadResult &cpuLoadResult) const = 0;
 
     /// Used by the subclasses during CPU load to check if the loading has been externally terminated
     /// by the terminate call
@@ -107,7 +127,7 @@ protected:
     }
 
 private:
-    void runImpl(const CpuLoadArgs &cpuLoadArgs) {
+    void runImpl(const CpuLoadArgs &cpuLoadArgs, CpuLoadResult &cpuLoadResult) {
         // Enter CPU phase or return early
         {
             std::lock_guard<std::mutex> lock{this->terminateLock};
@@ -119,7 +139,7 @@ private:
         }
 
         // Run CPU load phase
-        CpuLoadResult cpuLoadResult = cpuLoad(cpuLoadArgs);
+        cpuLoadResult = cpuLoad(cpuLoadArgs);
 
         // Enter GPU phase or return early
         {

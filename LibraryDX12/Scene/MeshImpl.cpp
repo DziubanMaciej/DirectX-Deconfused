@@ -30,13 +30,13 @@ template std::unique_ptr<Event<Mesh::ObjLoadResult>> Event<Mesh::ObjLoadResult>:
 MeshImpl::MeshImpl(const std::wstring &filePath, bool loadTextureCoordinates, bool computeTangents, DXD::Mesh::ObjLoadResult *loadResult)
     : loadOperation(*this) {
     const MeshCpuLoadArgs args{filePath, loadTextureCoordinates, computeTangents};
-    loadOperation.runSynchronously(args);
+    loadOperation.runSynchronously(args, loadResult);
 }
 
 MeshImpl::MeshImpl(const std::wstring &filePath, bool loadTextureCoordinates, bool computeTangents, DXD::Mesh::ObjLoadEvent *loadEvent)
     : loadOperation(*this) {
     const MeshCpuLoadArgs args{filePath, loadTextureCoordinates, computeTangents};
-    loadOperation.runAsynchronously(args);
+    loadOperation.runAsynchronously(args, loadEvent);
 }
 
 MeshImpl::~MeshImpl() {
@@ -136,7 +136,7 @@ MeshCpuLoadResult ObjLoadCpuGpuOperation::cpuLoad(const MeshCpuLoadArgs &args) {
     const auto fullFilePath = std::wstring{RESOURCES_PATH} + args.filePath;
     std::fstream inputFile{fullFilePath, std::ios::in};
     if (!inputFile.good()) {
-        return std::move(MeshCpuLoadResult{});
+        return std::move(MeshCpuLoadResult{DXD::Mesh::ObjLoadResult::WRONG_FILENAME});
     }
 
     // Temporary variables for loading
@@ -151,7 +151,7 @@ MeshCpuLoadResult ObjLoadCpuGpuOperation::cpuLoad(const MeshCpuLoadArgs &args) {
     // Read all lines
     for (std::string line; getline(inputFile, line).good();) {
         if (isCpuLoadTerminated()) {
-            return MeshCpuLoadResult{};
+            return MeshCpuLoadResult{DXD::Mesh::ObjLoadResult::TERMINATED};
         }
 
         if (line.empty()) {
@@ -201,11 +201,11 @@ MeshCpuLoadResult ObjLoadCpuGpuOperation::cpuLoad(const MeshCpuLoadArgs &args) {
     }
 
     // Compute some fields based on lines that were read
-    MeshCpuLoadResult result{};
+    MeshCpuLoadResult result{DXD::Mesh::ObjLoadResult::SUCCESS};
     const auto meshType = MeshImpl::computeMeshType(normalCoordinates, textureCoordinates, args.loadTextureCoordinates, args.computeTangents);
     const auto vertexSizeInBytes = MeshImpl::computeVertexSize(meshType);
     if (meshType == MeshImpl::UNKNOWN) {
-        return std::move(MeshCpuLoadResult{});
+        return std::move(MeshCpuLoadResult{DXD::Mesh::ObjLoadResult::WRONG_OBJ});
     }
 
     const bool hasTextureCoordinates = meshType & MeshImpl::TEXTURE_COORDS;
@@ -286,7 +286,7 @@ MeshCpuLoadResult ObjLoadCpuGpuOperation::cpuLoad(const MeshCpuLoadArgs &args) {
 }
 
 bool ObjLoadCpuGpuOperation::isCpuLoadSuccessful(const MeshCpuLoadResult &result) {
-    return mesh.getMeshType() != MeshImpl::UNKNOWN && result.vertexElements.size() > 0;
+    return result.result == DXD::Mesh::ObjLoadResult::SUCCESS;
 }
 
 void ObjLoadCpuGpuOperation::gpuLoad(const MeshCpuLoadResult &args) {
@@ -325,6 +325,10 @@ bool ObjLoadCpuGpuOperation::hasGpuLoadEnded() {
     const bool indexInProgress = mesh.getIndexBuffer() != nullptr && mesh.getIndexBuffer()->isWaitingForGpuDependencies();
     const bool bothEnded = !vertexInProgress && !indexInProgress;
     return bothEnded;
+}
+
+DXD::Mesh::ObjLoadResult ObjLoadCpuGpuOperation::getOperationResult(const MeshCpuLoadResult &cpuLoadResult) const {
+    return cpuLoadResult.result;
 }
 
 void ObjLoadCpuGpuOperation::processIndexToken(const std::string &indexToken, bool textures, bool normals,

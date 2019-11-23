@@ -21,6 +21,7 @@ class EXPORT Mesh : NonCopyableAndMovable {
 public:
     enum class ObjLoadResult {
         SUCCESS,
+        TERMINATED,
         WRONG_FILENAME,
         WRONG_OBJ,
     };

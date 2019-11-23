@@ -38,12 +38,12 @@ private:
     };
 
     struct TextureCpuLoadResult {
-        bool success = false;
+        DXD::Texture::TextureLoadResult result = {};
         DirectX::TexMetadata metadata = {};
         DirectX::ScratchImage scratchImage = {};
     };
 
-    class TextureLoadCpuGpuOperation : public CpuGpuOperation<TextureCpuLoadArgs, TextureCpuLoadResult> {
+    class TextureLoadCpuGpuOperation : public CpuGpuOperation<TextureCpuLoadArgs, TextureCpuLoadResult, DXD::Texture::TextureLoadResult> {
     public:
         TextureLoadCpuGpuOperation(TextureImpl &texture) : texture(texture) {}
 
@@ -52,6 +52,7 @@ private:
         bool isCpuLoadSuccessful(const TextureCpuLoadResult &cpuLoadResult) override;
         void gpuLoad(const TextureCpuLoadResult &args) override;
         bool hasGpuLoadEnded() override;
+        DXD::Texture::TextureLoadResult getOperationResult(const TextureCpuLoadResult &cpuLoadResult) const override;
 
     private:
         TextureImpl &texture;

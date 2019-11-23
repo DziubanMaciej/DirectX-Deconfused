@@ -17,7 +17,7 @@ public:
     enum class TextureLoadResult {
         SUCCESS,
         WRONG_FILENAME,
-        WRONG_OBJ,
+        WRONG_TEXTURE,
     };
     using TextureLoadEvent = Event<TextureLoadResult>;
 

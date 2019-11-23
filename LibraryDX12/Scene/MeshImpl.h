@@ -21,11 +21,12 @@ struct MeshCpuLoadArgs {
 };
 
 struct MeshCpuLoadResult {
+    DXD::Mesh::ObjLoadResult result = {};
     std::vector<FLOAT> vertexElements = {};
     std::vector<UINT> indices = {};
 };
 
-class ObjLoadCpuGpuOperation : public CpuGpuOperation<MeshCpuLoadArgs, MeshCpuLoadResult> {
+class ObjLoadCpuGpuOperation : public CpuGpuOperation<MeshCpuLoadArgs, MeshCpuLoadResult, DXD::Mesh::ObjLoadResult> {
 public:
     ObjLoadCpuGpuOperation(MeshImpl &mesh) : mesh(mesh) {}
 
@@ -35,6 +36,7 @@ protected:
     bool isCpuLoadSuccessful(const MeshCpuLoadResult &result) override;
     void gpuLoad(const MeshCpuLoadResult &args) override;
     bool hasGpuLoadEnded() override;
+    DXD::Mesh::ObjLoadResult getOperationResult(const MeshCpuLoadResult &cpuLoadResult) const override;
 
     // Helpers
     static void processIndexToken(const std::string &indexToken, bool textures, bool normals,
