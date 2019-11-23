@@ -4,7 +4,7 @@
 #include "PipelineState/PipelineStateController.h"
 #include "Resource/Resource.h"
 #include "Resource/VertexOrIndexBuffer.h"
-#include "Threading/AsyncLoadableObject.h"
+#include "Threading/CpuGpuOperation.h"
 #include "Utility/MathHelper.h"
 
 #include "DXD/Mesh.h"
@@ -14,25 +14,7 @@
 #include <utility>
 #include <vector>
 
-struct MeshCpuLoadArgs {
-    const std::wstring filePath;
-    bool loadTextureCoordinates;
-    bool computeTangents;
-};
-
-struct MeshCpuLoadResult {
-    std::vector<FLOAT> vertexElements = {};
-    std::vector<UINT> indices = {};
-};
-
-struct MeshGpuLoadArgs {
-    const std::vector<FLOAT> &vertexElements;
-    const std::vector<UINT> &indices;
-};
-
-using MeshAsyncLoadableObject = AsyncLoadableObject<MeshCpuLoadArgs, MeshCpuLoadResult, MeshGpuLoadArgs>;
-
-class MeshImpl : public DXD::Mesh, public MeshAsyncLoadableObject {
+class MeshImpl : public DXD::Mesh {
 public:
     using MeshType = unsigned int;
     constexpr static MeshType UNKNOWN = 0x0;
@@ -54,22 +36,10 @@ public:
     MeshType getMeshType() const { return meshType; }
     PipelineStateController::Identifier getPipelineStateIdentifier() const { return pipelineStateIdentifier; }
     PipelineStateController::Identifier getShadowMapPipelineStateIdentifier() const { return shadowMapPipelineStateIdentifier; }
+    bool isReady();
 
     auto &getVertexBuffer() { return vertexBuffer; }
     auto &getIndexBuffer() { return indexBuffer; }
-
-protected:
-    // CPU data, set during load time
-    MeshType meshType = UNKNOWN;
-    UINT vertexSizeInBytes = 0;
-    UINT verticesCount = 0;
-    UINT indicesCount = 0;
-    PipelineStateController::Identifier pipelineStateIdentifier;
-    PipelineStateController::Identifier shadowMapPipelineStateIdentifier;
-
-    // GPU data, set during upload time
-    std::unique_ptr<VertexBuffer> vertexBuffer = {};
-    std::unique_ptr<IndexBuffer> indexBuffer = {};
 
 private:
     // Helpers
@@ -88,10 +58,44 @@ private:
     static std::map<MeshType, PipelineStateController::Identifier> getShadowMapPipelineStateIdentifierMap();
     static PipelineStateController::Identifier computeShadowMapPipelineStateIdentifier(MeshType meshType);
 
-    // AsyncLoadableObject overrides
-    MeshCpuLoadResult cpuLoad(const MeshCpuLoadArgs &args) override;
-    bool isCpuLoadSuccessful(const MeshCpuLoadResult &result) override;
-    MeshGpuLoadArgs createArgsForGpuLoad(const MeshCpuLoadResult &cpuLoadResult) override;
-    void gpuLoad(const MeshGpuLoadArgs &args) override;
-    bool hasGpuLoadEnded() override;
+    struct MeshCpuLoadArgs {
+        const std::wstring filePath;
+        bool loadTextureCoordinates;
+        bool computeTangents;
+    };
+
+    struct MeshCpuLoadResult {
+        std::vector<FLOAT> vertexElements = {};
+        std::vector<UINT> indices = {};
+    };
+
+    class ObjLoadCpuGpuOperation : public CpuGpuOperation<MeshCpuLoadArgs, MeshCpuLoadResult> {
+    public:
+        ObjLoadCpuGpuOperation(MeshImpl &mesh) : mesh(mesh) {}
+
+    protected:
+        MeshCpuLoadResult cpuLoad(const MeshCpuLoadArgs &args) override;
+        bool isCpuLoadSuccessful(const MeshCpuLoadResult &result) override;
+        void gpuLoad(const MeshCpuLoadResult &args) override;
+        bool hasGpuLoadEnded() override;
+
+    private:
+        MeshImpl &mesh;
+    };
+
+protected:
+    // Load operation
+    ObjLoadCpuGpuOperation loadOperation;
+
+    // CPU data, set during load time
+    MeshType meshType = UNKNOWN;
+    UINT vertexSizeInBytes = 0;
+    UINT verticesCount = 0;
+    UINT indicesCount = 0;
+    PipelineStateController::Identifier pipelineStateIdentifier;
+    PipelineStateController::Identifier shadowMapPipelineStateIdentifier;
+
+    // GPU data, set during upload time
+    std::unique_ptr<VertexBuffer> vertexBuffer = {};
+    std::unique_ptr<IndexBuffer> indexBuffer = {};
 };

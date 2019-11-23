@@ -22,18 +22,25 @@ std::unique_ptr<Texture> Texture::createFromFile(const std::wstring &filePath, b
 }
 } // namespace DXD
 
-TextureImpl::TextureImpl(const std::wstring &filePath, bool asynchronousLoading) {
+TextureImpl::TextureImpl(const std::wstring &filePath, bool asynchronousLoading)
+    : loadOperation(*this) {
     const TextureCpuLoadArgs cpuLoadArgs{filePath};
-    this->cpuGpuLoad(cpuLoadArgs, asynchronousLoading);
+    loadOperation.run(cpuLoadArgs, asynchronousLoading);
 }
 
 TextureImpl::~TextureImpl() {
-    terminateBackgroundProcessing(true);
+    loadOperation.terminate(true);
 }
 
-// ----------------------------------------------------------------- AsyncLoadableObject overrides
+// ----------------------------------------------------------------- Accessors
 
-TextureCpuLoadResult TextureImpl::cpuLoad(const TextureCpuLoadArgs &args) {
+bool TextureImpl::isReady() {
+    return loadOperation.isReady();
+}
+
+// ----------------------------------------------------------------- CpuGpuOperation class
+
+TextureImpl::TextureCpuLoadResult TextureImpl::TextureLoadCpuGpuOperation::cpuLoad(const TextureCpuLoadArgs &args) {
     // Validate path
     const auto fullFilePath = std::wstring{RESOURCES_PATH} + args.filePath;
     if (!FileHelper::exists(fullFilePath)) {
@@ -70,109 +77,54 @@ TextureCpuLoadResult TextureImpl::cpuLoad(const TextureCpuLoadArgs &args) {
     }
 
     // Compute resource description
-    this->description = TextureImpl::createTextureDescription(result.metadata);
+    texture.description = TextureImpl::createTextureDescription(result.metadata);
 
     // Return successfully
     result.success = true;
     return std::move(result);
 }
 
-bool TextureImpl::isCpuLoadSuccessful(const TextureCpuLoadResult &result) {
-    return result.success;
+bool TextureImpl::TextureLoadCpuGpuOperation::isCpuLoadSuccessful(const TextureImpl::TextureCpuLoadResult &cpuLoadResult) {
+    return cpuLoadResult.success;
 }
 
-TextureGpuLoadArgs TextureImpl::createArgsForGpuLoad(const TextureCpuLoadResult &cpuLoadResult) {
-    return std::move(TextureGpuLoadArgs{
-        cpuLoadResult.metadata,
-        cpuLoadResult.scratchImage});
-}
+void TextureImpl::TextureLoadCpuGpuOperation::gpuLoad(const TextureImpl::TextureCpuLoadResult &args) {
+    // Context
+    ApplicationImpl &application = ApplicationImpl::getInstance();
 
-void TextureImpl::gpuLoad(const TextureGpuLoadArgs &args) {
     // Create GPU resource with typeless format
-    const auto realFormat = this->description.Format;
-    this->description.Format = DxgiFormatHelper::convertToTypelessFormat(realFormat);
-    this->setResource(createResource(ApplicationImpl::getInstance().getDevice(), &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT), D3D12_HEAP_FLAG_NONE,
-                                     &this->description, D3D12_RESOURCE_STATE_COPY_DEST, nullptr),
-                      D3D12_RESOURCE_STATE_COPY_DEST, this->description.MipLevels);
-    this->description.Format = realFormat;
+    const auto realFormat = texture.description.Format;
+    texture.description.Format = DxgiFormatHelper::convertToTypelessFormat(realFormat);
+    texture.setResource(Resource::createResource(application.getDevice(), &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+                                                 D3D12_HEAP_FLAG_NONE, &texture.description, D3D12_RESOURCE_STATE_COPY_DEST, nullptr),
+                        D3D12_RESOURCE_STATE_COPY_DEST, texture.description.MipLevels);
+    texture.description.Format = realFormat;
 
     // Upload data to the GPU resource
-    Resource::uploadToGPU(ApplicationImpl::getInstance(), args.scratchImage.GetPixels(),
-                          static_cast<UINT>(args.scratchImage.GetImages()->rowPitch),
-                          static_cast<UINT>(args.scratchImage.GetImages()->slicePitch));
+    texture.uploadToGPU(application, args.scratchImage.GetPixels(),
+                        static_cast<UINT>(args.scratchImage.GetImages()->rowPitch),
+                        static_cast<UINT>(args.scratchImage.GetImages()->slicePitch));
 
     // Create SRV
-    DescriptorAllocation cpuDescriptors = ApplicationImpl::getInstance().getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1);
+    DescriptorAllocation cpuDescriptors = application.getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1);
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDescription = {};
-    srvDescription.Format = this->description.Format;
+    srvDescription.Format = texture.description.Format;
     srvDescription.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
     srvDescription.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDescription.Texture2D.MipLevels = this->description.MipLevels;
+    srvDescription.Texture2D.MipLevels = texture.description.MipLevels;
     srvDescription.Texture2D.MostDetailedMip = 0;
     srvDescription.Texture2D.PlaneSlice = 0;
     srvDescription.Texture2D.ResourceMinLODClamp = 0;
-    this->createSrv(&srvDescription);
+    texture.createSrv(&srvDescription);
 
-    if (this->description.MipLevels > 1u) {
-        assert(this->description.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D);
-        generateMips();
+    if (texture.description.MipLevels > 1u) {
+        assert(texture.description.Dimension == D3D12_RESOURCE_DIMENSION_TEXTURE2D);
+        texture.generateMips();
     }
 }
 
-void TextureImpl::generateMips() {
-    // Create command list
-    auto &queue = ApplicationImpl::getInstance().getDirectCommandQueue();
-    CommandList commandList{queue};
-    commandList.setPipelineStateAndComputeRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_GENERATE_MIPS);
-
-    // Space for cpu visible descriptors, can be reused after committing to gpu visible heap (this is made on dispatch)
-    auto cpuDescriptors = ApplicationImpl::getInstance().getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 2);
-
-    // Generate subsequent mips
-    uint32_t currentSourceWidth = static_cast<uint32_t>(description.Width);
-    uint32_t currentSourceHeight = static_cast<uint32_t>(description.Height);
-    for (auto sourceMipLevel = 0u; sourceMipLevel + 1u < description.MipLevels; sourceMipLevel++) {
-        const auto outputMipsCount = 1u;    // how many mips shader will generate in the current dispatch
-        const auto maxOutputMipsCount = 1u; // how many mips can a shader generate in one dispatch
-
-        // Create descriptors and transition resources
-        createDescriptorsForMipMapGeneration(cpuDescriptors, getResource(), description.Format, sourceMipLevel, outputMipsCount, maxOutputMipsCount);
-        transitionSubresourcesForMipMapGeneration(commandList, sourceMipLevel, outputMipsCount);
-
-        // Bind resources
-        const uint32_t dstWidth = currentSourceWidth / 2;
-        const uint32_t dstHeight = currentSourceHeight / 2;
-        GenerateMipsCB cb = {};
-        cb.texelSize = XMFLOAT2{1.0f / dstWidth, 1.0f / dstHeight};
-        cb.sourceMipLevel = sourceMipLevel;
-        commandList.setCbvSrvUavInDescriptorTable(0, 0, *this, cpuDescriptors.getCpuHandle(0));
-        commandList.setCbvSrvUavInDescriptorTable(0, 1, *this, cpuDescriptors.getCpuHandle(1));
-        commandList.setRoot32BitConstant(1, cb);
-
-        // Dispatch
-        const UINT threadGroupSize = 16u;
-        const UINT threadGroupCountX = MathHelper::divideByMultiple(dstWidth, threadGroupSize);
-        const UINT threadGroupCountY = MathHelper::divideByMultiple(dstHeight, threadGroupSize);
-        commandList.dispatch(threadGroupCountX, threadGroupCountY, 1u);
-        commandList.uavBarrier(*this);
-
-        // Size of source texture in next iteration will be two times smaller, but cannot be 0
-        currentSourceWidth = std::max(currentSourceWidth / 2, 1u);
-        currentSourceHeight = std::max(currentSourceHeight / 2, 1u);
-    }
-
-    // Epilogue
-    commandList.transitionBarrier(*this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    commandList.close();
-
-    // Submit to gpu
-    this->waitOnGpuForGpuUpload(queue);
-    const uint64_t fenceValue = queue.executeCommandListAndSignal(commandList);
-    this->addGpuDependency(queue, fenceValue);
-}
-
-bool TextureImpl::hasGpuLoadEnded() {
-    return !isWaitingForGpuDependencies();
+bool TextureImpl::TextureLoadCpuGpuOperation::hasGpuLoadEnded() {
+    return !texture.isWaitingForGpuDependencies();
 }
 
 // ----------------------------------------------------------------- Helpers
@@ -260,4 +212,56 @@ void TextureImpl::transitionSubresourcesForMipMapGeneration(CommandList &command
         const auto subresourceIndex = sourceMip + i + 1;
         commandList.transitionBarrier(*this, D3D12_RESOURCE_STATE_UNORDERED_ACCESS, subresourceIndex);
     }
+}
+
+void TextureImpl::generateMips() {
+    // Create command list
+    auto &queue = ApplicationImpl::getInstance().getDirectCommandQueue();
+    CommandList commandList{queue};
+    commandList.setPipelineStateAndComputeRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_GENERATE_MIPS);
+
+    // Space for cpu visible descriptors, can be reused after committing to gpu visible heap (this is made on dispatch)
+    auto cpuDescriptors = ApplicationImpl::getInstance().getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 2);
+
+    // Generate subsequent mips
+    uint32_t currentSourceWidth = static_cast<uint32_t>(description.Width);
+    uint32_t currentSourceHeight = static_cast<uint32_t>(description.Height);
+    for (auto sourceMipLevel = 0u; sourceMipLevel + 1u < description.MipLevels; sourceMipLevel++) {
+        const auto outputMipsCount = 1u;    // how many mips shader will generate in the current dispatch
+        const auto maxOutputMipsCount = 1u; // how many mips can a shader generate in one dispatch
+
+        // Create descriptors and transition resources
+        createDescriptorsForMipMapGeneration(cpuDescriptors, getResource(), description.Format, sourceMipLevel, outputMipsCount, maxOutputMipsCount);
+        transitionSubresourcesForMipMapGeneration(commandList, sourceMipLevel, outputMipsCount);
+
+        // Bind resources
+        const uint32_t dstWidth = currentSourceWidth / 2;
+        const uint32_t dstHeight = currentSourceHeight / 2;
+        GenerateMipsCB cb = {};
+        cb.texelSize = XMFLOAT2{1.0f / dstWidth, 1.0f / dstHeight};
+        cb.sourceMipLevel = sourceMipLevel;
+        commandList.setCbvSrvUavInDescriptorTable(0, 0, *this, cpuDescriptors.getCpuHandle(0));
+        commandList.setCbvSrvUavInDescriptorTable(0, 1, *this, cpuDescriptors.getCpuHandle(1));
+        commandList.setRoot32BitConstant(1, cb);
+
+        // Dispatch
+        const UINT threadGroupSize = 16u;
+        const UINT threadGroupCountX = MathHelper::divideByMultiple(dstWidth, threadGroupSize);
+        const UINT threadGroupCountY = MathHelper::divideByMultiple(dstHeight, threadGroupSize);
+        commandList.dispatch(threadGroupCountX, threadGroupCountY, 1u);
+        commandList.uavBarrier(*this);
+
+        // Size of source texture in next iteration will be two times smaller, but cannot be 0
+        currentSourceWidth = std::max(currentSourceWidth / 2, 1u);
+        currentSourceHeight = std::max(currentSourceHeight / 2, 1u);
+    }
+
+    // Epilogue
+    commandList.transitionBarrier(*this, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    commandList.close();
+
+    // Submit to gpu
+    this->waitOnGpuForGpuUpload(queue);
+    const uint64_t fenceValue = queue.executeCommandListAndSignal(commandList);
+    this->addGpuDependency(queue, fenceValue);
 }

@@ -21,18 +21,19 @@ std::unique_ptr<Mesh> Mesh::createFromObj(const std::wstring &filePath, bool loa
 } // namespace DXD
 
 MeshImpl::MeshImpl(const std::wstring &filePath, bool loadTextureCoordinates,
-                   bool computeTangents, bool asynchronousLoading) {
-    const MeshCpuLoadArgs cpuLoadArgs{filePath, loadTextureCoordinates, computeTangents};
-    cpuGpuLoad(cpuLoadArgs, asynchronousLoading);
+                   bool computeTangents, bool asynchronousLoading)
+    : loadOperation(*this) {
+    const MeshCpuLoadArgs args{filePath, loadTextureCoordinates, computeTangents};
+    loadOperation.run(args, asynchronousLoading);
 }
 
 MeshImpl::~MeshImpl() {
-    terminateBackgroundProcessing(true);
+    loadOperation.terminate(true);
 }
 
-// ----------------------------------------------------------------- AsyncLoadableObject overrides
+// ----------------------------------------------------------------- ObjLoadCpuGpuOperation class
 
-MeshCpuLoadResult MeshImpl::cpuLoad(const MeshCpuLoadArgs &args) {
+MeshImpl::MeshCpuLoadResult MeshImpl::ObjLoadCpuGpuOperation::cpuLoad(const MeshCpuLoadArgs &args) {
     // Initial validation
     const auto fullFilePath = std::wstring{RESOURCES_PATH} + args.filePath;
     std::fstream inputFile{fullFilePath, std::ios::in};
@@ -51,8 +52,8 @@ MeshCpuLoadResult MeshImpl::cpuLoad(const MeshCpuLoadArgs &args) {
 
     // Read all lines
     for (std::string line; getline(inputFile, line).good();) {
-        if (shouldBackgroundProcessingTerminate()) {
-            return std::move(MeshCpuLoadResult{});
+        if (isCpuLoadTerminated()) {
+            return MeshCpuLoadResult{};
         }
 
         if (line.empty()) {
@@ -103,16 +104,16 @@ MeshCpuLoadResult MeshImpl::cpuLoad(const MeshCpuLoadArgs &args) {
 
     // Compute some fields based on lines that were read
     MeshCpuLoadResult result{};
-    this->meshType = MeshImpl::computeMeshType(normalCoordinates, textureCoordinates, args.loadTextureCoordinates, args.computeTangents);
-    this->vertexSizeInBytes = computeVertexSize(this->meshType);
-    if (this->meshType == MeshImpl::UNKNOWN) {
+    mesh.meshType = MeshImpl::computeMeshType(normalCoordinates, textureCoordinates, args.loadTextureCoordinates, args.computeTangents);
+    mesh.vertexSizeInBytes = computeVertexSize(mesh.meshType);
+    if (mesh.meshType == MeshImpl::UNKNOWN) {
         return std::move(MeshCpuLoadResult{});
     }
 
-    const bool hasTextureCoordinates = this->meshType & TEXTURE_COORDS;
+    const bool hasTextureCoordinates = mesh.meshType & TEXTURE_COORDS;
     const bool hasNormals = normalCoordinates.size() > 0;
-    const bool computeNormals = this->meshType & NORMALS && !hasNormals;
-    const bool computeTangents = this->meshType & TANGENTS;
+    const bool computeNormals = mesh.meshType & NORMALS && !hasNormals;
+    const bool computeTangents = mesh.meshType & TANGENTS;
     const bool usesIndexBuffer = !hasTextureCoordinates && !hasNormals && !computeNormals && !computeTangents;
     if (usesIndexBuffer) {
         // Index buffer path - vertices are unmodified, we push indices to index buffer to define polygons
@@ -177,24 +178,18 @@ MeshCpuLoadResult MeshImpl::cpuLoad(const MeshCpuLoadArgs &args) {
         }
     }
 
-    this->verticesCount = static_cast<UINT>(result.vertexElements.size() * sizeof(FLOAT) / this->vertexSizeInBytes);
-    this->indicesCount = static_cast<UINT>(result.indices.size());
-    this->pipelineStateIdentifier = computePipelineStateIdentifier(this->meshType);
-    this->shadowMapPipelineStateIdentifier = computeShadowMapPipelineStateIdentifier(this->meshType);
+    mesh.verticesCount = static_cast<UINT>(result.vertexElements.size() * sizeof(FLOAT) / mesh.vertexSizeInBytes);
+    mesh.indicesCount = static_cast<UINT>(result.indices.size());
+    mesh.pipelineStateIdentifier = computePipelineStateIdentifier(mesh.meshType);
+    mesh.shadowMapPipelineStateIdentifier = computeShadowMapPipelineStateIdentifier(mesh.meshType);
     return std::move(result);
 }
 
-bool MeshImpl::isCpuLoadSuccessful(const MeshCpuLoadResult &result) {
-    return this->meshType != UNKNOWN && result.vertexElements.size() > 0;
+bool MeshImpl::ObjLoadCpuGpuOperation::isCpuLoadSuccessful(const MeshCpuLoadResult &result) {
+    return mesh.meshType != UNKNOWN && result.vertexElements.size() > 0;
 }
 
-MeshGpuLoadArgs MeshImpl::createArgsForGpuLoad(const MeshCpuLoadResult &cpuLoadResult) {
-    return std::move(MeshGpuLoadArgs{
-        cpuLoadResult.vertexElements,
-        cpuLoadResult.indices});
-}
-
-void MeshImpl::gpuLoad(const MeshGpuLoadArgs &args) {
+void MeshImpl::ObjLoadCpuGpuOperation::gpuLoad(const MeshImpl::MeshCpuLoadResult &args) {
     const bool useIndexBuffer = args.indices.size() > 0;
 
     // Context
@@ -204,9 +199,9 @@ void MeshImpl::gpuLoad(const MeshGpuLoadArgs &args) {
 
     // Record command list for GPU upload
     CommandList commandList{commandQueue};
-    this->vertexBuffer = std::make_unique<VertexBuffer>(device, commandList, args.vertexElements.data(), this->verticesCount, this->vertexSizeInBytes);
+    mesh.vertexBuffer = std::make_unique<VertexBuffer>(device, commandList, args.vertexElements.data(), mesh.verticesCount, mesh.vertexSizeInBytes);
     if (useIndexBuffer) {
-        this->indexBuffer = std::make_unique<IndexBuffer>(device, commandList, args.indices.data(), static_cast<UINT>(args.indices.size()));
+        mesh.indexBuffer = std::make_unique<IndexBuffer>(device, commandList, args.indices.data(), static_cast<UINT>(args.indices.size()));
     }
     commandList.close();
 
@@ -214,20 +209,24 @@ void MeshImpl::gpuLoad(const MeshGpuLoadArgs &args) {
     const uint64_t fenceValue = commandQueue.executeCommandListAndSignal(commandList);
 
     // Register upload status for buffers
-    this->vertexBuffer->addGpuDependency(commandQueue, fenceValue);
+    mesh.vertexBuffer->addGpuDependency(commandQueue, fenceValue);
     if (useIndexBuffer) {
-        this->indexBuffer->addGpuDependency(commandQueue, fenceValue);
+        mesh.indexBuffer->addGpuDependency(commandQueue, fenceValue);
     }
 }
 
-bool MeshImpl::hasGpuLoadEnded() {
-    const bool vertexInProgress = this->vertexBuffer->isWaitingForGpuDependencies();
-    const bool indexInProgress = this->indexBuffer != nullptr && this->indexBuffer->isWaitingForGpuDependencies();
+bool MeshImpl::ObjLoadCpuGpuOperation::hasGpuLoadEnded() {
+    const bool vertexInProgress = mesh.vertexBuffer->isWaitingForGpuDependencies();
+    const bool indexInProgress = mesh.indexBuffer != nullptr && mesh.indexBuffer->isWaitingForGpuDependencies();
     const bool bothEnded = !vertexInProgress && !indexInProgress;
     return bothEnded;
 }
 
 // ----------------------------------------------------------------- Helpers
+
+bool MeshImpl::isReady() {
+    return loadOperation.isReady();
+}
 
 MeshImpl::MeshType MeshImpl::computeMeshType(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates,
                                              bool loadTextureCoordinates, bool computeTangents) {
