@@ -31,9 +31,95 @@ MeshImpl::~MeshImpl() {
     loadOperation.terminate(true);
 }
 
+// ----------------------------------------------------------------- Setters for loaders
+
+void MeshImpl::setCpuData(MeshType meshType, UINT vertexSizeInBytes, UINT verticesCount, UINT indicesCount) {
+    this->meshType = meshType;
+    this->vertexSizeInBytes = vertexSizeInBytes;
+    this->verticesCount = verticesCount;
+    this->indicesCount = indicesCount;
+    this->pipelineStateIdentifier = computePipelineStateIdentifier(meshType);
+    this->shadowMapPipelineStateIdentifier = computeShadowMapPipelineStateIdentifier(meshType);
+}
+
+void MeshImpl::setGpuData(std::unique_ptr<VertexBuffer> &vertexBuffer, std::unique_ptr<IndexBuffer> &indexBuffer) {
+    this->vertexBuffer = std::move(vertexBuffer);
+    this->indexBuffer = std::move(indexBuffer);
+}
+
+// ----------------------------------------------------------------- Helpers
+
+MeshImpl::MeshType MeshImpl::computeMeshType(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates,
+                                             bool loadTextureCoordinates, bool computeTangents) {
+    MeshType meshType = TRIANGLE_STRIP | NORMALS;
+    if (loadTextureCoordinates) {
+        if (textureCoordinates.size() > 0) {
+            meshType |= TEXTURE_COORDS;
+        } else {
+            return UNKNOWN; // user wants texture coords which .obj doesn't provide - error
+        }
+    }
+    if (computeTangents) {
+        meshType |= TANGENTS;
+    }
+
+    return meshType;
+}
+
+UINT MeshImpl::computeVertexSize(MeshType meshType) {
+    UINT vertexSize = 0;
+    if (meshType & TRIANGLE_STRIP) {
+        vertexSize += 3;
+    }
+    if (meshType & TEXTURE_COORDS) {
+        vertexSize += 2;
+    }
+    if (meshType & TANGENTS) {
+        vertexSize += 3;
+    }
+    if (meshType & NORMALS) {
+        vertexSize += 3;
+    }
+    return vertexSize * sizeof(FLOAT);
+}
+
+std::map<MeshImpl::MeshType, PipelineStateController::Identifier> MeshImpl::getPipelineStateIdentifierMap() {
+    std::map<MeshImpl::MeshType, PipelineStateController::Identifier> map = {};
+    map[TRIANGLE_STRIP | NORMALS] = PipelineStateController::Identifier::PIPELINE_STATE_NORMAL;
+    map[TRIANGLE_STRIP | NORMALS | TEXTURE_COORDS] = PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE_NORMAL;
+    map[TRIANGLE_STRIP | NORMALS | TEXTURE_COORDS | TANGENTS] = PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE_NORMAL_MAP;
+    return std::move(map);
+}
+
+PipelineStateController::Identifier MeshImpl::computePipelineStateIdentifier(MeshType meshType) {
+    static const auto map = getPipelineStateIdentifierMap();
+    auto it = map.find(meshType);
+    if (it == map.end()) {
+        UNREACHABLE_CODE();
+    }
+    return it->second;
+}
+
+std::map<MeshImpl::MeshType, PipelineStateController::Identifier> MeshImpl::getShadowMapPipelineStateIdentifierMap() {
+    std::map<MeshImpl::MeshType, PipelineStateController::Identifier> map = {};
+    map[TRIANGLE_STRIP | NORMALS] = PipelineStateController::Identifier::PIPELINE_STATE_SM_NORMAL;
+    map[TRIANGLE_STRIP | NORMALS | TEXTURE_COORDS] = PipelineStateController::Identifier::PIPELINE_STATE_SM_TEXTURE_NORMAL;
+    map[TRIANGLE_STRIP | NORMALS | TEXTURE_COORDS | TANGENTS] = PipelineStateController::Identifier::PIPELINE_STATE_SM_TEXTURE_NORMAL_MAP;
+    return std::move(map);
+}
+
+PipelineStateController::Identifier MeshImpl::computeShadowMapPipelineStateIdentifier(MeshType meshType) {
+    static const auto map = getShadowMapPipelineStateIdentifierMap();
+    auto it = map.find(meshType);
+    if (it == map.end()) {
+        UNREACHABLE_CODE();
+    }
+    return it->second;
+}
+
 // ----------------------------------------------------------------- ObjLoadCpuGpuOperation class
 
-MeshImpl::MeshCpuLoadResult MeshImpl::ObjLoadCpuGpuOperation::cpuLoad(const MeshCpuLoadArgs &args) {
+MeshCpuLoadResult ObjLoadCpuGpuOperation::cpuLoad(const MeshCpuLoadArgs &args) {
     // Initial validation
     const auto fullFilePath = std::wstring{RESOURCES_PATH} + args.filePath;
     std::fstream inputFile{fullFilePath, std::ios::in};
@@ -104,16 +190,16 @@ MeshImpl::MeshCpuLoadResult MeshImpl::ObjLoadCpuGpuOperation::cpuLoad(const Mesh
 
     // Compute some fields based on lines that were read
     MeshCpuLoadResult result{};
-    mesh.meshType = MeshImpl::computeMeshType(normalCoordinates, textureCoordinates, args.loadTextureCoordinates, args.computeTangents);
-    mesh.vertexSizeInBytes = computeVertexSize(mesh.meshType);
-    if (mesh.meshType == MeshImpl::UNKNOWN) {
+    const auto meshType = MeshImpl::computeMeshType(normalCoordinates, textureCoordinates, args.loadTextureCoordinates, args.computeTangents);
+    const auto vertexSizeInBytes = MeshImpl::computeVertexSize(meshType);
+    if (meshType == MeshImpl::UNKNOWN) {
         return std::move(MeshCpuLoadResult{});
     }
 
-    const bool hasTextureCoordinates = mesh.meshType & TEXTURE_COORDS;
+    const bool hasTextureCoordinates = meshType & MeshImpl::TEXTURE_COORDS;
     const bool hasNormals = normalCoordinates.size() > 0;
-    const bool computeNormals = mesh.meshType & NORMALS && !hasNormals;
-    const bool computeTangents = mesh.meshType & TANGENTS;
+    const bool computeNormals = meshType & MeshImpl::NORMALS && !hasNormals;
+    const bool computeTangents = meshType & MeshImpl::TANGENTS;
     const bool usesIndexBuffer = !hasTextureCoordinates && !hasNormals && !computeNormals && !computeTangents;
     if (usesIndexBuffer) {
         // Index buffer path - vertices are unmodified, we push indices to index buffer to define polygons
@@ -178,18 +264,20 @@ MeshImpl::MeshCpuLoadResult MeshImpl::ObjLoadCpuGpuOperation::cpuLoad(const Mesh
         }
     }
 
-    mesh.verticesCount = static_cast<UINT>(result.vertexElements.size() * sizeof(FLOAT) / mesh.vertexSizeInBytes);
-    mesh.indicesCount = static_cast<UINT>(result.indices.size());
-    mesh.pipelineStateIdentifier = computePipelineStateIdentifier(mesh.meshType);
-    mesh.shadowMapPipelineStateIdentifier = computeShadowMapPipelineStateIdentifier(mesh.meshType);
+    // Set data to Mesh instance
+    const auto verticesCount = static_cast<UINT>(result.vertexElements.size() * sizeof(FLOAT) / vertexSizeInBytes);
+    const auto indicesCount = static_cast<UINT>(result.indices.size());
+    mesh.setCpuData(meshType, vertexSizeInBytes, verticesCount, indicesCount);
+
+    // Return load results
     return std::move(result);
 }
 
-bool MeshImpl::ObjLoadCpuGpuOperation::isCpuLoadSuccessful(const MeshCpuLoadResult &result) {
-    return mesh.meshType != UNKNOWN && result.vertexElements.size() > 0;
+bool ObjLoadCpuGpuOperation::isCpuLoadSuccessful(const MeshCpuLoadResult &result) {
+    return mesh.getMeshType() != MeshImpl::UNKNOWN && result.vertexElements.size() > 0;
 }
 
-void MeshImpl::ObjLoadCpuGpuOperation::gpuLoad(const MeshImpl::MeshCpuLoadResult &args) {
+void ObjLoadCpuGpuOperation::gpuLoad(const MeshCpuLoadResult &args) {
     const bool useIndexBuffer = args.indices.size() > 0;
 
     // Context
@@ -199,9 +287,11 @@ void MeshImpl::ObjLoadCpuGpuOperation::gpuLoad(const MeshImpl::MeshCpuLoadResult
 
     // Record command list for GPU upload
     CommandList commandList{commandQueue};
-    mesh.vertexBuffer = std::make_unique<VertexBuffer>(device, commandList, args.vertexElements.data(), mesh.verticesCount, mesh.vertexSizeInBytes);
+    std::unique_ptr<VertexBuffer> vertexBuffer = std::make_unique<VertexBuffer>(device, commandList, args.vertexElements.data(),
+                                                                                mesh.getVerticesCount(), mesh.getVertexSizeInBytes());
+    std::unique_ptr<IndexBuffer> indexBuffer{};
     if (useIndexBuffer) {
-        mesh.indexBuffer = std::make_unique<IndexBuffer>(device, commandList, args.indices.data(), static_cast<UINT>(args.indices.size()));
+        indexBuffer = std::make_unique<IndexBuffer>(device, commandList, args.indices.data(), static_cast<UINT>(args.indices.size()));
     }
     commandList.close();
 
@@ -209,61 +299,24 @@ void MeshImpl::ObjLoadCpuGpuOperation::gpuLoad(const MeshImpl::MeshCpuLoadResult
     const uint64_t fenceValue = commandQueue.executeCommandListAndSignal(commandList);
 
     // Register upload status for buffers
-    mesh.vertexBuffer->addGpuDependency(commandQueue, fenceValue);
+    vertexBuffer->addGpuDependency(commandQueue, fenceValue);
     if (useIndexBuffer) {
-        mesh.indexBuffer->addGpuDependency(commandQueue, fenceValue);
+        indexBuffer->addGpuDependency(commandQueue, fenceValue);
     }
+
+    // Set buffers in Mesh instance
+    mesh.setGpuData(vertexBuffer, indexBuffer);
 }
 
-bool MeshImpl::ObjLoadCpuGpuOperation::hasGpuLoadEnded() {
-    const bool vertexInProgress = mesh.vertexBuffer->isWaitingForGpuDependencies();
-    const bool indexInProgress = mesh.indexBuffer != nullptr && mesh.indexBuffer->isWaitingForGpuDependencies();
+bool ObjLoadCpuGpuOperation::hasGpuLoadEnded() {
+    const bool vertexInProgress = mesh.getVertexBuffer()->isWaitingForGpuDependencies();
+    const bool indexInProgress = mesh.getIndexBuffer() != nullptr && mesh.getIndexBuffer()->isWaitingForGpuDependencies();
     const bool bothEnded = !vertexInProgress && !indexInProgress;
     return bothEnded;
 }
 
-// ----------------------------------------------------------------- Helpers
-
-bool MeshImpl::isReady() {
-    return loadOperation.isReady();
-}
-
-MeshImpl::MeshType MeshImpl::computeMeshType(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates,
-                                             bool loadTextureCoordinates, bool computeTangents) {
-    MeshType meshType = TRIANGLE_STRIP | NORMALS;
-    if (loadTextureCoordinates) {
-        if (textureCoordinates.size() > 0) {
-            meshType |= TEXTURE_COORDS;
-        } else {
-            return UNKNOWN; // user wants texture coords which .obj doesn't provide - error
-        }
-    }
-    if (computeTangents) {
-        meshType |= TANGENTS;
-    }
-
-    return meshType;
-}
-
-UINT MeshImpl::computeVertexSize(MeshType meshType) {
-    UINT vertexSize = 0;
-    if (meshType & TRIANGLE_STRIP) {
-        vertexSize += 3;
-    }
-    if (meshType & TEXTURE_COORDS) {
-        vertexSize += 2;
-    }
-    if (meshType & TANGENTS) {
-        vertexSize += 3;
-    }
-    if (meshType & NORMALS) {
-        vertexSize += 3;
-    }
-    return vertexSize * sizeof(FLOAT);
-}
-
-void MeshImpl::processIndexToken(const std::string &indexToken, bool textures, bool normals,
-                                 UINT *outVertexIndex, UINT *outTextureCoordinateIndex, UINT *outNormalIndex) {
+void ObjLoadCpuGpuOperation::processIndexToken(const std::string &indexToken, bool textures, bool normals,
+                                               UINT *outVertexIndex, UINT *outTextureCoordinateIndex, UINT *outNormalIndex) {
     size_t leftPosition{};
     size_t rightPosition{};
 
@@ -284,21 +337,21 @@ void MeshImpl::processIndexToken(const std::string &indexToken, bool textures, b
     }
 }
 
-XMFLOAT3 MeshImpl::getVertexVector(const std::vector<FLOAT> &vertices, UINT vertexIndex) {
+XMFLOAT3 ObjLoadCpuGpuOperation::getVertexVector(const std::vector<FLOAT> &vertices, UINT vertexIndex) {
     const float x = vertices[3 * vertexIndex + 0];
     const float y = vertices[3 * vertexIndex + 1];
     const float z = vertices[3 * vertexIndex + 2];
     return XMFLOAT3{x, y, z};
 }
 
-XMFLOAT2 MeshImpl::getTextureCoordinateVector(const std::vector<FLOAT> &textureCoordinates, UINT textureCoordinateIndex) {
+XMFLOAT2 ObjLoadCpuGpuOperation::getTextureCoordinateVector(const std::vector<FLOAT> &textureCoordinates, UINT textureCoordinateIndex) {
     const float u = textureCoordinates[2 * textureCoordinateIndex + 0];
     const float v = textureCoordinates[2 * textureCoordinateIndex + 1];
     return XMFLOAT2{u, v};
 }
 
-void MeshImpl::computeVertexTangent(const std::vector<FLOAT> &vertices, const std::vector<FLOAT> &textureCoordinates,
-                                    const UINT vertexIndices[3], UINT textureCoordinateIndices[3], XMFLOAT3 &outTangent) {
+void ObjLoadCpuGpuOperation::computeVertexTangent(const std::vector<FLOAT> &vertices, const std::vector<FLOAT> &textureCoordinates,
+                                                  const UINT vertexIndices[3], UINT textureCoordinateIndices[3], XMFLOAT3 &outTangent) {
     // Get position and texture coordinate deltas (edges)
     XMFLOAT3 pos1 = getVertexVector(vertices, vertexIndices[0]);
     XMFLOAT3 pos2 = getVertexVector(vertices, vertexIndices[1]);
@@ -324,7 +377,7 @@ void MeshImpl::computeVertexTangent(const std::vector<FLOAT> &vertices, const st
     outTangent.z /= len;
 }
 
-void MeshImpl::computeVertexNormal(const std::vector<FLOAT> &vertexElements, const UINT vertexIndices[3], XMFLOAT3 &outNormal) {
+void ObjLoadCpuGpuOperation::computeVertexNormal(const std::vector<FLOAT> &vertexElements, const UINT vertexIndices[3], XMFLOAT3 &outNormal) {
     XMFLOAT3 _p1{vertexElements[3 * (vertexIndices[0]) + 0],
                  vertexElements[3 * (vertexIndices[0]) + 1],
                  vertexElements[3 * (vertexIndices[0]) + 2]};
@@ -344,38 +397,4 @@ void MeshImpl::computeVertexNormal(const std::vector<FLOAT> &vertexElements, con
 
     XMVECTOR normal = XMVector3Cross(e2, e1);
     outNormal = XMStoreFloat3(normal);
-}
-
-std::map<MeshImpl::MeshType, PipelineStateController::Identifier> MeshImpl::getPipelineStateIdentifierMap() {
-    std::map<MeshImpl::MeshType, PipelineStateController::Identifier> map = {};
-    map[TRIANGLE_STRIP | NORMALS] = PipelineStateController::Identifier::PIPELINE_STATE_NORMAL;
-    map[TRIANGLE_STRIP | NORMALS | TEXTURE_COORDS] = PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE_NORMAL;
-    map[TRIANGLE_STRIP | NORMALS | TEXTURE_COORDS | TANGENTS] = PipelineStateController::Identifier::PIPELINE_STATE_TEXTURE_NORMAL_MAP;
-    return std::move(map);
-}
-
-PipelineStateController::Identifier MeshImpl::computePipelineStateIdentifier(MeshType meshType) {
-    static const auto map = getPipelineStateIdentifierMap();
-    auto it = map.find(meshType);
-    if (it == map.end()) {
-        UNREACHABLE_CODE();
-    }
-    return it->second;
-}
-
-std::map<MeshImpl::MeshType, PipelineStateController::Identifier> MeshImpl::getShadowMapPipelineStateIdentifierMap() {
-    std::map<MeshImpl::MeshType, PipelineStateController::Identifier> map = {};
-    map[TRIANGLE_STRIP | NORMALS] = PipelineStateController::Identifier::PIPELINE_STATE_SM_NORMAL;
-    map[TRIANGLE_STRIP | NORMALS | TEXTURE_COORDS] = PipelineStateController::Identifier::PIPELINE_STATE_SM_TEXTURE_NORMAL;
-    map[TRIANGLE_STRIP | NORMALS | TEXTURE_COORDS | TANGENTS] = PipelineStateController::Identifier::PIPELINE_STATE_SM_TEXTURE_NORMAL_MAP;
-    return std::move(map);
-}
-
-PipelineStateController::Identifier MeshImpl::computeShadowMapPipelineStateIdentifier(MeshType meshType) {
-    static const auto map = getShadowMapPipelineStateIdentifierMap();
-    auto it = map.find(meshType);
-    if (it == map.end()) {
-        UNREACHABLE_CODE();
-    }
-    return it->second;
 }

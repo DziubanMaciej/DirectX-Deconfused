@@ -21,7 +21,7 @@ public:
     };
 
     /// Main entrypoint to start the operation.
-    /// \runAsync if true, executes on different thread and returns immediately
+    /// \param runAsync if true, executes on different thread and returns immediately
     void run(const CpuLoadArgs &args, bool runAsync) {
         if (runAsync) {
             auto task = [this, args]() { runImpl(args); };

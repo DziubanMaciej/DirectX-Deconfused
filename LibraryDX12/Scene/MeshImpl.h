@@ -14,6 +14,41 @@
 #include <utility>
 #include <vector>
 
+struct MeshCpuLoadArgs {
+    const std::wstring filePath;
+    bool loadTextureCoordinates;
+    bool computeTangents;
+};
+
+struct MeshCpuLoadResult {
+    std::vector<FLOAT> vertexElements = {};
+    std::vector<UINT> indices = {};
+};
+
+class ObjLoadCpuGpuOperation : public CpuGpuOperation<MeshCpuLoadArgs, MeshCpuLoadResult> {
+public:
+    ObjLoadCpuGpuOperation(MeshImpl &mesh) : mesh(mesh) {}
+
+protected:
+    // CpuGpuOperation overrides
+    MeshCpuLoadResult cpuLoad(const MeshCpuLoadArgs &args) override;
+    bool isCpuLoadSuccessful(const MeshCpuLoadResult &result) override;
+    void gpuLoad(const MeshCpuLoadResult &args) override;
+    bool hasGpuLoadEnded() override;
+
+    // Helpers
+    static void processIndexToken(const std::string &indexToken, bool textures, bool normals,
+                                  UINT *outVertexIndex, UINT *outTextureCoordinateIndex, UINT *outNormalIndex);
+    static XMFLOAT3 getVertexVector(const std::vector<FLOAT> &vertices, UINT vertexIndex);
+    static XMFLOAT2 getTextureCoordinateVector(const std::vector<FLOAT> &textureCoordinates, UINT textureCoordinateIndex);
+    static void computeVertexTangent(const std::vector<FLOAT> &vertices, const std::vector<FLOAT> &textureCoordinates,
+                                     const UINT vertexIndices[3], UINT textureCoordinateIndices[3], XMFLOAT3 &outTangent);
+    static void computeVertexNormal(const std::vector<FLOAT> &vertexElements, const UINT vertexIndices[3], XMFLOAT3 &outNormal);
+
+private:
+    MeshImpl &mesh;
+};
+
 class MeshImpl : public DXD::Mesh {
 public:
     using MeshType = unsigned int;
@@ -30,58 +65,32 @@ protected:
     ~MeshImpl() override;
 
 public:
+    // Setters for loaders
+    void setCpuData(MeshType meshType, UINT vertexSizeInBytes, UINT verticesCount, UINT indicesCount);
+    void setGpuData(std::unique_ptr<VertexBuffer> &vertexBuffer, std::unique_ptr<IndexBuffer> &indexBuffer);
+
+    // Getters
     UINT getVertexSizeInBytes() const { return vertexSizeInBytes; }
     UINT getVerticesCount() const { return verticesCount; }
     UINT getIndicesCount() const { return indicesCount; }
     MeshType getMeshType() const { return meshType; }
     PipelineStateController::Identifier getPipelineStateIdentifier() const { return pipelineStateIdentifier; }
     PipelineStateController::Identifier getShadowMapPipelineStateIdentifier() const { return shadowMapPipelineStateIdentifier; }
-    bool isReady();
+    bool isReady() { return loadOperation.isReady(); }
 
     auto &getVertexBuffer() { return vertexBuffer; }
     auto &getIndexBuffer() { return indexBuffer; }
 
-private:
     // Helpers
     static MeshType computeMeshType(const std::vector<FLOAT> &normals, const std::vector<FLOAT> &textureCoordinates,
                                     bool loadTextureCoordinates, bool computeTangents);
     static UINT computeVertexSize(MeshType meshType);
-    static void processIndexToken(const std::string &indexToken, bool textures, bool normals,
-                                  UINT *outVertexIndex, UINT *outTextureCoordinateIndex, UINT *outNormalIndex);
-    static XMFLOAT3 getVertexVector(const std::vector<FLOAT> &vertices, UINT vertexIndex);
-    static XMFLOAT2 getTextureCoordinateVector(const std::vector<FLOAT> &textureCoordinates, UINT textureCoordinateIndex);
-    static void computeVertexTangent(const std::vector<FLOAT> &vertices, const std::vector<FLOAT> &textureCoordinates,
-                                     const UINT vertexIndices[3], UINT textureCoordinateIndices[3], XMFLOAT3 &outTangent);
-    static void computeVertexNormal(const std::vector<FLOAT> &vertexElements, const UINT vertexIndices[3], XMFLOAT3 &outNormal);
+
+private:
     static std::map<MeshType, PipelineStateController::Identifier> getPipelineStateIdentifierMap();
     static PipelineStateController::Identifier computePipelineStateIdentifier(MeshType meshType);
     static std::map<MeshType, PipelineStateController::Identifier> getShadowMapPipelineStateIdentifierMap();
     static PipelineStateController::Identifier computeShadowMapPipelineStateIdentifier(MeshType meshType);
-
-    struct MeshCpuLoadArgs {
-        const std::wstring filePath;
-        bool loadTextureCoordinates;
-        bool computeTangents;
-    };
-
-    struct MeshCpuLoadResult {
-        std::vector<FLOAT> vertexElements = {};
-        std::vector<UINT> indices = {};
-    };
-
-    class ObjLoadCpuGpuOperation : public CpuGpuOperation<MeshCpuLoadArgs, MeshCpuLoadResult> {
-    public:
-        ObjLoadCpuGpuOperation(MeshImpl &mesh) : mesh(mesh) {}
-
-    protected:
-        MeshCpuLoadResult cpuLoad(const MeshCpuLoadArgs &args) override;
-        bool isCpuLoadSuccessful(const MeshCpuLoadResult &result) override;
-        void gpuLoad(const MeshCpuLoadResult &args) override;
-        bool hasGpuLoadEnded() override;
-
-    private:
-        MeshImpl &mesh;
-    };
 
 protected:
     // Load operation
