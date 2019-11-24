@@ -29,6 +29,7 @@ public:
     Resource &getSsrMap() { return *ssrMap; }
     Resource &getSsrBlurredMap() { return *ssrBlurredMap; }
     Resource &getBloomMap() { return *bloomMap; }
+    Resource &getPreFogBuffer() { return *preFogBuffer; }
     Resource &getGBufferAlbedo() { return *gBufferAlbedo; }
     Resource &getGBufferNormal() { return *gBufferNormal; }
     Resource &getGBufferSpecular() { return *gBufferSpecular; }
@@ -44,6 +45,7 @@ private:
     void createSsaoBuffers(int width, int height);
     void createSsrBuffers(int width, int height);
     void createLightingOutputBuffers(int width, int height);
+    void createPreFogBuffer(int width, int height);
     void createDepthBuffer(int width, int height);
 
     // Helpers
@@ -62,6 +64,7 @@ private:
     std::unique_ptr<Resource> gBufferSpecular;
     std::unique_ptr<Resource> bloomMap;
     std::unique_ptr<Resource> lightingOutput;
+    std::unique_ptr<Resource> preFogBuffer;
     std::unique_ptr<Resource> shadowMap[8] = {};
     std::unique_ptr<Resource> depthStencilBuffer = {};
     std::unique_ptr<VertexBuffer> fullscreenVB;

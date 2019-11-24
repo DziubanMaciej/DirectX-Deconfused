@@ -24,6 +24,8 @@ public:
     /// @{
     virtual void setBackgroundColor(float r, float g, float b) = 0;
     virtual void setAmbientLight(float r, float g, float b) = 0;
+    virtual void setFogColor(float r, float g, float b) = 0;
+    virtual void setFogPower(float pow) = 0;
     /// @}
 
     /// @{

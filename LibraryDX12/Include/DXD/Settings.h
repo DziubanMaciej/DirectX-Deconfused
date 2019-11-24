@@ -35,6 +35,13 @@ public:
     virtual bool getSsrEnabled() const = 0;
     /// @}
 
+    /// \name Fog
+    /// \brief This effect provides fog.
+    /// @{
+    virtual void setFogEnabled(bool value) = 0;
+    virtual bool getFogEnabled() const = 0;
+    /// @}
+
     /// \name Shadows quality
     /// \brief This effect casts shadows of Objects based on Light sources. Quality
     /// of the effect means resolution of shadow maps used internally and number of

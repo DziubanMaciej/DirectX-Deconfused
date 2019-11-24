@@ -32,6 +32,8 @@ public:
         PIPELINE_STATE_SSR_MERGE,
         // Lighting
         PIPELINE_STATE_LIGHTING,
+        // Fog
+        PIPELINE_STATE_FOG,
         // Post Processes
         PIPELINE_STATE_POST_PROCESS_BLACK_BARS,
         PIPELINE_STATE_POST_PROCESS_CONVOLUTION,
@@ -73,6 +75,8 @@ private:
     void compilePipelineStateSSRMerge(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     // Lighting
     void compilePipelineStateLighting(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    // Fog
+    void compilePipelineStateFog(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     // Shadow maps
     void compilePipelineStateShadowMapNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateShadowMapTextureNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);

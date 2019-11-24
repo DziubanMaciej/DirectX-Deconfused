@@ -100,6 +100,16 @@ struct LightingCB {
     uint enableSSAO;
 };
 
+struct FogCB {
+    float3 fogColor;
+    float screenWidth;
+    float screenHeight;
+    float fogPower;
+    matrix viewMatrixInverse;
+    matrix projMatrixInverse;
+    float4 cameraPosition;
+};
+
 struct SpriteCB {
     float screenWidth;
     float screenHeight;

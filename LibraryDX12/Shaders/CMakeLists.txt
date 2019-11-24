@@ -22,6 +22,7 @@ add_shaders_and_cmake_file(${TARGET_NAME}
 
     # Other shaders
     ${CMAKE_CURRENT_SOURCE_DIR}/generate_mip_maps_CS.hlsl   Compute
+    ${CMAKE_CURRENT_SOURCE_DIR}/fog_PS.hlsl                 Pixel
     ${CMAKE_CURRENT_SOURCE_DIR}/lighting_PS.hlsl            Pixel
     ${CMAKE_CURRENT_SOURCE_DIR}/sprite_sampler_PS.hlsl      Pixel
     ${CMAKE_CURRENT_SOURCE_DIR}/ssao_PS.hlsl                Pixel

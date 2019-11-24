@@ -31,6 +31,8 @@ protected:
 public:
     void setBackgroundColor(float r, float g, float b) override;
     void setAmbientLight(float r, float g, float b) override;
+    void setFogColor(float r, float g, float b) override;
+    void setFogPower(float pow) override;
 
     void addLight(DXD::Light &light) override;
     unsigned int removeLight(DXD::Light &light) override;
@@ -79,6 +81,7 @@ protected:
     void renderSSAO(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
     void renderLighting(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output);
     void renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output);
+    void renderFog(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output);
     static void renderPostProcess(PostProcessImpl &postProcess, CommandList &commandList, VertexBuffer &fullscreenVB,
                                   Resource *input, AlternatingResources &renderTargets, Resource *output,
                                   float screenWidth, float screenHeight);
@@ -93,6 +96,8 @@ protected:
     // Data set by user
     FLOAT backgroundColor[3] = {};
     FLOAT ambientLight[3] = {};
+    FLOAT fogColor[3] = {};
+    FLOAT fogPower = 0;
     std::vector<LightImpl *> lights;
     std::set<ObjectImpl *> objects; // TODO might not be the best data structure for that
     std::set<ObjectImpl *> objectsNotReady;

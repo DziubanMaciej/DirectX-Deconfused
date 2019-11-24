@@ -323,6 +323,8 @@ private:
         scene = DXD::Scene::create();
         scene->setBackgroundColor(0.7f, 1.0f, 1.0f);
         scene->setAmbientLight(1.0f, 1.0f, 250.0f / 255.0f);
+        scene->setFogColor(1.0f, 1.0f, 1.0f);
+        scene->setFogPower(0.03f);
         scene->setCamera(*camera);
 
         for (auto &object : objects) {
@@ -441,6 +443,9 @@ private:
             break;
         case '6':
             application->getSettings().setSsrEnabled(!application->getSettings().getSsrEnabled());
+            break;
+        case 'Y':
+            application->getSettings().setFogEnabled(!application->getSettings().getFogEnabled());
             break;
         case '7':
             postProcesses["blackBars"]->setEnabled(!postProcesses["blackBars"]->isEnabled());

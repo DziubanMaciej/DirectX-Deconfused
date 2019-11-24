@@ -71,6 +71,16 @@ void SceneImpl::setAmbientLight(float r, float g, float b) {
     ambientLight[2] = b;
 }
 
+void SceneImpl::setFogColor(float r, float g, float b) {
+    fogColor[0] = r;
+    fogColor[1] = g;
+    fogColor[2] = b;
+}
+
+void SceneImpl::setFogPower(float pow) {
+    fogPower = pow;
+}
+
 // --------------------------------------------------------------------------- Scene management
 
 void SceneImpl::addLight(DXD::Light &light) {
@@ -506,6 +516,38 @@ void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, 
     ///commandList.getCommandList()->ResolveQueryData(queryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0, 2, queryResult->getResource().Get(), 0);
 }
 
+void SceneImpl::renderFog(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output) {
+    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+    commandList.RSSetScissorRectNoScissor();
+    commandList.IASetPrimitiveTopologyTriangleList();
+
+    commandList.transitionBarrier(renderData.getPreFogBuffer(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+    commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_FOG);
+
+    const Resource *fogRts[] = {&output};
+    commandList.OMSetRenderTargetsNoDepth(fogRts);
+
+    commandList.setSrvInDescriptorTable(0, 0, renderData.getDepthStencilBuffer());
+    commandList.setSrvInDescriptorTable(0, 1, renderData.getPreFogBuffer());
+
+    FogCB fogCB;
+    fogCB.screenWidth = static_cast<float>(swapChain.getWidth());
+    fogCB.screenHeight = static_cast<float>(swapChain.getHeight());
+    fogCB.fogPower = fogPower;
+    fogCB.fogColor = XMFLOAT3(fogColor[0], fogColor[1], fogColor[2]);
+    fogCB.viewMatrixInverse = camera->getInvViewMatrix();
+    fogCB.projMatrixInverse = camera->getInvProjectionMatrix();
+    fogCB.cameraPosition = XMFLOAT4(camera->getEyePosition().x, camera->getEyePosition().y, camera->getEyePosition().z, 1);
+    commandList.setRoot32BitConstant(1, fogCB);
+
+    commandList.IASetVertexBuffer(renderData.getFullscreenVB());
+
+    commandList.draw(6u);
+
+}
+
 void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList, VertexBuffer &fullscreenVB,
                                     Resource *input, AlternatingResources &renderTargets, Resource *output,
                                     size_t enabledPostProcessesCount, float screenWidth, float screenHeight) {
@@ -730,7 +772,11 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     // Identify output for the next step: if there are post processes, render to intermediate buffer
     const auto postProcessesCount = getEnabledPostProcessesCount();
     const bool shouldRenderPostProcesses = (postProcessesCount > 0);
-    auto &renderLightingOutput = shouldRenderPostProcesses ? renderData.getPostProcessRenderTargets().getDestination() : backBuffer;
+    Resource *renderOutput = shouldRenderPostProcesses ? &renderData.getPostProcessRenderTargets().getDestination() : &backBuffer;
+
+    const bool shouldRenderFog = ApplicationImpl::getInstance().getSettings().getFogEnabled();
+
+    renderOutput = shouldRenderFog ? &renderData.getPreFogBuffer() : renderOutput;
 
     // SSR and merge
     if (ApplicationImpl::getInstance().getSettings().getSsrEnabled()) {
@@ -744,18 +790,29 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
         // SSR
         CommandList commandListSSR{commandQueue};
         SET_OBJECT_NAME(commandListSSR, L"cmdListSSR");
-        renderSSRandMerge(swapChain, renderData, commandListSSR, renderLightingOutput);
+        renderSSRandMerge(swapChain, renderData, commandListSSR, *renderOutput);
         commandListSSR.close();
         commandQueue.executeCommandListAndSignal(commandListSSR);
     } else {
         // Lighting
         CommandList commandListLighting{commandQueue};
         SET_OBJECT_NAME(commandListLighting, L"cmdListLighting");
-        renderLighting(swapChain, renderData, commandListLighting, renderLightingOutput);
+        renderLighting(swapChain, renderData, commandListLighting, *renderOutput);
         commandListLighting.close();
         commandQueue.executeCommandListAndSignal(commandListLighting);
     }
 
+    if (shouldRenderFog) {
+
+        renderOutput = shouldRenderPostProcesses ? &renderData.getPostProcessRenderTargets().getDestination() : &backBuffer;
+
+        // Fog
+        CommandList commandListFog{commandQueue};
+        SET_OBJECT_NAME(commandListFog, L"cmdListFog");
+        renderFog(swapChain, renderData, commandListFog, *renderOutput);
+        commandListFog.close();
+        commandQueue.executeCommandListAndSignal(commandListFog);
+    }
     /// QUERY used in perf. measurement.
     ///UINT64 *queryData = nullptr;
     ///queryResult->getResource().Get()->Map(0, nullptr, (void **)&queryData);
