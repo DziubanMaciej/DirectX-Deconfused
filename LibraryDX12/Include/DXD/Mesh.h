@@ -27,20 +27,31 @@ public:
     };
     using ObjLoadEvent = Event<ObjLoadResult>;
 
-    /// Factory function for loading geometry from wavefront obj file. Internally handles
-    /// getting the geometry to the GPU memory and all operations associated with setting
-    /// it up.
-    /// \param application execution context for the loader
+    /// Factory function for loading geometry from wavefront obj file synchronously, in the calling
+    /// thread. Internally handles getting the geometry to the GPU memory and all operations
+    /// associated with setting it up.
     /// \param filePath relative or absolute path of the obj file
-    /// \param loadTextureCoordinates when set to true, adds UVs to the model. Fails if the
-    /// uvs are not available
+    /// \param loadTextureCoordinates when set to true, adds UVs to the model. Fails if the uvs are
+    /// not available
     /// \param computeTangents when set to true, calculates tangent vector for vertices to
     /// enable normal mapping
-    /// \param asynchronousLoading when set to true, handles object loading in a separate thread
-    /// managed by the engine
+    /// \param loadResult optional parameter for checking operation status. Application should use it
+    /// to verify if the loading succeeded.
     /// \return created mesh
     static std::unique_ptr<Mesh> createFromObjSynchronously(const std::wstring &filePath, bool loadTextureCoordinates,
                                                             bool computeTangents, ObjLoadResult *loadResult);
+
+    /// Factory function for loading geometry from wavefront obj file asynchronously, in a background
+    /// thread managed by the engine. Internally handles getting the geometry to the GPU memory and
+    ///all operations associated with setting it up.
+    /// \param filePath relative or absolute path of the obj file
+    /// \param loadTextureCoordinates when set to true, adds UVs to the model. Fails if the uvs are
+    /// not available
+    /// \param computeTangents when set to true, calculates tangent vector for vertices to
+    /// enable normal mapping
+    /// \param loadEvent optional parameter for checking operation status. Application should use it
+    /// to verify if the loading succeeded.
+    /// \return created mesh
     static std::unique_ptr<Mesh> createFromObjAsynchronously(const std::wstring &filePath, bool loadTextureCoordinates,
                                                              bool computeTangents, ObjLoadEvent *loadEvent);
     virtual ~Mesh() = default;

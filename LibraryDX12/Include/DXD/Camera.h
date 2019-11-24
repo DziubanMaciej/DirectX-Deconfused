@@ -18,73 +18,41 @@ namespace DXD {
 /// rotate as he moves.
 class EXPORT Camera : NonCopyableAndMovable {
 public:
-    /// \name Camera position accessors
     ///@{
-
-    /// Sets the camera position
     virtual void setEyePosition(float x, float y, float z) = 0;
-    /// Sets the camera position
     virtual void setEyePosition(XMFLOAT3 vec) = 0;
-    /// Retrieves the camera position
     virtual XMFLOAT3 getEyePosition() const = 0;
     ///@}
 
-    /// \name Focus point accessors
     ///@{
-
-    /// Sets focus the point and puts Camera in focus mode
     virtual void setFocusPoint(float x, float y, float z) = 0;
-    /// Sets focus the point and puts Camera in focus mode
     virtual void setFocusPoint(XMFLOAT3 vec) = 0;
-    /// Retrieves focus point. If the Camera is in direction mode, focus point is calculated.
     virtual XMFLOAT3 getFocusPoint() const = 0;
     ///@}
 
-    /// \name Look direction accessors
     ///@{
-
-    /// Sets looking direction and puts Camera in direction mode
     virtual void setLookDirection(float x, float y, float z) = 0;
-    /// Sets looking direction and puts Camera in direction mode
     virtual void setLookDirection(XMFLOAT3 vec) = 0;
-    /// Retrieves look direction. If the Camera is in focus mode, direction is calculated
     virtual XMFLOAT3 getLookDirection() const = 0;
     ///@}
 
-    /// \name Up direction accessors
     ///@{
-
-    /// Sets up direction
     virtual void setUpDirection(float x, float y, float z) = 0;
-    /// Sets up direction
     virtual void setUpDirection(XMFLOAT3 vec) = 0;
-    /// Retrieves up direction
     virtual XMFLOAT3 getUpDirection() const = 0;
     ///@}
 
-    /// \name Field of view accessors
     ///@{
-
-    /// Sets FoV of the Camera
     virtual void setFovAngleY(float val) = 0;
-    /// Sets FoV of the Camera
     virtual void setFovAngleYDeg(float val) = 0;
-    /// Retrieves FoV of the Camera
     virtual float getFovAngleY() const = 0;
-    /// Retrieves FoV of the Camera
     virtual float getFovAngleYDeg() const = 0;
     ///@}
 
-    /// \brief Z planes accessors
     ///@{
-
-    /// Sets near Z plane
     virtual void setNearZ(float val) = 0;
-    /// Retrieves near Z plane
     virtual float getNearZ() const = 0;
-    /// Sets far Z plane
     virtual void setFarZ(float val) = 0;
-    /// Retrieves far Z plane
     virtual float getFarZ() const = 0;
     ///@}
 
