@@ -549,11 +549,37 @@ void SceneImpl::renderFog(SwapChain &swapChain, RenderData &renderData, CommandL
 }
 
 void SceneImpl::renderDof(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output) {
+    // DOF
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
     commandList.transitionBarrier(renderData.getPreDofBuffer(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    commandList.transitionBarrier(renderData.getDofMap(), D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+    commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_DOF_BLUR);
+
+    const Resource *dofBlurRts[] = {&renderData.getDofMap()};
+    commandList.OMSetRenderTargetsNoDepth(dofBlurRts);
+
+    commandList.setSrvInDescriptorTable(0, 0, renderData.getDepthStencilBuffer());
+    commandList.setSrvInDescriptorTable(0, 1, renderData.getPreDofBuffer());
+
+    DofCB dofCB;
+    dofCB.screenWidth = static_cast<float>(swapChain.getWidth());
+    dofCB.screenHeight = static_cast<float>(swapChain.getHeight());
+    commandList.setRoot32BitConstant(1, dofCB);
+
+    commandList.IASetVertexBuffer(renderData.getFullscreenVB());
+
+    commandList.draw(6u);
+
+    // DOF 2
+    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+    commandList.RSSetScissorRectNoScissor();
+    commandList.IASetPrimitiveTopologyTriangleList();
+
+    commandList.transitionBarrier(renderData.getDofMap(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_DOF);
@@ -562,11 +588,8 @@ void SceneImpl::renderDof(SwapChain &swapChain, RenderData &renderData, CommandL
     commandList.OMSetRenderTargetsNoDepth(dofRts);
 
     commandList.setSrvInDescriptorTable(0, 0, renderData.getDepthStencilBuffer());
-    commandList.setSrvInDescriptorTable(0, 1, renderData.getPreDofBuffer());
+    commandList.setSrvInDescriptorTable(0, 1, renderData.getDofMap());
 
-    DofCB dofCB;
-    dofCB.screenWidth = static_cast<float>(swapChain.getWidth());
-    dofCB.screenHeight = static_cast<float>(swapChain.getHeight());
     commandList.setRoot32BitConstant(1, dofCB);
 
     commandList.IASetVertexBuffer(renderData.getFullscreenVB());

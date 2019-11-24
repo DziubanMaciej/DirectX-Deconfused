@@ -83,6 +83,9 @@ void PipelineStateController::compile(Identifier identifier) {
     case Identifier::PIPELINE_STATE_DOF:
         compilePipelineStateDof(rootSignature, pipelineState);
         break;
+    case Identifier::PIPELINE_STATE_DOF_BLUR:
+        compilePipelineStateDofBlur(rootSignature, pipelineState);
+        break;
     case Identifier::PIPELINE_STATE_POST_PROCESS_BLACK_BARS:
         compilePipelineStatePostProcessBlackBars(rootSignature, pipelineState);
         break;
@@ -669,6 +672,37 @@ void PipelineStateController::compilePipelineStateDof(RootSignature &rootSignatu
     DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
     table.appendSrvRange(t(0), 1) // gbuffer depth
         .appendSrvRange(t(1), 1); // lighting output
+
+    rootSignature
+        .appendStaticSampler(s(0), sampler)
+        .appendDescriptorTable(std::move(table))
+        .append32bitConstant<DofCB>(b(1), D3D12_SHADER_VISIBILITY_PIXEL)
+        .compile(device);
+
+    // Input layout - per vertex data
+    const D3D12_INPUT_ELEMENT_DESC inputLayout[] = {
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D12_APPEND_ALIGNED_ELEMENT, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+    };
+
+    // Pipeline state object
+    return GraphicsPipelineState{inputLayout, rootSignature}
+        .VS(L"PostProcess/VS.hlsl")
+        .PS(L"dof_PS.hlsl")
+        .disableDepthStencil()
+        .setRenderTargetsCount(1)
+        .compile(device, pipelineState);
+}
+
+void PipelineStateController::compilePipelineStateDofBlur(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
+    // Root signature - crossthread data
+    StaticSampler sampler{D3D12_SHADER_VISIBILITY_PIXEL};
+    sampler.lodRange(0, 0);
+    sampler.addressMode(D3D12_TEXTURE_ADDRESS_MODE_MIRROR);
+    sampler.filter(D3D12_FILTER_MIN_MAG_LINEAR_MIP_POINT);
+
+    DescriptorTable table{D3D12_SHADER_VISIBILITY_PIXEL};
+    table.appendSrvRange(t(0), 1) // gbuffer depth
+        .appendSrvRange(t(1), 1); // dof output
 
     rootSignature
         .appendStaticSampler(s(0), sampler)

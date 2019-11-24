@@ -37,29 +37,27 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
     [loop] for (int i = 1; i < sampleKernelSize; i++) {
 
-        float tempDepth = gBufferDepth.Sample(g_sampler, float2(uBase, vBase + float(i) * invResHeight)).r;
+        float tempDepth = gBufferDepth.Sample(g_sampler, float2(uBase + float(i) * invResWidth, vBase)).r;
         float depthDiff = tempDepth - centerDepth;
 
         if (depthDiff < 0.03f) {
             break;
         }
 
-        float invResWidth = 1.0f / scb.screenWidth;
-        float invResHeight = 1.0f / scb.screenHeight;
-        outputColor += lightingOutput.Sample(g_sampler, float2(uBase, vBase + float(i) * invResHeight)).rgb;
+        outputColor += lightingOutput.Sample(g_sampler, float2(uBase + float(i) * invResWidth, vBase)).rgb;
         sampleCount++;
     }
 
     [loop] for (int i = -sampleKernelSize; i < -1; i++) {
 
-        float tempDepth = gBufferDepth.Sample(g_sampler, float2(uBase, vBase + float(i) * invResHeight)).r;
+        float tempDepth = gBufferDepth.Sample(g_sampler, float2(uBase + float(i) * invResWidth, vBase)).r;
         float depthDiff = tempDepth - centerDepth;
 
         if (depthDiff < 0.03f) {
             break;
         }
 
-        outputColor += lightingOutput.Sample(g_sampler, float2(uBase, vBase + float(i) * invResHeight)).rgb;
+        outputColor += lightingOutput.Sample(g_sampler, float2(uBase + float(i) * invResWidth, vBase)).rgb;
         sampleCount++;
     }
 

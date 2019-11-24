@@ -36,6 +36,8 @@ public:
         PIPELINE_STATE_FOG,
         // Depth of Field
         PIPELINE_STATE_DOF,
+        // Depth of Field
+        PIPELINE_STATE_DOF_BLUR,
         // Post Processes
         PIPELINE_STATE_POST_PROCESS_BLACK_BARS,
         PIPELINE_STATE_POST_PROCESS_CONVOLUTION,
@@ -81,6 +83,8 @@ private:
     void compilePipelineStateFog(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     // Fog
     void compilePipelineStateDof(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    // Fog
+    void compilePipelineStateDofBlur(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     // Shadow maps
     void compilePipelineStateShadowMapNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateShadowMapTextureNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
