@@ -42,6 +42,13 @@ public:
     virtual bool getFogEnabled() const = 0;
     /// @}
 
+    /// \name Dof
+    /// \brief This effect provides depth of field.
+    /// @{
+    virtual void setDofEnabled(bool value) = 0;
+    virtual bool getDofEnabled() const = 0;
+    /// @}
+
     /// \name Shadows quality
     /// \brief This effect casts shadows of Objects based on Light sources. Quality
     /// of the effect means resolution of shadow maps used internally and number of

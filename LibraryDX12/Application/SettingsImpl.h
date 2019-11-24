@@ -38,8 +38,9 @@ public:
     using SsaoEnabled = Setting<1, bool, false>;
     using SsrEnabled = Setting<2, bool, false>;
     using FogEnabled = Setting<3, bool, false>;
-    using ShadowsQuality = NumericalSetting<4, unsigned int, 8u, 0u, 10u>;
-    struct Data : std::tuple<VerticalSyncEnabled, SsaoEnabled, SsrEnabled, FogEnabled, ShadowsQuality> {};
+    using DofEnabled = Setting<4, bool, false>;
+    using ShadowsQuality = NumericalSetting<5, unsigned int, 8u, 0u, 10u>;
+    struct Data : std::tuple<VerticalSyncEnabled, SsaoEnabled, SsrEnabled, FogEnabled, DofEnabled, ShadowsQuality> {};
 
     // Registering handlers
     template <typename _Setting>
@@ -60,11 +61,13 @@ public:
     void setSsaoEnabled(bool value) override { set<SsaoEnabled>(value); }
     void setSsrEnabled(bool value) override { set<SsrEnabled>(value); }
     void setFogEnabled(bool value) override { set<FogEnabled>(value); }
+    void setDofEnabled(bool value) override { set<DofEnabled>(value); }
     void setShadowsQuality(unsigned int value) override { set<ShadowsQuality>(value); }
     bool getVerticalSyncEnabled() const override { return get<VerticalSyncEnabled>(); }
     bool getSsaoEnabled() const override { return get<SsaoEnabled>(); }
     bool getSsrEnabled() const override { return get<SsrEnabled>(); }
     bool getFogEnabled() const override { return get<FogEnabled>(); }
+    bool getDofEnabled() const override { return get<DofEnabled>(); }
     unsigned int getShadowsQuality() const override { return get<ShadowsQuality>(); }
 
     template <typename _Setting>

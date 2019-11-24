@@ -54,6 +54,7 @@ void RenderData::resize(int width, int height) {
     createSsaoBuffers(width, height);
     createSsrBuffers(width, height);
     createPreFogBuffer(width, height);
+    createPreDofBuffer(width, height);
     createLightingOutputBuffers(width, height);
     createDepthBuffer(width, height);
     postProcessRenderTargets.resize(width, height);
@@ -244,6 +245,22 @@ void RenderData::createPreFogBuffer(int width, int height) {
     preFogBuffer->createSrv(nullptr);
     preFogBuffer->createRtv(nullptr);
     SET_OBJECT_NAME(*preFogBuffer, L"PreFogBuffer");
+}
+
+void RenderData::createPreDofBuffer(int width, int height) {
+    D3D12_RESOURCE_DESC preDofBufferDesc = getBaseDescForFullscreenTexture(width, height);
+    preDofBufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    preDofBufferDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
+    preDofBuffer = std::make_unique<Resource>(
+        device,
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &preDofBufferDesc,
+        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE,
+        nullptr);
+    preDofBuffer->createSrv(nullptr);
+    preDofBuffer->createRtv(nullptr);
+    SET_OBJECT_NAME(*preDofBuffer, L"PreDofBuffer");
 }
 
 void RenderData::createDepthBuffer(int width, int height) {

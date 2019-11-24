@@ -447,6 +447,9 @@ private:
         case 'Y':
             application->getSettings().setFogEnabled(!application->getSettings().getFogEnabled());
             break;
+        case 'U':
+            application->getSettings().setDofEnabled(!application->getSettings().getDofEnabled());
+            break;
         case '7':
             postProcesses["blackBars"]->setEnabled(!postProcesses["blackBars"]->isEnabled());
             break;

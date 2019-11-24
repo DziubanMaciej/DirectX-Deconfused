@@ -110,6 +110,11 @@ struct FogCB {
     float4 cameraPosition;
 };
 
+struct DofCB {
+    float screenWidth;
+    float screenHeight;
+};
+
 struct SpriteCB {
     float screenWidth;
     float screenHeight;

@@ -548,6 +548,32 @@ void SceneImpl::renderFog(SwapChain &swapChain, RenderData &renderData, CommandL
 
 }
 
+void SceneImpl::renderDof(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output) {
+    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+    commandList.RSSetScissorRectNoScissor();
+    commandList.IASetPrimitiveTopologyTriangleList();
+
+    commandList.transitionBarrier(renderData.getPreDofBuffer(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
+
+    commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_DOF);
+
+    const Resource *dofRts[] = {&output};
+    commandList.OMSetRenderTargetsNoDepth(dofRts);
+
+    commandList.setSrvInDescriptorTable(0, 0, renderData.getDepthStencilBuffer());
+    commandList.setSrvInDescriptorTable(0, 1, renderData.getPreDofBuffer());
+
+    DofCB dofCB;
+    dofCB.screenWidth = static_cast<float>(swapChain.getWidth());
+    dofCB.screenHeight = static_cast<float>(swapChain.getHeight());
+    commandList.setRoot32BitConstant(1, dofCB);
+
+    commandList.IASetVertexBuffer(renderData.getFullscreenVB());
+
+    commandList.draw(6u);
+}
+
 void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList, VertexBuffer &fullscreenVB,
                                     Resource *input, AlternatingResources &renderTargets, Resource *output,
                                     size_t enabledPostProcessesCount, float screenWidth, float screenHeight) {
@@ -775,8 +801,15 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     Resource *renderOutput = shouldRenderPostProcesses ? &renderData.getPostProcessRenderTargets().getDestination() : &backBuffer;
 
     const bool shouldRenderFog = ApplicationImpl::getInstance().getSettings().getFogEnabled();
+    const bool shouldRenderDof = ApplicationImpl::getInstance().getSettings().getDofEnabled();
 
-    renderOutput = shouldRenderFog ? &renderData.getPreFogBuffer() : renderOutput;
+    if (shouldRenderDof) {
+        renderOutput = &renderData.getPreDofBuffer();
+    }
+
+    if (shouldRenderFog) {
+        renderOutput = &renderData.getPreFogBuffer();
+    }
 
     // SSR and merge
     if (ApplicationImpl::getInstance().getSettings().getSsrEnabled()) {
@@ -806,12 +839,28 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
 
         renderOutput = shouldRenderPostProcesses ? &renderData.getPostProcessRenderTargets().getDestination() : &backBuffer;
 
+        if (shouldRenderDof) {
+            renderOutput = &renderData.getPreDofBuffer();
+        }
+
         // Fog
         CommandList commandListFog{commandQueue};
         SET_OBJECT_NAME(commandListFog, L"cmdListFog");
         renderFog(swapChain, renderData, commandListFog, *renderOutput);
         commandListFog.close();
         commandQueue.executeCommandListAndSignal(commandListFog);
+    }
+
+    if (shouldRenderDof) {
+
+        renderOutput = shouldRenderPostProcesses ? &renderData.getPostProcessRenderTargets().getDestination() : &backBuffer;
+
+        // Fog
+        CommandList commandListDof{commandQueue};
+        SET_OBJECT_NAME(commandListDof, L"cmdListDof");
+        renderDof(swapChain, renderData, commandListDof, *renderOutput);
+        commandListDof.close();
+        commandQueue.executeCommandListAndSignal(commandListDof);
     }
     /// QUERY used in perf. measurement.
     ///UINT64 *queryData = nullptr;

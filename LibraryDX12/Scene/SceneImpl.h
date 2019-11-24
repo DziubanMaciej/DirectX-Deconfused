@@ -82,6 +82,7 @@ protected:
     void renderLighting(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output);
     void renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output);
     void renderFog(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output);
+    void renderDof(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output);
     static void renderPostProcess(PostProcessImpl &postProcess, CommandList &commandList, VertexBuffer &fullscreenVB,
                                   Resource *input, AlternatingResources &renderTargets, Resource *output,
                                   float screenWidth, float screenHeight);
