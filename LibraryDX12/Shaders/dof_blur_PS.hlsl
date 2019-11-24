@@ -31,7 +31,6 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
     int sampleCount = 1;
 
-   
     const float invResWidth = 1.0f / scb.screenWidth;
     const float invResHeight = 1.0f / scb.screenHeight;
 

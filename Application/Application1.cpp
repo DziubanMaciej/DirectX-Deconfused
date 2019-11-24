@@ -74,6 +74,7 @@ private:
             {"glowingCube2", "cubeNormalMesh"},
             {"glowingCube3", "cubeNormalMesh"},
             {"glowingCube4", "cubeNormalMesh"},
+            {"transparentCube", "cubeNormalMesh"},
             {"wood", "cubeNormalUv"},
             {"glowingBlue", "cubeNormalMesh"},
             {"glowingRed", "cubeNormalMesh"},
@@ -143,6 +144,10 @@ private:
         objects["glowingRed"]->setColor(0.9f, 0.0f, 0.0f);
         objects["glowingRed"]->setScale(0.25f, 0.25f, 0.25f);
 
+        objects["transparentCube"]->setPosition(0.0f, 0.0f, 0.0f);
+        objects["transparentCube"]->setColor(0.0f, 0.0f, 0.0f);
+        objects["transparentCube"]->setScale(0.5f, 0.5f, 0.5f);
+
         objects["stand"]->setPosition(0, -2.5, 0);
         objects["stand"]->setSpecularity(0.2f);
         objects["stand"]->setScale(12, 0.5, 12);
@@ -186,6 +191,7 @@ private:
         objects["dennis"]->setScale(0.01f, 0.01f, 0.01f);
         objects["dennis"]->setRotation(XMFLOAT3(0, 1, 0), 90);
         objects["dennis"]->setTexture(textures["dennis"].get());
+
     }
     void prepLights() {
         DXD::log("Loading lights...\n");
