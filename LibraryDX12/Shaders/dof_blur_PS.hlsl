@@ -41,7 +41,7 @@ float4 main(PixelShaderInput IN) : SV_Target {
         float depthDiff = tempDepth - centerDepth;
 
         if (depthDiff < 0.03f) {
-            break;
+            continue;
         }
 
         outputColor += lightingOutput.Sample(g_sampler, float2(uBase + float(i) * invResWidth, vBase)).rgb;
@@ -54,7 +54,7 @@ float4 main(PixelShaderInput IN) : SV_Target {
         float depthDiff = tempDepth - centerDepth;
 
         if (depthDiff < 0.03f) {
-            break;
+            continue;
         }
 
         outputColor += lightingOutput.Sample(g_sampler, float2(uBase + float(i) * invResWidth, vBase)).rgb;

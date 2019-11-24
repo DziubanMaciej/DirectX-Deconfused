@@ -1,5 +1,5 @@
 Texture2D gBufferDepth : register(t0);
-Texture2D lightingOutput : register(t1);
+Texture2D dofMap : register(t1);
 
 SamplerState g_sampler : register(s0);
 
@@ -27,7 +27,7 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
     int sampleKernelSize = max(1, int(10.0f * depthDiff));
 
-    float3 outputColor = lightingOutput.Sample(g_sampler, float2(uBase, vBase)).rgb;
+    float3 outputColor = dofMap.Sample(g_sampler, float2(uBase, vBase)).rgb;
 
     int sampleCount = 1;
 
@@ -41,12 +41,10 @@ float4 main(PixelShaderInput IN) : SV_Target {
         float depthDiff = tempDepth - centerDepth;
 
         if (depthDiff < 0.03f) {
-            break;
+            continue;
         }
 
-        float invResWidth = 1.0f / scb.screenWidth;
-        float invResHeight = 1.0f / scb.screenHeight;
-        outputColor += lightingOutput.Sample(g_sampler, float2(uBase, vBase + float(i) * invResHeight)).rgb;
+        outputColor += dofMap.Sample(g_sampler, float2(uBase, vBase + float(i) * invResHeight)).rgb;
         sampleCount++;
     }
 
@@ -56,10 +54,10 @@ float4 main(PixelShaderInput IN) : SV_Target {
         float depthDiff = tempDepth - centerDepth;
 
         if (depthDiff < 0.03f) {
-            break;
+            continue;
         }
 
-        outputColor += lightingOutput.Sample(g_sampler, float2(uBase, vBase + float(i) * invResHeight)).rgb;
+        outputColor += dofMap.Sample(g_sampler, float2(uBase, vBase + float(i) * invResHeight)).rgb;
         sampleCount++;
     }
 

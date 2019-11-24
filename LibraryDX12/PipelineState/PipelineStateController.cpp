@@ -718,7 +718,7 @@ void PipelineStateController::compilePipelineStateDofBlur(RootSignature &rootSig
     // Pipeline state object
     return GraphicsPipelineState{inputLayout, rootSignature}
         .VS(L"PostProcess/VS.hlsl")
-        .PS(L"dof_PS.hlsl")
+        .PS(L"dof_blur_PS.hlsl")
         .disableDepthStencil()
         .setRenderTargetsCount(1)
         .compile(device, pipelineState);
