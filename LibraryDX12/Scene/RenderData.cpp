@@ -181,9 +181,9 @@ void RenderData::createSsaoBuffers(int width, int height) {
 
 void RenderData::createSsrBuffers(int width, int height) {
     // SSR map
-    width = std::max(width / 2, 1);
-    height = std::max(height / 2, 1);
-    D3D12_RESOURCE_DESC ssrMapDesc = getBaseDescForFullscreenTexture(width, height);
+    int halfWidth = std::max(width / 2, 1);
+    int halfHeight = std::max(height / 2, 1);
+    D3D12_RESOURCE_DESC ssrMapDesc = getBaseDescForFullscreenTexture(halfWidth, halfHeight);
     ssrMapDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     ssrMapDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET;
     ssrMap = std::make_unique<Resource>(
