@@ -172,11 +172,10 @@ private:
         objects["aventador2"]->setScale(0.9f, 0.9f, 0.9f);
         objects["aventador2"]->setRotation(XMFLOAT3(0, 1, 0), float(-M_PI / 4));
 
-        objects["dennis"]->setPosition(-2, -2, -8);
+        objects["dennis"]->setPosition(-2, -2, -6);
         objects["dennis"]->setScale(0.01f, 0.01f, 0.01f);
         objects["dennis"]->setRotation(XMFLOAT3(0, 1, 0), 90);
         objects["dennis"]->setTexture(textures["dennis"].get());
-
     }
     void prepLights() {
         DXD::log("Loading lights...\n");
@@ -199,24 +198,28 @@ private:
 
         lights["sunLight"]->setColor(1.0f, 1.0f, 1.0f);
         lights["sunLight"]->setPosition(-12, 12, 6);
-        lights["sunLight"]->setDirection(1, -1, -0.5);
+        lights["sunLight"]->setFocusPoint(0, -3, -2);
         lights["sunLight"]->setPower(12);
 
         lights["leftLight1"]->setColor(1.0f, 1.0f, 1.0f);
-        lights["leftLight1"]->setPosition(-9.0f, 0.0f, 3.0f);
-        lights["leftLight1"]->setDirection(1, -0.25f, 0);
+        lights["leftLight1"]->setPosition(-9.0f, 0.2f, 3.0f);
+        lights["leftLight1"]->setDirection(1, 0, 0);
+        lights["leftLight1"]->setPower(2);
 
         lights["leftLight2"]->setColor(1.0f, 1.0f, 1.0f);
-        lights["leftLight2"]->setPosition(-9.0f, 0.0f, -3.0f);
-        lights["leftLight2"]->setDirection(1, -0.25f, 0);
+        lights["leftLight2"]->setPosition(-9.0f, 0.2f, -3.0f);
+        lights["leftLight2"]->setDirection(1, 0, 0);
+        lights["leftLight2"]->setPower(2);
 
         lights["rightLight1"]->setColor(1.0f, 1.0f, 1.0f);
-        lights["rightLight1"]->setPosition(9.0f, 0.0f, 3.0f);
-        lights["rightLight1"]->setDirection(-1, -0.25f, 0);
+        lights["rightLight1"]->setPosition(9.0f, 0.2f, 3.0f);
+        lights["rightLight1"]->setDirection(-1, 0, 0);
+        lights["rightLight1"]->setPower(2);
 
         lights["rightLight2"]->setColor(1.0f, 1.0f, 1.0f);
-        lights["rightLight2"]->setPosition(9.0f, 0.0f, -3.0f);
-        lights["rightLight2"]->setDirection(-1, -0.25f, 0);
+        lights["rightLight2"]->setPosition(9.0f, 0.2f, -3.0f);
+        lights["rightLight2"]->setDirection(-1, 0, 0);
+        lights["rightLight2"]->setPower(2);
     }
     void prepTextures() {
         DXD::log("Loading textures...\n");
@@ -350,7 +353,27 @@ private:
     }
     void sceneMoveTick(unsigned int deltaTimeMicroseconds) {
         static float rotation = 0.f;
-        rotation += 0.000001f * deltaTimeMicroseconds;
+        rotation += 0.0000001f * deltaTimeMicroseconds;
+
+
+        lights["sunLight"]->setPosition(20 * sin(rotation), 8 + 8 * cos(2 * rotation), 6);
+        lights["sunLight"]->setColor(1.0f + sin(rotation), 1.0f + sin(rotation), 1.0f + sin(rotation));
+        lights["sunLight"]->setPower(5.0f + 5.0f * cos(2 * rotation));
+
+        //scene->setAmbientLight(0.8f, 0.8f, 0.8f);
+        float ambientPower = 0.4f + 0.4f * cos(2 * rotation);
+        scene->setAmbientLight(ambientPower, ambientPower, ambientPower);
+
+        //scene->setBackgroundColor(0.7f, 1.0f, 1.0f);
+        
+        float backgroundRedPower = sqrt(0.2f + 0.2f * cos(2 * rotation));
+        
+        float backgroundGreenPower = 0.35f + 0.45f * cos(2 * rotation);
+
+        float backgroundBluePower = 0.45f + 0.55f * cos(2 * rotation);
+
+        scene->setBackgroundColor(backgroundRedPower, backgroundGreenPower, backgroundBluePower);
+
     }
 
     // Callbacks
@@ -494,7 +517,7 @@ private:
     unsigned int lastMouseX, lastMouseY;
     bool lookingAroundEnabled = false;
     bool fullscreen = false;
-    bool toggleSceneMovement = true;
+    bool toggleSceneMovement = false;
     float angleX = 0.f;
     float angleY = 0.f;
     XMFLOAT3 cameraPosition{0, 4, -20};

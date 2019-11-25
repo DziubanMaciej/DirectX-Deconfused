@@ -178,9 +178,9 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
     }
 
     // Shader output - bloom map
-    const float brightness = dot(OUT_Color.rgb, float3(0.2126, 0.7152, 0.0722));
-    if (brightness > 0.5) {
-        result.bloomMap = float4(result.lightingOutput.rgb * INspecularity.g, INspecularity.g);
+    //const float brightness = dot(OUT_Color.rgb, float3(0.2126f, 0.7152f, 0.0722f));
+    if (INspecularity.g > 0.0f) {
+        result.bloomMap = float4(INalbedo.rgb * INspecularity.g, INspecularity.g);
     } else {
         result.bloomMap = float4(0, 0, 0, 0);
     }
