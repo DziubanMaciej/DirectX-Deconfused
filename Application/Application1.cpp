@@ -78,7 +78,7 @@ private:
             {"wood", "cubeNormalUv"},
             {"glowingBlue", "cubeNormalMesh"},
             {"glowingRed", "cubeNormalMesh"},
-            {"stand", "cubeNormalMesh"},
+            {"stand", "cubeNormalUv"},
             {"ground", "cubeNormalUv"},
             {"aventador1", "aventadorMesh"},
             {"porshe1", "porsheMesh"},
@@ -149,8 +149,10 @@ private:
         objects["transparentCube"]->setScale(0.5f, 0.5f, 0.5f);
 
         objects["stand"]->setPosition(0, -2.5, 0);
-        objects["stand"]->setSpecularity(0.2f);
+        objects["stand"]->setSpecularity(0.4f);
         objects["stand"]->setScale(12, 0.5, 12);
+        objects["stand"]->setTexture(textures["tiles"].get());
+        objects["stand"]->setTextureScale(12, 12);
 
         objects["wood"]->setPosition(0, -2.4f, 0);
         objects["wood"]->setScale(1.5f, 0.5f, 11);
@@ -238,10 +240,8 @@ private:
             {"brickwall_normal", L"Resources/textures/brickwall_normal.jpg"},
             {"porsche", L"Resources/textures/porsche.bmp"},
             {"dennis", L"Resources/textures/dennis.jpg"},
-            {
-                "wood",
-                L"Resources/textures/wood.jpg",
-            },
+            {"tiles", L"Resources/textures/tiles.jpg",},
+            {"wood", L"Resources/textures/wood.jpg",},
             {"grass", L"Resources/textures/grass.jpg"}};
 
         for (const auto &data : texturesCreationData) {
@@ -328,7 +328,7 @@ private:
         DXD::log("Preparing scene...\n");
         scene = DXD::Scene::create();
         scene->setBackgroundColor(0.7f, 1.0f, 1.0f);
-        scene->setAmbientLight(1.0f, 1.0f, 250.0f / 255.0f);
+        scene->setAmbientLight(0.8f, 0.8f, 0.8f);
         scene->setFogColor(1.0f, 1.0f, 1.0f);
         scene->setFogPower(0.03f);
         scene->setCamera(*camera);
