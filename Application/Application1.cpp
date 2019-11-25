@@ -74,10 +74,7 @@ private:
             {"glowingCube2", "cubeNormalMesh"},
             {"glowingCube3", "cubeNormalMesh"},
             {"glowingCube4", "cubeNormalMesh"},
-            {"transparentCube", "cubeNormalMesh"},
             {"wood", "cubeNormalUv"},
-            {"glowingBlue", "cubeNormalMesh"},
-            {"glowingRed", "cubeNormalMesh"},
             {"stand", "cubeNormalUv"},
             {"ground", "cubeNormalUv"},
             {"aventador1", "aventadorMesh"},
@@ -134,20 +131,6 @@ private:
         objects["glowingCube4"]->setColor(0.9f, 0.9f, 0.9f);
         objects["glowingCube4"]->setScale(0.75, 1.5f, 0.5f);
 
-        objects["glowingBlue"]->setPosition(-8.5f, 1.0f, -9.0f);
-        objects["glowingBlue"]->setBloomFactor(1.0f);
-        objects["glowingBlue"]->setColor(0.0f, 0.0f, 0.9f);
-        objects["glowingBlue"]->setScale(0.25f, 0.25f, 0.25f);
-
-        objects["glowingRed"]->setPosition(8.5f, 1.0f, -9.0f);
-        objects["glowingRed"]->setBloomFactor(1.0f);
-        objects["glowingRed"]->setColor(0.9f, 0.0f, 0.0f);
-        objects["glowingRed"]->setScale(0.25f, 0.25f, 0.25f);
-
-        objects["transparentCube"]->setPosition(0.0f, 0.0f, 0.0f);
-        objects["transparentCube"]->setColor(0.0f, 0.0f, 0.0f);
-        objects["transparentCube"]->setScale(0.5f, 0.5f, 0.5f);
-
         objects["stand"]->setPosition(0, -2.5, 0);
         objects["stand"]->setSpecularity(0.4f);
         objects["stand"]->setScale(12, 0.5, 12);
@@ -166,9 +149,9 @@ private:
         objects["ground"]->setTextureScale(50, 50);
 
         objects["porshe1"]->setPosition(4.0f, -1.475f, 2.0f);
-        objects["porshe1"]->setSpecularity(0.6f);
+        objects["porshe1"]->setSpecularity(0.5f);
         objects["porshe1"]->setScale(0.9f, 0.9f, 0.9f);
-        objects["porshe1"]->setTexture(textures["porsche"].get());
+        objects["porshe1"]->setTexture(textures["porshe_blue"].get());
         objects["porshe1"]->setRotation(XMFLOAT3(0, 1, 0), float(M_PI / 4));
 
         objects["aventador1"]->setPosition(-4.0f, -2.0f, 2.0f);
@@ -178,9 +161,9 @@ private:
         objects["aventador1"]->setRotation(XMFLOAT3(0, 1, 0), float(-M_PI / 4));
 
         objects["porshe2"]->setPosition(-4.0f, -1.475f, -2.0f);
-        objects["porshe2"]->setSpecularity(0.6f);
+        objects["porshe2"]->setSpecularity(0.5f);
         objects["porshe2"]->setScale(0.9f, 0.9f, 0.9f);
-        objects["porshe2"]->setTexture(textures["porsche"].get());
+        objects["porshe2"]->setTexture(textures["porshe_green"].get());
         objects["porshe2"]->setRotation(XMFLOAT3(0, 1, 0), float(M_PI / 4));
 
         objects["aventador2"]->setPosition(4.0f, -2.0f, -2.0f);
@@ -205,8 +188,10 @@ private:
 
         std::vector<LightCreationData> lightNames = {
             {"sunLight", DXD::Light::LightType::DIRECTIONAL_LIGHT},
-            {"redLight", DXD::Light::LightType::SPOT_LIGHT},
-            {"blueLight", DXD::Light::LightType::SPOT_LIGHT}};
+            {"leftLight1", DXD::Light::LightType::SPOT_LIGHT},
+            {"leftLight2", DXD::Light::LightType::SPOT_LIGHT},
+            {"rightLight1", DXD::Light::LightType::SPOT_LIGHT},
+            {"rightLight2", DXD::Light::LightType::SPOT_LIGHT}};
 
         for (const auto &data : lightNames) {
             lights.insert({data.name, DXD::Light::create(data.type)});
@@ -217,15 +202,21 @@ private:
         lights["sunLight"]->setDirection(1, -1, -0.5);
         lights["sunLight"]->setPower(12);
 
-        lights["redLight"]->setColor(1.0f, 0.0f, 0.0f);
-        lights["redLight"]->setPosition(8.5f, 1.0f, -9.0f);
-        lights["redLight"]->setDirection(-1, 0, 1);
-        lights["redLight"]->setPower(2);
+        lights["leftLight1"]->setColor(1.0f, 1.0f, 1.0f);
+        lights["leftLight1"]->setPosition(-9.0f, 0.0f, 3.0f);
+        lights["leftLight1"]->setDirection(1, -0.25f, 0);
 
-        lights["blueLight"]->setColor(0.0f, 0.0f, 1.0f);
-        lights["blueLight"]->setPosition(-8.5f, 1.0f, -9.0f);
-        lights["blueLight"]->setDirection(1, 0, 1);
-        lights["blueLight"]->setPower(2);
+        lights["leftLight2"]->setColor(1.0f, 1.0f, 1.0f);
+        lights["leftLight2"]->setPosition(-9.0f, 0.0f, -3.0f);
+        lights["leftLight2"]->setDirection(1, -0.25f, 0);
+
+        lights["rightLight1"]->setColor(1.0f, 1.0f, 1.0f);
+        lights["rightLight1"]->setPosition(9.0f, 0.0f, 3.0f);
+        lights["rightLight1"]->setDirection(-1, -0.25f, 0);
+
+        lights["rightLight2"]->setColor(1.0f, 1.0f, 1.0f);
+        lights["rightLight2"]->setPosition(9.0f, 0.0f, -3.0f);
+        lights["rightLight2"]->setDirection(-1, -0.25f, 0);
     }
     void prepTextures() {
         DXD::log("Loading textures...\n");
@@ -238,7 +229,8 @@ private:
         TextureCreationData texturesCreationData[] = {
             {"brickwall", L"Resources/textures/brickwall.jpg"},
             {"brickwall_normal", L"Resources/textures/brickwall_normal.jpg"},
-            {"porsche", L"Resources/textures/porsche.bmp"},
+            {"porshe_blue", L"Resources/textures/porshe_blue.bmp"},
+            {"porshe_green", L"Resources/textures/porshe_green.bmp"},
             {"dennis", L"Resources/textures/dennis.jpg"},
             {"tiles", L"Resources/textures/tiles.jpg",},
             {"wood", L"Resources/textures/wood.jpg",},

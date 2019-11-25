@@ -61,7 +61,7 @@ float4 main(PixelShaderInput IN) : SV_Target {
 
     float4 rayPoint = worldSpacePos;
 
-    float marchingStep = distance(scb.cameraPosition.xyz, worldSpacePos.xyz) / 50.0f;
+    float marchingStep = min(distance(scb.cameraPosition.xyz, worldSpacePos.xyz) / 50.0f, 10.0f);
 
     int marchQty = min(int(10.0f / marchingStep), 100);
 
@@ -81,7 +81,7 @@ float4 main(PixelShaderInput IN) : SV_Target {
             // Too far Depth/Distance test
             float3 posFromDepth = getPositionFromDepth(screenSpacePos.x, screenSpacePos.y, pointDepth).xyz;
             float rayDistance = distance(posFromDepth.xyz, rayPoint.xyz);
-            if (rayDistance > (2.0f * marchingStep)) {
+            if (rayDistance > (3.0f * marchingStep)) {
                 continue;
             }
 

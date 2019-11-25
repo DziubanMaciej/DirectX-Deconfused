@@ -153,7 +153,7 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
         //Specular
         float3 viewDir = normalize(cameraPosition.xyz - INworldPosition.xyz);
         float3 reflectDir = reflect(-lightPositionNorm, INnormal.xyz);
-        float specularPower = pow(max(dot(viewDir, reflectDir), 0.0), 32) * INspecularity.x;
+        float specularPower = pow(max(dot(viewDir, reflectDir), 0.0), 36) * INspecularity.x;
 
         //Direction
         float3 lightDirNorm = normalize(lightDirection[i].xyz);
