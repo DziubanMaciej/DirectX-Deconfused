@@ -111,3 +111,12 @@ void PostProcessImpl::setGaussianBlur(UINT passCount, UINT samplingRange) {
     data.cb.screenWidth = -1;
     data.passCount = std::min(passCount, maxPassCount);
 }
+
+void PostProcessImpl::setFxaa() {
+    this->type = Type::FXAA;
+    this->enabled = true;
+
+    auto &data = this->data.fxaa;
+    data.screenHeight = -1;
+    data.screenWidth = -1;
+}

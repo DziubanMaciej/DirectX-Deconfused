@@ -235,8 +235,14 @@ private:
             {"porshe_blue", L"Resources/textures/porshe_blue.bmp"},
             {"porshe_green", L"Resources/textures/porshe_green.bmp"},
             {"dennis", L"Resources/textures/dennis.jpg"},
-            {"tiles", L"Resources/textures/tiles.jpg",},
-            {"wood", L"Resources/textures/wood.jpg",},
+            {
+                "tiles",
+                L"Resources/textures/tiles.jpg",
+            },
+            {
+                "wood",
+                L"Resources/textures/wood.jpg",
+            },
             {"grass", L"Resources/textures/grass.jpg"}};
 
         for (const auto &data : texturesCreationData) {
@@ -266,6 +272,10 @@ private:
         postProcesses["sepia"] = DXD::PostProcess::create();
         postProcesses["sepia"]->setLinearColorCorrectionSepia();
         postProcesses["sepia"]->setEnabled(false);
+     
+        postProcesses["FXAA"] = DXD::PostProcess::create();
+        postProcesses["FXAA"]->setFxaa();
+        postProcesses["FXAA"]->setEnabled(false);
     }
     void prepSprites() {
         DXD::log("Loading sprites...\n");
@@ -355,7 +365,6 @@ private:
         static float rotation = 0.f;
         rotation += 0.0000001f * deltaTimeMicroseconds;
 
-
         lights["sunLight"]->setPosition(20 * sin(rotation), 8 + 8 * cos(2 * rotation), 6);
         lights["sunLight"]->setColor(1.0f + sin(rotation), 1.0f + sin(rotation), 1.0f + sin(rotation));
         lights["sunLight"]->setPower(5.0f + 5.0f * cos(2 * rotation));
@@ -365,15 +374,14 @@ private:
         scene->setAmbientLight(ambientPower, ambientPower, ambientPower);
 
         //scene->setBackgroundColor(0.7f, 1.0f, 1.0f);
-        
+
         float backgroundRedPower = sqrt(0.2f + 0.2f * cos(2 * rotation));
-        
+
         float backgroundGreenPower = 0.35f + 0.45f * cos(2 * rotation);
 
         float backgroundBluePower = 0.45f + 0.55f * cos(2 * rotation);
 
         scene->setBackgroundColor(backgroundRedPower, backgroundGreenPower, backgroundBluePower);
-
     }
 
     // Callbacks
@@ -476,6 +484,9 @@ private:
             break;
         case '8':
             postProcesses["sepia"]->setEnabled(!postProcesses["sepia"]->isEnabled());
+            break;
+        case 'P':
+            postProcesses["FXAA"]->setEnabled(!postProcesses["FXAA"]->isEnabled());
             break;
         case '0':
             gaussianBlurPassCount = std::min(gaussianBlurPassCount + 1, 5u);

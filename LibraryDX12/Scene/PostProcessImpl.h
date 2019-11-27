@@ -16,7 +16,8 @@ public:
         BLACK_BARS,
         CONVOLUTION,
         LINEAR_COLOR_CORRECTION,
-        GAUSSIAN_BLUR
+        GAUSSIAN_BLUR,
+        FXAA
     };
 
     void setEnabled(bool enabled) override;
@@ -41,6 +42,7 @@ public:
 
     void setGaussianBlur(UINT passCount, UINT samplingRange) override;
 
+    void setFxaa() override;
     auto getType() const { return type; }
     auto &getData() { return data; }
 
@@ -58,6 +60,7 @@ private:
         PostProcessConvolutionCB convolution;
         PostProcessLinearColorCorrectionCB linearColorCorrection;
         PostProcessGaussianBlurData gaussianBlur;
+        PostProcessFxaaCB fxaa;
     };
     Data data = {};
 };

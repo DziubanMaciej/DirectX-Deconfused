@@ -67,6 +67,11 @@ struct PostProcessLinearColorCorrectionCB {
     float screenHeight;
 };
 
+struct PostProcessFxaaCB {
+    float screenWidth;
+    float screenHeight;
+};
+
 // ---------------------------------------------------- Buffers for shadow maps
 
 struct ShadowMapCB {

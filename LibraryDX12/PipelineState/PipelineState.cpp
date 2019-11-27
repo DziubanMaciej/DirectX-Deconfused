@@ -63,7 +63,7 @@ D3D12_SHADER_BYTECODE PipelineState::loadAndCompileShader(const std::wstring &na
     ID3DBlob *errorBlob = nullptr;
 
     const auto path = std::wstring{SHADERS_PATH} + name;
-    const auto result = D3DCompileFromFile(path.c_str(), defines, nullptr, "main", target.c_str(), 0, 0, &compiledShader, &errorBlob);
+    const auto result = D3DCompileFromFile(path.c_str(), defines, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", target.c_str(), 0, 0, &compiledShader, &errorBlob);
     throwIfFailed(result, errorBlob);
 
     this->shaderBlobs.emplace_back(compiledShader);

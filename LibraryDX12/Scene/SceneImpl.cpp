@@ -740,6 +740,23 @@ void SceneImpl::renderPostProcess(PostProcessImpl &postProcess, CommandList &com
                 renderTargets.swapResources();
             }
         }
+    } else if (postProcess.getType() == PostProcessImpl::Type::FXAA) {
+        getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, true, true, input, output, source, destination);
+
+        // Prepare constant buffer
+        auto &postProcessData = postProcess.getData().fxaa;
+        postProcessData.screenWidth = screenWidth;
+        postProcessData.screenHeight = screenHeight;
+
+        // Set state
+        commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_FXAA);
+        commandList.setRoot32BitConstant(0, postProcessData);
+        commandList.setSrvInDescriptorTable(1, 0, *source);
+        commandList.OMSetRenderTargetNoDepth(*destination);
+        commandList.IASetVertexBuffer(fullscreenVB);
+
+        // Render
+        commandList.draw(6u);
     } else {
         UNREACHABLE_CODE();
     }
