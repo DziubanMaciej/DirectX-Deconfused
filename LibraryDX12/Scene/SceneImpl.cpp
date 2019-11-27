@@ -852,6 +852,14 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     renderLighting(swapChain, renderData, commandListFixedPostProcesses, alternatingResources.getDestination());
     alternatingResources.swapResources();
 
+    // Bloom
+    const bool bloomEnabled = true; //  TODO
+    if (bloomEnabled) {
+        Resource &source = renderData.getBloomMap();
+        Resource &destination = alternatingResources.getSource(); // render to previously rendered frame
+        renderBloom(swapChain, renderData, commandListFixedPostProcesses, source, destination);
+    }
+
     // SSR
     if (ApplicationImpl::getInstance().getSettings().getSsrEnabled()) {
         Resource &source = alternatingResources.getSource();
@@ -891,14 +899,6 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     if (shouldRenderPostProcesses) {
         renderPostProcesses(renderData, postProcesses, commandListPostProcess, alternatingResources, postProcessesCount,
                             static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
-    }
-
-    // Bloom
-    const bool bloomEnabled = true; //  TODO
-    if (bloomEnabled) {
-        Resource &source = renderData.getBloomMap();
-        Resource &destination = alternatingResources.getSource(); // render to previously rendered frame
-        renderBloom(swapChain, renderData, commandListPostProcess, source, destination);
     }
 
     // Copy to back buffers
