@@ -130,6 +130,12 @@ PS_OUT main(PixelShaderInput IN) : SV_Target {
     float4 OUT_Color = float4(0, 0, 0, 1);
 
     for (int i = 0; i < lightsSize; i++) {
+
+        // Skip light if power is 0
+        if (lightColor[i].w == 0.0f) {
+            continue;
+        }
+
         //Check for shadow
         float4 smCoords = (mul(smVpMatrix[i], INworldPosition)).xyzw;
         smCoords.x = smCoords.x / smCoords.w / 2.0f + 0.5f;
