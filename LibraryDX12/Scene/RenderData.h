@@ -24,13 +24,10 @@ public:
     Resource &getShadowMap(int i) { return *shadowMap[i]; }
     UINT getShadowMapSize() { return shadowMapSize; }
     Resource &getDepthStencilBuffer() { return *depthStencilBuffer; };
-    Resource &getLightingOutput() { return *lightingOutput; }
     Resource &getSsaoMap() { return *ssaoMap; }
     Resource &getSsrMap() { return *ssrMap; }
     Resource &getSsrBlurredMap() { return *ssrBlurredMap; }
     Resource &getBloomMap() { return *bloomMap; }
-    Resource &getPreFogBuffer() { return *preFogBuffer; }
-    Resource &getPreDofBuffer() { return *preDofBuffer; }
     Resource &getDofMap() { return *dofMap; }
     Resource &getGBufferAlbedo() { return *gBufferAlbedo; }
     Resource &getGBufferNormal() { return *gBufferNormal; }
@@ -46,9 +43,7 @@ private:
     void createBloomBuffers(int width, int height);
     void createSsaoBuffers(int width, int height);
     void createSsrBuffers(int width, int height);
-    void createLightingOutputBuffers(int width, int height);
-    void createPreFogBuffer(int width, int height);
-    void createDofBuffers(int width, int height);
+    void createDofMap(int width, int height);
     void createDepthBuffer(int width, int height);
 
     // Helpers
@@ -66,9 +61,6 @@ private:
     std::unique_ptr<Resource> gBufferNormal;
     std::unique_ptr<Resource> gBufferSpecular;
     std::unique_ptr<Resource> bloomMap;
-    std::unique_ptr<Resource> lightingOutput;
-    std::unique_ptr<Resource> preFogBuffer;
-    std::unique_ptr<Resource> preDofBuffer;
     std::unique_ptr<Resource> dofMap;
     std::unique_ptr<Resource> shadowMap[8] = {};
     std::unique_ptr<Resource> depthStencilBuffer = {};
