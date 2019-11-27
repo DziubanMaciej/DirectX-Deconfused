@@ -5,15 +5,71 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+class KeystrokeHandler {
+public:
+    using VkCode = unsigned int;
+    using Callback = std::function<void()>;
+
+    void addCallback(VkCode vkCode, const std::wstring &description, Callback action) {
+        data.push_back(KeystrokeData{vkCode, description, action});
+    }
+
+    void addSeparator() {
+        data.push_back({});
+    }
+
+    bool call(VkCode vkCode) {
+        auto it = std::find_if(data.begin(), data.end(), [vkCode](const KeystrokeData &d) { return d.vkCode == vkCode; });
+        if (it == data.end()) {
+            return false;
+        }
+        it->action();
+        return true;
+    }
+
+    std::wstring getInstructions() {
+        std::wostringstream result{};
+        for (auto it : data) {
+            if (it.action != nullptr) {
+                const std::wstring key = vkCodeToString(it.vkCode);
+                const std::wstring description = it.description;
+                result << key << " - " << description;
+            }
+            result << "\n";
+        }
+
+        std::wstring stringResult = result.str();
+        stringResult.pop_back();
+        return stringResult;
+    }
+
+private:
+    std::wstring vkCodeToString(VkCode vkCode) {
+        UINT scanCode = MapVirtualKeyW(vkCode, MAPVK_VK_TO_VSC);
+        wchar_t keyName[128]{};
+        GetKeyNameTextW(scanCode << 16, keyName, 128);
+        return {keyName};
+    }
+
+    struct KeystrokeData {
+        VkCode vkCode{};
+        std::wstring description{};
+        Callback action{};
+    };
+    std::vector<KeystrokeData> data{};
+};
 
 class Game : DXD::CallbackHandler {
 public:
     Game(HINSTANCE hInstance) {
         application = DXD::Application::create(true);
         window = DXD::Window::create(L"DXD", hInstance, 1280, 720);
+        prepKeyStrokeHandler();
         prepTextures();
         prepMeshes();
         prepObjects();
@@ -35,6 +91,122 @@ public:
     }
 
 private:
+    void prepKeyStrokeHandler() {
+#define KEYSTROKE(key, description, code) keystrokeHandler.addCallback(key, description, [this]() { code });
+
+        // Walking
+        KEYSTROKE('W', L"Walk forward", {
+            cameraPosition.x += focusDirection.x * movementSpeed;
+            cameraPosition.y += focusDirection.y * movementSpeed;
+            cameraPosition.z += focusDirection.z * movementSpeed;
+            updateCamera();
+        })
+        KEYSTROKE('S', L"Walk backward", {
+            cameraPosition.x -= focusDirection.x * movementSpeed;
+            cameraPosition.y -= focusDirection.y * movementSpeed;
+            cameraPosition.z -= focusDirection.z * movementSpeed;
+            updateCamera();
+        })
+        KEYSTROKE('A', L"Walk left", {
+            cameraPosition.x += -focusDirection.z * movementSpeed;
+            cameraPosition.z += focusDirection.x * movementSpeed;
+            updateCamera();
+        })
+        KEYSTROKE('D', L"Walk right", {
+            cameraPosition.x -= -focusDirection.z * movementSpeed;
+            cameraPosition.z -= focusDirection.x * movementSpeed;
+            updateCamera();
+        })
+        KEYSTROKE('Q', L"Walk up", {
+            cameraPosition.y += movementSpeed;
+            updateCamera();
+        })
+        KEYSTROKE('E', L"Walk down", {
+            cameraPosition.y -= movementSpeed;
+            updateCamera();
+        })
+        KEYSTROKE('L', L"Toggle looking", {
+            lookingAroundEnabled = !lookingAroundEnabled;
+        })
+        keystrokeHandler.addSeparator();
+
+        // Misc
+        KEYSTROKE('F', L"Fullscreen mode", {
+            fullscreen = !fullscreen;
+            window->setFullscreen(fullscreen);
+        })
+        KEYSTROKE('T', L"Toggle scene movement", {
+            toggleSceneMovement ^= 1;
+        })
+        KEYSTROKE('H', L"Toggle help", {
+            int removed = scene->removeText(*texts["help"]);
+            if (removed == 0) {
+                scene->addText(*texts["help"]);
+            }
+        })
+        keystrokeHandler.addSeparator();
+
+        // Effects
+        KEYSTROKE('B', L"Toggle bloom", {
+            application->getSettings().setBloomEnabled(!application->getSettings().getBloomEnabled());
+            if (application->getSettings().getBloomEnabled()) {
+                lights["leftLight1"]->setPower(2);
+                lights["leftLight2"]->setPower(2);
+                lights["rightLight1"]->setPower(2);
+                lights["rightLight2"]->setPower(2);
+            } else {
+                lights["leftLight1"]->setPower(0);
+                lights["leftLight2"]->setPower(0);
+                lights["rightLight1"]->setPower(0);
+                lights["rightLight2"]->setPower(0);
+            }
+        })
+
+        KEYSTROKE('V', L"Toggle vsync", {
+            application->getSettings().setVerticalSyncEnabled(!application->getSettings().getVerticalSyncEnabled());
+        })
+        KEYSTROKE('3', L"Decrease shadow quality", {
+            application->getSettings().setShadowsQuality(application->getSettings().getShadowsQuality() - 1);
+        })
+        KEYSTROKE('4', L"Increase shadow quality", {
+            application->getSettings().setShadowsQuality(application->getSettings().getShadowsQuality() + 1);
+        })
+        KEYSTROKE('5', L"Toggle SSAO", {
+            application->getSettings().setSsaoEnabled(!application->getSettings().getSsaoEnabled());
+        })
+        KEYSTROKE('6', L"Toggle SSR", {
+            application->getSettings().setSsrEnabled(!application->getSettings().getSsrEnabled());
+        })
+        KEYSTROKE('Y', L"Toggle fog", {
+            application->getSettings().setFogEnabled(!application->getSettings().getFogEnabled());
+        })
+        KEYSTROKE('U', L"Toggle depth of field", {
+            application->getSettings().setDofEnabled(!application->getSettings().getDofEnabled());
+        })
+        KEYSTROKE('B', L"Toggle bloom", {
+            application->getSettings().setBloomEnabled(!application->getSettings().getBloomEnabled());
+        })
+        KEYSTROKE('7', L"Toggle black bars", {
+            postProcesses["blackBars"]->setEnabled(!postProcesses["blackBars"]->isEnabled());
+        })
+        KEYSTROKE('8', L"Toggle sepia", {
+            postProcesses["sepia"]->setEnabled(!postProcesses["sepia"]->isEnabled());
+        })
+        KEYSTROKE('P', L"Toggle FXAA", {
+            postProcesses["FXAA"]->setEnabled(!postProcesses["FXAA"]->isEnabled());
+        })
+        KEYSTROKE('9', L"Decrease blur strength", {
+            if (gaussianBlurPassCount > 0u) {
+                gaussianBlurPassCount--;
+            }
+            postProcesses["gaussianBlur"]->setGaussianBlur(gaussianBlurPassCount, 5);
+        })
+        KEYSTROKE('0', L"Increase blur strength", {
+            gaussianBlurPassCount = std::min(gaussianBlurPassCount + 1, 5u);
+            postProcesses["gaussianBlur"]->setGaussianBlur(gaussianBlurPassCount, 5);
+        })
+#undef KEYSTROKE
+    }
     void prepMeshes() {
         DXD::log("Loading meshes...\n");
 
@@ -310,11 +482,19 @@ private:
     void prepText() {
         DXD::log("Loading texts...\n");
         std::vector<std::string> textNames = {
+            "help",
             "fpsCounter"};
 
         for (auto text : textNames) {
             texts.insert({text, DXD::Text::create()});
         }
+
+        texts["help"]->setAlignment(DXDTextHorizontalAlignment::LEFT, DXDTextVerticalAlignment::BOTTOM);
+        texts["help"]->setFontStyle(DXDFontStyle::NORMAL);
+        texts["help"]->setFontWeight(DXDFontWeight::ULTRA_BLACK);
+        texts["help"]->setColor(0, 0, 0, 1);
+        texts["help"]->setFontSize(13.f);
+        texts["help"]->setText(keystrokeHandler.getInstructions());
 
         texts["fpsCounter"]->setAlignment(DXDTextHorizontalAlignment::LEFT, DXDTextVerticalAlignment::TOP);
         texts["fpsCounter"]->setFontStyle(DXDFontStyle::NORMAL);
@@ -411,102 +591,7 @@ private:
         lastMouseY = yPos;
     }
     void onKeyDown(unsigned int vkCode) override {
-        switch (vkCode) {
-        case 'F':
-            fullscreen = !fullscreen;
-            window->setFullscreen(fullscreen);
-            break;
-        case 'W':
-            cameraPosition.x += focusDirection.x * movementSpeed;
-            cameraPosition.y += focusDirection.y * movementSpeed;
-            cameraPosition.z += focusDirection.z * movementSpeed;
-            updateCamera();
-            break;
-        case 'S':
-            cameraPosition.x -= focusDirection.x * movementSpeed;
-            cameraPosition.y -= focusDirection.y * movementSpeed;
-            cameraPosition.z -= focusDirection.z * movementSpeed;
-            updateCamera();
-            break;
-        case 'A':
-            cameraPosition.x += -focusDirection.z * movementSpeed;
-            cameraPosition.z += focusDirection.x * movementSpeed;
-            updateCamera();
-            break;
-        case 'D':
-            cameraPosition.x -= -focusDirection.z * movementSpeed;
-            cameraPosition.z -= focusDirection.x * movementSpeed;
-            updateCamera();
-            break;
-        case 'Q':
-            cameraPosition.y += movementSpeed;
-            updateCamera();
-            break;
-        case 'E':
-            cameraPosition.y -= movementSpeed;
-            updateCamera();
-            break;
-        case 'L':
-            lookingAroundEnabled = !lookingAroundEnabled;
-            break;
-        case 'T':
-            toggleSceneMovement ^= 1;
-            break;
-        case 'V':
-            application->getSettings().setVerticalSyncEnabled(!application->getSettings().getVerticalSyncEnabled());
-            break;
-        case '3':
-            application->getSettings().setShadowsQuality(application->getSettings().getShadowsQuality() - 1);
-            break;
-        case '4':
-            application->getSettings().setShadowsQuality(application->getSettings().getShadowsQuality() + 1);
-            break;
-        case '5':
-            application->getSettings().setSsaoEnabled(!application->getSettings().getSsaoEnabled());
-            break;
-        case '6':
-            application->getSettings().setSsrEnabled(!application->getSettings().getSsrEnabled());
-            break;
-        case 'Y':
-            application->getSettings().setFogEnabled(!application->getSettings().getFogEnabled());
-            break;
-        case 'U':
-            application->getSettings().setDofEnabled(!application->getSettings().getDofEnabled());
-            break;
-        case 'B':
-            application->getSettings().setBloomEnabled(!application->getSettings().getBloomEnabled());
-            if (application->getSettings().getBloomEnabled()) {
-                lights["leftLight1"]->setPower(2);
-                lights["leftLight2"]->setPower(2);
-                lights["rightLight1"]->setPower(2);
-                lights["rightLight2"]->setPower(2);
-            } else {
-                lights["leftLight1"]->setPower(0);
-                lights["leftLight2"]->setPower(0);
-                lights["rightLight1"]->setPower(0);
-                lights["rightLight2"]->setPower(0);
-            }
-            break;
-        case '7':
-            postProcesses["blackBars"]->setEnabled(!postProcesses["blackBars"]->isEnabled());
-            break;
-        case '8':
-            postProcesses["sepia"]->setEnabled(!postProcesses["sepia"]->isEnabled());
-            break;
-        case 'P':
-            postProcesses["FXAA"]->setEnabled(!postProcesses["FXAA"]->isEnabled());
-            break;
-        case '0':
-            gaussianBlurPassCount = std::min(gaussianBlurPassCount + 1, 5u);
-            postProcesses["gaussianBlur"]->setGaussianBlur(gaussianBlurPassCount, 5);
-            break;
-        case '9':
-            if (gaussianBlurPassCount > 0u) {
-                gaussianBlurPassCount--;
-            }
-            postProcesses["gaussianBlur"]->setGaussianBlur(gaussianBlurPassCount, 5);
-            break;
-        }
+        keystrokeHandler.call(vkCode);
     }
     void onUpdate(unsigned int deltaTimeMicroseconds) override {
         fpsCounter.push(deltaTimeMicroseconds);
@@ -533,6 +618,7 @@ private:
     constexpr static float cameraRotationSpeed = 0.007f;
 
     // Data
+    KeystrokeHandler keystrokeHandler;
     unsigned int lastMouseX, lastMouseY;
     bool lookingAroundEnabled = false;
     bool fullscreen = false;
