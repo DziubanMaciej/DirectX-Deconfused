@@ -32,7 +32,18 @@ public:
     Resource &getDofMap() { return *dofMap; }
     AlternatingResources &getPostProcessRenderTargets() { return postProcessRenderTargets; }
     PostProcessImpl &getPostProcessForBloom() { return *static_cast<PostProcessImpl *>(postProcessForBloom.get()); }
-    ConstantBuffer &getLightingConstantBuffer() { return lightingConstantBuffer; }
+    ConstantBuffer &getLightingConstantBuffer() {
+        if (lightConstantBufferIdx == 0) {
+            lightConstantBufferIdx = (lightConstantBufferIdx + 1) % 3;
+            return lightingConstantBuffer1;
+        } else if (lightConstantBufferIdx == 1) {
+            lightConstantBufferIdx = (lightConstantBufferIdx + 1) % 3;
+            return lightingConstantBuffer2;
+        } else {
+            lightConstantBufferIdx = (lightConstantBufferIdx + 1) % 3;
+            return lightingConstantBuffer3;
+        }
+    }
     VertexBuffer &getFullscreenVB() { return *fullscreenVB; }
     Resource &getDepthStencilBuffer() { return *depthStencilBuffer; };
 
@@ -71,7 +82,10 @@ private:
     // Misc
     PostProcessRenderTargets postProcessRenderTargets;
     std::unique_ptr<DXD::PostProcess> postProcessForBloom;
-    ConstantBuffer lightingConstantBuffer;
+    int lightConstantBufferIdx = 0;
+    ConstantBuffer lightingConstantBuffer1;
+    ConstantBuffer lightingConstantBuffer2;
+    ConstantBuffer lightingConstantBuffer3;
     std::unique_ptr<VertexBuffer> fullscreenVB;
     std::unique_ptr<Resource> depthStencilBuffer = {};
 };

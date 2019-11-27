@@ -97,6 +97,9 @@ protected:
     FLOAT fogColor[3] = {};
     FLOAT fogPower = 0;
     std::vector<LightImpl *> lights;
+    std::vector<XMMATRIX> lightVpMatrixes;
+    std::vector<XMFLOAT4> lightPositions;
+    std::vector<XMFLOAT4> lightDirections;
     std::set<ObjectImpl *> objects; // TODO might not be the best data structure for that
     std::set<ObjectImpl *> objectsNotReady;
     std::vector<TextImpl *> texts;

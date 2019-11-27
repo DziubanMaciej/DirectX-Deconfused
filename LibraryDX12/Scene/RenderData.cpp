@@ -11,7 +11,9 @@ RenderData::RenderData(int width, int height)
     : device(ApplicationImpl::getInstance().getDevice()),
       postProcessRenderTargets(device),
       postProcessForBloom(DXD::PostProcess::create()),
-      lightingConstantBuffer(sizeof(LightingHeapCB)) {
+      lightingConstantBuffer1(sizeof(LightingHeapCB)),
+      lightingConstantBuffer2(sizeof(LightingHeapCB)),
+      lightingConstantBuffer3(sizeof(LightingHeapCB)) {
     // Configure bloom blur
     postProcessForBloom->setGaussianBlur(3, 5);
 

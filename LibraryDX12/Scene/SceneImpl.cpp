@@ -197,6 +197,11 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
         camera->setAspectRatio(1.0f);
         const XMMATRIX smViewProjectionMatrix = light->getShadowMapViewProjectionMatrix();
 
+        // Light values used in Lighting
+        lightVpMatrixes.push_back(smViewProjectionMatrix);
+        lightPositions.push_back(XMFLOAT4(light->getPosition().x, light->getPosition().y, light->getPosition().z, 0));
+        lightDirections.push_back(XMFLOAT4(light->getDirection().x, light->getDirection().y, light->getDirection().z, 0));
+
         // Draw NORMAL
         commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SM_NORMAL);
         for (ObjectImpl *object : objects) {
@@ -389,15 +394,19 @@ void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, Com
     lightCb->screenHeight = static_cast<float>(swapChain.getHeight());
     for (LightImpl *light : lights) {
         lightCb->lightColor[lightCb->lightsSize] = XMFLOAT4(light->getColor().x, light->getColor().y, light->getColor().z, light->getPower());
-        lightCb->lightPosition[lightCb->lightsSize] = XMFLOAT4(light->getPosition().x, light->getPosition().y, light->getPosition().z, 0);
-        lightCb->lightDirection[lightCb->lightsSize] = XMFLOAT4(light->getDirection().x, light->getDirection().y, light->getDirection().z, 0);
-        lightCb->smViewProjectionMatrix[lightCb->lightsSize] = light->getShadowMapViewProjectionMatrix();
+        lightCb->lightPosition[lightCb->lightsSize] = lightPositions[lightCb->lightsSize];
+        lightCb->lightDirection[lightCb->lightsSize] = lightDirections[lightCb->lightsSize];
+        lightCb->smViewProjectionMatrix[lightCb->lightsSize] = lightVpMatrixes[lightCb->lightsSize];
         lightCb->lightsSize++;
         if (lightCb->lightsSize >= 8) {
             break;
         }
     }
     lightConstantBuffer.upload();
+    lightVpMatrixes.clear();
+    lightPositions.clear();
+    lightDirections.clear();
+
 
     commandList.setCbvInDescriptorTable(0, 0, lightConstantBuffer);
     commandList.setSrvInDescriptorTable(0, 1, renderData.getGBufferAlbedo());
