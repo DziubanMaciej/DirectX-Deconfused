@@ -159,22 +159,15 @@ size_t SceneImpl::getEnabledPostProcessesCount() const {
     return count;
 }
 
-void SceneImpl::getAndPrepareSourceAndDestinationForPostProcess(CommandList &commandList,
-                                                                AlternatingResources &renderTargets,
-                                                                bool first, bool last,
-                                                                Resource *initialInput, Resource *finalOutput,
-                                                                Resource *&outSource, Resource *&outDestination, bool compute) {
-    // Get resources
-    outSource = (first && initialInput) ? initialInput : &renderTargets.getSource();
-    outDestination = (last && finalOutput) ? finalOutput : &renderTargets.getDestination();
-
-    // Set states
+void SceneImpl::prepareSourceAndDestinationForPostProcess(CommandList &commandList, AlternatingResources &renderTargets, bool compute) {
+    Resource &source = renderTargets.getSource();
+    Resource &destination = renderTargets.getDestination();
     if (compute) {
-        commandList.transitionBarrier(*outSource, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        commandList.transitionBarrier(*outDestination, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
+        commandList.transitionBarrier(source, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        commandList.transitionBarrier(destination, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
     } else {
-        commandList.transitionBarrier(*outSource, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        commandList.transitionBarrier(*outDestination, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        commandList.transitionBarrier(source, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        commandList.transitionBarrier(destination, D3D12_RESOURCE_STATE_RENDER_TARGET);
     }
 }
 
@@ -427,15 +420,13 @@ void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, Com
     commandList.draw(6u);
 }
 
-void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output) {
-
+void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &input, Resource &output) {
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(std::max(swapChain.getWidth(), 1u)), static_cast<float>(std::max(swapChain.getHeight(), 1u)));
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SSR);
-
-    commandList.transitionBarrier(renderData.getLightingOutput(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    commandList.transitionBarrier(input, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getSsrMap(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     const Resource *ssrRts[] = {&renderData.getSsrMap()};
@@ -444,7 +435,7 @@ void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, 
     commandList.setSrvInDescriptorTable(0, 0, renderData.getGBufferNormal());
     commandList.setSrvInDescriptorTable(0, 1, renderData.getDepthStencilBuffer());
     commandList.setSrvInDescriptorTable(0, 2, renderData.getGBufferSpecular());
-    commandList.setSrvInDescriptorTable(0, 3, renderData.getLightingOutput());
+    commandList.setSrvInDescriptorTable(0, 3, input);
 
     SsrCB ssrCB;
     ssrCB.cameraPosition = XMFLOAT4(camera->getEyePosition().x, camera->getEyePosition().y, camera->getEyePosition().z, 1);
@@ -502,7 +493,7 @@ void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, 
     commandList.setSrvInDescriptorTable(0, 0, renderData.getGBufferSpecular());
     commandList.setSrvInDescriptorTable(0, 1, renderData.getDepthStencilBuffer());
     commandList.setSrvInDescriptorTable(0, 2, renderData.getSsrBlurredMap());
-    commandList.setSrvInDescriptorTable(0, 3, renderData.getLightingOutput());
+    commandList.setSrvInDescriptorTable(0, 3, input);
 
     commandList.setRoot32BitConstant(1, ssrMergeCB);
 
@@ -516,12 +507,12 @@ void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, 
     ///commandList.getCommandList()->ResolveQueryData(queryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0, 2, queryResult->getResource().Get(), 0);
 }
 
-void SceneImpl::renderFog(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output) {
+void SceneImpl::renderFog(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &input, Resource &output) {
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
-    commandList.transitionBarrier(renderData.getPreFogBuffer(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    commandList.transitionBarrier(input, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_FOG);
@@ -530,7 +521,7 @@ void SceneImpl::renderFog(SwapChain &swapChain, RenderData &renderData, CommandL
     commandList.OMSetRenderTargetsNoDepth(fogRts);
 
     commandList.setSrvInDescriptorTable(0, 0, renderData.getDepthStencilBuffer());
-    commandList.setSrvInDescriptorTable(0, 1, renderData.getPreFogBuffer());
+    commandList.setSrvInDescriptorTable(0, 1, input);
 
     FogCB fogCB;
     fogCB.screenWidth = static_cast<float>(swapChain.getWidth());
@@ -545,16 +536,15 @@ void SceneImpl::renderFog(SwapChain &swapChain, RenderData &renderData, CommandL
     commandList.IASetVertexBuffer(renderData.getFullscreenVB());
 
     commandList.draw(6u);
-
 }
 
-void SceneImpl::renderDof(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output) {
+void SceneImpl::renderDof(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &input, Resource &output) {
     // DOF
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
-    commandList.transitionBarrier(renderData.getPreDofBuffer(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    commandList.transitionBarrier(input, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getDofMap(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_DOF_BLUR);
@@ -563,7 +553,7 @@ void SceneImpl::renderDof(SwapChain &swapChain, RenderData &renderData, CommandL
     commandList.OMSetRenderTargetsNoDepth(dofBlurRts);
 
     commandList.setSrvInDescriptorTable(0, 0, renderData.getDepthStencilBuffer());
-    commandList.setSrvInDescriptorTable(0, 1, renderData.getPreDofBuffer());
+    commandList.setSrvInDescriptorTable(0, 1, input);
 
     DofCB dofCB;
     dofCB.screenWidth = static_cast<float>(swapChain.getWidth());
@@ -597,9 +587,9 @@ void SceneImpl::renderDof(SwapChain &swapChain, RenderData &renderData, CommandL
     commandList.draw(6u);
 }
 
-void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList, VertexBuffer &fullscreenVB,
-                                    Resource *input, AlternatingResources &renderTargets, Resource *output,
-                                    size_t enabledPostProcessesCount, float screenWidth, float screenHeight) {
+void SceneImpl::renderPostProcesses(RenderData &renderData, std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList,
+                                    AlternatingResources &alternatingResources, size_t enabledPostProcessesCount,
+                                    float screenWidth, float screenHeight) {
     commandList.RSSetViewport(0.f, 0.f, screenWidth, screenHeight);
     commandList.IASetPrimitiveTopologyTriangleList();
 
@@ -610,48 +600,43 @@ void SceneImpl::renderPostProcesses(std::vector<PostProcessImpl *> &postProcesse
             continue;
         }
 
-        // Select input and output buffer for current post process
-        const bool firstPostProcess = (postProcessIndex == 0);
-        const bool lastPostProcess = (postProcessIndex == enabledPostProcessesCount - 1);
-        Resource *postProcessInput = firstPostProcess ? input : nullptr;
-        Resource *postProcessOutput = lastPostProcess ? output : nullptr;
-
         // Render
-        renderPostProcess(*postProcess, commandList, fullscreenVB, postProcessInput, renderTargets, postProcessOutput, screenWidth, screenHeight);
-        renderTargets.swapResources();
+        renderPostProcess(renderData, *postProcess, commandList, alternatingResources, screenWidth, screenHeight);
+        alternatingResources.swapResources();
         postProcessIndex++;
     }
 }
 
-void SceneImpl::renderBloom(SwapChain &swapChain, CommandList &commandList, PostProcessImpl &bloomBlurEffect, VertexBuffer &fullscreenVB,
-                            Resource &bloomMap, AlternatingResources &renderTargets, Resource &output) {
+void SceneImpl::renderBloom(RenderData &renderData, SwapChain &swapChain, CommandList &commandList,
+                            AlternatingResources &alternatingResources, Resource &output) {
     // Blur the bloom map
-    renderPostProcess(bloomBlurEffect, commandList, fullscreenVB,
-                      &bloomMap, renderTargets, &bloomMap,
-                      static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+    const float screenWidth = static_cast<float>(swapChain.getWidth());
+    const float screenHeight = static_cast<float>(swapChain.getHeight());
+    renderPostProcess(renderData, renderData.getPostProcessForBloom(), commandList, alternatingResources, screenWidth, screenHeight);
 
     // Apply bloom on output buffer
     PostProcessApplyBloomCB cb = {};
     cb.screenWidth = static_cast<float>(swapChain.getWidth());
     cb.screenHeight = static_cast<float>(swapChain.getHeight());
-    commandList.transitionBarrier(bloomMap, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    commandList.transitionBarrier(renderData.getBloomMap(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_APPLY_BLOOM);
     commandList.setRoot32BitConstant(0, cb);
-    commandList.setSrvInDescriptorTable(1, 0, bloomMap);
+    commandList.setSrvInDescriptorTable(1, 0, renderData.getBloomMap());
     commandList.OMSetRenderTargetNoDepth(output);
-    commandList.IASetVertexBuffer(fullscreenVB);
+    commandList.IASetVertexBuffer(renderData.getFullscreenVB());
     commandList.draw(6u);
 }
 
-void SceneImpl::renderPostProcess(PostProcessImpl &postProcess, CommandList &commandList, VertexBuffer &fullscreenVB,
-                                  Resource *input, AlternatingResources &renderTargets, Resource *output,
-                                  float screenWidth, float screenHeight) {
+void SceneImpl::renderPostProcess(RenderData &renderData, PostProcessImpl &postProcess, CommandList &commandList,
+                                  AlternatingResources &alternatingResources, float screenWidth, float screenHeight) {
     assert(postProcess.isEnabled());
-    Resource *source{}, *destination{};
+    Resource *source = &alternatingResources.getSource();
+    Resource *destination = &alternatingResources.getDestination();
 
     // Render post process base on its type
     if (postProcess.getType() == PostProcessImpl::Type::CONVOLUTION) {
-        getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, true, true, input, output, source, destination);
+        prepareSourceAndDestinationForPostProcess(commandList, alternatingResources, false);
 
         // Prepare constant buffer
         auto &postProcessData = postProcess.getData().convolution;
@@ -663,12 +648,12 @@ void SceneImpl::renderPostProcess(PostProcessImpl &postProcess, CommandList &com
         commandList.setRoot32BitConstant(0, postProcessData);
         commandList.setSrvInDescriptorTable(1, 0, *source);
         commandList.OMSetRenderTargetNoDepth(*destination);
-        commandList.IASetVertexBuffer(fullscreenVB);
+        commandList.IASetVertexBuffer(renderData.getFullscreenVB());
 
         // Render
         commandList.draw(6u);
     } else if (postProcess.getType() == PostProcessImpl::Type::BLACK_BARS) {
-        getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, true, true, input, output, source, destination);
+        prepareSourceAndDestinationForPostProcess(commandList, alternatingResources, false);
 
         // Prepare constant buffer
         auto &postProcessData = postProcess.getData().blackBars;
@@ -680,12 +665,12 @@ void SceneImpl::renderPostProcess(PostProcessImpl &postProcess, CommandList &com
         commandList.setRoot32BitConstant(0, postProcessData);
         commandList.setSrvInDescriptorTable(1, 0, *source);
         commandList.OMSetRenderTargetNoDepth(*destination);
-        commandList.IASetVertexBuffer(fullscreenVB);
+        commandList.IASetVertexBuffer(renderData.getFullscreenVB());
 
         // Render
         commandList.draw(6u);
     } else if (postProcess.getType() == PostProcessImpl::Type::LINEAR_COLOR_CORRECTION) {
-        getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, true, true, input, output, source, destination);
+        prepareSourceAndDestinationForPostProcess(commandList, alternatingResources, false);
 
         // Prepare constant buffer
         auto &postProcessData = postProcess.getData().linearColorCorrection;
@@ -697,7 +682,7 @@ void SceneImpl::renderPostProcess(PostProcessImpl &postProcess, CommandList &com
         commandList.setRoot32BitConstant(0, postProcessData);
         commandList.setSrvInDescriptorTable(1, 0, *source);
         commandList.OMSetRenderTargetNoDepth(*destination);
-        commandList.IASetVertexBuffer(fullscreenVB);
+        commandList.IASetVertexBuffer(renderData.getFullscreenVB());
 
         // Render
         commandList.draw(6u);
@@ -711,33 +696,34 @@ void SceneImpl::renderPostProcess(PostProcessImpl &postProcess, CommandList &com
         const UINT threadGroupCountY = static_cast<UINT>(screenHeight / 16 + 0.5f);
 
         // Set cross-pass state
-        commandList.IASetVertexBuffer(fullscreenVB);
+        commandList.IASetVertexBuffer(renderData.getFullscreenVB());
 
         // Render all passes of the blur filter
         for (auto passIndex = 0u; passIndex < postProcessData.passCount; passIndex++) {
-
             // Render horizontal pass
-            const bool firstPass = (passIndex == 0);
-            getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, firstPass, false, input, nullptr, source, destination, true);
+            source = &alternatingResources.getSource();
+            destination = &alternatingResources.getSource();
+            prepareSourceAndDestinationForPostProcess(commandList, alternatingResources, true);
             commandList.setPipelineStateAndComputeRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR_COMPUTE_HORIZONTAL);
             commandList.setSrvInDescriptorTable(0, 0, *source);
             commandList.setUavInDescriptorTable(0, 1, *destination);
             commandList.setRoot32BitConstant(1, postProcessData.cb);
             commandList.dispatch(threadGroupCountX, threadGroupCountY, 1u);
-
-            renderTargets.swapResources();
+            alternatingResources.swapResources();
 
             // Render vertical pass
-            const bool lastPass = (passIndex == postProcessData.passCount - 1);
-            getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, false, lastPass, nullptr, output, source, destination, true);
+            source = &alternatingResources.getSource();
+            destination = &alternatingResources.getSource();
+            prepareSourceAndDestinationForPostProcess(commandList, alternatingResources, true);
             commandList.setPipelineStateAndComputeRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR_COMPUTE_VERTICAL);
             commandList.setSrvInDescriptorTable(0, 0, *source);
             commandList.setUavInDescriptorTable(0, 1, *destination);
             commandList.setRoot32BitConstant(1, postProcessData.cb);
             commandList.dispatch(threadGroupCountX, threadGroupCountY, 1u);
 
+            const bool lastPass = (passIndex == postProcessData.passCount - 1);
             if (!lastPass) {
-                renderTargets.swapResources();
+                alternatingResources.swapResources();
             }
         }
     } else if (postProcess.getType() == PostProcessImpl::Type::FXAA) {
@@ -787,11 +773,14 @@ void SceneImpl::renderD2DTexts(SwapChain &swapChain) {
 void SceneImpl::renderSprite(SwapChain &swapChain, CommandList &commandList, SpriteImpl *sprite, VertexBuffer &fullscreenVB) {
     auto &tex = sprite->getTextureImpl();
     auto &backBuffer = swapChain.getCurrentBackBuffer();
+
     // Prepare constant buffer
     SpriteCB spriteData = sprite->getData();
     spriteData.screenWidth = static_cast<float>(swapChain.getWidth());
     spriteData.screenHeight = static_cast<float>(swapChain.getHeight());
+
     // Set state
+    commandList.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET);
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SPRITE);
     commandList.setRoot32BitConstant(0, spriteData);
     commandList.setSrvInDescriptorTable(1, 0, tex);
@@ -806,12 +795,12 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     auto &application = ApplicationImpl::getInstance();
     auto &commandQueue = application.getDirectCommandQueue();
     auto &backBuffer = swapChain.getCurrentBackBuffer();
+    auto &alternatingResources = renderData.getPostProcessRenderTargets();
     application.flushAllResources();
     inspectObjectsNotReady();
 
     // Render shadow maps
-    const bool shadowsEnabled = ApplicationImpl::getInstance().getSettingsImpl().getShadowsQuality() > 0;
-    if (shadowsEnabled) {
+    if (ApplicationImpl::getInstance().getSettingsImpl().getShadowsQuality() > 0) {
         CommandList commandListShadowMap{commandQueue};
         SET_OBJECT_NAME(commandListShadowMap, L"cmdListShadowMap")
         renderShadowMaps(swapChain, renderData, commandListShadowMap);
@@ -835,90 +824,41 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
         commandQueue.executeCommandListAndSignal(commandListSSAO);
     }
 
-    // Identify output for the next step: if there are post processes, render to intermediate buffer
-    const auto postProcessesCount = getEnabledPostProcessesCount();
-    const bool shouldRenderPostProcesses = (postProcessesCount > 0);
-    Resource *renderOutput = shouldRenderPostProcesses ? &renderData.getPostProcessRenderTargets().getDestination() : &backBuffer;
+    // Command list for fixed post processes - 2D operations
+    CommandList commandListFixedPostProcesses{commandQueue};
+    SET_OBJECT_NAME(commandListFixedPostProcesses, L"cmdListFixedPostProcesses");
 
-    const bool shouldRenderFog = ApplicationImpl::getInstance().getSettings().getFogEnabled();
-    const bool shouldRenderDof = ApplicationImpl::getInstance().getSettings().getDofEnabled();
+    // Lighting - merge GBuffers and apply per-pixel shading
+    renderLighting(swapChain, renderData, commandListFixedPostProcesses, alternatingResources.getDestination());
+    alternatingResources.swapResources();
 
-    if (shouldRenderDof) {
-        renderOutput = &renderData.getPreDofBuffer();
-    }
-
-    if (shouldRenderFog) {
-        renderOutput = &renderData.getPreFogBuffer();
-    }
-
-    // SSR and merge
+    // SSR
     if (ApplicationImpl::getInstance().getSettings().getSsrEnabled()) {
-        // Lighting
-        CommandList commandListLighting{commandQueue};
-        SET_OBJECT_NAME(commandListLighting, L"cmdListLighting");
-        renderLighting(swapChain, renderData, commandListLighting, renderData.getLightingOutput());
-        commandListLighting.close();
-        commandQueue.executeCommandListAndSignal(commandListLighting);
-
-        // SSR
-        CommandList commandListSSR{commandQueue};
-        SET_OBJECT_NAME(commandListSSR, L"cmdListSSR");
-        renderSSRandMerge(swapChain, renderData, commandListSSR, *renderOutput);
-        commandListSSR.close();
-        commandQueue.executeCommandListAndSignal(commandListSSR);
-    } else {
-        // Lighting
-        CommandList commandListLighting{commandQueue};
-        SET_OBJECT_NAME(commandListLighting, L"cmdListLighting");
-        renderLighting(swapChain, renderData, commandListLighting, *renderOutput);
-        commandListLighting.close();
-        commandQueue.executeCommandListAndSignal(commandListLighting);
+        Resource &source = alternatingResources.getSource();
+        Resource &destination = alternatingResources.getDestination();
+        renderSSRandMerge(swapChain, renderData, commandListFixedPostProcesses, source, destination);
+        alternatingResources.swapResources();
     }
 
-    if (shouldRenderFog) {
-
-        renderOutput = shouldRenderPostProcesses ? &renderData.getPostProcessRenderTargets().getDestination() : &backBuffer;
-
-        if (shouldRenderDof) {
-            renderOutput = &renderData.getPreDofBuffer();
-        }
-
-        // Fog
-        CommandList commandListFog{commandQueue};
-        SET_OBJECT_NAME(commandListFog, L"cmdListFog");
-        renderFog(swapChain, renderData, commandListFog, *renderOutput);
-        commandListFog.close();
-        commandQueue.executeCommandListAndSignal(commandListFog);
+    // Fog
+    if (ApplicationImpl::getInstance().getSettings().getFogEnabled()) {
+        Resource &source = alternatingResources.getSource();
+        Resource &destination = alternatingResources.getDestination();
+        renderFog(swapChain, renderData, commandListFixedPostProcesses, source, destination);
+        alternatingResources.swapResources();
     }
 
-    if (shouldRenderDof) {
-
-        renderOutput = shouldRenderPostProcesses ? &renderData.getPostProcessRenderTargets().getDestination() : &backBuffer;
-
-        // Fog
-        CommandList commandListDof{commandQueue};
-        SET_OBJECT_NAME(commandListDof, L"cmdListDof");
-        renderDof(swapChain, renderData, commandListDof, *renderOutput);
-        commandListDof.close();
-        commandQueue.executeCommandListAndSignal(commandListDof);
+    // Dof
+    if (ApplicationImpl::getInstance().getSettings().getDofEnabled()) {
+        Resource &source = alternatingResources.getSource();
+        Resource &destination = alternatingResources.getDestination();
+        renderDof(swapChain, renderData, commandListFixedPostProcesses, source, destination);
+        alternatingResources.swapResources();
     }
-    /// QUERY used in perf. measurement.
-    ///UINT64 *queryData = nullptr;
-    ///queryResult->getResource().Get()->Map(0, nullptr, (void **)&queryData);
-    ///
-    ///static int fpsTab[100];
-    ///static int fpsTabIter;
-    ///fpsTabIter++;
-    ///
-    ///fpsTab[fpsTabIter % 100] = int(queryData[1] - queryData[0]);
-    ///
-    ///int fpsSum = 0;
-    ///for (int i = 0; i < 100; i++) {
-    ///    fpsSum += fpsTab[i];
-    ///}
-    ///
-    ///DXD::log("Time: %d\n", fpsSum/100);
-    ///queryResult->getResource().Get()->Unmap(0, nullptr);
+
+    // Send fixed post processes command lsit
+    commandListFixedPostProcesses.close();
+    commandQueue.executeCommandListAndSignal(commandListFixedPostProcesses);
 
     // Render post processes
     CommandList commandListPostProcess{commandQueue};
@@ -926,14 +866,18 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     commandListPostProcess.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     commandListPostProcess.RSSetScissorRectNoScissor();
     commandListPostProcess.IASetPrimitiveTopologyTriangleList();
+    const auto postProcessesCount = getEnabledPostProcessesCount();
+    const bool shouldRenderPostProcesses = (postProcessesCount > 0);
     if (shouldRenderPostProcesses) {
-        renderData.getPostProcessRenderTargets().swapResources();
-        renderPostProcesses(postProcesses, commandListPostProcess, renderData.getFullscreenVB(),
-                            &renderData.getPostProcessRenderTargets().getSource(), renderData.getPostProcessRenderTargets(), &backBuffer,
-                            postProcessesCount, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+        renderPostProcesses(renderData, postProcesses, commandListPostProcess, renderData.getPostProcessRenderTargets(), postProcessesCount,
+                            static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     }
-    renderBloom(swapChain, commandListPostProcess, renderData.getPostProcessForBloom(), renderData.getFullscreenVB(),
-                renderData.getBloomMap(), renderData.getPostProcessRenderTargets(), backBuffer);
+    //renderBloom(renderData, swapChain, commandListPostProcess, renderData.getPostProcessRenderTargets(), backBuffer);
+
+    // Copy to back buffers
+    commandListPostProcess.transitionBarrier(renderData.getPostProcessRenderTargets().getSource(), D3D12_RESOURCE_STATE_COPY_SOURCE);
+    commandListPostProcess.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_COPY_DEST);
+    commandListPostProcess.copyResource(backBuffer, renderData.getPostProcessRenderTargets().getSource());
 
     // Close command list and submit it to the GPU
     commandListPostProcess.close();
@@ -943,13 +887,15 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     commandListSprite.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     commandListSprite.RSSetScissorRectNoScissor();
     commandListSprite.IASetPrimitiveTopologyTriangleList();
-    //auto &tex = DXD::Texture::createFromFile(this->application, L"Resources/textures/brickwall.jpg", false);
     for (auto &sprite : sprites)
         renderSprite(swapChain, commandListSprite, sprite, renderData.getFullscreenVB());
 
     // If there are no D2D content to render, there will be no implicit transition to present, hence the manual barrier
+
     if (texts.empty()) {
         commandListSprite.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_PRESENT);
+    } else {
+        commandListSprite.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET);
     }
 
     commandListSprite.close();
@@ -964,3 +910,21 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     swapChain.present(fenceValue);
     commandQueue.waitOnCpu(swapChain.getFenceValueForCurrentBackBuffer());
 }
+
+/// QUERY used in perf. measurement.
+///UINT64 *queryData = nullptr;
+///queryResult->getResource().Get()->Map(0, nullptr, (void **)&queryData);
+///
+///static int fpsTab[100];
+///static int fpsTabIter;
+///fpsTabIter++;
+///
+///fpsTab[fpsTabIter % 100] = int(queryData[1] - queryData[0]);
+///
+///int fpsSum = 0;
+///for (int i = 0; i < 100; i++) {
+///    fpsSum += fpsTab[i];
+///}
+///
+///DXD::log("Time: %d\n", fpsSum/100);
+///queryResult->getResource().Get()->Unmap(0, nullptr);

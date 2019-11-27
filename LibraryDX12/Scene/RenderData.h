@@ -20,35 +20,30 @@ public:
     void resize(int width, int height);
 
     // Getters
-    AlternatingResources &getPostProcessRenderTargets() { return postProcessRenderTargets; }
-    Resource &getShadowMap(int i) { return *shadowMap[i]; }
     UINT getShadowMapSize() { return shadowMapSize; }
-    Resource &getDepthStencilBuffer() { return *depthStencilBuffer; };
-    Resource &getLightingOutput() { return *lightingOutput; }
+    Resource &getShadowMap(int i) { return *shadowMap[i]; }
+    Resource &getGBufferAlbedo() { return *gBufferAlbedo; }
+    Resource &getGBufferNormal() { return *gBufferNormal; }
+    Resource &getGBufferSpecular() { return *gBufferSpecular; }
     Resource &getSsaoMap() { return *ssaoMap; }
     Resource &getSsrMap() { return *ssrMap; }
     Resource &getSsrBlurredMap() { return *ssrBlurredMap; }
     Resource &getBloomMap() { return *bloomMap; }
-    Resource &getPreFogBuffer() { return *preFogBuffer; }
-    Resource &getPreDofBuffer() { return *preDofBuffer; }
     Resource &getDofMap() { return *dofMap; }
-    Resource &getGBufferAlbedo() { return *gBufferAlbedo; }
-    Resource &getGBufferNormal() { return *gBufferNormal; }
-    Resource &getGBufferSpecular() { return *gBufferSpecular; }
+    AlternatingResources &getPostProcessRenderTargets() { return postProcessRenderTargets; }
     PostProcessImpl &getPostProcessForBloom() { return *static_cast<PostProcessImpl *>(postProcessForBloom.get()); }
-    VertexBuffer &getFullscreenVB() { return *fullscreenVB; }
     ConstantBuffer &getLightingConstantBuffer() { return lightingConstantBuffer; }
+    VertexBuffer &getFullscreenVB() { return *fullscreenVB; }
+    Resource &getDepthStencilBuffer() { return *depthStencilBuffer; };
 
 private:
     // Buffer creations
     void createShadowMaps(unsigned int shadowsQuality);
     void createGBuffers(int width, int height);
-    void createBloomBuffers(int width, int height);
-    void createSsaoBuffers(int width, int height);
-    void createSsrBuffers(int width, int height);
-    void createLightingOutputBuffers(int width, int height);
-    void createPreFogBuffer(int width, int height);
-    void createDofBuffers(int width, int height);
+    void createSsaoMap(int width, int height);
+    void createSsrMaps(int width, int height);
+    void createBloomMap(int width, int height);
+    void createDofMap(int width, int height);
     void createDepthBuffer(int width, int height);
 
     // Helpers
@@ -57,27 +52,26 @@ private:
     // Base objects
     ID3D12DevicePtr device = {};
 
-    // Resources
-    PostProcessRenderTargets postProcessRenderTargets;
-    std::unique_ptr<Resource> ssaoMap;
-    std::unique_ptr<Resource> ssrMap;
-    std::unique_ptr<Resource> ssrBlurredMap;
+    // Shadow maps
+    UINT shadowMapSize{};
+    std::unique_ptr<Resource> shadowMap[8] = {};
+
+    // GBuffers
     std::unique_ptr<Resource> gBufferAlbedo;
     std::unique_ptr<Resource> gBufferNormal;
     std::unique_ptr<Resource> gBufferSpecular;
-    std::unique_ptr<Resource> bloomMap;
-    std::unique_ptr<Resource> lightingOutput;
-    std::unique_ptr<Resource> preFogBuffer;
-    std::unique_ptr<Resource> preDofBuffer;
-    std::unique_ptr<Resource> dofMap;
-    std::unique_ptr<Resource> shadowMap[8] = {};
-    std::unique_ptr<Resource> depthStencilBuffer = {};
-    std::unique_ptr<VertexBuffer> fullscreenVB;
-    ConstantBuffer lightingConstantBuffer;
 
-    // Numerical state
-    UINT shadowMapSize{};
+    // Effect-specific side buffers
+    std::unique_ptr<Resource> ssaoMap;
+    std::unique_ptr<Resource> ssrMap;
+    std::unique_ptr<Resource> ssrBlurredMap;
+    std::unique_ptr<Resource> bloomMap;
+    std::unique_ptr<Resource> dofMap;
 
     // Misc
+    PostProcessRenderTargets postProcessRenderTargets;
     std::unique_ptr<DXD::PostProcess> postProcessForBloom;
+    ConstantBuffer lightingConstantBuffer;
+    std::unique_ptr<VertexBuffer> fullscreenVB;
+    std::unique_ptr<Resource> depthStencilBuffer = {};
 };

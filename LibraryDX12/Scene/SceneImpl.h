@@ -71,26 +71,23 @@ protected:
     // Helpers
     void inspectObjectsNotReady();
     size_t getEnabledPostProcessesCount() const;
-    static void getAndPrepareSourceAndDestinationForPostProcess(CommandList &commandList, AlternatingResources &renderTargets, bool first, bool last,
-                                                                Resource *initialInput, Resource *finalOutput, Resource *&outSource, Resource *&outDestination,
-                                                                bool compute = false);
+    static void prepareSourceAndDestinationForPostProcess(CommandList &commandList, AlternatingResources &renderTargets, bool compute = false);
 
     // Render methods
     void renderShadowMaps(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
     void renderGBuffer(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
     void renderSSAO(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
     void renderLighting(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output);
-    void renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output);
-    void renderFog(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output);
-    void renderDof(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output);
-    static void renderPostProcess(PostProcessImpl &postProcess, CommandList &commandList, VertexBuffer &fullscreenVB,
-                                  Resource *input, AlternatingResources &renderTargets, Resource *output,
-                                  float screenWidth, float screenHeight);
-    static void renderPostProcesses(std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList, VertexBuffer &fullscreenVB,
-                                    Resource *input, AlternatingResources &renderTargets, Resource *output,
-                                    size_t enabledPostProcessesCount, float screenWidth, float screenHeight);
-    static void renderBloom(SwapChain &swapChain, CommandList &commandList, PostProcessImpl &bloomBlurEffect, VertexBuffer &fullscreenVB,
-                            Resource &bloomMap, AlternatingResources &renderTargets, Resource &output);
+    void renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &input, Resource &output);
+    void renderFog(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &input, Resource &output);
+    void renderDof(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &input, Resource &output);
+    static void renderPostProcess(RenderData &renderData, PostProcessImpl &postProcess, CommandList &commandList,
+                                  AlternatingResources &alternatingResources, float screenWidth, float screenHeight);
+    static void renderPostProcesses(RenderData &renderData, std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList,
+                                    AlternatingResources &alternatingResources, size_t enabledPostProcessesCount,
+                                    float screenWidth, float screenHeight);
+    static void renderBloom(RenderData &renderData, SwapChain &swapChain, CommandList &commandList,
+                            AlternatingResources &alternatingResources, Resource &output);
     void renderD2DTexts(SwapChain &swapChain);
     void renderSprite(SwapChain &swapChain, CommandList &commandList, SpriteImpl *sprite, VertexBuffer &fullscreenVB);
 

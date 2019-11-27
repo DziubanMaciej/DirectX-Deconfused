@@ -77,6 +77,8 @@ public:
 
     void dispatch(UINT threadGroupCountX, UINT threadGroupCountY, UINT threadGroupCountZ);
 
+    void copyResource(Resource &destination, Resource &source);
+
     void close();
     void registerAllData(ResourceUsageTracker &resourceUsageTracker, uint64_t fenceValue);
 
