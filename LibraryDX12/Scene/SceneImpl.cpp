@@ -844,24 +844,6 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     commandListFixedPostProcesses.close();
     commandQueue.executeCommandListAndSignal(commandListFixedPostProcesses);
 
-    /// QUERY used in perf. measurement.
-    ///UINT64 *queryData = nullptr;
-    ///queryResult->getResource().Get()->Map(0, nullptr, (void **)&queryData);
-    ///
-    ///static int fpsTab[100];
-    ///static int fpsTabIter;
-    ///fpsTabIter++;
-    ///
-    ///fpsTab[fpsTabIter % 100] = int(queryData[1] - queryData[0]);
-    ///
-    ///int fpsSum = 0;
-    ///for (int i = 0; i < 100; i++) {
-    ///    fpsSum += fpsTab[i];
-    ///}
-    ///
-    ///DXD::log("Time: %d\n", fpsSum/100);
-    ///queryResult->getResource().Get()->Unmap(0, nullptr);
-
     // Render post processes
     CommandList commandListPostProcess{commandQueue};
     SET_OBJECT_NAME(commandListPostProcess, L"cmdListPostProcess");
@@ -912,3 +894,21 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     swapChain.present(fenceValue);
     commandQueue.waitOnCpu(swapChain.getFenceValueForCurrentBackBuffer());
 }
+
+/// QUERY used in perf. measurement.
+///UINT64 *queryData = nullptr;
+///queryResult->getResource().Get()->Map(0, nullptr, (void **)&queryData);
+///
+///static int fpsTab[100];
+///static int fpsTabIter;
+///fpsTabIter++;
+///
+///fpsTab[fpsTabIter % 100] = int(queryData[1] - queryData[0]);
+///
+///int fpsSum = 0;
+///for (int i = 0; i < 100; i++) {
+///    fpsSum += fpsTab[i];
+///}
+///
+///DXD::log("Time: %d\n", fpsSum/100);
+///queryResult->getResource().Get()->Unmap(0, nullptr);
