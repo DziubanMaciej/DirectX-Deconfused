@@ -204,22 +204,22 @@ private:
         lights["leftLight1"]->setColor(1.0f, 1.0f, 1.0f);
         lights["leftLight1"]->setPosition(-9.0f, 0.2f, 3.0f);
         lights["leftLight1"]->setDirection(1, 0, 0);
-        lights["leftLight1"]->setPower(2);
+        lights["leftLight1"]->setPower(0);
 
         lights["leftLight2"]->setColor(1.0f, 1.0f, 1.0f);
         lights["leftLight2"]->setPosition(-9.0f, 0.2f, -3.0f);
         lights["leftLight2"]->setDirection(1, 0, 0);
-        lights["leftLight2"]->setPower(2);
+        lights["leftLight2"]->setPower(0);
 
         lights["rightLight1"]->setColor(1.0f, 1.0f, 1.0f);
         lights["rightLight1"]->setPosition(9.0f, 0.2f, 3.0f);
         lights["rightLight1"]->setDirection(-1, 0, 0);
-        lights["rightLight1"]->setPower(2);
+        lights["rightLight1"]->setPower(0);
 
         lights["rightLight2"]->setColor(1.0f, 1.0f, 1.0f);
         lights["rightLight2"]->setPosition(9.0f, 0.2f, -3.0f);
         lights["rightLight2"]->setDirection(-1, 0, 0);
-        lights["rightLight2"]->setPower(2);
+        lights["rightLight2"]->setPower(0);
     }
     void prepTextures() {
         DXD::log("Loading textures...\n");
@@ -475,6 +475,17 @@ private:
             break;
         case 'B':
             application->getSettings().setBloomEnabled(!application->getSettings().getBloomEnabled());
+            if (application->getSettings().getBloomEnabled()) {
+                lights["leftLight1"]->setPower(2);
+                lights["leftLight2"]->setPower(2);
+                lights["rightLight1"]->setPower(2);
+                lights["rightLight2"]->setPower(2);
+            } else {
+                lights["leftLight1"]->setPower(0);
+                lights["leftLight2"]->setPower(0);
+                lights["rightLight1"]->setPower(0);
+                lights["rightLight2"]->setPower(0);
+            }
             break;
         case '7':
             postProcesses["blackBars"]->setEnabled(!postProcesses["blackBars"]->isEnabled());
