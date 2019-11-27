@@ -871,7 +871,6 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     const auto postProcessesCount = getEnabledPostProcessesCount();
     const bool shouldRenderPostProcesses = (postProcessesCount > 0);
     if (shouldRenderPostProcesses) {
-        renderData.getPostProcessRenderTargets().swapResources();
         renderPostProcesses(renderData, postProcesses, commandListPostProcess, renderData.getPostProcessRenderTargets(), postProcessesCount,
                             static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     }
