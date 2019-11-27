@@ -78,9 +78,9 @@ protected:
     void renderGBuffer(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
     void renderSSAO(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
     void renderLighting(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output);
-    void renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output);
-    void renderFog(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output);
-    void renderDof(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output);
+    void renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &input, Resource &output);
+    void renderFog(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &input, Resource &output);
+    void renderDof(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &input, Resource &output);
     static void renderPostProcess(RenderData &renderData, PostProcessImpl &postProcess, CommandList &commandList,
                                   AlternatingResources &alternatingResources, float screenWidth, float screenHeight);
     static void renderPostProcesses(RenderData &renderData, std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList,

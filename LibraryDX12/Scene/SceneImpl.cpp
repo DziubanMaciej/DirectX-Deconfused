@@ -420,15 +420,13 @@ void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, Com
     commandList.draw(6u);
 }
 
-void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output) {
-
+void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &input, Resource &output) {
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(std::max(swapChain.getWidth(), 1u)), static_cast<float>(std::max(swapChain.getHeight(), 1u)));
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SSR);
-
-    commandList.transitionBarrier(renderData.getLightingOutput(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    commandList.transitionBarrier(input, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getSsrMap(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     const Resource *ssrRts[] = {&renderData.getSsrMap()};
@@ -437,7 +435,7 @@ void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, 
     commandList.setSrvInDescriptorTable(0, 0, renderData.getGBufferNormal());
     commandList.setSrvInDescriptorTable(0, 1, renderData.getDepthStencilBuffer());
     commandList.setSrvInDescriptorTable(0, 2, renderData.getGBufferSpecular());
-    commandList.setSrvInDescriptorTable(0, 3, renderData.getLightingOutput());
+    commandList.setSrvInDescriptorTable(0, 3, input);
 
     SsrCB ssrCB;
     ssrCB.cameraPosition = XMFLOAT4(camera->getEyePosition().x, camera->getEyePosition().y, camera->getEyePosition().z, 1);
@@ -495,7 +493,7 @@ void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, 
     commandList.setSrvInDescriptorTable(0, 0, renderData.getGBufferSpecular());
     commandList.setSrvInDescriptorTable(0, 1, renderData.getDepthStencilBuffer());
     commandList.setSrvInDescriptorTable(0, 2, renderData.getSsrBlurredMap());
-    commandList.setSrvInDescriptorTable(0, 3, renderData.getLightingOutput());
+    commandList.setSrvInDescriptorTable(0, 3, input);
 
     commandList.setRoot32BitConstant(1, ssrMergeCB);
 
@@ -509,12 +507,12 @@ void SceneImpl::renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, 
     ///commandList.getCommandList()->ResolveQueryData(queryHeap.Get(), D3D12_QUERY_TYPE_TIMESTAMP, 0, 2, queryResult->getResource().Get(), 0);
 }
 
-void SceneImpl::renderFog(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output) {
+void SceneImpl::renderFog(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &input, Resource &output) {
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
-    commandList.transitionBarrier(renderData.getPreFogBuffer(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    commandList.transitionBarrier(input, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_FOG);
@@ -523,7 +521,7 @@ void SceneImpl::renderFog(SwapChain &swapChain, RenderData &renderData, CommandL
     commandList.OMSetRenderTargetsNoDepth(fogRts);
 
     commandList.setSrvInDescriptorTable(0, 0, renderData.getDepthStencilBuffer());
-    commandList.setSrvInDescriptorTable(0, 1, renderData.getPreFogBuffer());
+    commandList.setSrvInDescriptorTable(0, 1, input);
 
     FogCB fogCB;
     fogCB.screenWidth = static_cast<float>(swapChain.getWidth());
@@ -540,13 +538,13 @@ void SceneImpl::renderFog(SwapChain &swapChain, RenderData &renderData, CommandL
     commandList.draw(6u);
 }
 
-void SceneImpl::renderDof(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output) {
+void SceneImpl::renderDof(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &input, Resource &output) {
     // DOF
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
-    commandList.transitionBarrier(renderData.getPreDofBuffer(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    commandList.transitionBarrier(input, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getDofMap(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_DOF_BLUR);
@@ -555,7 +553,7 @@ void SceneImpl::renderDof(SwapChain &swapChain, RenderData &renderData, CommandL
     commandList.OMSetRenderTargetsNoDepth(dofBlurRts);
 
     commandList.setSrvInDescriptorTable(0, 0, renderData.getDepthStencilBuffer());
-    commandList.setSrvInDescriptorTable(0, 1, renderData.getPreDofBuffer());
+    commandList.setSrvInDescriptorTable(0, 1, input);
 
     DofCB dofCB;
     dofCB.screenWidth = static_cast<float>(swapChain.getWidth());
@@ -780,6 +778,7 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     auto &application = ApplicationImpl::getInstance();
     auto &commandQueue = application.getDirectCommandQueue();
     auto &backBuffer = swapChain.getCurrentBackBuffer();
+    auto &alternatingResources = renderData.getPostProcessRenderTargets();
     application.flushAllResources();
     inspectObjectsNotReady();
 
@@ -809,73 +808,42 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
         commandQueue.executeCommandListAndSignal(commandListSSAO);
     }
 
-    // Identify output for the next step: if there are post processes, render to intermediate buffer
-    const auto postProcessesCount = getEnabledPostProcessesCount();
-    const bool shouldRenderPostProcesses = (postProcessesCount > 0);
-    Resource *renderOutput = shouldRenderPostProcesses ? &renderData.getPostProcessRenderTargets().getDestination() : &backBuffer;
+    // Command list for fixed post processes - 2D operations
+    CommandList commandListFixedPostProcesses{commandQueue};
+    SET_OBJECT_NAME(commandListFixedPostProcesses, L"cmdListFixedPostProcesses");
 
-    const bool shouldRenderFog = ApplicationImpl::getInstance().getSettings().getFogEnabled();
-    const bool shouldRenderDof = ApplicationImpl::getInstance().getSettings().getDofEnabled();
+    // Lighting - merge GBuffers and apply per-pixel shading
+    renderLighting(swapChain, renderData, commandListFixedPostProcesses, alternatingResources.getDestination());
+    alternatingResources.swapResources();
 
-    if (shouldRenderDof) {
-        renderOutput = &renderData.getPreDofBuffer();
-    }
-
-    if (shouldRenderFog) {
-        renderOutput = &renderData.getPreFogBuffer();
-    }
-
-    // SSR and merge
+    // SSR
     if (ApplicationImpl::getInstance().getSettings().getSsrEnabled()) {
-        // Lighting
-        CommandList commandListLighting{commandQueue};
-        SET_OBJECT_NAME(commandListLighting, L"cmdListLighting");
-        renderLighting(swapChain, renderData, commandListLighting, renderData.getLightingOutput());
-        commandListLighting.close();
-        commandQueue.executeCommandListAndSignal(commandListLighting);
-
-        // SSR
-        CommandList commandListSSR{commandQueue};
-        SET_OBJECT_NAME(commandListSSR, L"cmdListSSR");
-        renderSSRandMerge(swapChain, renderData, commandListSSR, *renderOutput);
-        commandListSSR.close();
-        commandQueue.executeCommandListAndSignal(commandListSSR);
-    } else {
-        // Lighting
-        CommandList commandListLighting{commandQueue};
-        SET_OBJECT_NAME(commandListLighting, L"cmdListLighting");
-        renderLighting(swapChain, renderData, commandListLighting, *renderOutput);
-        commandListLighting.close();
-        commandQueue.executeCommandListAndSignal(commandListLighting);
+        Resource &source = alternatingResources.getSource();
+        Resource &destination = alternatingResources.getDestination();
+        renderSSRandMerge(swapChain, renderData, commandListFixedPostProcesses, source, destination);
+        alternatingResources.swapResources();
     }
 
-    if (shouldRenderFog) {
-
-        renderOutput = shouldRenderPostProcesses ? &renderData.getPostProcessRenderTargets().getDestination() : &backBuffer;
-
-        if (shouldRenderDof) {
-            renderOutput = &renderData.getPreDofBuffer();
-        }
-
-        // Fog
-        CommandList commandListFog{commandQueue};
-        SET_OBJECT_NAME(commandListFog, L"cmdListFog");
-        renderFog(swapChain, renderData, commandListFog, *renderOutput);
-        commandListFog.close();
-        commandQueue.executeCommandListAndSignal(commandListFog);
+    // Fog
+    if (ApplicationImpl::getInstance().getSettings().getFogEnabled()) {
+        Resource &source = alternatingResources.getSource();
+        Resource &destination = alternatingResources.getDestination();
+        renderFog(swapChain, renderData, commandListFixedPostProcesses, source, destination);
+        alternatingResources.swapResources();
     }
 
-    if (shouldRenderDof) {
-
-        renderOutput = shouldRenderPostProcesses ? &renderData.getPostProcessRenderTargets().getDestination() : &backBuffer;
-
-        // Fog
-        CommandList commandListDof{commandQueue};
-        SET_OBJECT_NAME(commandListDof, L"cmdListDof");
-        renderDof(swapChain, renderData, commandListDof, *renderOutput);
-        commandListDof.close();
-        commandQueue.executeCommandListAndSignal(commandListDof);
+    // Dof
+    if (ApplicationImpl::getInstance().getSettings().getDofEnabled()) {
+        Resource &source = alternatingResources.getSource();
+        Resource &destination = alternatingResources.getDestination();
+        renderDof(swapChain, renderData, commandListFixedPostProcesses, source, destination);
+        alternatingResources.swapResources();
     }
+
+    // Send fixed post processes command lsit
+    commandListFixedPostProcesses.close();
+    commandQueue.executeCommandListAndSignal(commandListFixedPostProcesses);
+
     /// QUERY used in perf. measurement.
     ///UINT64 *queryData = nullptr;
     ///queryResult->getResource().Get()->Map(0, nullptr, (void **)&queryData);
@@ -900,17 +868,19 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     commandListPostProcess.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     commandListPostProcess.RSSetScissorRectNoScissor();
     commandListPostProcess.IASetPrimitiveTopologyTriangleList();
+    const auto postProcessesCount = getEnabledPostProcessesCount();
+    const bool shouldRenderPostProcesses = (postProcessesCount > 0);
     if (shouldRenderPostProcesses) {
         renderData.getPostProcessRenderTargets().swapResources();
         renderPostProcesses(renderData, postProcesses, commandListPostProcess, renderData.getPostProcessRenderTargets(), postProcessesCount,
                             static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
-
-        // Copy to back buffers
-        commandListPostProcess.transitionBarrier(renderData.getPostProcessRenderTargets().getSource(), D3D12_RESOURCE_STATE_COPY_SOURCE);
-        commandListPostProcess.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_COPY_DEST);
-        commandListPostProcess.copyResource(backBuffer, renderData.getPostProcessRenderTargets().getSource());
     }
     //renderBloom(renderData, swapChain, commandListPostProcess, renderData.getPostProcessRenderTargets(), backBuffer);
+
+    // Copy to back buffers
+    commandListPostProcess.transitionBarrier(renderData.getPostProcessRenderTargets().getSource(), D3D12_RESOURCE_STATE_COPY_SOURCE);
+    commandListPostProcess.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_COPY_DEST);
+    commandListPostProcess.copyResource(backBuffer, renderData.getPostProcessRenderTargets().getSource());
 
     // Close command list and submit it to the GPU
     commandListPostProcess.close();
