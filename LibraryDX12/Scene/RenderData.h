@@ -10,7 +10,7 @@
 
 class RenderData {
 public:
-    struct PostProcessRenderTargets : AlternatingResources {
+    struct AlternatingResourceImpl : AlternatingResources {
         using AlternatingResources::AlternatingResources;
         void resize(int width, int height) override;
     };
@@ -30,7 +30,8 @@ public:
     Resource &getSsrBlurredMap() { return *ssrBlurredMap; }
     Resource &getBloomMap() { return *bloomMap; }
     Resource &getDofMap() { return *dofMap; }
-    AlternatingResources &getPostProcessRenderTargets() { return postProcessRenderTargets; }
+    AlternatingResources &getSceneAlternatingResources() { return sceneAlternatingResources; }
+    AlternatingResources &getHelperAlternatingResources() { return helperAlternatingResources; }
     PostProcessImpl &getPostProcessForBloom() { return *static_cast<PostProcessImpl *>(postProcessForBloom.get()); }
     ConstantBuffer &getLightingConstantBuffer() {
         if (lightConstantBufferIdx == 0) {
@@ -80,7 +81,8 @@ private:
     std::unique_ptr<Resource> dofMap;
 
     // Misc
-    PostProcessRenderTargets postProcessRenderTargets;
+    AlternatingResourceImpl sceneAlternatingResources;
+    AlternatingResourceImpl helperAlternatingResources;
     std::unique_ptr<DXD::PostProcess> postProcessForBloom;
     int lightConstantBufferIdx = 0;
     ConstantBuffer lightingConstantBuffer1;

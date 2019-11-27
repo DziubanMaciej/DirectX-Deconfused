@@ -71,7 +71,9 @@ protected:
     // Helpers
     void inspectObjectsNotReady();
     size_t getEnabledPostProcessesCount() const;
-    static void prepareSourceAndDestinationForPostProcess(CommandList &commandList, AlternatingResources &renderTargets, bool compute = false);
+    static void getSourceAndDestinationForPostProcess(AlternatingResources &alternatingResources, Resource *optionalInput,
+                                                      Resource *&outSource, Resource *&outDestination);
+    static void prepareSourceAndDestinationForPostProcess(CommandList &commandList, Resource &source, Resource &destination, bool compute = false);
 
     // Render methods
     void renderShadowMaps(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
@@ -81,13 +83,13 @@ protected:
     void renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &input, Resource &output);
     void renderFog(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &input, Resource &output);
     void renderDof(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &input, Resource &output);
-    static void renderPostProcess(RenderData &renderData, PostProcessImpl &postProcess, CommandList &commandList,
+    static void renderPostProcess(RenderData &renderData, PostProcessImpl &postProcess, CommandList &commandList, Resource *optionalInput,
                                   AlternatingResources &alternatingResources, float screenWidth, float screenHeight);
     static void renderPostProcesses(RenderData &renderData, std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList,
                                     AlternatingResources &alternatingResources, size_t enabledPostProcessesCount,
                                     float screenWidth, float screenHeight);
-    static void renderBloom(RenderData &renderData, SwapChain &swapChain, CommandList &commandList,
-                            AlternatingResources &alternatingResources, Resource &output);
+    static void renderBloom(SwapChain &swapChain, RenderData &renderData, CommandList &commandList,
+                            Resource &input, Resource &output);
     void renderD2DTexts(SwapChain &swapChain);
     void renderSprite(SwapChain &swapChain, CommandList &commandList, SpriteImpl *sprite, VertexBuffer &fullscreenVB);
 

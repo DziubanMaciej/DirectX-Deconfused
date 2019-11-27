@@ -9,7 +9,8 @@
 
 RenderData::RenderData(int width, int height)
     : device(ApplicationImpl::getInstance().getDevice()),
-      postProcessRenderTargets(device),
+      sceneAlternatingResources(L"sceneAlternatingResources", device),
+      helperAlternatingResources(L"helperAlternatingResources", device),
       postProcessForBloom(DXD::PostProcess::create()),
       lightingConstantBuffer1(sizeof(LightingHeapCB)),
       lightingConstantBuffer2(sizeof(LightingHeapCB)),
@@ -57,7 +58,8 @@ void RenderData::resize(int width, int height) {
     createBloomMap(width, height);
     createDofMap(width, height);
     createDepthBuffer(width, height);
-    postProcessRenderTargets.resize(width, height);
+    sceneAlternatingResources.resize(width, height);
+    helperAlternatingResources.resize(width, height);
 }
 
 void RenderData::createShadowMaps(unsigned int shadowsQuality) {
@@ -256,7 +258,7 @@ void RenderData::createDepthBuffer(int width, int height) {
     SET_OBJECT_NAME(*depthStencilBuffer, L"DepthStencilBuffer");
 }
 
-void RenderData::PostProcessRenderTargets::resize(int width, int height) {
+void RenderData::AlternatingResourceImpl::resize(int width, int height) {
     D3D12_RESOURCE_DESC renderTargetDesc = getBaseDescForFullscreenTexture(width, height);
     renderTargetDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     renderTargetDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
@@ -272,7 +274,7 @@ void RenderData::PostProcessRenderTargets::resize(int width, int height) {
         resources[i]->createSrv(nullptr);
         resources[i]->createRtv(nullptr);
         resources[i]->createUav(nullptr);
-        SET_OBJECT_NAME(*resources[i], L"PostProcessRT%d", i);
+        SET_OBJECT_NAME(*resources[i], L"%ls_%d", this->name.c_str(), i);
     }
 }
 

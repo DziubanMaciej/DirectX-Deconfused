@@ -5,7 +5,7 @@
 /// Encapsulates two resources - source and destination resource - which can be easily
 /// swapped, so the source becomes destination and vice versa.
 struct AlternatingResources {
-    explicit AlternatingResources(ID3D12DevicePtr &device) : device(device) {}
+    explicit AlternatingResources(std::wstring name, ID3D12DevicePtr &device) : name(name), device(device) {}
     virtual void resize(int width, int height) = 0;
 
     Resource &getSource() { return *resources[sourceResourceIndex]; }
@@ -20,4 +20,5 @@ protected:
     ID3D12DevicePtr device = {};
     int sourceResourceIndex = 0;
     std::unique_ptr<Resource> resources[2] = {};
+    std::wstring name;
 };

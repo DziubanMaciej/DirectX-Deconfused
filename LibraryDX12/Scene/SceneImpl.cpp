@@ -159,9 +159,13 @@ size_t SceneImpl::getEnabledPostProcessesCount() const {
     return count;
 }
 
-void SceneImpl::prepareSourceAndDestinationForPostProcess(CommandList &commandList, AlternatingResources &renderTargets, bool compute) {
-    Resource &source = renderTargets.getSource();
-    Resource &destination = renderTargets.getDestination();
+void SceneImpl::getSourceAndDestinationForPostProcess(AlternatingResources &alternatingResources, Resource *optionalInput,
+                                                      Resource *&outSource, Resource *&outDestination) {
+    outSource = (optionalInput != nullptr) ? optionalInput : &alternatingResources.getSource();
+    outDestination = &alternatingResources.getDestination();
+}
+
+void SceneImpl::prepareSourceAndDestinationForPostProcess(CommandList &commandList, Resource &source, Resource &destination, bool compute) {
     if (compute) {
         commandList.transitionBarrier(source, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
         commandList.transitionBarrier(destination, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
@@ -610,42 +614,45 @@ void SceneImpl::renderPostProcesses(RenderData &renderData, std::vector<PostProc
         }
 
         // Render
-        renderPostProcess(renderData, *postProcess, commandList, alternatingResources, screenWidth, screenHeight);
+        renderPostProcess(renderData, *postProcess, commandList, nullptr, alternatingResources, screenWidth, screenHeight);
         alternatingResources.swapResources();
         postProcessIndex++;
     }
 }
 
-void SceneImpl::renderBloom(RenderData &renderData, SwapChain &swapChain, CommandList &commandList,
-                            AlternatingResources &alternatingResources, Resource &output) {
+void SceneImpl::renderBloom(SwapChain &swapChain, RenderData &renderData, CommandList &commandList,
+                            Resource &input, Resource &output) {
     // Blur the bloom map
     const float screenWidth = static_cast<float>(swapChain.getWidth());
     const float screenHeight = static_cast<float>(swapChain.getHeight());
-    renderPostProcess(renderData, renderData.getPostProcessForBloom(), commandList, alternatingResources, screenWidth, screenHeight);
+    AlternatingResources &alternatingResourcesForBlur = renderData.getHelperAlternatingResources();
+    renderPostProcess(renderData, renderData.getPostProcessForBloom(), commandList,
+                      &input, alternatingResourcesForBlur, screenWidth, screenHeight);
 
     // Apply bloom on output buffer
+    Resource &blurredBloomMap = alternatingResourcesForBlur.getDestination();
+    commandList.transitionBarrier(blurredBloomMap, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+    commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_APPLY_BLOOM);
     PostProcessApplyBloomCB cb = {};
     cb.screenWidth = static_cast<float>(swapChain.getWidth());
     cb.screenHeight = static_cast<float>(swapChain.getHeight());
-    commandList.transitionBarrier(renderData.getBloomMap(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_APPLY_BLOOM);
     commandList.setRoot32BitConstant(0, cb);
-    commandList.setSrvInDescriptorTable(1, 0, renderData.getBloomMap());
+    commandList.setSrvInDescriptorTable(1, 0, blurredBloomMap);
     commandList.OMSetRenderTargetNoDepth(output);
     commandList.IASetVertexBuffer(renderData.getFullscreenVB());
     commandList.draw(6u);
 }
 
-void SceneImpl::renderPostProcess(RenderData &renderData, PostProcessImpl &postProcess, CommandList &commandList,
+void SceneImpl::renderPostProcess(RenderData &renderData, PostProcessImpl &postProcess, CommandList &commandList, Resource *optionalInput,
                                   AlternatingResources &alternatingResources, float screenWidth, float screenHeight) {
     assert(postProcess.isEnabled());
-    Resource *source = &alternatingResources.getSource();
-    Resource *destination = &alternatingResources.getDestination();
+    Resource *source{}, *destination{};
 
     // Render post process base on its type
     if (postProcess.getType() == PostProcessImpl::Type::CONVOLUTION) {
-        prepareSourceAndDestinationForPostProcess(commandList, alternatingResources, false);
+        getSourceAndDestinationForPostProcess(alternatingResources, optionalInput, source, destination);
+        prepareSourceAndDestinationForPostProcess(commandList, *source, *destination, false);
 
         // Prepare constant buffer
         auto &postProcessData = postProcess.getData().convolution;
@@ -662,7 +669,8 @@ void SceneImpl::renderPostProcess(RenderData &renderData, PostProcessImpl &postP
         // Render
         commandList.draw(6u);
     } else if (postProcess.getType() == PostProcessImpl::Type::BLACK_BARS) {
-        prepareSourceAndDestinationForPostProcess(commandList, alternatingResources, false);
+        getSourceAndDestinationForPostProcess(alternatingResources, optionalInput, source, destination);
+        prepareSourceAndDestinationForPostProcess(commandList, *source, *destination, false);
 
         // Prepare constant buffer
         auto &postProcessData = postProcess.getData().blackBars;
@@ -679,7 +687,8 @@ void SceneImpl::renderPostProcess(RenderData &renderData, PostProcessImpl &postP
         // Render
         commandList.draw(6u);
     } else if (postProcess.getType() == PostProcessImpl::Type::LINEAR_COLOR_CORRECTION) {
-        prepareSourceAndDestinationForPostProcess(commandList, alternatingResources, false);
+        getSourceAndDestinationForPostProcess(alternatingResources, optionalInput, source, destination);
+        prepareSourceAndDestinationForPostProcess(commandList, *source, *destination, false);
 
         // Prepare constant buffer
         auto &postProcessData = postProcess.getData().linearColorCorrection;
@@ -710,9 +719,8 @@ void SceneImpl::renderPostProcess(RenderData &renderData, PostProcessImpl &postP
         // Render all passes of the blur filter
         for (auto passIndex = 0u; passIndex < postProcessData.passCount; passIndex++) {
             // Render horizontal pass
-            source = &alternatingResources.getSource();
-            destination = &alternatingResources.getSource();
-            prepareSourceAndDestinationForPostProcess(commandList, alternatingResources, true);
+            getSourceAndDestinationForPostProcess(alternatingResources, optionalInput, source, destination);
+            prepareSourceAndDestinationForPostProcess(commandList, *source, *destination, true);
             commandList.setPipelineStateAndComputeRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR_COMPUTE_HORIZONTAL);
             commandList.setSrvInDescriptorTable(0, 0, *source);
             commandList.setUavInDescriptorTable(0, 1, *destination);
@@ -720,10 +728,12 @@ void SceneImpl::renderPostProcess(RenderData &renderData, PostProcessImpl &postP
             commandList.dispatch(threadGroupCountX, threadGroupCountY, 1u);
             alternatingResources.swapResources();
 
+            // Clear optional input so rest of the passes are done in ping-pong manner
+            optionalInput = nullptr;
+
             // Render vertical pass
-            source = &alternatingResources.getSource();
-            destination = &alternatingResources.getSource();
-            prepareSourceAndDestinationForPostProcess(commandList, alternatingResources, true);
+            getSourceAndDestinationForPostProcess(alternatingResources, optionalInput, source, destination);
+            prepareSourceAndDestinationForPostProcess(commandList, *source, *destination, true);
             commandList.setPipelineStateAndComputeRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR_COMPUTE_VERTICAL);
             commandList.setSrvInDescriptorTable(0, 0, *source);
             commandList.setUavInDescriptorTable(0, 1, *destination);
@@ -736,7 +746,8 @@ void SceneImpl::renderPostProcess(RenderData &renderData, PostProcessImpl &postP
             }
         }
     } else if (postProcess.getType() == PostProcessImpl::Type::FXAA) {
-        prepareSourceAndDestinationForPostProcess(commandList, alternatingResources, false);
+        getSourceAndDestinationForPostProcess(alternatingResources, optionalInput, source, destination);
+        prepareSourceAndDestinationForPostProcess(commandList, *source, *destination, false);
 
         // Prepare constant buffer
         auto &postProcessData = postProcess.getData().fxaa;
@@ -804,7 +815,7 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     auto &application = ApplicationImpl::getInstance();
     auto &commandQueue = application.getDirectCommandQueue();
     auto &backBuffer = swapChain.getCurrentBackBuffer();
-    auto &alternatingResources = renderData.getPostProcessRenderTargets();
+    auto &alternatingResources = renderData.getSceneAlternatingResources();
     application.flushAllResources();
     inspectObjectsNotReady();
 
@@ -878,15 +889,22 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     const auto postProcessesCount = getEnabledPostProcessesCount();
     const bool shouldRenderPostProcesses = (postProcessesCount > 0);
     if (shouldRenderPostProcesses) {
-        renderPostProcesses(renderData, postProcesses, commandListPostProcess, renderData.getPostProcessRenderTargets(), postProcessesCount,
+        renderPostProcesses(renderData, postProcesses, commandListPostProcess, alternatingResources, postProcessesCount,
                             static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     }
-    //renderBloom(renderData, swapChain, commandListPostProcess, renderData.getPostProcessRenderTargets(), backBuffer);
+
+    // Bloom
+    const bool bloomEnabled = true; //  TODO
+    if (bloomEnabled) {
+        Resource &source = renderData.getBloomMap();
+        Resource &destination = alternatingResources.getSource(); // render to previously rendered frame
+        renderBloom(swapChain, renderData, commandListPostProcess, source, destination);
+    }
 
     // Copy to back buffers
-    commandListPostProcess.transitionBarrier(renderData.getPostProcessRenderTargets().getSource(), D3D12_RESOURCE_STATE_COPY_SOURCE);
+    commandListPostProcess.transitionBarrier(alternatingResources.getSource(), D3D12_RESOURCE_STATE_COPY_SOURCE);
     commandListPostProcess.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_COPY_DEST);
-    commandListPostProcess.copyResource(backBuffer, renderData.getPostProcessRenderTargets().getSource());
+    commandListPostProcess.copyResource(backBuffer, alternatingResources.getSource());
 
     // Close command list and submit it to the GPU
     commandListPostProcess.close();
