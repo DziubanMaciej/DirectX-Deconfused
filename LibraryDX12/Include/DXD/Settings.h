@@ -27,6 +27,12 @@ public:
     virtual bool getSsaoEnabled() const = 0;
     /// @}
 
+    /// \name Bloom effect for bright lights
+    /// @{
+    virtual void setBloomEnabled(bool value) = 0;
+    virtual bool getBloomEnabled() const = 0;
+    /// @}
+
     /// \name Screen space reflections
     /// \brief This effect provides reflections, intensity of which scales with
     /// specularity of Object instances being rendered.

@@ -473,6 +473,9 @@ private:
         case 'U':
             application->getSettings().setDofEnabled(!application->getSettings().getDofEnabled());
             break;
+        case 'B':
+            application->getSettings().setBloomEnabled(!application->getSettings().getBloomEnabled());
+            break;
         case '7':
             postProcesses["blackBars"]->setEnabled(!postProcesses["blackBars"]->isEnabled());
             break;

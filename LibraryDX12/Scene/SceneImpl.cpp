@@ -853,8 +853,7 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     alternatingResources.swapResources();
 
     // Bloom
-    const bool bloomEnabled = true; //  TODO
-    if (bloomEnabled) {
+    if (ApplicationImpl::getInstance().getSettings().getBloomEnabled()) {
         Resource &source = renderData.getBloomMap();
         Resource &destination = alternatingResources.getSource(); // render to previously rendered frame
         renderBloom(swapChain, renderData, commandListFixedPostProcesses, source, destination);
