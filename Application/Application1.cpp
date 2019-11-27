@@ -235,14 +235,8 @@ private:
             {"porshe_blue", L"Resources/textures/porshe_blue.bmp"},
             {"porshe_green", L"Resources/textures/porshe_green.bmp"},
             {"dennis", L"Resources/textures/dennis.jpg"},
-            {
-                "tiles",
-                L"Resources/textures/tiles.jpg",
-            },
-            {
-                "wood",
-                L"Resources/textures/wood.jpg",
-            },
+            {"tiles", L"Resources/textures/tiles.jpg"},
+            {"wood", L"Resources/textures/wood.jpg"},
             {"grass", L"Resources/textures/grass.jpg"}};
 
         for (const auto &data : texturesCreationData) {
@@ -272,7 +266,7 @@ private:
         postProcesses["sepia"] = DXD::PostProcess::create();
         postProcesses["sepia"]->setLinearColorCorrectionSepia();
         postProcesses["sepia"]->setEnabled(false);
-     
+
         postProcesses["FXAA"] = DXD::PostProcess::create();
         postProcesses["FXAA"]->setFxaa();
         postProcesses["FXAA"]->setEnabled(false);

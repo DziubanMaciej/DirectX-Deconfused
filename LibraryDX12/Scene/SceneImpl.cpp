@@ -727,7 +727,7 @@ void SceneImpl::renderPostProcess(RenderData &renderData, PostProcessImpl &postP
             }
         }
     } else if (postProcess.getType() == PostProcessImpl::Type::FXAA) {
-        getAndPrepareSourceAndDestinationForPostProcess(commandList, renderTargets, true, true, input, output, source, destination);
+        prepareSourceAndDestinationForPostProcess(commandList, alternatingResources, false);
 
         // Prepare constant buffer
         auto &postProcessData = postProcess.getData().fxaa;
@@ -739,7 +739,7 @@ void SceneImpl::renderPostProcess(RenderData &renderData, PostProcessImpl &postP
         commandList.setRoot32BitConstant(0, postProcessData);
         commandList.setSrvInDescriptorTable(1, 0, *source);
         commandList.OMSetRenderTargetNoDepth(*destination);
-        commandList.IASetVertexBuffer(fullscreenVB);
+        commandList.IASetVertexBuffer(renderData.getFullscreenVB());
 
         // Render
         commandList.draw(6u);
