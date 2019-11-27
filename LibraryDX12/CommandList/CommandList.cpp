@@ -225,6 +225,13 @@ void CommandList::dispatch(UINT threadGroupCountX, UINT threadGroupCountY, UINT 
     commandList->Dispatch(threadGroupCountX, threadGroupCountY, threadGroupCountZ);
 }
 
+void CommandList::copyResource(Resource &destination, Resource &source) {
+    addUsedResource(destination.getResource());
+    addUsedResource(source.getResource());
+    commitResourceBarriers();
+    commandList->CopyResource(destination.getResource().Get(), source.getResource().Get());
+}
+
 void CommandList::close() {
     commitResourceBarriers();
     throwIfFailed(commandList->Close());
