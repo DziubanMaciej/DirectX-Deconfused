@@ -783,8 +783,7 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
     inspectObjectsNotReady();
 
     // Render shadow maps
-    const bool shadowsEnabled = ApplicationImpl::getInstance().getSettingsImpl().getShadowsQuality() > 0;
-    if (shadowsEnabled) {
+    if (ApplicationImpl::getInstance().getSettingsImpl().getShadowsQuality() > 0) {
         CommandList commandListShadowMap{commandQueue};
         SET_OBJECT_NAME(commandListShadowMap, L"cmdListShadowMap")
         renderShadowMaps(swapChain, renderData, commandListShadowMap);
