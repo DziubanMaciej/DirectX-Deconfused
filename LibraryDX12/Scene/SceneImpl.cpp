@@ -398,9 +398,15 @@ void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, Com
     lightCb->screenHeight = static_cast<float>(swapChain.getHeight());
     for (LightImpl *light : lights) {
         lightCb->lightColor[lightCb->lightsSize] = XMFLOAT4(light->getColor().x, light->getColor().y, light->getColor().z, light->getPower());
-        lightCb->lightPosition[lightCb->lightsSize] = lightPositions[lightCb->lightsSize];
-        lightCb->lightDirection[lightCb->lightsSize] = lightDirections[lightCb->lightsSize];
-        lightCb->smViewProjectionMatrix[lightCb->lightsSize] = lightVpMatrixes[lightCb->lightsSize];
+        if (renderData.getShadowMapSize() > 0) {
+            lightCb->lightPosition[lightCb->lightsSize] = lightPositions[lightCb->lightsSize];
+            lightCb->lightDirection[lightCb->lightsSize] = lightDirections[lightCb->lightsSize];
+            lightCb->smViewProjectionMatrix[lightCb->lightsSize] = lightVpMatrixes[lightCb->lightsSize];
+        } else {
+            lightCb->lightPosition[lightCb->lightsSize] = XMFLOAT4(light->getPosition().x, light->getPosition().y, light->getPosition().z, 0);
+            lightCb->lightDirection[lightCb->lightsSize] = XMFLOAT4(light->getDirection().x, light->getDirection().y, light->getDirection().z, 0);
+            lightCb->smViewProjectionMatrix[lightCb->lightsSize] = light->getShadowMapViewProjectionMatrix();
+        }
         lightCb->lightsSize++;
         if (lightCb->lightsSize >= 8) {
             break;

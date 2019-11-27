@@ -361,7 +361,7 @@ private:
 
         lights["sunLight"]->setPosition(20 * sin(rotation), 8 + 8 * cos(2 * rotation), 6);
         lights["sunLight"]->setColor(1.0f + sin(rotation), 1.0f + sin(rotation), 1.0f + sin(rotation));
-        lights["sunLight"]->setPower(5.0f + 5.0f * cos(2 * rotation));
+        lights["sunLight"]->setPower(4.0f + 4.0f * cos(2 * rotation));
 
         //scene->setAmbientLight(0.8f, 0.8f, 0.8f);
         float ambientPower = 0.4f + 0.4f * cos(2 * rotation);
