@@ -95,33 +95,33 @@ private:
 #define KEYSTROKE(key, description, code) keystrokeHandler.addCallback(key, description, [this]() { code });
 
         // Walking
-        KEYSTROKE('W', L"Walk forward", {
+        KEYSTROKE('W', L"Move forward", {
             cameraPosition.x += focusDirection.x * movementSpeed;
             cameraPosition.y += focusDirection.y * movementSpeed;
             cameraPosition.z += focusDirection.z * movementSpeed;
             updateCamera();
         })
-        KEYSTROKE('S', L"Walk backward", {
+        KEYSTROKE('S', L"Move backward", {
             cameraPosition.x -= focusDirection.x * movementSpeed;
             cameraPosition.y -= focusDirection.y * movementSpeed;
             cameraPosition.z -= focusDirection.z * movementSpeed;
             updateCamera();
         })
-        KEYSTROKE('A', L"Walk left", {
+        KEYSTROKE('A', L"Move left", {
             cameraPosition.x += -focusDirection.z * movementSpeed;
             cameraPosition.z += focusDirection.x * movementSpeed;
             updateCamera();
         })
-        KEYSTROKE('D', L"Walk right", {
+        KEYSTROKE('D', L"Move right", {
             cameraPosition.x -= -focusDirection.z * movementSpeed;
             cameraPosition.z -= focusDirection.x * movementSpeed;
             updateCamera();
         })
-        KEYSTROKE('Q', L"Walk up", {
+        KEYSTROKE('Q', L"Move up", {
             cameraPosition.y += movementSpeed;
             updateCamera();
         })
-        KEYSTROKE('E', L"Walk down", {
+        KEYSTROKE('E', L"Move down", {
             cameraPosition.y -= movementSpeed;
             updateCamera();
         })
@@ -142,6 +142,12 @@ private:
             int removed = scene->removeText(*texts["help"]);
             if (removed == 0) {
                 scene->addText(*texts["help"]);
+            }
+        })
+        KEYSTROKE('G', L"Toggle FPS counter", {
+            int removed = scene->removeText(*texts["fpsCounter"]);
+            if (removed == 0) {
+                scene->addText(*texts["fpsCounter"]);
             }
         })
         keystrokeHandler.addSeparator();
