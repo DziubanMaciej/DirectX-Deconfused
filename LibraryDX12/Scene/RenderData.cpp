@@ -50,9 +50,9 @@ void RenderData::resize(int width, int height) {
     height = std::max(static_cast<uint32_t>(height), 1u);
 
     createGBuffers(width, height);
-    createBloomBuffers(width, height);
-    createSsaoBuffers(width, height);
-    createSsrBuffers(width, height);
+    createSsaoMap(width, height);
+    createSsrMaps(width, height);
+    createBloomMap(width, height);
     createDofMap(width, height);
     createDepthBuffer(width, height);
     postProcessRenderTargets.resize(width, height);
@@ -144,24 +144,7 @@ void RenderData::createGBuffers(int width, int height) {
     SET_OBJECT_NAME(*gBufferSpecular, L"GBuffer Specular");
 }
 
-void RenderData::createBloomBuffers(int width, int height) {
-    D3D12_RESOURCE_DESC bloomMapDesc = getBaseDescForFullscreenTexture(width, height);
-    bloomMapDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    bloomMapDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
-    bloomMap = std::make_unique<Resource>(
-        device,
-        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
-        D3D12_HEAP_FLAG_NONE,
-        &bloomMapDesc,
-        D3D12_RESOURCE_STATE_RENDER_TARGET,
-        nullptr);
-    bloomMap->createSrv(nullptr);
-    bloomMap->createRtv(nullptr);
-    bloomMap->createUav(nullptr);
-    SET_OBJECT_NAME(*bloomMap, L"BloomMap");
-}
-
-void RenderData::createSsaoBuffers(int width, int height) {
+void RenderData::createSsaoMap(int width, int height) {
     width = std::max(width / 2, 1);
     height = std::max(height / 2, 1);
     D3D12_RESOURCE_DESC ssaoMapDesc = getBaseDescForFullscreenTexture(width, height);
@@ -179,7 +162,7 @@ void RenderData::createSsaoBuffers(int width, int height) {
     SET_OBJECT_NAME(*ssaoMap, L"SsaoMap");
 }
 
-void RenderData::createSsrBuffers(int width, int height) {
+void RenderData::createSsrMaps(int width, int height) {
     // SSR map
     int halfWidth = std::max(width / 2, 1);
     int halfHeight = std::max(height / 2, 1);
@@ -211,6 +194,23 @@ void RenderData::createSsrBuffers(int width, int height) {
     ssrBlurredMap->createSrv(nullptr);
     ssrBlurredMap->createRtv(nullptr);
     SET_OBJECT_NAME(*ssrBlurredMap, L"SsrBlurredMap");
+}
+
+void RenderData::createBloomMap(int width, int height) {
+    D3D12_RESOURCE_DESC bloomMapDesc = getBaseDescForFullscreenTexture(width, height);
+    bloomMapDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    bloomMapDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET | D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
+    bloomMap = std::make_unique<Resource>(
+        device,
+        &CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_DEFAULT),
+        D3D12_HEAP_FLAG_NONE,
+        &bloomMapDesc,
+        D3D12_RESOURCE_STATE_RENDER_TARGET,
+        nullptr);
+    bloomMap->createSrv(nullptr);
+    bloomMap->createRtv(nullptr);
+    bloomMap->createUav(nullptr);
+    SET_OBJECT_NAME(*bloomMap, L"BloomMap");
 }
 
 void RenderData::createDofMap(int width, int height) {
