@@ -30,8 +30,9 @@ public:
     /// Factory function used to create Application instance. This function should be called only once during
     /// whole execution and should be the first DXD function called.
     /// \param debugLayer enable diagnostic DirectX debug layer, should be set to false during normal development
+    /// \param debugShaders enable debug info in shaders, should be set to false during normal development
     /// \return Application instance
-    static std::unique_ptr<Application> create(bool debugLayer);
+    static std::unique_ptr<Application> create(bool debugLayer, bool debugShaders);
     virtual ~Application() = default;
 
 protected:

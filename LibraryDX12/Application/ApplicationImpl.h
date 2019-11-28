@@ -15,7 +15,7 @@
 class ApplicationImpl : public DXD::Application {
 protected:
     friend class DXD::Application;
-    ApplicationImpl(bool debugLayer);
+    ApplicationImpl(bool debugLayer, bool debugShaders);
 
 public:
     ~ApplicationImpl() override;
@@ -32,6 +32,7 @@ public:
     static auto &getInstance() { return *instance; }
     auto &getSettingsImpl() { return settings; }
     auto getCallbackHandler() const { return callbackHandler; }
+    auto areDebugShadersEnabled() const { return debugShadersEnabled; }
     auto getFactory() { return factory; }
     auto getAdapter() { return adapter; }
     auto getDevice() { return device; }
@@ -55,6 +56,7 @@ protected:
 
     // DX12 context
     const bool debugLayerEnabled;
+    const bool debugShadersEnabled;
     IDXGIFactoryPtr factory;
     IDXGIAdapterPtr adapter;
     ID3D12DevicePtr device;
