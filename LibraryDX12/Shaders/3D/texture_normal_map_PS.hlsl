@@ -7,12 +7,12 @@ struct ObjectProperties {
 ConstantBuffer<ObjectProperties> op : register(b1);
 Texture2D normalMap : register(t0);
 Texture2D diffuseTexture : register(t1);
-SamplerState s_sampler : register(s0);
+SamplerState linearSampler : register(s0);
 
 struct PixelShaderInput {
     float4 Position : SV_Position;
-    float3 Tangent : TANGENT;
     float2 UV : TEXCOORD;
+    float3x3 tbn :TBN;
 };
 
 struct PixelShaderOutput {
@@ -24,9 +24,13 @@ struct PixelShaderOutput {
 PixelShaderOutput main(PixelShaderInput IN) : SV_Target {
     const float2 textureCoords = float2(IN.UV.x, 1 - IN.UV.y);
 
+    const float3 normalInTangentSpace = (2 * normalMap.Sample(linearSampler, textureCoords).xyz ) - float3(1, 1, 1);
+    const float3 normalInWorldSpace = normalize(mul(IN.tbn, normalInTangentSpace));
+
     PixelShaderOutput result;
-    result.gBufferAlbedo = diffuseTexture.Sample(s_sampler, textureCoords);
-    result.gBufferNormal = 2 * normalMap.Sample(s_sampler, textureCoords) - float4(1, 1, 1, 1);
+    result.gBufferNormal.xyz = normalInWorldSpace;
+    result.gBufferNormal.w = 1;
+    result.gBufferAlbedo = diffuseTexture.Sample(linearSampler, textureCoords);
     result.gBufferSpecular = float2(op.specularity, op.bloomFactor);
     return result;
 }

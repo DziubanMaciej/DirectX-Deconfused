@@ -252,6 +252,9 @@ private:
             {"glowingCube2", "cubeNormalMesh"},
             {"glowingCube3", "cubeNormalMesh"},
             {"glowingCube4", "cubeNormalMesh"},
+            {"littleCube1", "cubeNormalUv"},
+            {"littleCube2", "cubeNormalUv"},
+            {"littleCube3", "cubeNormalUvTangents"},
             {"wood", "cubeNormalUv"},
             {"stand", "cubeNormalUv"},
             {"ground", "cubeNormalUv"},
@@ -308,6 +311,16 @@ private:
         objects["glowingCube4"]->setBloomFactor(1.0f);
         objects["glowingCube4"]->setColor(0.9f, 0.9f, 0.9f);
         objects["glowingCube4"]->setScale(0.75, 1.5f, 0.5f);
+
+        objects["littleCube1"]->setPosition(-3, 3, -12);
+        objects["littleCube1"]->setTexture(textures["brickwall"].get());
+
+        objects["littleCube2"]->setPosition(0, 3, -12);
+        objects["littleCube2"]->setTexture(textures["brickwall_normal"].get());
+
+        objects["littleCube3"]->setPosition(3, 3, -12);
+        objects["littleCube3"]->setTexture(textures["brickwall"].get());
+        objects["littleCube3"]->setNormalMap(textures["brickwall_normal"].get());
 
         objects["stand"]->setPosition(0, -2.5, 0);
         objects["stand"]->setSpecularity(0.4f);
@@ -428,8 +441,8 @@ private:
         };
 
         for (const auto &data : normalMaps) {
-            const auto type = DXD::Texture::TextureType::ALBEDO;
-            textures[data.name] = DXD::Texture::loadFromFileAsynchronously(data.path, type, nullptr);
+            const auto type = DXD::Texture::TextureType::NORMAL_MAP;
+            textures[data.name] = DXD::Texture::loadFromFileSynchronously(data.path, type, nullptr);
             assert(textures[data.name]);
         }
 
@@ -558,6 +571,10 @@ private:
         lights["sunLight"]->setPosition(20 * sin(rotation), 8 + 8 * cos(2 * rotation), 6);
         lights["sunLight"]->setColor(1.0f + sin(rotation), 1.0f + sin(rotation), 1.0f + sin(rotation));
         lights["sunLight"]->setPower(4.0f + 4.0f * cos(2 * rotation));
+
+        objects["littleCube1"]->setRotation(rotation, rotation, rotation);
+        objects["littleCube2"]->setRotation(rotation, rotation, rotation);
+        objects["littleCube3"]->setRotation(rotation, rotation, rotation);
 
         //scene->setAmbientLight(0.8f, 0.8f, 0.8f);
         float ambientPower = 0.4f + 0.4f * cos(2 * rotation);
