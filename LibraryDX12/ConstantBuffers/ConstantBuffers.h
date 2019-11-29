@@ -83,6 +83,7 @@ struct ShadowMapCB {
 struct GenerateMipsCB {
     float2 texelSize;
     uint sourceMipLevel;
+    bool isSrgb;
 };
 
 struct LightingHeapCB {

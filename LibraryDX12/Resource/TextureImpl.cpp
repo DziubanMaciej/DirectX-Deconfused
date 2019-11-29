@@ -257,6 +257,7 @@ void TextureImpl::generateMips() {
         GenerateMipsCB cb = {};
         cb.texelSize = XMFLOAT2{1.0f / dstWidth, 1.0f / dstHeight};
         cb.sourceMipLevel = sourceMipLevel;
+        cb.isSrgb = DxgiFormatHelper::isSrgbFormat(this->description.Format);
         commandList.setCbvSrvUavInDescriptorTable(0, 0, *this, cpuDescriptors.getCpuHandle(0));
         commandList.setCbvSrvUavInDescriptorTable(0, 1, *this, cpuDescriptors.getCpuHandle(1));
         commandList.setRoot32BitConstant(1, cb);
