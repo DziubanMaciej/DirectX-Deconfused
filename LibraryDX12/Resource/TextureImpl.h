@@ -19,8 +19,8 @@ public:
 
 protected:
     friend class DXD::Texture;
-    TextureImpl(const std::wstring &filePath, TextureLoadEvent *loadEvent);
-    TextureImpl(const std::wstring &filePath, TextureLoadResult *loadResult);
+    TextureImpl(const std::wstring &filePath, DXD::Texture::TextureType type, TextureLoadEvent *loadEvent);
+    TextureImpl(const std::wstring &filePath, DXD::Texture::TextureType type, TextureLoadResult *loadResult);
     ~TextureImpl() override;
 
 private:
@@ -35,6 +35,7 @@ private:
     // Loading
     struct TextureCpuLoadArgs {
         const std::wstring filePath;
+        DXD::Texture::TextureType type;
     };
 
     struct TextureCpuLoadResult {

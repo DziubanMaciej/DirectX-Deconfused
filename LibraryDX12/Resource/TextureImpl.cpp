@@ -19,26 +19,26 @@
 
 namespace DXD {
 
-std::unique_ptr<Texture> Texture::loadFromFileSynchronously(const std::wstring &filePath, Texture::TextureLoadResult *loadResult) {
-    return std::unique_ptr<Texture>(new TextureImpl(filePath, loadResult));
+std::unique_ptr<Texture> Texture::loadFromFileSynchronously(const std::wstring &filePath, DXD::Texture::TextureType type, Texture::TextureLoadResult *loadResult) {
+    return std::unique_ptr<Texture>(new TextureImpl(filePath, type, loadResult));
 }
 
-std::unique_ptr<Texture> Texture::loadFromFileAsynchronously(const std::wstring &filePath, Texture::TextureLoadEvent *loadEvent) {
-    return std::unique_ptr<Texture>(new TextureImpl(filePath, loadEvent));
+std::unique_ptr<Texture> Texture::loadFromFileAsynchronously(const std::wstring &filePath, DXD::Texture::TextureType type, Texture::TextureLoadEvent *loadEvent) {
+    return std::unique_ptr<Texture>(new TextureImpl(filePath, type, loadEvent));
 }
 
 template std::unique_ptr<Event<Texture::TextureLoadResult>> Event<Texture::TextureLoadResult>::create();
 } // namespace DXD
 
-TextureImpl::TextureImpl(const std::wstring &filePath, TextureLoadEvent *loadEvent)
+TextureImpl::TextureImpl(const std::wstring &filePath, DXD::Texture::TextureType type, TextureLoadEvent *loadEvent)
     : loadOperation(*this) {
-    const TextureCpuLoadArgs args{filePath};
+    const TextureCpuLoadArgs args{filePath, type};
     loadOperation.runAsynchronously(args, loadEvent);
 }
 
-TextureImpl::TextureImpl(const std::wstring &filePath, TextureLoadResult *loadResult)
+TextureImpl::TextureImpl(const std::wstring &filePath, DXD::Texture::TextureType type, TextureLoadResult *loadResult)
     : loadOperation(*this) {
-    const TextureCpuLoadArgs args{filePath};
+    const TextureCpuLoadArgs args{filePath, type};
     loadOperation.runSynchronously(args, loadResult);
 }
 
@@ -92,6 +92,9 @@ TextureImpl::TextureCpuLoadResult TextureImpl::TextureLoadCpuGpuOperation::cpuLo
 
     // Compute resource description
     texture.description = TextureImpl::createTextureDescription(result.metadata);
+    if (args.type == DXD::Texture::TextureType::NORMAL_MAP) {
+        texture.description.Format = DxgiFormatHelper::convertToNonSrgbFormat(texture.description.Format);
+    }
 
     // Return successfully
     return std::move(result);

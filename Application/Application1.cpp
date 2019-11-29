@@ -407,18 +407,41 @@ private:
             std::wstring path;
         };
 
-        TextureCreationData texturesCreationData[] = {
+        TextureCreationData albedoTextures[] = {
             {"brickwall", L"Resources/textures/brickwall.jpg"},
-            {"brickwall_normal", L"Resources/textures/brickwall_normal.jpg"},
             {"porshe_blue", L"Resources/textures/porshe_blue.bmp"},
             {"porshe_green", L"Resources/textures/porshe_green.bmp"},
             {"dennis", L"Resources/textures/dennis.jpg"},
             {"tiles", L"Resources/textures/tiles.jpg"},
             {"wood", L"Resources/textures/wood.jpg"},
-            {"grass", L"Resources/textures/grass.jpg"}};
+            {"grass", L"Resources/textures/grass.jpg"},
+        };
 
-        for (const auto &data : texturesCreationData) {
-            textures[data.name] = DXD::Texture::loadFromFileAsynchronously(data.path, nullptr);
+        for (const auto &data : albedoTextures) {
+            const auto type = DXD::Texture::TextureType::ALBEDO;
+            textures[data.name] = DXD::Texture::loadFromFileAsynchronously(data.path, type, nullptr);
+            assert(textures[data.name]);
+        }
+
+        TextureCreationData normalMaps[] = {
+            {"brickwall_normal", L"Resources/textures/brickwall_normal.jpg"},
+        };
+
+        for (const auto &data : normalMaps) {
+            const auto type = DXD::Texture::TextureType::ALBEDO;
+            textures[data.name] = DXD::Texture::loadFromFileAsynchronously(data.path, type, nullptr);
+            assert(textures[data.name]);
+        }
+
+        TextureCreationData spriteTextures[] = {
+            {"shrek", L"Resources/sprites/shrek.png"},
+            {"rectangle-alpha", L"Resources/sprites/rectangle-alpha.png"},
+            {"crosshair", L"Resources/sprites/crosshair.png"},
+        };
+
+        for (const auto &data : spriteTextures) {
+            const auto type = DXD::Texture::TextureType::ALBEDO;
+            textures[data.name] = DXD::Texture::loadFromFileSynchronously(data.path, type, nullptr);
             assert(textures[data.name]);
         }
     }
@@ -452,11 +475,6 @@ private:
     void prepSprites() {
         DXD::log("Loading sprites...\n");
 
-        struct SpriteTextureCreationData {
-            std::string name;
-            std::wstring path;
-        };
-
         struct SpriteCreationData {
             std::string name;
             std::string textureName;
@@ -467,20 +485,12 @@ private:
             DXD::Sprite::HorizontalAlignment horizontalAlignment;
             DXD::Sprite::VerticalAlignment verticalAlignment;
         };
-        SpriteTextureCreationData spriteTexturesCreationData[] = {
-            {"shrek", L"Resources/sprites/shrek.png"},
-            {"rectangle-alpha", L"Resources/sprites/rectangle-alpha.png"},
-            {"crosshair", L"Resources/sprites/crosshair.png"}};
 
         SpriteCreationData spritesCreationData[] = {
             {"rectangle-alpha", "rectangle-alpha", 165, 0, 33, 0, DXD::Sprite::HorizontalAlignment::LEFT, DXD::Sprite::VerticalAlignment::TOP}};
 
-        for (const auto &data : spriteTexturesCreationData) {
-            spriteTextures[data.name] = DXD::Texture::loadFromFileSynchronously(data.path, nullptr);
-            assert(spriteTextures[data.name]);
-        }
         for (const auto &data : spritesCreationData) {
-            sprites[data.name] = DXD::Sprite::create(*spriteTextures[data.textureName], data.spriteSizeX, data.spriteOffsetX, data.spriteSizeY, data.spriteOffsetY, data.horizontalAlignment, data.verticalAlignment);
+            sprites[data.name] = DXD::Sprite::create(*textures[data.textureName], data.spriteSizeX, data.spriteOffsetX, data.spriteSizeY, data.spriteOffsetY, data.horizontalAlignment, data.verticalAlignment);
             assert(sprites[data.name]);
         }
     }
@@ -649,7 +659,6 @@ private:
     std::unordered_map<std::string, std::unique_ptr<DXD::Text>> texts;
     std::unordered_map<std::string, std::unique_ptr<DXD::PostProcess>> postProcesses;
     std::unordered_map<std::string, std::unique_ptr<DXD::Texture>> textures;
-    std::unordered_map<std::string, std::unique_ptr<DXD::Texture>> spriteTextures;
     std::unordered_map<std::string, std::unique_ptr<DXD::Sprite>> sprites;
 };
 
