@@ -47,6 +47,7 @@ Preferred way is to link to a dynamic library.
 1. Build DXD_dll project. 
 2. Link your application to ./build/DXD/lib/DXD.lib
 3. Copy DXD.dll to the same directory as your executable
+
 It is also possible to link against DXD statically, but it's a bit more complex. 
 1. Build DXD_lib project. 
 2. Link your application to ./build/DXD/lib/DXD_static.lib.
