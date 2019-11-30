@@ -115,7 +115,10 @@ XMFLOAT2 ObjectImpl::getTextureScale() const {
 }
 
 bool ObjectImpl::isReady() {
-    return mesh.isReady() &&
-           (texture == nullptr || texture->isReady()) &&
-           (normalMap == nullptr || normalMap->isReady());
+    if (!mesh.isReady()) {
+        return false;
+    }
+
+    const bool textureReady = !mesh.requiresTexture() || (texture != nullptr && texture->isReady());
+    return textureReady;
 }

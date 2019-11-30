@@ -79,6 +79,7 @@ public:
     PipelineStateController::Identifier getPipelineStateIdentifier() const { return pipelineStateIdentifier; }
     PipelineStateController::Identifier getShadowMapPipelineStateIdentifier() const { return shadowMapPipelineStateIdentifier; }
     bool isReady() { return loadOperation.isReady(); }
+    bool requiresTexture() const { return meshType & TEXTURE_COORDS; }
 
     auto &getVertexBuffer() { return vertexBuffer; }
     auto &getIndexBuffer() { return indexBuffer; }
