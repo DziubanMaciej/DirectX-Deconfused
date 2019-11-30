@@ -97,7 +97,7 @@ macro(add_definitions_for_paths)
         add_definitions(-DRESOURCES_PATH=L"./")
     else()
         add_definitions(-DSHADERS_PATH=L"${DXD_SRC_DIR}/Shaders/")
-        add_definitions(-DRESOURCES_PATH=L"${PROJECT_SOURCE_DIR}/")
+        add_definitions(-DRESOURCES_PATH=L"${PROJECT_SOURCE_DIR}/Application/")
     endif()
 endmacro()
 
