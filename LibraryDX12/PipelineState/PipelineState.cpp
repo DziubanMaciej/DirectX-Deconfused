@@ -65,7 +65,8 @@ D3D12_SHADER_BYTECODE PipelineState::loadAndCompileShader(const std::wstring &na
 
     const auto path = std::wstring{SHADERS_PATH} + name;
     const auto includeHandler = D3D_COMPILE_STANDARD_FILE_INCLUDE;
-    const UINT compileFlags = ApplicationImpl::getInstance().areDebugShadersEnabled() ? D3DCOMPILE_DEBUG : 0u;
+
+    const UINT compileFlags = ApplicationImpl::getInstance().areDebugShadersEnabled() ? D3DCOMPILE_DEBUG | D3DCOMPILE_SKIP_OPTIMIZATION : 0u;
     const auto result = D3DCompileFromFile(path.c_str(), defines, includeHandler, "main", target.c_str(), compileFlags, 0, &compiledShader, &errorBlob);
     throwIfFailed(result, errorBlob);
 
