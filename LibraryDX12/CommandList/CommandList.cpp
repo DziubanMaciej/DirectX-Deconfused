@@ -102,6 +102,10 @@ void CommandList::setDescriptorHeap(D3D12_DESCRIPTOR_HEAP_TYPE heapType, ID3D12D
     addUsedResource(descriptorHeap);
 }
 
+void CommandList::setRawDescriptorInDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable,  D3D12_CPU_DESCRIPTOR_HANDLE descriptor) {
+    gpuDescriptorHeapControllerCbvSrvUav.stage(rootParameterIndexOfTable, offsetInTable, descriptor, 1u);
+}
+
 void CommandList::setCbvSrvUavInDescriptorTable(UINT rootParameterIndexOfTable, UINT offsetInTable, const Resource &resource, D3D12_CPU_DESCRIPTOR_HANDLE descriptor) {
     gpuDescriptorHeapControllerCbvSrvUav.stage(rootParameterIndexOfTable, offsetInTable, descriptor, 1u);
     addUsedResource(resource.getResource());

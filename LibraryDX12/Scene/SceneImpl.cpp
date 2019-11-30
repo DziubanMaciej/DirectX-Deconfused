@@ -316,10 +316,11 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
     for (ObjectImpl *object : objects) {
         MeshImpl &mesh = object->getMesh();
         if (mesh.getPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
-            NormalTextureCB cb;
+            TextureNormalMapCB cb;
             cb.modelMatrix = object->getModelMatrix();
             cb.modelViewProjectionMatrix = XMMatrixMultiply(cb.modelMatrix, vpMatrix);
             cb.textureScale = object->getTextureScale();
+            cb.normalMapAvailable = (object->getNormalMap() != nullptr);
             commandList.setRoot32BitConstant(0, cb);
 
             ObjectPropertiesCB op = {};
@@ -329,7 +330,18 @@ void SceneImpl::renderGBuffer(SwapChain &swapChain, RenderData &renderData, Comm
             commandList.setRoot32BitConstant(1, op);
 
             commandList.IASetVertexAndIndexBuffer(mesh);
-            commandList.setSrvInDescriptorTable(2, 0, *object->getNormalMapImpl());
+            if (cb.normalMapAvailable) {
+                commandList.setSrvInDescriptorTable(2, 0, *object->getNormalMapImpl());
+            } else {
+                // TODO this is quite wasteful, maybe we can have global null descriptors?
+                auto allocation = ApplicationImpl::getInstance().getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1);
+                D3D12_SHADER_RESOURCE_VIEW_DESC desc{};
+                desc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+                desc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+                desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+                ApplicationImpl::getInstance().getDevice()->CreateShaderResourceView(nullptr, &desc, allocation.getCpuHandle());
+                commandList.setRawDescriptorInDescriptorTable(2, 0, allocation.getCpuHandle());
+            }
             commandList.setSrvInDescriptorTable(2, 1, *object->getTextureImpl());
             commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
         }
@@ -416,7 +428,6 @@ void SceneImpl::renderLighting(SwapChain &swapChain, RenderData &renderData, Com
     lightVpMatrixes.clear();
     lightPositions.clear();
     lightDirections.clear();
-
 
     commandList.setCbvInDescriptorTable(0, 0, lightConstantBuffer);
     commandList.setSrvInDescriptorTable(0, 1, renderData.getGBufferAlbedo());

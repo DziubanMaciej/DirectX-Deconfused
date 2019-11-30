@@ -196,7 +196,7 @@ void PipelineStateController::compilePipelineStateTextureNormalMap(RootSignature
     table.appendSrvRange(t(0), 1); // normal map
     table.appendSrvRange(t(1), 1); // diffuse texture
     rootSignature
-        .append32bitConstant<NormalTextureCB>(b(0), D3D12_SHADER_VISIBILITY_VERTEX)
+        .append32bitConstant<TextureNormalMapCB>(b(0), D3D12_SHADER_VISIBILITY_ALL)
         .append32bitConstant<ObjectPropertiesCB>(b(1), D3D12_SHADER_VISIBILITY_PIXEL)
         .appendDescriptorTable(std::move(table))
         .appendStaticSampler(s(0), sampler)

@@ -20,6 +20,14 @@ struct NormalTextureCB {
     float2 textureScale;
 };
 
+struct TextureNormalMapCB {
+    matrix modelMatrix;
+    matrix modelViewProjectionMatrix;
+    float2 textureScale;
+    float _padding;
+    uint normalMapAvailable;
+};
+
 struct ObjectPropertiesCB {
     float3 albedoColor;
     float specularity;

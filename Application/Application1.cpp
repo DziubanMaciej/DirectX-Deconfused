@@ -167,7 +167,14 @@ private:
                 lights["rightLight2"]->setPower(0);
             }
         })
-
+        KEYSTROKE('N', L"Toggle normal mapping for example object", {
+            DXD::Object &object = *objects["littleCube3"];
+            if (object.getNormalMap() == nullptr) {
+                object.setNormalMap(textures["brickwall_normal"].get());
+            } else {
+                object.setNormalMap(nullptr);
+            }
+        })
         KEYSTROKE('V', L"Toggle vsync", {
             application->getSettings().setVerticalSyncEnabled(!application->getSettings().getVerticalSyncEnabled());
         })
