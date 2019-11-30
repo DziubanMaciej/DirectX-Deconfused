@@ -4,7 +4,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 project("DXD")
 include(CMakeMacros.cmake)
 include(CMakeValues.cmake)
-validate_parameters(CMAKE_BUILD_TYPE EXTERNAL_LIBS_BIN_PATH)
+validate_parameters(CMAKE_BUILD_TYPE EXTERNAL_LIBS_BIN_PATH DISTRIBUTION_MODE)
 
 add_subdirectory("Application")
 add_subdirectory("LibraryDX12")

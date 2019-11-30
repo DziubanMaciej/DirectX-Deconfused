@@ -10,10 +10,16 @@ Requirements:
 Steps:
 1. Clone DXD
 2. Ensure CMake is in your PATH
-3. Run build.sh (optional parameter: Debug/Release)
+3. Run ./build.sh (see below for available arguments)
 4. Open .build/DXD/DXD.sln in Visual Studio
 5. Build DXD_dll project
 6. Generated binaries are under .build/DXD/bin/Debug
+
+
+## Build script
+File build.sh contains bash script used for building DXD along with its dependencies. Its input are the following parameters
+- Debug/Release (default: Debug)
+- Production/Development (default: Development) - Development mode is used to run example application and develop the library. For custom application use Production mode.
 
 ## Coding guidelines
 1. Code formatting - ClangFormat, download extension for Visual Studio at https://marketplace.visualstudio.com/items?itemName=LLVMExtensions.ClangFormat Currently opened file  can be formatted with with Ctrl+R,D.
@@ -43,12 +49,14 @@ Steps:
     - UnitTests - unit level tests of some parts of the engine
     
 ## Linking your own applications to DXD
-Preferred way is to link to a dynamic library.
+In order to work with DXD within your applications you have to include required public headers placed in LibraryDX12/Include to your files. You will also need to copy LibraryDX12/Shaders directory to your executable's directory. You will also have link to DXD library, which can be done in two ways.
+
+Preferred way is to link to a dynamic library:
 1. Build DXD_dll project. 
 2. Link your application to ./build/DXD/lib/DXD.lib
 3. Copy DXD.dll to the same directory as your executable
 
-It is also possible to link against DXD statically, but it's a bit more complex. 
+It is also possible to link against DXD statically, but it's a bit more complex:
 1. Build DXD_lib project. 
 2. Link your application to ./build/DXD/lib/DXD_static.lib.
 3. Link your application to all of DXD's dependendies (see CMakeValues.cmake file)

@@ -92,8 +92,13 @@ macro(set_link_directory_to_lib)
 endmacro()
 
 macro(add_definitions_for_paths)
-    add_definitions(-DSHADERS_PATH=L"${DXD_SRC_DIR}/Shaders/")
-    add_definitions(-DRESOURCES_PATH=L"${PROJECT_SOURCE_DIR}/")
+    if(DISTRIBUTION_MODE STREQUAL "Production")
+        add_definitions(-DSHADERS_PATH=L"Shaders/")
+        add_definitions(-DRESOURCES_PATH=L"./")
+    else()
+        add_definitions(-DSHADERS_PATH=L"${DXD_SRC_DIR}/Shaders/")
+        add_definitions(-DRESOURCES_PATH=L"${PROJECT_SOURCE_DIR}/")
+    endif()
 endmacro()
 
 # ---------------------------------------------- Helpers for external libraries
