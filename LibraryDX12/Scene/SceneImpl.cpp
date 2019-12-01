@@ -931,10 +931,21 @@ void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
                             static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     }
 
-    // Copy to back buffers
-    commandListPostProcess.transitionBarrier(alternatingResources.getSource(), D3D12_RESOURCE_STATE_COPY_SOURCE);
-    commandListPostProcess.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_COPY_DEST);
-    commandListPostProcess.copyResource(backBuffer, alternatingResources.getSource());
+    // Gamma correction
+    {
+        commandListPostProcess.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_GAMMA_CORRECTION);
+        commandListPostProcess.transitionBarrier(alternatingResources.getSource(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+        commandListPostProcess.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        commandListPostProcess.setSrvInDescriptorTable(1, 0, alternatingResources.getSource());
+        commandListPostProcess.OMSetRenderTargetNoDepth(backBuffer);
+        commandListPostProcess.IASetVertexBuffer(renderData.getFullscreenVB());
+        GammaCorrectionCB gammaCorrectionCB;
+        gammaCorrectionCB.screenWidth = static_cast<float>(swapChain.getWidth());
+        gammaCorrectionCB.screenHeight = static_cast<float>(swapChain.getHeight());
+        gammaCorrectionCB.gammaValue = ApplicationImpl::getInstance().getSettings().getGammaCorrectionEnabled() ? 2.2f : 1.f;
+        commandListPostProcess.setRoot32BitConstant(0, gammaCorrectionCB);
+        commandListPostProcess.draw(6);
+    }
 
     // Close command list and submit it to the GPU
     commandListPostProcess.close();

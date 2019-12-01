@@ -80,13 +80,19 @@ struct PostProcessFxaaCB {
     float screenHeight;
 };
 
+struct GammaCorrectionCB {
+    float screenWidth;
+    float screenHeight;
+    float gammaValue;
+};
+
 // ---------------------------------------------------- Buffers for shadow maps
 
 struct ShadowMapCB {
     matrix mvp;
 };
 
-// ---------------------------------------------------- Buffers for shadow maps
+// ---------------------------------------------------- Other buffers
 
 struct GenerateMipsCB {
     float2 texelSize;

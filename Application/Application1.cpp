@@ -144,7 +144,7 @@ private:
                 scene->addText(*texts["help"]);
             }
         })
-        KEYSTROKE('G', L"Toggle FPS counter", {
+        KEYSTROKE('Z', L"Toggle FPS counter", {
             int removed = scene->removeText(*texts["fpsCounter"]);
             if (removed == 0) {
                 scene->addText(*texts["fpsCounter"]);
@@ -196,8 +196,8 @@ private:
         KEYSTROKE('U', L"Toggle depth of field", {
             application->getSettings().setDofEnabled(!application->getSettings().getDofEnabled());
         })
-        KEYSTROKE('B', L"Toggle bloom", {
-            application->getSettings().setBloomEnabled(!application->getSettings().getBloomEnabled());
+        KEYSTROKE('G', L"Toggle gamma correction", {
+           application->getSettings().setGammaCorrectionEnabled(!application->getSettings().getGammaCorrectionEnabled());
         })
         KEYSTROKE('7', L"Toggle black bars", {
             postProcesses["blackBars"]->setEnabled(!postProcesses["blackBars"]->isEnabled());

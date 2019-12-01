@@ -55,6 +55,13 @@ public:
     virtual bool getDofEnabled() const = 0;
     /// @}
 
+     /// \name Gamma correction
+    /// \brief This setting can toggle gamma correction of the frames rendered by the engine
+    /// @{
+    virtual void setGammaCorrectionEnabled(bool value) = 0;
+    virtual bool getGammaCorrectionEnabled() const = 0;
+    /// @}
+
     /// \name Shadows quality
     /// \brief This effect casts shadows of Objects based on Light sources. Quality
     /// of the effect means resolution of shadow maps used internally and number of

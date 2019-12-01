@@ -122,6 +122,9 @@ void PipelineStateController::compile(Identifier identifier) {
     case Identifier::PIPELINE_STATE_SPRITE:
         compilePipelineStateSprite(rootSignature, pipelineState);
         break;
+    case Identifier::PIPELINE_STATE_POST_PROCESS_GAMMA_CORRECTION:
+        compilePipelineStatePostProcessGammaCorrection(rootSignature, pipelineState);
+        break;
     default:
         UNREACHABLE_CODE();
     }
@@ -759,4 +762,8 @@ void PipelineStateController::compilePipelineStateSprite(RootSignature &rootSign
         .disableDepthStencil()
         .setBlendDesc(blendDesc)
         .compile(device, pipelineState);
+}
+
+void PipelineStateController::compilePipelineStatePostProcessGammaCorrection(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState) {
+    compileBasicPipelineStatePostProcess<GammaCorrectionCB>(device, rootSignature, pipelineState, L"PostProcess/gamma_correction.hlsl");
 }

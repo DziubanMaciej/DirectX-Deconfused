@@ -47,6 +47,7 @@ public:
         PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR_COMPUTE_VERTICAL,
         PIPELINE_STATE_POST_PROCESS_APPLY_BLOOM,
         PIPELINE_STATE_POST_PROCESS_FXAA,
+        PIPELINE_STATE_POST_PROCESS_GAMMA_CORRECTION,
         // Sprite
         PIPELINE_STATE_SPRITE,
         // This hould be the last entry
@@ -95,6 +96,7 @@ private:
     void compilePipelineStatePostProcessGaussianBlurComputeVertical(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStatePostProcessApplyBloom(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStatePostProcessFxaa(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    void compilePipelineStatePostProcessGammaCorrection(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateSprite(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
 
     ID3D12DevicePtr device;
