@@ -64,32 +64,28 @@ private:
     void compile(Identifier identifier);
     void reset(Identifier identifier);
 
-    // 3D
+    // Deferred shading
     void compilePipelineStateNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateTextureNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStateTextureNormalMap(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    void compilePipelineStateLighting(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    // Shadow maps
+    void compilePipelineStateShadowMapNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    void compilePipelineStateShadowMapTextureNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
+    void compilePipelineStateShadowMapTextureNormalMap(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     // Mip maps
     void compilePipelineStateGenerateMips(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     // SSAO
     void compilePipelineStateSSAO(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     // SSR
     void compilePipelineStateSSR(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
-    // SSR Merge
     void compilePipelineStateSSRBlur(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
-    // SSR Merge
     void compilePipelineStateSSRMerge(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
-    // Lighting
-    void compilePipelineStateLighting(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     // Fog
     void compilePipelineStateFog(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
-    // Fog
+    // Dof
     void compilePipelineStateDof(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
-    // Fog
     void compilePipelineStateDofBlur(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
-    // Shadow maps
-    void compilePipelineStateShadowMapNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
-    void compilePipelineStateShadowMapTextureNormal(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
-    void compilePipelineStateShadowMapTextureNormalMap(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     // Post processes
     void compilePipelineStatePostProcessBlackBars(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
     void compilePipelineStatePostProcessConvolution(RootSignature &rootSignature, ID3D12PipelineStatePtr &pipelineState);
