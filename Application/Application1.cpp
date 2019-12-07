@@ -317,9 +317,10 @@ private:
         objects["glowingCube4"]->setColor(0.9f, 0.9f, 0.9f);
         objects["glowingCube4"]->setScale(0.75, 1.5f, 0.5f);
 
-        objects["normalMappableCube"]->setPosition(-7.5, -1, 9);
+        objects["normalMappableCube"]->setPosition(-2, -2.5f, -6);
         objects["normalMappableCube"]->setTexture(textures["brickwall"].get());
         objects["normalMappableCube"]->setNormalMap(textures["brickwall_normal"].get());
+        objects["normalMappableCube"]->setRotation(XMFLOAT3(0, 1, 0), float(M_PI / 8));
 
         objects["stand"]->setPosition(0, -2.5, 0);
         objects["stand"]->setSpecularity(0.4f);
@@ -362,7 +363,7 @@ private:
         objects["aventador2"]->setScale(0.9f, 0.9f, 0.9f);
         objects["aventador2"]->setRotation(XMFLOAT3(0, 1, 0), float(-M_PI / 4));
 
-        objects["dennis"]->setPosition(-2, -2, -6);
+        objects["dennis"]->setPosition(-2, -1.5f, -6);
         objects["dennis"]->setScale(0.01f, 0.01f, 0.01f);
         objects["dennis"]->setRotation(XMFLOAT3(0, 1, 0), 90);
         objects["dennis"]->setTexture(textures["dennis"].get());
@@ -635,6 +636,10 @@ private:
                 DXD::log("Frame time=%d us, FPS=%d\n", deltaTimeMicroseconds, fpsCounter.getFps());
             }
         }
+
+        static float rotation = 0.f;
+        rotation += 0.0000001f * deltaTimeMicroseconds;
+        objects["dennis"]->setRotation(XMFLOAT3(0, 1, 0), rotation);
 
         if (toggleSceneMovement) {
             sceneMoveTick(deltaTimeMicroseconds);

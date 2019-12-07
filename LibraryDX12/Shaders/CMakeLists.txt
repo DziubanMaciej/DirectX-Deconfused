@@ -2,6 +2,7 @@ add_shaders_and_cmake_file(${TARGET_NAME}
     # Shadow map shaders
     ${CMAKE_CURRENT_SOURCE_DIR}/ShadowMap/normal_VS.hlsl         Vertex
     ${CMAKE_CURRENT_SOURCE_DIR}/ShadowMap/normal_texture_VS.hlsl Vertex
+    ${CMAKE_CURRENT_SOURCE_DIR}/ShadowMap/texture_normal_map_VS.hlsl Vertex
 
     # 3D shaders
     ${CMAKE_CURRENT_SOURCE_DIR}/3D/normal_PS.hlsl               Pixel

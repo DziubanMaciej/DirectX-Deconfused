@@ -71,7 +71,7 @@ float calculateShadowFactor(float4 smCoords, int shadowMapIndex) {
             if (smCoords.y >= 0 && smCoords.y <= 1) {
 
                 for (int oxy = 0; oxy < 16; oxy++) {
-                    float2 offset = (poissonDisk[oxy] * 2.0f) / float2(shadowMapSize, shadowMapSize);
+                    float2 offset = (poissonDisk[oxy] * 3.0f) / float2(shadowMapSize, shadowMapSize);
                     smDepth = shadowMaps[shadowMapIndex].SampleLevel(g_sampler_sm, smCoords.xy + offset, 0).r;
 
                     if (((smCoords.z / smCoords.w) - 0.001f) > smDepth) {

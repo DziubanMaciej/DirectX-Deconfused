@@ -234,6 +234,20 @@ void SceneImpl::renderShadowMaps(SwapChain &swapChain, RenderData &renderData, C
             }
         }
 
+        // Draw TEXTURE NORMAL MAP
+        commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SM_TEXTURE_NORMAL_MAP);
+        for (ObjectImpl *object : objects) {
+            MeshImpl &mesh = object->getMesh();
+            if (mesh.getShadowMapPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
+                ShadowMapCB cb;
+                cb.mvp = XMMatrixMultiply(object->getModelMatrix(), smViewProjectionMatrix);
+                commandList.setRoot32BitConstant(0, cb);
+
+                commandList.IASetVertexAndIndexBuffer(mesh);
+                commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
+            }
+        }
+
         lightIdx++;
     }
 
