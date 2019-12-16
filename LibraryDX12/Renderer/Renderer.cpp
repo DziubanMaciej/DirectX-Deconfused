@@ -698,7 +698,6 @@ void Renderer::render() {
     auto &backBuffer = swapChain.getCurrentBackBuffer();
     auto &alternatingResources = renderData.getSceneAlternatingResources();
     application.flushAllResources();
-    scene.inspectObjectsNotReady();
 
     // Render shadow maps
     if (ApplicationImpl::getInstance().getSettingsImpl().getShadowsQuality() > 0) {

@@ -54,6 +54,7 @@ SceneImpl::SceneImpl() {
 }
 
 void SceneImpl::render(SwapChain &swapChain, RenderData &renderData) {
+    inspectObjectsNotReady();
     Renderer renderer{swapChain, renderData, *this};
     renderer.render();
 }

@@ -66,9 +66,9 @@ public:
     Microsoft::WRL::ComPtr<ID3D12QueryHeap> queryHeap;
     std::unique_ptr<Resource> queryResult;
 
+protected:
     void inspectObjectsNotReady();
 
-protected:
     template <typename Type, typename TypeImpl>
     uint32_t removeFromScene(std::vector<TypeImpl *> &vector, Type &object) {
         TypeImpl *objectImpl = static_cast<TypeImpl *>(&object);
