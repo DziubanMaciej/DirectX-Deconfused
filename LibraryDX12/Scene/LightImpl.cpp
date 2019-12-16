@@ -110,3 +110,7 @@ XMMATRIX LightImpl::getShadowMapProjectionMatrix() {
 XMMATRIX LightImpl::getShadowMapViewProjectionMatrix() {
     return XMMatrixMultiply(getShadowMapViewMatrix(), getShadowMapProjectionMatrix());
 }
+
+bool LightImpl::isViewOrProjectionDirty() const {
+    return dirtyProj || dirtyView;
+}

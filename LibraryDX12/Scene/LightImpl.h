@@ -35,6 +35,7 @@ public:
     XMMATRIX getShadowMapViewMatrix();
     XMMATRIX getShadowMapProjectionMatrix();
     XMMATRIX getShadowMapViewProjectionMatrix();
+    bool isViewOrProjectionDirty() const;
 
 protected:
     LightType type;

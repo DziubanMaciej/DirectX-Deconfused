@@ -45,9 +45,4 @@ private:
     SwapChain &swapChain;
     RenderData &renderData;
     SceneImpl &scene;
-
-    // Tmp TODO
-    std::vector<XMMATRIX> lightVpMatrixes;
-    std::vector<XMFLOAT4> lightPositions;
-    std::vector<XMFLOAT4> lightDirections;
 };
