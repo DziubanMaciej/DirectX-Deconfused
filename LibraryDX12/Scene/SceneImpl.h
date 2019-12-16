@@ -1,27 +1,23 @@
 #pragma once
 
-#include "Resource/ConstantBuffer.h"
-#include "Scene/CameraImpl.h"
-#include "Scene/LightImpl.h"
-#include "Scene/ObjectImpl.h"
-#include "Scene/PostProcessImpl.h"
-#include "Scene/SpriteImpl.h"
-#include "Scene/TextImpl.h"
-
-#include "DXD/Scene.h"
+#include "Resource/Resource.h"
 
 #include <DXD/ExternalHeadersWrappers/d3d12.h>
+#include <DXD/Scene.h>
 #include <set>
 #include <vector>
 
+struct AlternatingResources;
 class ApplicationImpl;
-class SwapChain;
-class WindowImpl;
+class CameraImpl;
 class LightImpl;
 class ObjectImpl;
-class CameraImpl;
+class PostProcessImpl;
 class RenderData;
-struct AlternatingResources;
+class SpriteImpl;
+class SwapChain;
+class TextImpl;
+class WindowImpl;
 
 class SceneImpl : public DXD::Scene {
 protected:
@@ -29,36 +25,50 @@ protected:
     SceneImpl();
 
 public:
+    void render(SwapChain &swapChain, RenderData &renderData);
+
     void setBackgroundColor(float r, float g, float b) override;
+    const FLOAT *getBackgroundColor() const { return backgroundColor; }
+
     void setAmbientLight(float r, float g, float b) override;
+    const FLOAT *getAmbientLight() const { return ambientLight; }
+
     void setFogColor(float r, float g, float b) override;
+    const FLOAT *getFogColor() const { return fogColor; }
+
     void setFogPower(float pow) override;
+    float getFogPower() const { return fogPower; }
 
     void addLight(DXD::Light &light) override;
     unsigned int removeLight(DXD::Light &light) override;
+    const auto &getLights() const { return lights; }
 
     void addPostProcess(DXD::PostProcess &postProcess) override;
     unsigned int removePostProcess(DXD::PostProcess &postProcess) override;
+    const auto &getPostProcesses() const { return postProcesses; }
 
     void addObject(DXD::Object &object) override;
     unsigned int removeObject(DXD::Object &object) override;
+    const auto &getObjects() const { return objects; }
 
     void addText(DXD::Text &text) override;
     unsigned int removeText(DXD::Text &text) override;
+    const auto &getTexts() const { return texts; }
 
     void addSprite(DXD::Sprite &sprite) override;
     unsigned int removeSprite(DXD::Sprite &sprite) override;
+    const auto &getSprites() const { return sprites; }
 
     void setCamera(DXD::Camera &camera) override;
     virtual DXD::Camera *getCamera() override;
-
-    void render(SwapChain &swapChain, RenderData &renderData);
+    auto getCameraImpl() const { return camera; }
 
     Microsoft::WRL::ComPtr<ID3D12QueryHeap> queryHeap;
     std::unique_ptr<Resource> queryResult;
 
+    void inspectObjectsNotReady();
+
 protected:
-    // Helper for scene management
     template <typename Type, typename TypeImpl>
     uint32_t removeFromScene(std::vector<TypeImpl *> &vector, Type &object) {
         TypeImpl *objectImpl = static_cast<TypeImpl *>(&object);
@@ -68,40 +78,12 @@ protected:
         return static_cast<uint32_t>(sizeBefore - vector.size());
     }
 
-    // Helpers
-    void inspectObjectsNotReady();
-    size_t getEnabledPostProcessesCount() const;
-    static void getSourceAndDestinationForPostProcess(AlternatingResources &alternatingResources, Resource *optionalInput,
-                                                      Resource *&outSource, Resource *&outDestination);
-    static void prepareSourceAndDestinationForPostProcess(CommandList &commandList, Resource &source, Resource &destination, bool compute = false);
-
-    // Render methods
-    void renderShadowMaps(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
-    void renderGBuffer(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
-    void renderSSAO(SwapChain &swapChain, RenderData &renderData, CommandList &commandList);
-    void renderLighting(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &output);
-    void renderSSRandMerge(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &input, Resource &output);
-    void renderFog(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &input, Resource &output);
-    void renderDof(SwapChain &swapChain, RenderData &renderData, CommandList &commandList, Resource &input, Resource &output);
-    static void renderPostProcess(RenderData &renderData, PostProcessImpl &postProcess, CommandList &commandList, Resource *optionalInput,
-                                  AlternatingResources &alternatingResources, float screenWidth, float screenHeight);
-    static void renderPostProcesses(RenderData &renderData, std::vector<PostProcessImpl *> &postProcesses, CommandList &commandList,
-                                    AlternatingResources &alternatingResources, size_t enabledPostProcessesCount,
-                                    float screenWidth, float screenHeight);
-    static void renderBloom(SwapChain &swapChain, RenderData &renderData, CommandList &commandList,
-                            Resource &input, Resource &output);
-    void renderD2DTexts(SwapChain &swapChain);
-    void renderSprite(SwapChain &swapChain, CommandList &commandList, SpriteImpl *sprite, VertexBuffer &fullscreenVB);
-
     // Data set by user
     FLOAT backgroundColor[3] = {};
     FLOAT ambientLight[3] = {};
     FLOAT fogColor[3] = {};
     FLOAT fogPower = 0;
     std::vector<LightImpl *> lights;
-    std::vector<XMMATRIX> lightVpMatrixes;
-    std::vector<XMFLOAT4> lightPositions;
-    std::vector<XMFLOAT4> lightDirections;
     std::set<ObjectImpl *> objects; // TODO might not be the best data structure for that
     std::set<ObjectImpl *> objectsNotReady;
     std::vector<TextImpl *> texts;
