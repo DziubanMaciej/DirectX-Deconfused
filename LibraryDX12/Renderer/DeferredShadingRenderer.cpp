@@ -18,7 +18,7 @@ DeferredShadingRenderer::DeferredShadingRenderer(SwapChain &swapChain, RenderDat
       shadowsEnabled(shadowsEnabled) {}
 
 void DeferredShadingRenderer::renderGBuffers(CommandList &commandList) {
-    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+    commandList.RSSetViewport(0.f, 0.f, swapChain.getWidth(), swapChain.getHeight());
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
@@ -32,7 +32,7 @@ void DeferredShadingRenderer::renderGBuffers(CommandList &commandList) {
     commandList.clearDepthStencilView(renderData.getDepthStencilBuffer(), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
 
     // View projection matrix
-    const float aspectRatio = static_cast<float>(swapChain.getWidth()) / static_cast<float>(swapChain.getHeight());
+    const float aspectRatio = swapChain.getWidth() / swapChain.getHeight();
     scene.getCameraImpl()->setAspectRatio(aspectRatio);
     const XMMATRIX vpMatrix = scene.getCameraImpl()->getViewProjectionMatrix();
 
@@ -130,7 +130,7 @@ void DeferredShadingRenderer::renderGBuffers(CommandList &commandList) {
 
 void DeferredShadingRenderer::renderLighting(CommandList &commandList, Resource &output) {
 
-    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+    commandList.RSSetViewport(0.f, 0.f, swapChain.getWidth(), swapChain.getHeight());
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
@@ -154,8 +154,8 @@ void DeferredShadingRenderer::renderLighting(CommandList &commandList, Resource 
     lightCb->lightsSize = 0;
     lightCb->shadowMapSize = static_cast<float>(renderData.getShadowMapSize());
     lightCb->ambientLight = XMFLOAT3(scene.getAmbientLight());
-    lightCb->screenWidth = static_cast<float>(swapChain.getWidth());
-    lightCb->screenHeight = static_cast<float>(swapChain.getHeight());
+    lightCb->screenWidth = swapChain.getWidth();
+    lightCb->screenHeight = swapChain.getHeight();
     const auto maxLightsCount = std::min<UINT>(static_cast<UINT>(scene.getLights().size()), 8u); //  TODO dynamic light sizing
     for (; lightCb->lightsSize < maxLightsCount; lightCb->lightsSize++) {
         LightImpl &light = *scene.getLights()[lightCb->lightsSize];

@@ -196,7 +196,7 @@ void WindowImpl::handleResize() {
     const int newWidth = clientRect.right - clientRect.left;
     const int newHeight = clientRect.bottom - clientRect.top;
 
-    if (swapChain.getWidth() != newWidth || swapChain.getHeight() != newHeight) {
+    if (swapChain.getWidthUint() != newWidth || swapChain.getHeightUint() != newHeight) {
         // Finish all work
         application.flushAllQueues();
         application.flushAllResources();

@@ -27,10 +27,10 @@ Renderer::Renderer(SwapChain &swapChain, RenderData &renderData, SceneImpl &scen
       scene(scene),
       shadowsRenderer(swapChain, renderData, scene),
       deferredShadingRenderer(swapChain, renderData, scene, shadowsRenderer.isEnabled()),
-      postProcessRenderer(renderData, scene.getPostProcesses(), static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight())) {}
+      postProcessRenderer(renderData, scene.getPostProcesses(), swapChain.getWidth(), swapChain.getHeight()) {}
 
 void Renderer::renderSSAO(CommandList &commandList) {
-    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(std::max(swapChain.getWidth() / 2, 1u)), static_cast<float>(std::max(swapChain.getHeight() / 2, 1u)));
+    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(std::max(swapChain.getWidthUint() / 2, 1u)), static_cast<float>(std::max(swapChain.getHeightUint() / 2, 1u)));
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
@@ -44,8 +44,8 @@ void Renderer::renderSSAO(CommandList &commandList) {
     commandList.setSrvInDescriptorTable(0, 1, renderData.getDepthStencilBuffer());
 
     SsaoCB ssaoCB;
-    ssaoCB.screenWidth = static_cast<float>(std::max(swapChain.getWidth() / 2, 1u));
-    ssaoCB.screenHeight = static_cast<float>(std::max(swapChain.getHeight() / 2, 1u));
+    ssaoCB.screenWidth = static_cast<float>(std::max(swapChain.getWidthUint() / 2, 1u));
+    ssaoCB.screenHeight = static_cast<float>(std::max(swapChain.getHeightUint() / 2, 1u));
     ssaoCB.viewMatrixInverse = scene.getCameraImpl()->getInvViewMatrix();
     ssaoCB.projMatrixInverse = scene.getCameraImpl()->getInvProjectionMatrix();
     commandList.setRoot32BitConstant(1, ssaoCB);
@@ -58,7 +58,7 @@ void Renderer::renderSSAO(CommandList &commandList) {
 }
 
 void Renderer::renderSSRandMerge(CommandList &commandList, Resource &input, Resource &output) {
-    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(std::max(swapChain.getWidth(), 1u)), static_cast<float>(std::max(swapChain.getHeight(), 1u)));
+    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(std::max(swapChain.getWidthUint(), 1u)), static_cast<float>(std::max(swapChain.getHeightUint(), 1u)));
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
@@ -76,8 +76,8 @@ void Renderer::renderSSRandMerge(CommandList &commandList, Resource &input, Reso
     SsrCB ssrCB;
     CameraImpl &camera = *scene.getCameraImpl();
     ssrCB.cameraPosition = XMFLOAT4(camera.getEyePosition().x, camera.getEyePosition().y, camera.getEyePosition().z, 1);
-    ssrCB.screenWidth = static_cast<float>(std::max(swapChain.getWidth() / 2, 1u));
-    ssrCB.screenHeight = static_cast<float>(std::max(swapChain.getHeight() / 2, 1u));
+    ssrCB.screenWidth = static_cast<float>(std::max(swapChain.getWidthUint() / 2, 1u));
+    ssrCB.screenHeight = static_cast<float>(std::max(swapChain.getHeightUint() / 2, 1u));
     ssrCB.viewMatrixInverse = camera.getInvViewMatrix();
     ssrCB.projMatrixInverse = camera.getInvProjectionMatrix();
     ssrCB.viewProjectionMatrix = camera.getViewProjectionMatrix();
@@ -89,7 +89,7 @@ void Renderer::renderSSRandMerge(CommandList &commandList, Resource &input, Reso
     commandList.draw(6u);
 
     // SSR Blur
-    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+    commandList.RSSetViewport(0.f, 0.f, swapChain.getWidth(), swapChain.getHeight());
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
@@ -105,8 +105,8 @@ void Renderer::renderSSRandMerge(CommandList &commandList, Resource &input, Reso
     commandList.setSrvInDescriptorTable(0, 2, renderData.getSsrMap());
 
     SsrMergeCB ssrMergeCB;
-    ssrMergeCB.screenWidth = static_cast<float>(swapChain.getWidth());
-    ssrMergeCB.screenHeight = static_cast<float>(swapChain.getHeight());
+    ssrMergeCB.screenWidth = swapChain.getWidth();
+    ssrMergeCB.screenHeight = swapChain.getHeight();
     commandList.setRoot32BitConstant(1, ssrMergeCB);
 
     commandList.IASetVertexBuffer(renderData.getFullscreenVB());
@@ -114,7 +114,7 @@ void Renderer::renderSSRandMerge(CommandList &commandList, Resource &input, Reso
     commandList.draw(6u);
 
     // SSR Merge
-    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+    commandList.RSSetViewport(0.f, 0.f, swapChain.getWidth(), swapChain.getHeight());
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
@@ -143,7 +143,7 @@ void Renderer::renderSSRandMerge(CommandList &commandList, Resource &input, Reso
 }
 
 void Renderer::renderFog(CommandList &commandList, Resource &input, Resource &output) {
-    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+    commandList.RSSetViewport(0.f, 0.f, swapChain.getWidth(), swapChain.getHeight());
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
@@ -158,8 +158,8 @@ void Renderer::renderFog(CommandList &commandList, Resource &input, Resource &ou
     commandList.setSrvInDescriptorTable(0, 1, input);
 
     FogCB fogCB;
-    fogCB.screenWidth = static_cast<float>(swapChain.getWidth());
-    fogCB.screenHeight = static_cast<float>(swapChain.getHeight());
+    fogCB.screenWidth = swapChain.getWidth();
+    fogCB.screenHeight = swapChain.getHeight();
     fogCB.fogPower = scene.getFogPower();
     fogCB.fogColor = XMFLOAT3(scene.getFogColor());
     fogCB.viewMatrixInverse = scene.getCameraImpl()->getInvViewMatrix();
@@ -174,7 +174,7 @@ void Renderer::renderFog(CommandList &commandList, Resource &input, Resource &ou
 
 void Renderer::renderDof(CommandList &commandList, Resource &input, Resource &output) {
     // DOF
-    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+    commandList.RSSetViewport(0.f, 0.f, swapChain.getWidth(), swapChain.getHeight());
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
@@ -189,8 +189,8 @@ void Renderer::renderDof(CommandList &commandList, Resource &input, Resource &ou
     commandList.setSrvInDescriptorTable(0, 1, input);
 
     DofCB dofCB;
-    dofCB.screenWidth = static_cast<float>(swapChain.getWidth());
-    dofCB.screenHeight = static_cast<float>(swapChain.getHeight());
+    dofCB.screenWidth = swapChain.getWidth();
+    dofCB.screenHeight = swapChain.getHeight();
     commandList.setRoot32BitConstant(1, dofCB);
 
     commandList.IASetVertexBuffer(renderData.getFullscreenVB());
@@ -198,7 +198,7 @@ void Renderer::renderDof(CommandList &commandList, Resource &input, Resource &ou
     commandList.draw(6u);
 
     // DOF 2
-    commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+    commandList.RSSetViewport(0.f, 0.f, swapChain.getWidth(), swapChain.getHeight());
     commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
@@ -247,8 +247,8 @@ void Renderer::renderSprite(CommandList &commandList, SpriteImpl *sprite) {
 
     // Prepare constant buffer
     SpriteCB spriteData = sprite->getData();
-    spriteData.screenWidth = static_cast<float>(swapChain.getWidth());
-    spriteData.screenHeight = static_cast<float>(swapChain.getHeight());
+    spriteData.screenWidth = swapChain.getWidth();
+    spriteData.screenHeight = swapChain.getHeight();
 
     // Set state
     commandList.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET);
@@ -339,7 +339,7 @@ void Renderer::render() {
 
     // Render post processes
     CommandList commandListPostProcess{commandQueue};
-    postProcessRenderer.renderPostProcesses(commandListPostProcess, alternatingResources, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+    postProcessRenderer.renderPostProcesses(commandListPostProcess, alternatingResources, swapChain.getWidth(), swapChain.getHeight());
 
     // Gamma correction TODO make it a post process
     {
@@ -350,8 +350,8 @@ void Renderer::render() {
         commandListPostProcess.OMSetRenderTargetNoDepth(backBuffer);
         commandListPostProcess.IASetVertexBuffer(renderData.getFullscreenVB());
         GammaCorrectionCB gammaCorrectionCB;
-        gammaCorrectionCB.screenWidth = static_cast<float>(swapChain.getWidth());
-        gammaCorrectionCB.screenHeight = static_cast<float>(swapChain.getHeight());
+        gammaCorrectionCB.screenWidth = swapChain.getWidth();
+        gammaCorrectionCB.screenHeight = swapChain.getHeight();
         gammaCorrectionCB.gammaValue = ApplicationImpl::getInstance().getSettings().getGammaCorrectionEnabled() ? 2.2f : 1.f;
         commandListPostProcess.setRoot32BitConstant(0, gammaCorrectionCB);
         commandListPostProcess.draw(6);
@@ -362,7 +362,7 @@ void Renderer::render() {
     commandQueue.executeCommandListAndSignal(commandListPostProcess);
 
     CommandList commandListSprite{commandQueue};
-    commandListSprite.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
+    commandListSprite.RSSetViewport(0.f, 0.f, swapChain.getWidth(), swapChain.getHeight());
     commandListSprite.RSSetScissorRectNoScissor();
     commandListSprite.IASetPrimitiveTopologyTriangleList();
     for (auto &sprite : scene.getSprites())

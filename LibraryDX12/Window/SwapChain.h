@@ -29,8 +29,10 @@ public:
     void present(uint64_t fenceValue);
     void resize(int desiredWidth, int desiredHeight);
 
-    uint32_t getWidth() const { return width; }
-    uint32_t getHeight() const { return height; }
+    float getWidth() const { return static_cast<float>(width); }
+    float getHeight() const { return static_cast<float>(height); }
+    uint32_t getWidthUint() const { return width; }
+    uint32_t getHeightUint() const { return height; }
 
     uint64_t getFenceValueForCurrentBackBuffer() const;
     auto &getCurrentBackBuffer() { return backBufferEntries[this->currentBackBufferIndex].backBuffer; };
