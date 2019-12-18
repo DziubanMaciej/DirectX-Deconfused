@@ -26,80 +26,8 @@ const static FLOAT blackColor[] = {0.f, 0.f, 0.f, 1.f};
 Renderer::Renderer(SwapChain &swapChain, RenderData &renderData, SceneImpl &scene)
     : swapChain(swapChain),
       renderData(renderData),
-      scene(scene) {}
-
-void Renderer::renderShadowMaps(CommandList &commandList) {
-    const auto &lights = scene.getLights();
-    const auto shadowMapsUsed = std::min(size_t{8u}, lights.size());
-
-    for (int i = 0; i < shadowMapsUsed; i++) {
-        commandList.transitionBarrier(renderData.getShadowMap(i), D3D12_RESOURCE_STATE_DEPTH_WRITE);
-    }
-
-    const auto shadowMapSize = static_cast<float>(renderData.getShadowMapSize());
-    commandList.RSSetViewport(0.f, 0.f, shadowMapSize, shadowMapSize);
-    commandList.RSSetScissorRectNoScissor();
-    commandList.IASetPrimitiveTopologyTriangleList();
-
-    int lightIdx = 0;
-
-    for (LightImpl *light : lights) {
-        commandList.OMSetRenderTargetDepthOnly(renderData.getShadowMap(lightIdx));
-        commandList.clearDepthStencilView(renderData.getShadowMap(lightIdx), D3D12_CLEAR_FLAG_DEPTH, 1.f, 0);
-
-        // View projection matrix
-        scene.getCameraImpl()->setAspectRatio(1.0f);
-        const XMMATRIX smViewProjectionMatrix = light->getShadowMapViewProjectionMatrix();
-
-        // Draw NORMAL
-        commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SM_NORMAL);
-        for (ObjectImpl *object : scene.getObjects()) {
-            MeshImpl &mesh = object->getMesh();
-            if (mesh.getShadowMapPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
-                ShadowMapCB cb;
-                cb.mvp = XMMatrixMultiply(object->getModelMatrix(), smViewProjectionMatrix);
-                commandList.setRoot32BitConstant(0, cb);
-
-                commandList.IASetVertexAndIndexBuffer(mesh);
-                commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
-            }
-        }
-
-        // Draw TEXTURE NORMAL
-        commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SM_TEXTURE_NORMAL);
-        for (ObjectImpl *object : scene.getObjects()) {
-            MeshImpl &mesh = object->getMesh();
-            if (mesh.getShadowMapPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
-                ShadowMapCB cb;
-                cb.mvp = XMMatrixMultiply(object->getModelMatrix(), smViewProjectionMatrix);
-                commandList.setRoot32BitConstant(0, cb);
-
-                commandList.IASetVertexAndIndexBuffer(mesh);
-                commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
-            }
-        }
-
-        // Draw TEXTURE NORMAL MAP
-        commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SM_TEXTURE_NORMAL_MAP);
-        for (ObjectImpl *object : scene.getObjects()) {
-            MeshImpl &mesh = object->getMesh();
-            if (mesh.getShadowMapPipelineStateIdentifier() == commandList.getPipelineStateIdentifier()) {
-                ShadowMapCB cb;
-                cb.mvp = XMMatrixMultiply(object->getModelMatrix(), smViewProjectionMatrix);
-                commandList.setRoot32BitConstant(0, cb);
-
-                commandList.IASetVertexAndIndexBuffer(mesh);
-                commandList.draw(static_cast<UINT>(mesh.getVerticesCount()));
-            }
-        }
-
-        lightIdx++;
-    }
-
-    for (int i = 0; i < shadowMapsUsed; i++) {
-        commandList.transitionBarrier(renderData.getShadowMap(i), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    }
-}
+      scene(scene),
+      shadowsRenderer(swapChain, renderData, scene) {}
 
 void Renderer::renderGBuffer(CommandList &commandList) {
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
@@ -267,19 +195,19 @@ void Renderer::renderLighting(CommandList &commandList, Resource &output) {
     lightCb->ambientLight = XMFLOAT3(scene.getAmbientLight());
     lightCb->screenWidth = static_cast<float>(swapChain.getWidth());
     lightCb->screenHeight = static_cast<float>(swapChain.getHeight());
-    if (ApplicationImpl::getInstance().getSettings().getShadowsQuality() > 0) {
-        const auto maxLightsCount = std::min<UINT>(static_cast<UINT>(scene.getLights().size()), 8u); //  TODO dynamic light sizing
-        for (; lightCb->lightsSize < maxLightsCount; lightCb->lightsSize++) {
-            LightImpl &light = *scene.getLights()[lightCb->lightsSize];
-
-            lightCb->lightColor[lightCb->lightsSize] = toXmFloat4(XMFLOAT3(light.getColor()), light.getPower());
-            assert(!light.isViewOrProjectionDirty());
-            lightCb->lightPosition[lightCb->lightsSize] = toXmFloat4(light.getPosition(), 1);
-            lightCb->lightDirection[lightCb->lightsSize] = toXmFloat4(light.getDirection(), 0);
+    const auto maxLightsCount = std::min<UINT>(static_cast<UINT>(scene.getLights().size()), 8u); //  TODO dynamic light sizing
+    for (; lightCb->lightsSize < maxLightsCount; lightCb->lightsSize++) {
+        LightImpl &light = *scene.getLights()[lightCb->lightsSize];
+        lightCb->lightColor[lightCb->lightsSize] = toXmFloat4(XMFLOAT3(light.getColor()), light.getPower());
+        assert(!light.isViewOrProjectionDirty());
+        lightCb->lightPosition[lightCb->lightsSize] = toXmFloat4(light.getPosition(), 1);
+        lightCb->lightDirection[lightCb->lightsSize] = toXmFloat4(light.getDirection(), 0);
+        if (shadowsRenderer.isEnabled()) {
             lightCb->smViewProjectionMatrix[lightCb->lightsSize] = light.getShadowMapViewProjectionMatrix();
-            lightCb->lightsSize++;
         }
+        lightCb->lightsSize++;
     }
+
     const D3D12_CPU_DESCRIPTOR_HANDLE lightConstantBufferView = lightConstantBuffer.uploadAndSwap();
 
     commandList.setCbvSrvUavInDescriptorTable(0, 0, lightConstantBuffer, lightConstantBufferView); // TODO set null descriptor if shadows are off
@@ -683,10 +611,10 @@ void Renderer::render() {
     application.flushAllResources();
 
     // Render shadow maps
-    if (ApplicationImpl::getInstance().getSettingsImpl().getShadowsQuality() > 0) {
+    if (shadowsRenderer.isEnabled()) {
         CommandList commandListShadowMap{commandQueue};
         SET_OBJECT_NAME(commandListShadowMap, L"cmdListShadowMap")
-        renderShadowMaps(commandListShadowMap);
+        shadowsRenderer.renderShadowMaps(commandListShadowMap);
         commandListShadowMap.close();
         commandQueue.executeCommandListAndSignal(commandListShadowMap);
     }

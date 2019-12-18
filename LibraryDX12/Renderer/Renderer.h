@@ -1,5 +1,7 @@
 #pragma once
 
+#include "Renderer/ShadowsRenderer.h"
+
 #include <DXD/ExternalHeadersWrappers/DirectXMath.h>
 #include <vector>
 
@@ -19,7 +21,6 @@ public:
 
 private:
     // Render methods
-    void renderShadowMaps(CommandList &commandList);
     void renderGBuffer(CommandList &commandList);
     void renderSSAO(CommandList &commandList);
     void renderLighting(CommandList &commandList, Resource &output);
@@ -45,4 +46,7 @@ private:
     SwapChain &swapChain;
     RenderData &renderData;
     SceneImpl &scene;
+
+    // Sub-renderers
+    ShadowsRenderer shadowsRenderer;
 };
