@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Renderer/ShadowsRenderer.h"
+#include "Renderer/DeferredShadingRenderer.h"
 
 #include <DXD/ExternalHeadersWrappers/DirectXMath.h>
 #include <vector>
@@ -21,9 +22,7 @@ public:
 
 private:
     // Render methods
-    void renderGBuffer(CommandList &commandList);
     void renderSSAO(CommandList &commandList);
-    void renderLighting(CommandList &commandList, Resource &output);
     void renderSSRandMerge(CommandList &commandList, Resource &input, Resource &output);
     void renderFog(CommandList &commandList, Resource &input, Resource &output);
     void renderDof(CommandList &commandList, Resource &input, Resource &output);
@@ -49,4 +48,5 @@ private:
 
     // Sub-renderers
     ShadowsRenderer shadowsRenderer;
+    DeferredShadingRenderer deferredShadingRenderer;
 };
