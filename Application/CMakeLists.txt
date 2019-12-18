@@ -1,3 +1,7 @@
+if(DISTRIBUTION_MODE STREQUAL "Production")
+    return()
+endif()
+
 # Compile options
 add_definitions(/MP)
 include_directories(. ${DXD_INCLUDE_DIR})

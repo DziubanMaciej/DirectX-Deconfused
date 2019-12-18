@@ -1,3 +1,7 @@
+if(DISTRIBUTION_MODE STREQUAL "Production")
+    return()
+endif()
+
 # Compile options
 add_definitions(/MP)
 include_directories(. ${DXD_SRC_DIR} ${DXD_INCLUDE_DIR} ${PROJECT_SOURCE_DIR}/ExternalLibraries/gtest/googletest/include)
