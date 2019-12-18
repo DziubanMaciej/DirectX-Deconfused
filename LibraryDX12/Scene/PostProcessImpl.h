@@ -45,6 +45,7 @@ public:
     void setFxaa() override;
     auto getType() const { return type; }
     auto &getData() { return data; }
+    const auto &getData() const { return data; }
 
 private:
     bool enabled = false;

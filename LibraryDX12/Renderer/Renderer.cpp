@@ -26,7 +26,8 @@ Renderer::Renderer(SwapChain &swapChain, RenderData &renderData, SceneImpl &scen
       renderData(renderData),
       scene(scene),
       shadowsRenderer(swapChain, renderData, scene),
-      deferredShadingRenderer(swapChain, renderData, scene, shadowsRenderer.isEnabled()) {}
+      deferredShadingRenderer(swapChain, renderData, scene, shadowsRenderer.isEnabled()),
+      postProcessRenderer(renderData, scene.getPostProcesses(), static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight())) {}
 
 void Renderer::renderSSAO(CommandList &commandList) {
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(std::max(swapChain.getWidth() / 2, 1u)), static_cast<float>(std::max(swapChain.getHeight() / 2, 1u)));
@@ -218,173 +219,6 @@ void Renderer::renderDof(CommandList &commandList, Resource &input, Resource &ou
     commandList.draw(6u);
 }
 
-void Renderer::renderPostProcesses(CommandList &commandList, const std::vector<PostProcessImpl *> &postProcesses,
-                                   AlternatingResources &alternatingResources, size_t enabledPostProcessesCount,
-                                   float screenWidth, float screenHeight) {
-    commandList.RSSetViewport(0.f, 0.f, screenWidth, screenHeight);
-    commandList.IASetPrimitiveTopologyTriangleList();
-
-    size_t postProcessIndex = 0u;
-    Resource *source{}, *destination{};
-    for (PostProcessImpl *postProcess : postProcesses) {
-        if (!postProcess->isEnabled()) {
-            continue;
-        }
-
-        // Render
-        renderPostProcess(*postProcess, commandList, nullptr, alternatingResources, screenWidth, screenHeight);
-        alternatingResources.swapResources();
-        postProcessIndex++;
-    }
-}
-
-void Renderer::renderBloom(CommandList &commandList, Resource &input, Resource &output) {
-    // Blur the bloom map
-    const float screenWidth = static_cast<float>(swapChain.getWidth());
-    const float screenHeight = static_cast<float>(swapChain.getHeight());
-    AlternatingResources &alternatingResourcesForBlur = renderData.getHelperAlternatingResources();
-    renderPostProcess(renderData.getPostProcessForBloom(), commandList,
-                      &input, alternatingResourcesForBlur, screenWidth, screenHeight);
-
-    // Apply bloom on output buffer
-    Resource &blurredBloomMap = alternatingResourcesForBlur.getDestination();
-    commandList.transitionBarrier(blurredBloomMap, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-    commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_APPLY_BLOOM);
-    PostProcessApplyBloomCB cb = {};
-    cb.screenWidth = static_cast<float>(swapChain.getWidth());
-    cb.screenHeight = static_cast<float>(swapChain.getHeight());
-    commandList.setRoot32BitConstant(0, cb);
-    commandList.setSrvInDescriptorTable(1, 0, blurredBloomMap);
-    commandList.OMSetRenderTargetNoDepth(output);
-    commandList.IASetVertexBuffer(renderData.getFullscreenVB());
-    commandList.draw(6u);
-}
-
-void Renderer::renderPostProcess(PostProcessImpl &postProcess, CommandList &commandList, Resource *optionalInput,
-                                 AlternatingResources &alternatingResources, float screenWidth, float screenHeight) {
-    assert(postProcess.isEnabled());
-    Resource *source{}, *destination{};
-
-    // Render post process base on its type
-    if (postProcess.getType() == PostProcessImpl::Type::CONVOLUTION) {
-        getSourceAndDestinationForPostProcess(alternatingResources, optionalInput, source, destination);
-        prepareSourceAndDestinationForPostProcess(commandList, *source, *destination, false);
-
-        // Prepare constant buffer
-        auto &postProcessData = postProcess.getData().convolution;
-        postProcessData.screenWidth = screenWidth;
-        postProcessData.screenHeight = screenHeight;
-
-        // Set state
-        commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_CONVOLUTION);
-        commandList.setRoot32BitConstant(0, postProcessData);
-        commandList.setSrvInDescriptorTable(1, 0, *source);
-        commandList.OMSetRenderTargetNoDepth(*destination);
-        commandList.IASetVertexBuffer(renderData.getFullscreenVB());
-
-        // Render
-        commandList.draw(6u);
-    } else if (postProcess.getType() == PostProcessImpl::Type::BLACK_BARS) {
-        getSourceAndDestinationForPostProcess(alternatingResources, optionalInput, source, destination);
-        prepareSourceAndDestinationForPostProcess(commandList, *source, *destination, false);
-
-        // Prepare constant buffer
-        auto &postProcessData = postProcess.getData().blackBars;
-        postProcessData.screenWidth = screenWidth;
-        postProcessData.screenHeight = screenHeight;
-
-        // Set state
-        commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_BLACK_BARS);
-        commandList.setRoot32BitConstant(0, postProcessData);
-        commandList.setSrvInDescriptorTable(1, 0, *source);
-        commandList.OMSetRenderTargetNoDepth(*destination);
-        commandList.IASetVertexBuffer(renderData.getFullscreenVB());
-
-        // Render
-        commandList.draw(6u);
-    } else if (postProcess.getType() == PostProcessImpl::Type::LINEAR_COLOR_CORRECTION) {
-        getSourceAndDestinationForPostProcess(alternatingResources, optionalInput, source, destination);
-        prepareSourceAndDestinationForPostProcess(commandList, *source, *destination, false);
-
-        // Prepare constant buffer
-        auto &postProcessData = postProcess.getData().linearColorCorrection;
-        postProcessData.screenWidth = screenWidth;
-        postProcessData.screenHeight = screenHeight;
-
-        // Set state
-        commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_LINEAR_COLOR_CORRECTION);
-        commandList.setRoot32BitConstant(0, postProcessData);
-        commandList.setSrvInDescriptorTable(1, 0, *source);
-        commandList.OMSetRenderTargetNoDepth(*destination);
-        commandList.IASetVertexBuffer(renderData.getFullscreenVB());
-
-        // Render
-        commandList.draw(6u);
-    } else if (postProcess.getType() == PostProcessImpl::Type::GAUSSIAN_BLUR) {
-        // Prepare constant buffer
-        auto &postProcessData = postProcess.getData().gaussianBlur;
-        postProcessData.cb.screenWidth = screenWidth;
-        postProcessData.cb.screenHeight = screenHeight;
-
-        const UINT threadGroupCountX = static_cast<UINT>(screenWidth / 16 + 0.5f);
-        const UINT threadGroupCountY = static_cast<UINT>(screenHeight / 16 + 0.5f);
-
-        // Set cross-pass state
-        commandList.IASetVertexBuffer(renderData.getFullscreenVB());
-
-        // Render all passes of the blur filter
-        for (auto passIndex = 0u; passIndex < postProcessData.passCount; passIndex++) {
-            // Render horizontal pass
-            getSourceAndDestinationForPostProcess(alternatingResources, optionalInput, source, destination);
-            prepareSourceAndDestinationForPostProcess(commandList, *source, *destination, true);
-            commandList.setPipelineStateAndComputeRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR_COMPUTE_HORIZONTAL);
-            commandList.setSrvInDescriptorTable(0, 0, *source);
-            commandList.setUavInDescriptorTable(0, 1, *destination);
-            commandList.setRoot32BitConstant(1, postProcessData.cb);
-            commandList.dispatch(threadGroupCountX, threadGroupCountY, 1u);
-            alternatingResources.swapResources();
-
-            // Clear optional input so rest of the passes are done in ping-pong manner
-            optionalInput = nullptr;
-
-            // Render vertical pass
-            getSourceAndDestinationForPostProcess(alternatingResources, optionalInput, source, destination);
-            prepareSourceAndDestinationForPostProcess(commandList, *source, *destination, true);
-            commandList.setPipelineStateAndComputeRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_GAUSSIAN_BLUR_COMPUTE_VERTICAL);
-            commandList.setSrvInDescriptorTable(0, 0, *source);
-            commandList.setUavInDescriptorTable(0, 1, *destination);
-            commandList.setRoot32BitConstant(1, postProcessData.cb);
-            commandList.dispatch(threadGroupCountX, threadGroupCountY, 1u);
-
-            const bool lastPass = (passIndex == postProcessData.passCount - 1);
-            if (!lastPass) {
-                alternatingResources.swapResources();
-            }
-        }
-    } else if (postProcess.getType() == PostProcessImpl::Type::FXAA) {
-        getSourceAndDestinationForPostProcess(alternatingResources, optionalInput, source, destination);
-        prepareSourceAndDestinationForPostProcess(commandList, *source, *destination, false);
-
-        // Prepare constant buffer
-        auto &postProcessData = postProcess.getData().fxaa;
-        postProcessData.screenWidth = screenWidth;
-        postProcessData.screenHeight = screenHeight;
-
-        // Set state
-        commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_FXAA);
-        commandList.setRoot32BitConstant(0, postProcessData);
-        commandList.setSrvInDescriptorTable(1, 0, *source);
-        commandList.OMSetRenderTargetNoDepth(*destination);
-        commandList.IASetVertexBuffer(renderData.getFullscreenVB());
-
-        // Render
-        commandList.draw(6u);
-    } else {
-        UNREACHABLE_CODE();
-    }
-}
-
 void Renderer::renderD2DTexts() {
     // Get the contexts
     auto &d2dDeviceContext = ApplicationImpl::getInstance().getD2DContext().getD2DDeviceContext();
@@ -472,7 +306,7 @@ void Renderer::render() {
     if (ApplicationImpl::getInstance().getSettings().getBloomEnabled()) {
         Resource &source = renderData.getBloomMap();
         Resource &destination = alternatingResources.getSource(); // render to previously rendered frame
-        renderBloom(commandListFixedPostProcesses, source, destination);
+        postProcessRenderer.renderBloom(commandListFixedPostProcesses, source, destination);
     }
 
     // SSR
@@ -509,10 +343,10 @@ void Renderer::render() {
     commandListPostProcess.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     commandListPostProcess.RSSetScissorRectNoScissor();
     commandListPostProcess.IASetPrimitiveTopologyTriangleList();
-    const auto postProcessesCount = getEnabledPostProcessesCount();
+    const auto postProcessesCount = postProcessRenderer.getEnabledPostProcessesCount();
     const bool shouldRenderPostProcesses = (postProcessesCount > 0);
     if (shouldRenderPostProcesses) {
-        renderPostProcesses(commandListPostProcess, scene.getPostProcesses(), alternatingResources, postProcessesCount,
+        postProcessRenderer.renderPostProcesses(commandListPostProcess, alternatingResources, postProcessesCount,
                             static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
     }
 
@@ -562,32 +396,4 @@ void Renderer::render() {
     // Present (swap back buffers) and wait for next frame's fence
     swapChain.present(fenceValue);
     commandQueue.waitOnCpu(swapChain.getFenceValueForCurrentBackBuffer());
-}
-
-// ---------------------------------------------------------------------------  Helpers
-
-size_t Renderer::getEnabledPostProcessesCount() const {
-    size_t count = 0u;
-    for (const auto &postProcess : scene.getPostProcesses()) {
-        if (postProcess->isEnabled()) {
-            count++;
-        }
-    }
-    return count;
-}
-
-void Renderer::getSourceAndDestinationForPostProcess(AlternatingResources &alternatingResources, Resource *optionalInput,
-                                                     Resource *&outSource, Resource *&outDestination) {
-    outSource = (optionalInput != nullptr) ? optionalInput : &alternatingResources.getSource();
-    outDestination = &alternatingResources.getDestination();
-}
-
-void Renderer::prepareSourceAndDestinationForPostProcess(CommandList &commandList, Resource &source, Resource &destination, bool compute) {
-    if (compute) {
-        commandList.transitionBarrier(source, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        commandList.transitionBarrier(destination, D3D12_RESOURCE_STATE_UNORDERED_ACCESS);
-    } else {
-        commandList.transitionBarrier(source, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        commandList.transitionBarrier(destination, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    }
 }
