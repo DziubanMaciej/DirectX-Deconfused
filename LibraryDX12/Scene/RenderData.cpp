@@ -7,14 +7,12 @@
 
 // ------------------------------------------------------------------------------- General
 
-RenderData::RenderData(int width, int height)
+RenderData::RenderData(int width, int height, UINT buffersCount)
     : device(ApplicationImpl::getInstance().getDevice()),
       sceneAlternatingResources(L"sceneAlternatingResources", device),
       helperAlternatingResources(L"helperAlternatingResources", device),
       postProcessForBloom(DXD::PostProcess::create()),
-      lightingConstantBuffer1(sizeof(LightingHeapCB)),
-      lightingConstantBuffer2(sizeof(LightingHeapCB)),
-      lightingConstantBuffer3(sizeof(LightingHeapCB)) {
+      lightingConstantBuffer(sizeof(LightingHeapCB), buffersCount) {
     // Configure bloom blur
     postProcessForBloom->setGaussianBlur(3, 5);
 

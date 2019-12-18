@@ -107,7 +107,7 @@ struct LightingHeapCB {
     float shadowMapSize;
     float screenWidth;
     float screenHeight;
-    int lightsSize;
+    uint lightsSize;
     float4 lightPosition[8];
     float4 lightColor[8];
     float4 lightDirection[8];

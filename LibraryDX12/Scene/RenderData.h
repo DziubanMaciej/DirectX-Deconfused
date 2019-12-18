@@ -15,7 +15,7 @@ public:
         void resize(int width, int height) override;
     };
 
-    RenderData(int width, int height);
+    RenderData(int width, int height, UINT buffersCount);
     ~RenderData();
     void resize(int width, int height);
 
@@ -33,18 +33,7 @@ public:
     AlternatingResources &getSceneAlternatingResources() { return sceneAlternatingResources; }
     AlternatingResources &getHelperAlternatingResources() { return helperAlternatingResources; }
     PostProcessImpl &getPostProcessForBloom() { return *static_cast<PostProcessImpl *>(postProcessForBloom.get()); }
-    ConstantBuffer &getLightingConstantBuffer() {
-        if (lightConstantBufferIdx == 0) {
-            lightConstantBufferIdx = (lightConstantBufferIdx + 1) % 3;
-            return lightingConstantBuffer1;
-        } else if (lightConstantBufferIdx == 1) {
-            lightConstantBufferIdx = (lightConstantBufferIdx + 1) % 3;
-            return lightingConstantBuffer2;
-        } else {
-            lightConstantBufferIdx = (lightConstantBufferIdx + 1) % 3;
-            return lightingConstantBuffer3;
-        }
-    }
+    ConstantBuffer &getLightingConstantBuffer() { return lightingConstantBuffer; }
     VertexBuffer &getFullscreenVB() { return *fullscreenVB; }
     Resource &getDepthStencilBuffer() { return *depthStencilBuffer; };
 
@@ -85,9 +74,7 @@ private:
     AlternatingResourceImpl helperAlternatingResources;
     std::unique_ptr<DXD::PostProcess> postProcessForBloom;
     int lightConstantBufferIdx = 0;
-    ConstantBuffer lightingConstantBuffer1;
-    ConstantBuffer lightingConstantBuffer2;
-    ConstantBuffer lightingConstantBuffer3;
+    ConstantBuffer lightingConstantBuffer;
     std::unique_ptr<VertexBuffer> fullscreenVB;
     std::unique_ptr<Resource> depthStencilBuffer = {};
 };

@@ -259,6 +259,7 @@ void Renderer::renderLighting(CommandList &commandList, Resource &output) {
     commandList.OMSetRenderTargetsNoDepth(lightingRts);
 
     // LightingConstantBuffer
+    // TODO extract to method
     ConstantBuffer &lightConstantBuffer = renderData.getLightingConstantBuffer();
     auto lightCb = lightConstantBuffer.getData<LightingHeapCB>();
     lightCb->cameraPosition = toXmFloat4(scene.getCamera()->getEyePosition(), 0);
@@ -267,26 +268,22 @@ void Renderer::renderLighting(CommandList &commandList, Resource &output) {
     lightCb->ambientLight = XMFLOAT3(scene.getAmbientLight());
     lightCb->screenWidth = static_cast<float>(swapChain.getWidth());
     lightCb->screenHeight = static_cast<float>(swapChain.getHeight());
-    for (LightImpl *light : scene.getLights()) {
-        lightCb->lightColor[lightCb->lightsSize] = XMFLOAT4(light->getColor().x, light->getColor().y, light->getColor().z, light->getPower());
-        if (renderData.getShadowMapSize() > 0) {
-            assert(!light->isViewOrProjectionDirty());
-            lightCb->lightPosition[lightCb->lightsSize] = toXmFloat4(light->getPosition(), 1);
-            lightCb->lightDirection[lightCb->lightsSize] = toXmFloat4(light->getDirection(), 0);
-            lightCb->smViewProjectionMatrix[lightCb->lightsSize] = light->getShadowMapViewProjectionMatrix();
-        } else {
-            lightCb->lightPosition[lightCb->lightsSize] = XMFLOAT4(light->getPosition().x, light->getPosition().y, light->getPosition().z, 0);
-            lightCb->lightDirection[lightCb->lightsSize] = XMFLOAT4(light->getDirection().x, light->getDirection().y, light->getDirection().z, 0);
-            lightCb->smViewProjectionMatrix[lightCb->lightsSize] = light->getShadowMapViewProjectionMatrix();
-        }
-        lightCb->lightsSize++;
-        if (lightCb->lightsSize >= 8) {
-            break;
+    if (ApplicationImpl::getInstance().getSettings().getShadowsQuality() > 0) {
+        const auto maxLightsCount = std::min<UINT>(static_cast<UINT>(scene.getLights().size()), 8u); //  TODO dynamic light sizing
+        for (; lightCb->lightsSize < maxLightsCount; lightCb->lightsSize++) {
+            LightImpl &light = *scene.getLights()[lightCb->lightsSize];
+
+            lightCb->lightColor[lightCb->lightsSize] = toXmFloat4(XMFLOAT3(light.getColor()), light.getPower());
+            assert(!light.isViewOrProjectionDirty());
+            lightCb->lightPosition[lightCb->lightsSize] = toXmFloat4(light.getPosition(), 1);
+            lightCb->lightDirection[lightCb->lightsSize] = toXmFloat4(light.getDirection(), 0);
+            lightCb->smViewProjectionMatrix[lightCb->lightsSize] = light.getShadowMapViewProjectionMatrix();
+            lightCb->lightsSize++;
         }
     }
-    lightConstantBuffer.upload();
+    const D3D12_CPU_DESCRIPTOR_HANDLE lightConstantBufferView = lightConstantBuffer.uploadAndSwap();
 
-    commandList.setCbvInDescriptorTable(0, 0, lightConstantBuffer);
+    commandList.setCbvSrvUavInDescriptorTable(0, 0, lightConstantBuffer, lightConstantBufferView); // TODO set null descriptor if shadows are off
     commandList.setSrvInDescriptorTable(0, 1, renderData.getGBufferAlbedo());
     commandList.setSrvInDescriptorTable(0, 2, renderData.getGBufferNormal());
     commandList.setSrvInDescriptorTable(0, 3, renderData.getGBufferSpecular());

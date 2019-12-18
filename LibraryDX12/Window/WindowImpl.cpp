@@ -42,7 +42,7 @@ WindowImpl::WindowImpl(const std::wstring &windowTitle, HINSTANCE hInstance, Bou
       windowHandle(registerClassAndCreateWindow(windowTitle, bounds)),
       lastFrameTime(Clock::now()),
       swapChain(windowHandle, application.getDirectCommandQueue(), bounds.width, bounds.height, swapChainBufferCount),
-      renderData(bounds.width, bounds.height) {}
+      renderData(bounds.width, bounds.height, swapChainBufferCount) {}
 
 HWND WindowImpl::registerClassAndCreateWindow(const std::wstring &windowTitle, Bounds bounds) {
     registerClass();
