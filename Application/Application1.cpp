@@ -197,7 +197,7 @@ private:
             application->getSettings().setDofEnabled(!application->getSettings().getDofEnabled());
         })
         KEYSTROKE('G', L"Toggle gamma correction", {
-           application->getSettings().setGammaCorrectionEnabled(!application->getSettings().getGammaCorrectionEnabled());
+            postProcesses["gammaCorrection"]->setEnabled(!postProcesses["gammaCorrection"]->isEnabled());
         })
         KEYSTROKE('7', L"Toggle black bars", {
             postProcesses["blackBars"]->setEnabled(!postProcesses["blackBars"]->isEnabled());
@@ -484,6 +484,10 @@ private:
         postProcesses["FXAA"] = DXD::PostProcess::create();
         postProcesses["FXAA"]->setFxaa();
         postProcesses["FXAA"]->setEnabled(false);
+
+        postProcesses["gammaCorrection"] = DXD::PostProcess::create();
+        postProcesses["gammaCorrection"]->setGammaCorrection(2.2);
+        postProcesses["gammaCorrection"]->setEnabled(false);
     }
     void prepSprites() {
         DXD::log("Loading sprites...\n");

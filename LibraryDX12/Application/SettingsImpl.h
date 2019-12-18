@@ -40,9 +40,8 @@ public:
     using FogEnabled = Setting<3, bool, false>;
     using DofEnabled = Setting<4, bool, false>;
     using BloomEnabled = Setting<5, bool, false>;
-    using GammaCorrectionEnabled = Setting<6, bool, false>;
-    using ShadowsQuality = NumericalSetting<7, unsigned int, 8u, 0u, 10u>;
-    struct Data : std::tuple<VerticalSyncEnabled, SsaoEnabled, SsrEnabled, FogEnabled, DofEnabled, ShadowsQuality, BloomEnabled, GammaCorrectionEnabled> {};
+    using ShadowsQuality = NumericalSetting<6, unsigned int, 8u, 0u, 10u>;
+    struct Data : std::tuple<VerticalSyncEnabled, SsaoEnabled, SsrEnabled, FogEnabled, DofEnabled, ShadowsQuality, BloomEnabled> {};
 
     // Registering handlers
     template <typename _Setting>
@@ -65,7 +64,6 @@ public:
     void setFogEnabled(bool value) override { set<FogEnabled>(value); }
     void setDofEnabled(bool value) override { set<DofEnabled>(value); }
     void setBloomEnabled(bool value) override { set<BloomEnabled>(value); }
-    void setGammaCorrectionEnabled(bool value) override { set<GammaCorrectionEnabled>(value); }
     void setShadowsQuality(unsigned int value) override { set<ShadowsQuality>(value); }
     bool getVerticalSyncEnabled() const override { return get<VerticalSyncEnabled>(); }
     bool getSsaoEnabled() const override { return get<SsaoEnabled>(); }
@@ -73,7 +71,6 @@ public:
     bool getFogEnabled() const override { return get<FogEnabled>(); }
     bool getDofEnabled() const override { return get<DofEnabled>(); }
     bool getBloomEnabled() const override { return get<BloomEnabled>(); }
-    bool getGammaCorrectionEnabled() const override { return get<GammaCorrectionEnabled>(); }
     unsigned int getShadowsQuality() const override { return get<ShadowsQuality>(); }
 
     template <typename _Setting>

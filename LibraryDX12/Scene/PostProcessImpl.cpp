@@ -120,3 +120,14 @@ void PostProcessImpl::setFxaa() {
     data.screenHeight = -1;
     data.screenWidth = -1;
 }
+
+void PostProcessImpl::setGammaCorrection(float gamma)
+{
+    this->type = Type::GAMMA_CORRECTION;
+    this->enabled = true;
+
+    auto &data = this->data.gammaCorrection;
+    data.gammaValue = gamma;
+    data.screenHeight = -1;
+    data.screenWidth = -1;
+}

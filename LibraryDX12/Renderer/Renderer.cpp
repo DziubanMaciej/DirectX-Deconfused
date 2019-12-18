@@ -262,6 +262,13 @@ void Renderer::renderSprite(CommandList &commandList, SpriteImpl *sprite) {
     commandList.draw(6u);
 }
 
+void Renderer::copyToBackBuffer(CommandList &commandList, Resource &source) {
+    auto &backBuffer = swapChain.getCurrentBackBuffer();
+    commandList.transitionBarrier(source, D3D12_RESOURCE_STATE_COPY_SOURCE);
+    commandList.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_COPY_DEST);
+    commandList.copyResource(backBuffer, source);
+}
+
 void Renderer::render() {
     auto &application = ApplicationImpl::getInstance();
     auto &commandQueue = application.getDirectCommandQueue();
@@ -340,22 +347,7 @@ void Renderer::render() {
     // Render post processes
     CommandList commandListPostProcess{commandQueue};
     postProcessRenderer.renderPostProcesses(commandListPostProcess, alternatingResources, swapChain.getWidth(), swapChain.getHeight());
-
-    // Gamma correction TODO make it a post process
-    {
-        commandListPostProcess.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_GAMMA_CORRECTION);
-        commandListPostProcess.transitionBarrier(alternatingResources.getSource(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
-        commandListPostProcess.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET);
-        commandListPostProcess.setSrvInDescriptorTable(1, 0, alternatingResources.getSource());
-        commandListPostProcess.OMSetRenderTargetNoDepth(backBuffer);
-        commandListPostProcess.IASetVertexBuffer(renderData.getFullscreenVB());
-        GammaCorrectionCB gammaCorrectionCB;
-        gammaCorrectionCB.screenWidth = swapChain.getWidth();
-        gammaCorrectionCB.screenHeight = swapChain.getHeight();
-        gammaCorrectionCB.gammaValue = ApplicationImpl::getInstance().getSettings().getGammaCorrectionEnabled() ? 2.2f : 1.f;
-        commandListPostProcess.setRoot32BitConstant(0, gammaCorrectionCB);
-        commandListPostProcess.draw(6);
-    }
+    copyToBackBuffer(commandListPostProcess, alternatingResources.getSource()); // resource has been swapped, so taking the "source"
 
     // Close command list and submit it to the GPU
     commandListPostProcess.close();
@@ -369,7 +361,6 @@ void Renderer::render() {
         renderSprite(commandListSprite, sprite);
 
     // If there are no D2D content to render, there will be no implicit transition to present, hence the manual barrier
-
     if (scene.getTexts().empty()) {
         commandListSprite.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_PRESENT);
     } else {

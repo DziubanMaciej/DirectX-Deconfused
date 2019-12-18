@@ -154,6 +154,24 @@ void PostProcessRenderer::renderPostProcess(PostProcessImpl &postProcess, Comman
 
         // Render
         commandList.draw(6u);
+    } else if (postProcess.getType() == PostProcessImpl::Type::GAMMA_CORRECTION) {
+        getSourceAndDestinationForPostProcess(alternatingResources, optionalInput, source, destination);
+        prepareSourceAndDestinationForPostProcess(commandList, *source, *destination, false);
+
+        // Prepare constant buffer
+        auto &postProcessData = postProcess.getData().gammaCorrection;
+        postProcessData.screenWidth = screenWidth;
+        postProcessData.screenHeight = screenHeight;
+
+        // Set state
+        commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_GAMMA_CORRECTION);
+        commandList.setRoot32BitConstant(0, postProcessData);
+        commandList.setSrvInDescriptorTable(1, 0, alternatingResources.getSource());
+        commandList.OMSetRenderTargetNoDepth(*destination);
+        commandList.IASetVertexBuffer(renderData.getFullscreenVB());
+
+        // Render
+        commandList.draw(6u);
     } else {
         UNREACHABLE_CODE();
     }

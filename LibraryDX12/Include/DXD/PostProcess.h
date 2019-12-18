@@ -68,6 +68,9 @@ public:
     virtual void setFxaa() = 0;
     /// @}
 
+    /// \name Gamma correction applied on final image
+    virtual void setGammaCorrection(float gamma) = 0;
+
     /// Factory method used to create PostProcess instances. Note that inactive instances are created.
     /// Application has to use one of "set" functions to set the effect and enable it. Calling setEnable
     /// before setting an effect is undefined behaviour.

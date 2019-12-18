@@ -17,7 +17,8 @@ public:
         CONVOLUTION,
         LINEAR_COLOR_CORRECTION,
         GAUSSIAN_BLUR,
-        FXAA
+        FXAA,
+        GAMMA_CORRECTION,
     };
 
     void setEnabled(bool enabled) override;
@@ -43,6 +44,9 @@ public:
     void setGaussianBlur(UINT passCount, UINT samplingRange) override;
 
     void setFxaa() override;
+
+    void setGammaCorrection(float gamma) override;
+
     auto getType() const { return type; }
     auto &getData() { return data; }
     const auto &getData() const { return data; }
@@ -62,6 +66,7 @@ private:
         PostProcessLinearColorCorrectionCB linearColorCorrection;
         PostProcessGaussianBlurData gaussianBlur;
         PostProcessFxaaCB fxaa;
+        GammaCorrectionCB gammaCorrection;
     };
     Data data = {};
 };

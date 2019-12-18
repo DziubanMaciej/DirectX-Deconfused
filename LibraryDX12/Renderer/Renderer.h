@@ -29,6 +29,7 @@ private:
     void renderDof(CommandList &commandList, Resource &input, Resource &output);
     void renderD2DTexts();
     void renderSprite(CommandList &commandList, SpriteImpl *sprite);
+    void copyToBackBuffer(CommandList &commandList, Resource &source);
 
     // Data
     SwapChain &swapChain;
