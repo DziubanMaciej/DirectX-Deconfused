@@ -16,9 +16,9 @@ PostProcessRenderer::PostProcessRenderer(RenderData &renderData, const std::vect
 
 // ------------------------------------------------------------------------------------- Rendering
 
-void PostProcessRenderer::renderPostProcesses(CommandList &commandList, AlternatingResources &alternatingResources,
-                                              size_t enabledPostProcessesCount, float screenWidth, float screenHeight) {
+void PostProcessRenderer::renderPostProcesses(CommandList &commandList, AlternatingResources &alternatingResources, float screenWidth, float screenHeight) {
     commandList.RSSetViewport(0.f, 0.f, screenWidth, screenHeight);
+    commandList.RSSetScissorRectNoScissor();
     commandList.IASetPrimitiveTopologyTriangleList();
 
     size_t postProcessIndex = 0u;
@@ -181,16 +181,6 @@ void PostProcessRenderer::renderBloom(CommandList &commandList, Resource &input,
 }
 
 // ------------------------------------------------------------------------------------- Helpers
-
-size_t PostProcessRenderer::getEnabledPostProcessesCount() const {
-    size_t count = 0u;
-    for (const auto &postProcess : postProcesses) {
-        if (postProcess->isEnabled()) {
-            count++;
-        }
-    }
-    return count;
-}
 
 void PostProcessRenderer::getSourceAndDestinationForPostProcess(AlternatingResources &alternatingResources, Resource *optionalInput,
                                                                 Resource *&outSource, Resource *&outDestination) {

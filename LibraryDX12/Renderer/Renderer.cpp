@@ -339,18 +339,9 @@ void Renderer::render() {
 
     // Render post processes
     CommandList commandListPostProcess{commandQueue};
-    SET_OBJECT_NAME(commandListPostProcess, L"cmdListPostProcess");
-    commandListPostProcess.RSSetViewport(0.f, 0.f, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
-    commandListPostProcess.RSSetScissorRectNoScissor();
-    commandListPostProcess.IASetPrimitiveTopologyTriangleList();
-    const auto postProcessesCount = postProcessRenderer.getEnabledPostProcessesCount();
-    const bool shouldRenderPostProcesses = (postProcessesCount > 0);
-    if (shouldRenderPostProcesses) {
-        postProcessRenderer.renderPostProcesses(commandListPostProcess, alternatingResources, postProcessesCount,
-                            static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
-    }
+    postProcessRenderer.renderPostProcesses(commandListPostProcess, alternatingResources, static_cast<float>(swapChain.getWidth()), static_cast<float>(swapChain.getHeight()));
 
-    // Gamma correction
+    // Gamma correction TODO make it a post process
     {
         commandListPostProcess.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_POST_PROCESS_GAMMA_CORRECTION);
         commandListPostProcess.transitionBarrier(alternatingResources.getSource(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);

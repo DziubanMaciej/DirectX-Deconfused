@@ -16,13 +16,10 @@ class PostProcessRenderer : DXD::NonCopyableAndMovable {
 public:
     PostProcessRenderer(RenderData &renderData, const std::vector<PostProcessImpl *> &postProcesses, float screenWidth, float screenHeight);
 
-    void renderPostProcesses(CommandList &commandList, AlternatingResources &alternatingResources,
-                             size_t enabledPostProcessesCount, float screenWidth, float screenHeight);
+    void renderPostProcesses(CommandList &commandList, AlternatingResources &alternatingResources, float screenWidth, float screenHeight);
     void renderPostProcess(PostProcessImpl &postProcess, CommandList &commandList, Resource *optionalInput,
                            AlternatingResources &alternatingResources, float screenWidth, float screenHeight);
     void renderBloom(CommandList &commandList, Resource &input, Resource &output);
-
-    size_t getEnabledPostProcessesCount() const;
 
 private:
     static void getSourceAndDestinationForPostProcess(AlternatingResources &alternatingResources, Resource *optionalInput,
