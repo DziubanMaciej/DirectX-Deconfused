@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Scene/RenderData.h"
+#include "Renderer/RenderData.h"
 #include "Window/SwapChain.h"
 
 #include "DXD/Window.h"
