@@ -17,9 +17,7 @@ Steps:
 
 
 ## Build script
-File build.sh contains bash script used for building DXD along with its dependencies. Its input are the following parameters
-- Debug/Release (default: Debug)
-- Production/Development (default: Development) - Development mode is used to run example application and develop the library. For custom application use Production mode.
+File build.sh contains bash script used for building DXD along with its dependencies. Run build.sh -h for information about parameters, all of which are optional. Default build is x64 Debug Development build. *Development* means sample applications and unit tests will be present in the project. These builds shouldn't be linked against by custom applications. *Production* builds do not contain these targets and are meant to be used by custom programs.
 
 ## Coding guidelines
 1. Code formatting - ClangFormat, download extension for Visual Studio at https://marketplace.visualstudio.com/items?itemName=LLVMExtensions.ClangFormat Currently opened file  can be formatted with with Ctrl+R,D.
