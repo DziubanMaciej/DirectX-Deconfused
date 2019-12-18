@@ -134,6 +134,7 @@ inline void CommandList::OMSetRenderTargets(const Resource *(&renderTargets)[ren
 
 template <UINT renderTargetsCount>
 inline void CommandList::OMSetRenderTargetsNoDepth(const Resource *(&renderTargets)[renderTargetsCount]) {
+    static_assert(renderTargetsCount > 1, "This method is for MRT");
     ID3D12ResourcePtr resources[renderTargetsCount];
     D3D12_CPU_DESCRIPTOR_HANDLE rtvs[renderTargetsCount];
     for (auto rtIndex = 0u; rtIndex < renderTargetsCount; rtIndex++) {

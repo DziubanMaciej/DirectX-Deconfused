@@ -221,8 +221,7 @@ void Renderer::renderSSAO(CommandList &commandList) {
 
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SSAO);
 
-    const Resource *ssaoRts[] = {&renderData.getSsaoMap()};
-    commandList.OMSetRenderTargetsNoDepth(ssaoRts);
+    commandList.OMSetRenderTargetNoDepth(renderData.getSsaoMap());
 
     commandList.setSrvInDescriptorTable(0, 0, renderData.getGBufferNormal());
     commandList.setSrvInDescriptorTable(0, 1, renderData.getDepthStencilBuffer());
@@ -313,8 +312,7 @@ void Renderer::renderSSRandMerge(CommandList &commandList, Resource &input, Reso
     commandList.transitionBarrier(input, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getSsrMap(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-    const Resource *ssrRts[] = {&renderData.getSsrMap()};
-    commandList.OMSetRenderTargetsNoDepth(ssrRts);
+    commandList.OMSetRenderTargetNoDepth(renderData.getSsrMap());
 
     commandList.setSrvInDescriptorTable(0, 0, renderData.getGBufferNormal());
     commandList.setSrvInDescriptorTable(0, 1, renderData.getDepthStencilBuffer());
@@ -346,8 +344,7 @@ void Renderer::renderSSRandMerge(CommandList &commandList, Resource &input, Reso
     commandList.transitionBarrier(renderData.getSsrMap(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(renderData.getSsrBlurredMap(), D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-    const Resource *ssrMergeRts[] = {&renderData.getSsrBlurredMap()};
-    commandList.OMSetRenderTargetsNoDepth(ssrMergeRts);
+    commandList.OMSetRenderTargetNoDepth(renderData.getSsrBlurredMap());
 
     commandList.setSrvInDescriptorTable(0, 0, renderData.getGBufferSpecular());
     commandList.setSrvInDescriptorTable(0, 1, renderData.getDepthStencilBuffer());
@@ -372,8 +369,7 @@ void Renderer::renderSSRandMerge(CommandList &commandList, Resource &input, Reso
     commandList.transitionBarrier(renderData.getSsrBlurredMap(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
     commandList.transitionBarrier(output, D3D12_RESOURCE_STATE_RENDER_TARGET);
 
-    const Resource *ssrBlurRts[] = {&output};
-    commandList.OMSetRenderTargetsNoDepth(ssrBlurRts);
+    commandList.OMSetRenderTargetNoDepth(output);
 
     commandList.setSrvInDescriptorTable(0, 0, renderData.getGBufferSpecular());
     commandList.setSrvInDescriptorTable(0, 1, renderData.getDepthStencilBuffer());
@@ -402,8 +398,7 @@ void Renderer::renderFog(CommandList &commandList, Resource &input, Resource &ou
 
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_FOG);
 
-    const Resource *fogRts[] = {&output};
-    commandList.OMSetRenderTargetsNoDepth(fogRts);
+    commandList.OMSetRenderTargetNoDepth(output);
 
     commandList.setSrvInDescriptorTable(0, 0, renderData.getDepthStencilBuffer());
     commandList.setSrvInDescriptorTable(0, 1, input);
@@ -434,8 +429,7 @@ void Renderer::renderDof(CommandList &commandList, Resource &input, Resource &ou
 
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_DOF_BLUR);
 
-    const Resource *dofBlurRts[] = {&renderData.getDofMap()};
-    commandList.OMSetRenderTargetsNoDepth(dofBlurRts);
+    commandList.OMSetRenderTargetNoDepth(renderData.getDofMap());
 
     commandList.setSrvInDescriptorTable(0, 0, renderData.getDepthStencilBuffer());
     commandList.setSrvInDescriptorTable(0, 1, input);
@@ -459,8 +453,7 @@ void Renderer::renderDof(CommandList &commandList, Resource &input, Resource &ou
 
     commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_DOF);
 
-    const Resource *dofRts[] = {&output};
-    commandList.OMSetRenderTargetsNoDepth(dofRts);
+    commandList.OMSetRenderTargetNoDepth(output);
 
     commandList.setSrvInDescriptorTable(0, 0, renderData.getDepthStencilBuffer());
     commandList.setSrvInDescriptorTable(0, 1, renderData.getDofMap());
