@@ -2,6 +2,7 @@
 
 #include "Application/ApplicationImpl.h"
 #include "CommandList/CommandList.h"
+#include "CommandList/CommandListInserter.h"
 #include "CommandList/CommandQueue.h"
 #include "ConstantBuffers/ConstantBuffers.h"
 #include "Renderer/RenderData.h"
@@ -234,52 +235,40 @@ void Renderer::render() {
     auto &backBuffer = swapChain.getCurrentBackBuffer();
     auto &alternatingResources = renderData.getSceneAlternatingResources();
     application.flushAllResources();
+    CommandListInserter commandListInserter{commandQueue};
 
     // Render shadow maps
     if (shadowsRenderer.isEnabled()) {
-        CommandList commandListShadowMap{commandQueue};
-        SET_OBJECT_NAME(commandListShadowMap, L"cmdListShadowMap")
-        shadowsRenderer.renderShadowMaps(commandListShadowMap);
-        commandListShadowMap.close();
-        commandQueue.executeCommandListAndSignal(commandListShadowMap);
+        shadowsRenderer.renderShadowMaps(commandListInserter.currentList());
+        commandListInserter.submitLists();
     }
 
     // GBuffer
-    CommandList commandListGBuffer{commandQueue};
-    SET_OBJECT_NAME(commandListGBuffer, L"cmdListGBuffer");
-    deferredShadingRenderer.renderGBuffers(commandListGBuffer);
-    commandListGBuffer.close();
-    commandQueue.executeCommandListAndSignal(commandListGBuffer);
+    commandListInserter.newList();
+    deferredShadingRenderer.renderGBuffers(commandListInserter.currentList());
+    commandListInserter.submitLists();
 
     // SSAO
     if (ApplicationImpl::getInstance().getSettings().getSsaoEnabled()) {
-        CommandList commandListSSAO{commandQueue};
-        SET_OBJECT_NAME(commandListSSAO, L"cmdListSSAO");
-        renderSSAO(commandListSSAO);
-        commandListSSAO.close();
-        commandQueue.executeCommandListAndSignal(commandListSSAO);
+        renderSSAO(commandListInserter.currentList());
     }
 
-    // Command list for fixed post processes - 2D operations
-    CommandList commandListFixedPostProcesses{commandQueue};
-    SET_OBJECT_NAME(commandListFixedPostProcesses, L"cmdListFixedPostProcesses");
-
     // Lighting - merge GBuffers and apply per-pixel shading
-    deferredShadingRenderer.renderLighting(commandListFixedPostProcesses, alternatingResources.getDestination());
+    deferredShadingRenderer.renderLighting(commandListInserter.currentList(), alternatingResources.getDestination());
     alternatingResources.swapResources();
 
     // Bloom
     if (ApplicationImpl::getInstance().getSettings().getBloomEnabled()) {
         Resource &source = renderData.getBloomMap();
         Resource &destination = alternatingResources.getSource(); // render to previously rendered frame
-        postProcessRenderer.renderBloom(commandListFixedPostProcesses, source, destination);
+        postProcessRenderer.renderBloom(commandListInserter.currentList(), source, destination);
     }
 
     // SSR
     if (ApplicationImpl::getInstance().getSettings().getSsrEnabled()) {
         Resource &source = alternatingResources.getSource();
         Resource &destination = alternatingResources.getDestination();
-        renderSSRandMerge(commandListFixedPostProcesses, source, destination);
+        renderSSRandMerge(commandListInserter.currentList(), source, destination);
         alternatingResources.swapResources();
     }
 
@@ -287,7 +276,7 @@ void Renderer::render() {
     if (ApplicationImpl::getInstance().getSettings().getFogEnabled()) {
         Resource &source = alternatingResources.getSource();
         Resource &destination = alternatingResources.getDestination();
-        renderFog(commandListFixedPostProcesses, source, destination);
+        renderFog(commandListInserter.currentList(), source, destination);
         alternatingResources.swapResources();
     }
 
@@ -295,36 +284,31 @@ void Renderer::render() {
     if (ApplicationImpl::getInstance().getSettings().getDofEnabled()) {
         Resource &source = alternatingResources.getSource();
         Resource &destination = alternatingResources.getDestination();
-        renderDof(commandListFixedPostProcesses, source, destination);
+        renderDof(commandListInserter.currentList(), source, destination);
         alternatingResources.swapResources();
     }
 
-    // Send fixed post processes command lsit
-    commandListFixedPostProcesses.close();
-    commandQueue.executeCommandListAndSignal(commandListFixedPostProcesses);
+    // Send to GPU
+    commandListInserter.submitLists();
 
     // Render post processes
-    CommandList commandListPostProcess{commandQueue};
-    postProcessRenderer.renderPostProcesses(commandListPostProcess, alternatingResources, swapChain.getWidth(), swapChain.getHeight());
-    copyToBackBuffer(commandListPostProcess, alternatingResources.getSource()); // resource has been swapped, so taking the "source"
+    postProcessRenderer.renderPostProcesses(commandListInserter.currentList(), alternatingResources, swapChain.getWidth(), swapChain.getHeight());
+    copyToBackBuffer(commandListInserter.currentList(), alternatingResources.getSource()); // resource has been swapped, so taking the "source"
 
-    // Close command list and submit it to the GPU
-    commandListPostProcess.close();
-    commandQueue.executeCommandListAndSignal(commandListPostProcess);
+    // Render sprites
+    spriteRenderer.renderSprites(commandListInserter.currentList(), backBuffer);
 
-    CommandList commandListSprite{commandQueue};
-    spriteRenderer.renderSprites(commandListSprite, backBuffer);
-
+    // Prepare back buffer state
     if (textRenderer.isEnabled()) {
         // Text rendering requires resource to be in this state and will transition it to PRESENT afterwards
-        commandListSprite.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET);
+        commandListInserter.currentList().transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET);
     } else {
         // These are the last rendering commands, will be presenting now
-        commandListSprite.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_PRESENT);
+        commandListInserter.currentList().transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_PRESENT);
     }
 
-    commandListSprite.close();
-    const uint64_t fenceValue = commandQueue.executeCommandListAndSignal(commandListSprite);
+    // Send to GPU
+    commandListInserter.submitLists();
 
     // Render on-screen texts with D2D. Commands will be immediately submitted to the queue
     if (textRenderer.isEnabled()) {
@@ -333,6 +317,7 @@ void Renderer::render() {
     }
 
     // Present (swap back buffers) and wait for next frame's fence
+    const uint64_t fenceValue = commandQueue.signalOnGpu();
     swapChain.present(fenceValue);
     commandQueue.waitOnCpu(swapChain.getFenceValueForCurrentBackBuffer());
 }

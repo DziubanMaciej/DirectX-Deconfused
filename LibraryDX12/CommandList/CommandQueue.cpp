@@ -33,6 +33,11 @@ ID3D12CommandQueuePtr CommandQueue::createCommandQueue(ID3D12DevicePtr &device, 
 
 // ------------------------------------------------------------------------------ Execute
 
+uint64_t CommandQueue::signalOnGpu()
+{
+    return this->fence.signal(commandQueue);
+}
+
 bool CommandQueue::isFenceComplete(uint64_t fenceValue) const {
     return this->fence.isComplete(fenceValue);
 }
