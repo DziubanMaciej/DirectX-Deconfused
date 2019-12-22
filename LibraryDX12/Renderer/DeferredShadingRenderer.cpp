@@ -147,9 +147,32 @@ void DeferredShadingRenderer::renderLighting(CommandList &commandList, Resource 
     commandList.OMSetRenderTargetsNoDepth(lightingRts);
 
     // LightingConstantBuffer
-    // TODO extract to method
-    ConstantBuffer &lightConstantBuffer = renderData.getLightingConstantBuffer();
-    auto lightCb = lightConstantBuffer.getData<LightingHeapCB>();
+    ConstantBuffer &lightingConstantBuffer = renderData.getLightingConstantBuffer();
+    const D3D12_CPU_DESCRIPTOR_HANDLE lightingConstantBufferView = uploadLightingConstantBuffer(lightingConstantBuffer);
+
+    commandList.setCbvSrvUavInDescriptorTable(0, 0, lightingConstantBuffer, lightingConstantBufferView); // TODO set null descriptor if shadows are off
+    commandList.setSrvInDescriptorTable(0, 1, renderData.getGBufferAlbedo());
+    commandList.setSrvInDescriptorTable(0, 2, renderData.getGBufferNormal());
+    commandList.setSrvInDescriptorTable(0, 3, renderData.getGBufferSpecular());
+    commandList.setSrvInDescriptorTable(0, 4, renderData.getDepthStencilBuffer());
+    commandList.setSrvInDescriptorTable(0, 5, renderData.getSsaoMap());
+    for (auto shadowMapIndex = 0u; shadowMapIndex < 8; shadowMapIndex++) {
+        commandList.setSrvInDescriptorTable(0, shadowMapIndex + 6, renderData.getShadowMap(shadowMapIndex));
+    }
+
+    LightingCB lcb;
+    lcb.viewMatrixInverse = scene.getCameraImpl()->getInvViewMatrix();
+    lcb.projMatrixInverse = scene.getCameraImpl()->getInvProjectionMatrix();
+    lcb.enableSSAO = ApplicationImpl::getInstance().getSettings().getSsaoEnabled();
+    commandList.setRoot32BitConstant(1, lcb);
+
+    commandList.IASetVertexBuffer(renderData.getFullscreenVB());
+
+    commandList.draw(6u);
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE DeferredShadingRenderer::uploadLightingConstantBuffer(ConstantBuffer &lightingConstantBuffer) {
+    auto lightCb = lightingConstantBuffer.getData<LightingHeapCB>();
     lightCb->cameraPosition = toXmFloat4(scene.getCamera()->getEyePosition(), 0);
     lightCb->lightsSize = 0;
     lightCb->shadowMapSize = static_cast<float>(renderData.getShadowMapSize());
@@ -169,25 +192,6 @@ void DeferredShadingRenderer::renderLighting(CommandList &commandList, Resource 
         lightCb->lightsSize++;
     }
 
-    const D3D12_CPU_DESCRIPTOR_HANDLE lightConstantBufferView = lightConstantBuffer.uploadAndSwap();
-
-    commandList.setCbvSrvUavInDescriptorTable(0, 0, lightConstantBuffer, lightConstantBufferView); // TODO set null descriptor if shadows are off
-    commandList.setSrvInDescriptorTable(0, 1, renderData.getGBufferAlbedo());
-    commandList.setSrvInDescriptorTable(0, 2, renderData.getGBufferNormal());
-    commandList.setSrvInDescriptorTable(0, 3, renderData.getGBufferSpecular());
-    commandList.setSrvInDescriptorTable(0, 4, renderData.getDepthStencilBuffer());
-    commandList.setSrvInDescriptorTable(0, 5, renderData.getSsaoMap());
-    for (auto shadowMapIndex = 0u; shadowMapIndex < 8; shadowMapIndex++) {
-        commandList.setSrvInDescriptorTable(0, shadowMapIndex + 6, renderData.getShadowMap(shadowMapIndex));
-    }
-
-    LightingCB lcb;
-    lcb.viewMatrixInverse = scene.getCameraImpl()->getInvViewMatrix();
-    lcb.projMatrixInverse = scene.getCameraImpl()->getInvProjectionMatrix();
-    lcb.enableSSAO = ApplicationImpl::getInstance().getSettings().getSsaoEnabled();
-    commandList.setRoot32BitConstant(1, lcb);
-
-    commandList.IASetVertexBuffer(renderData.getFullscreenVB());
-
-    commandList.draw(6u);
+    const D3D12_CPU_DESCRIPTOR_HANDLE lightConstantBufferView = lightingConstantBuffer.uploadAndSwap();
+    return lightConstantBufferView;
 }
