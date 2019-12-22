@@ -3,6 +3,8 @@
 #include "Renderer/DeferredShadingRenderer.h"
 #include "Renderer/PostProcessRenderer.h"
 #include "Renderer/ShadowsRenderer.h"
+#include "Renderer/SpriteRenderer.h"
+#include "Renderer/TextRenderer.h"
 
 #include <DXD/ExternalHeadersWrappers/DirectXMath.h>
 #include <vector>
@@ -27,8 +29,6 @@ private:
     void renderSSRandMerge(CommandList &commandList, Resource &input, Resource &output);
     void renderFog(CommandList &commandList, Resource &input, Resource &output);
     void renderDof(CommandList &commandList, Resource &input, Resource &output);
-    void renderD2DTexts();
-    void renderSprite(CommandList &commandList, SpriteImpl *sprite);
     void copyToBackBuffer(CommandList &commandList, Resource &source);
 
     // Data
@@ -40,4 +40,6 @@ private:
     ShadowsRenderer shadowsRenderer;
     DeferredShadingRenderer deferredShadingRenderer;
     PostProcessRenderer postProcessRenderer;
+    SpriteRenderer spriteRenderer;
+    TextRenderer textRenderer;
 };

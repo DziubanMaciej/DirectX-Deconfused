@@ -9,4 +9,8 @@ add_sources_and_cmake_file(${TARGET_NAME}
     ${CMAKE_CURRENT_SOURCE_DIR}/Renderer.h
     ${CMAKE_CURRENT_SOURCE_DIR}/ShadowsRenderer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ShadowsRenderer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/SpriteRenderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/SpriteRenderer.h
+    ${CMAKE_CURRENT_SOURCE_DIR}/TextRenderer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/TextRenderer.h
 )

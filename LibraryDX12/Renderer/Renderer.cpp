@@ -27,7 +27,9 @@ Renderer::Renderer(SwapChain &swapChain, RenderData &renderData, SceneImpl &scen
       scene(scene),
       shadowsRenderer(swapChain, renderData, scene),
       deferredShadingRenderer(swapChain, renderData, scene, shadowsRenderer.isEnabled()),
-      postProcessRenderer(renderData, scene.getPostProcesses(), swapChain.getWidth(), swapChain.getHeight()) {}
+      postProcessRenderer(renderData, scene.getPostProcesses(), swapChain.getWidth(), swapChain.getHeight()),
+      spriteRenderer(swapChain, renderData, scene),
+      textRenderer(scene) {}
 
 void Renderer::renderSSAO(CommandList &commandList) {
     commandList.RSSetViewport(0.f, 0.f, static_cast<float>(std::max(swapChain.getWidthUint() / 2, 1u)), static_cast<float>(std::max(swapChain.getHeightUint() / 2, 1u)));
@@ -219,49 +221,6 @@ void Renderer::renderDof(CommandList &commandList, Resource &input, Resource &ou
     commandList.draw(6u);
 }
 
-void Renderer::renderD2DTexts() {
-    // Get the contexts
-    auto &d2dDeviceContext = ApplicationImpl::getInstance().getD2DContext().getD2DDeviceContext();
-    auto &d3d11DeviceContext = ApplicationImpl::getInstance().getD2DContext().getD3D11DeviceContext();
-
-    // Acquire D2D back buffer. Acquired buffer is automatically released by the destructor and flush is made
-    AcquiredD2DWrappedResource backBuffer = swapChain.getCurrentD2DWrappedBackBuffer().acquire();
-    auto &d2dBackBuffer = backBuffer.getD2DResource();
-
-    // Render text directly to the back buffer.
-    const D2D1_SIZE_F rtSize = d2dBackBuffer->GetSize();
-    const D2D1_RECT_F textRect = D2D1::RectF(0, 0, rtSize.width, rtSize.height);
-    d2dDeviceContext->SetTarget(d2dBackBuffer.Get());
-    d2dDeviceContext->BeginDraw();
-    d2dDeviceContext->SetTransform(D2D1::Matrix3x2F::Identity());
-    for (auto text : scene.getTexts()) {
-        text->update();
-        text->draw(textRect);
-    }
-    throwIfFailed(d2dDeviceContext->EndDraw());
-}
-
-void Renderer::renderSprite(CommandList &commandList, SpriteImpl *sprite) {
-    auto &tex = sprite->getTextureImpl();
-    auto &backBuffer = swapChain.getCurrentBackBuffer();
-
-    // Prepare constant buffer
-    SpriteCB spriteData = sprite->getData();
-    spriteData.screenWidth = swapChain.getWidth();
-    spriteData.screenHeight = swapChain.getHeight();
-
-    // Set state
-    commandList.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET);
-    commandList.setPipelineStateAndGraphicsRootSignature(PipelineStateController::Identifier::PIPELINE_STATE_SPRITE);
-    commandList.setRoot32BitConstant(0, spriteData);
-    commandList.setSrvInDescriptorTable(1, 0, tex);
-    commandList.OMSetRenderTargetNoDepth(backBuffer);
-    commandList.IASetVertexBuffer(renderData.getFullscreenVB());
-
-    // Render
-    commandList.draw(6u);
-}
-
 void Renderer::copyToBackBuffer(CommandList &commandList, Resource &source) {
     auto &backBuffer = swapChain.getCurrentBackBuffer();
     commandList.transitionBarrier(source, D3D12_RESOURCE_STATE_COPY_SOURCE);
@@ -354,25 +313,23 @@ void Renderer::render() {
     commandQueue.executeCommandListAndSignal(commandListPostProcess);
 
     CommandList commandListSprite{commandQueue};
-    commandListSprite.RSSetViewport(0.f, 0.f, swapChain.getWidth(), swapChain.getHeight());
-    commandListSprite.RSSetScissorRectNoScissor();
-    commandListSprite.IASetPrimitiveTopologyTriangleList();
-    for (auto &sprite : scene.getSprites())
-        renderSprite(commandListSprite, sprite);
+    spriteRenderer.renderSprites(commandListSprite, backBuffer);
 
-    // If there are no D2D content to render, there will be no implicit transition to present, hence the manual barrier
-    if (scene.getTexts().empty()) {
-        commandListSprite.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_PRESENT);
-    } else {
+    if (textRenderer.isEnabled()) {
+        // Text rendering requires resource to be in this state and will transition it to PRESENT afterwards
         commandListSprite.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_RENDER_TARGET);
+    } else {
+        // These are the last rendering commands, will be presenting now
+        commandListSprite.transitionBarrier(backBuffer, D3D12_RESOURCE_STATE_PRESENT);
     }
 
     commandListSprite.close();
     const uint64_t fenceValue = commandQueue.executeCommandListAndSignal(commandListSprite);
 
-    // D2D, additional command list is inserted
-    if (!scene.getTexts().empty()) {
-        renderD2DTexts();
+    // Render on-screen texts with D2D. Commands will be immediately submitted to the queue
+    if (textRenderer.isEnabled()) {
+        ApplicationImpl::getInstance().getD2DContext(); // Initialize context
+        textRenderer.renderTexts(swapChain.getCurrentD2DWrappedBackBuffer());
     }
 
     // Present (swap back buffers) and wait for next frame's fence
