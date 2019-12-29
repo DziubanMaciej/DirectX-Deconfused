@@ -196,10 +196,16 @@ void WindowImpl::handleResize() {
     const int newWidth = clientRect.right - clientRect.left;
     const int newHeight = clientRect.bottom - clientRect.top;
 
-    if (swapChain.getWidthUint() != newWidth || swapChain.getHeightUint() != newHeight) {
+    const bool sizeChanged = swapChain.getWidthUint() != newWidth || swapChain.getHeightUint() != newHeight;
+    const bool isMinimized = newWidth == 0 || newHeight == 0;
+    const bool shouldReactToMinimize = application.getMinimizeBehavior() == DXD::Application::MinimizeBehavior::Deallocate;
+
+    if (sizeChanged && (shouldReactToMinimize || !isMinimized)) {
         // Finish all work
         application.flushAllQueues();
         application.flushAllResources();
+
+        // Resize allocations
         swapChain.resize(newWidth, newHeight);
         renderData.resize(newWidth, newHeight);
     }

@@ -5,17 +5,18 @@
 #include <cassert>
 
 namespace DXD {
-std::unique_ptr<Application> Application::create(bool debugLayer, bool debugShaders) {
+std::unique_ptr<Application> Application::create(bool debugLayer, bool debugShaders, MinimizeBehavior minimizeBehavior) {
     assert(ApplicationImpl::instance == nullptr);
-    return std::unique_ptr<Application>{new ApplicationImpl(debugLayer, debugShaders)};
+    return std::unique_ptr<Application>{new ApplicationImpl(debugLayer, debugShaders, minimizeBehavior)};
 }
 } // namespace DXD
 
 ApplicationImpl *ApplicationImpl::instance = nullptr;
 
-ApplicationImpl::ApplicationImpl(bool debugLayer, bool debugShaders)
+ApplicationImpl::ApplicationImpl(bool debugLayer, bool debugShaders, MinimizeBehavior minimizeBehavior)
     : debugLayerEnabled(enableDebugLayer(debugLayer)),
       debugShadersEnabled(debugShaders),
+      minimizeBehavior(minimizeBehavior),
       factory(createFactory(debugLayerEnabled)),
       adapter(createAdapter(factory, false)),
       device(createDevice(adapter, debugLayerEnabled)),

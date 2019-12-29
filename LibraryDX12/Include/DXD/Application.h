@@ -19,6 +19,15 @@ class Settings;
 /// objects have been freed as well
 class EXPORT Application : NonCopyableAndMovable {
 public:
+    /// Enumeration describing, what engine should do when the window is minimized
+    enum class MinimizeBehavior {
+        /// Engine will try to free as many memory allocations as possible
+        Deallocate,
+
+        /// Engine will not react to minimize event
+        Keep,
+    };
+
     /// Set active CallbackHandler instance which will be handling all internal engine events.
     /// \param callbackHandler object to set as the active instance, can be null
     virtual void setCallbackHandler(CallbackHandler *callbackHandler) = 0;
@@ -31,8 +40,9 @@ public:
     /// whole execution and should be the first DXD function called.
     /// \param debugLayer enable diagnostic DirectX debug layer, should be set to false during normal development
     /// \param debugShaders enable debug info in shaders, should be set to false during normal development
+    /// \param minimizeBehavior description of engine reaction to minimize event
     /// \return Application instance
-    static std::unique_ptr<Application> create(bool debugLayer, bool debugShaders);
+    static std::unique_ptr<Application> create(bool debugLayer, bool debugShaders, MinimizeBehavior minimizeBehavior);
     virtual ~Application() = default;
 
 protected:
