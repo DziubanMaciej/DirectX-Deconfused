@@ -171,7 +171,7 @@ void WindowImpl::handlePaint() {
         handler->onUpdate(static_cast<unsigned int>(deltaTimeMicroseconds.count()));
     }
 
-    if (scene != nullptr) {
+    if (scene != nullptr && clientWidth > 0) {
         scene->render(swapChain, renderData);
     }
 }
@@ -191,16 +191,16 @@ void WindowImpl::handleKeyUp(unsigned int vkCode) {
 }
 
 void WindowImpl::handleResize() {
+    // Get old and new size
     RECT clientRect = {};
     ::GetClientRect(windowHandle, &clientRect);
     const int newWidth = clientRect.right - clientRect.left;
     const int newHeight = clientRect.bottom - clientRect.top;
 
-    const bool sizeChanged = swapChain.getWidthUint() != newWidth || swapChain.getHeightUint() != newHeight;
-    const bool isMinimized = newWidth == 0 || newHeight == 0;
+    const bool sizeChanged = this->clientWidth != newWidth || this->clientHeight != newHeight;
+    const bool isMaximizedOrMinimized = ((this->clientWidth == 0) ^ (newWidth == 0));
     const bool shouldReactToMinimize = application.getMinimizeBehavior() == DXD::Application::MinimizeBehavior::Deallocate;
-
-    if (sizeChanged && (shouldReactToMinimize || !isMinimized)) {
+    if (sizeChanged && (shouldReactToMinimize || !isMaximizedOrMinimized)) {
         // Finish all work
         application.flushAllQueues();
         application.flushAllResources();
@@ -214,6 +214,9 @@ void WindowImpl::handleResize() {
     if (handler != nullptr) {
         handler->onResize(newWidth, newHeight);
     }
+
+    this->clientWidth = newWidth;
+    this->clientHeight = newHeight;
 }
 
 void WindowImpl::handleMouseWheel(int zDelta) {

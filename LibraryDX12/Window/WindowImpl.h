@@ -64,13 +64,17 @@ protected:
 
     using Clock = std::chrono::high_resolution_clock;
 
-    // Window data
+    // Constant Data
     ApplicationImpl &application;
     const std::wstring windowClassName;
     const HINSTANCE hInstance;
     const HWND windowHandle;
+
+    // Mutable data
     Clock::time_point lastFrameTime;
     FullscreenData fullscreenData = {}; // Used to restore position and size after exiting fullscreen mode
+    int clientWidth = -1;               // size of drawable area, updated on resize
+    int clientHeight = -1;              // size of drawable area, updated on resize
 
     // Subobjects
     SwapChain swapChain;
