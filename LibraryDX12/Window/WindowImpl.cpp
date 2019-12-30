@@ -14,11 +14,11 @@
 // -------------------------------------------------------------------------------- Creating
 
 namespace DXD {
-std::unique_ptr<Window> Window::create(const std::wstring &windowTitle, HINSTANCE hInstance, Bounds bounds) {
-    return std::unique_ptr<Window>{new WindowImpl(windowTitle, hInstance, bounds)};
+std::unique_ptr<Window> Window::create(const std::wstring &windowTitle, HINSTANCE hInstance, unsigned int backBuffersCount, Bounds bounds) {
+    return std::unique_ptr<Window>{new WindowImpl(windowTitle, hInstance, backBuffersCount, bounds)};
 }
 
-std::unique_ptr<Window> Window::create(const std::wstring &windowTitle, HINSTANCE hInstance, int width, int height) {
+std::unique_ptr<Window> Window::create(const std::wstring &windowTitle, HINSTANCE hInstance, unsigned int backBuffersCount, int width, int height) {
     const auto screenWidth = ::GetSystemMetrics(SM_CXSCREEN);
     const auto screenHeight = ::GetSystemMetrics(SM_CYSCREEN);
 
@@ -31,18 +31,18 @@ std::unique_ptr<Window> Window::create(const std::wstring &windowTitle, HINSTANC
     const auto windowTop = std::max<int>(0, (screenHeight - windowHeight) / 2);
 
     Window::Bounds bounds{windowLeft, windowTop, windowWidth, windowHeight};
-    return Window::create(windowTitle, hInstance, bounds);
+    return Window::create(windowTitle, hInstance, backBuffersCount, bounds);
 }
 } // namespace DXD
 
-WindowImpl::WindowImpl(const std::wstring &windowTitle, HINSTANCE hInstance, Bounds bounds)
+WindowImpl::WindowImpl(const std::wstring &windowTitle, HINSTANCE hInstance, unsigned int backBuffersCount, Bounds bounds)
     : application(ApplicationImpl::getInstance()),
       windowClassName(WindowClassFactory::createWindowClassName()),
       hInstance(hInstance),
       windowHandle(registerClassAndCreateWindow(windowTitle, bounds)),
       lastFrameTime(Clock::now()),
-      swapChain(windowHandle, application.getDirectCommandQueue(), bounds.width, bounds.height, swapChainBufferCount),
-      renderData(bounds.width, bounds.height, swapChainBufferCount) {}
+      swapChain(windowHandle, application.getDirectCommandQueue(), bounds.width, bounds.height, backBuffersCount),
+      renderData(bounds.width, bounds.height, backBuffersCount) {}
 
 HWND WindowImpl::registerClassAndCreateWindow(const std::wstring &windowTitle, Bounds bounds) {
     registerClass();

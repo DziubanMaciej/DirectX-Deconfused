@@ -68,7 +68,7 @@ class Game : DXD::CallbackHandler {
 public:
     Game(HINSTANCE hInstance) {
         application = DXD::Application::create(true, true, DXD::Application::MinimizeBehavior::Keep);
-        window = DXD::Window::create(L"DXD", hInstance, 1280, 720);
+        window = DXD::Window::create(L"DXD", hInstance, 3, 1280, 720);
         prepKeyStrokeHandler();
         prepTextures();
         prepMeshes();

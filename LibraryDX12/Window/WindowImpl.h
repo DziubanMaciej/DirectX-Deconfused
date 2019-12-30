@@ -14,7 +14,7 @@ class SceneImpl;
 class WindowImpl : public DXD::Window {
 protected:
     friend class DXD::Window;
-    WindowImpl(const std::wstring &windowTitle, HINSTANCE hInstanc, Bounds bounds);
+    WindowImpl(const std::wstring &windowTitle, HINSTANCE hInstanc, unsigned int backBuffersCount, Bounds bounds);
 
 public:
     ~WindowImpl() override;
@@ -82,6 +82,4 @@ protected:
 
     // Set by user
     SceneImpl *scene = nullptr;
-
-    static constexpr uint32_t swapChainBufferCount = 3u; // TODO make this configurable from api?
 };

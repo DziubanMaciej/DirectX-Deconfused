@@ -50,14 +50,14 @@ public:
     /// \param windowTitle title displayed at the top of the window
     /// \param hInstance handle to the win32 application
     /// \param bounds position and size of created window
-    static std::unique_ptr<Window> create(const std::wstring &windowTitle, HINSTANCE hInstance, Bounds bounds);
+    static std::unique_ptr<Window> create(const std::wstring &windowTitle, HINSTANCE hInstance, unsigned int backBuffersCount, Bounds bounds);
 
     /// Creates window with given size at the center of screen
     /// \param windowTitle title displayed at the top of the window
     /// \hInstance handle to the win32 application
     /// \param width window width
     /// \param height window height
-    static std::unique_ptr<Window> create(const std::wstring &windowTitle, HINSTANCE hInstance, int width, int height);
+    static std::unique_ptr<Window> create(const std::wstring &windowTitle, HINSTANCE hInstance, unsigned int backBuffersCount, int width, int height);
     /// @}
     virtual ~Window() = default;
 
