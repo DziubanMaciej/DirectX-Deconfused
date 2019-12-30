@@ -122,7 +122,6 @@ void TextureImpl::TextureLoadCpuGpuOperation::gpuLoad(const TextureImpl::Texture
                         static_cast<UINT>(args.scratchImage.GetImages()->slicePitch));
 
     // Create SRV
-    DescriptorAllocation cpuDescriptors = application.getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 1);
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDescription = {};
     srvDescription.Format = texture.description.Format;
     srvDescription.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
