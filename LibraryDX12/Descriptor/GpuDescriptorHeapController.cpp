@@ -65,10 +65,6 @@ void GpuDescriptorHeapController::commit(ResourceBindingType::ResourceBindingTyp
         return;
     }
 
-    auto device = commandList.getDevice();
-
-    // TODO check if we have enough available handles
-
     // Allocate space for gpu-visible desciptors
     DescriptorAllocation allocation = commandList.getDescriptorController().allocateGpu(heapType, calculateStagedDescriptorsCount());
     CD3DX12_CPU_DESCRIPTOR_HANDLE currentCpuHandle = allocation.getCpuHandle();
@@ -91,7 +87,7 @@ void GpuDescriptorHeapController::commit(ResourceBindingType::ResourceBindingTyp
         const UINT sourceRangesCount = descriptorTableInfo.descriptorCount;
         const D3D12_CPU_DESCRIPTOR_HANDLE *sourceRangeStarts = &this->stagingDescriptors[descriptorTableInfo.offsetInStagingDescriptors];
         const UINT *sourceRangeSizes = nullptr; // It means all ranges are of length 1
-        device->CopyDescriptors(destinationRangesCount, &currentCpuHandle, &destinationRangeSize,
+        commandList.getDevice()->CopyDescriptors(destinationRangesCount, &currentCpuHandle, &destinationRangeSize,
                                 sourceRangesCount, sourceRangeStarts, sourceRangeSizes, this->heapType);
 
         // Bind the table to command list

@@ -40,7 +40,7 @@ DescriptorAllocation DescriptorController::allocateGpu(D3D12_DESCRIPTOR_HEAP_TYP
 
     DescriptorHeap &heap = getGpuHeap(type);
     auto allocation = heap.allocate(descriptorsCount);
-    assert(allocation != nullptr);
+    assert(allocation != nullptr); // All descriptors should fit in one heap. If this fails, consider controlling its size via API
     return std::move(*allocation.get());
 }
 

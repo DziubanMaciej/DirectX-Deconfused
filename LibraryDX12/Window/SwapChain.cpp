@@ -89,13 +89,10 @@ void SwapChain::present(uint64_t fenceValue) {
     backBufferEntries[currentBackBufferIndex].lastFence = fenceValue;
 
     // Present
-    UINT syncInterval = ApplicationImpl::getInstance().getSettings().getVerticalSyncEnabled() ? 1u : 0u;
-    //UINT presentFlags = g_TearingSupported && !g_VSync ? DXGI_PRESENT_ALLOW_TEARING : 0;
-
-    throwIfFailed(swapChain->Present(syncInterval, 0)); // TODO
+    const UINT syncInterval = ApplicationImpl::getInstance().getSettings().getVerticalSyncEnabled() ? 1u : 0u;
+    throwIfFailed(swapChain->Present(syncInterval, 0));
 
     // Move to next back buffer
-
     currentBackBufferIndex = swapChain->GetCurrentBackBufferIndex();
 }
 

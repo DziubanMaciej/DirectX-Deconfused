@@ -11,8 +11,6 @@
 
 class ApplicationImpl;
 
-// TODO if texture used as Albedo (Diffuse), make SRGB, e.g. convert DXGI_FORMAT_R8G8B8A8_UNORM to DXGI_FORMAT_R8G8B8A8_UNORM_SRGB
-// TODO mips
 class TextureImpl : public DXD::Texture, public Resource {
 public:
     bool isReady();

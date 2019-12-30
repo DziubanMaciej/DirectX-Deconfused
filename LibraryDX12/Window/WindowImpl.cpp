@@ -50,7 +50,6 @@ HWND WindowImpl::registerClassAndCreateWindow(const std::wstring &windowTitle, B
 }
 
 void WindowImpl::registerClass() {
-    // TODO assert if there is a class with given name
     WNDCLASSEXW windowClass = {};
     windowClass.cbSize = sizeof(windowClass);
     windowClass.style = CS_HREDRAW | CS_VREDRAW;

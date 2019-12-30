@@ -28,7 +28,6 @@ struct D3D12_CPU_DESCRIPTOR_HANDLE;
 /// middle of command list  may have a performance penalty on some hardware and should be avoided.
 ///
 /// Currently descriptor heap handling is not ideal
-/// TODO: No support for heap overflow
 /// TODO: validation if all of the required descriptors where staged could be useful
 class GpuDescriptorHeapController : DXD::NonCopyableAndMovable {
 private:
