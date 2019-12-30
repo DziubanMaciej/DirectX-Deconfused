@@ -10,10 +10,7 @@
 
 Resource::Resource(ID3D12ResourcePtr resource, D3D12_RESOURCE_STATES state)
     : resource(resource),
-      state(state),
-      descriptorsCbvSrvUav(ApplicationImpl::getInstance().getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, 3)),
-      descriptorsDsv(ApplicationImpl::getInstance().getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1)),
-      descriptorsRtv(ApplicationImpl::getInstance().getDescriptorController().allocateCpu(D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1)) {}
+      state(state) {}
 
 Resource::Resource() : Resource(nullptr, D3D12_RESOURCE_STATE_COMMON) {}
 
@@ -103,39 +100,40 @@ void Resource::recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &comm
 
 // ------------------------------------------------------------------------------------- Descriptors
 
+void Resource::ensureDescriptorAllocationIsPresent(DescriptorAllocation &allocation, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT count) {
+    if (allocation.isNull()) {
+        allocation = ApplicationImpl::getInstance().getDescriptorController().allocateCpu(type, count);
+    }
+}
+
 void Resource::createNullSrv(D3D12_SHADER_RESOURCE_VIEW_DESC *desc) {
-    ID3D12DevicePtr device = ApplicationImpl::getInstance().getDevice();
-    device->CreateShaderResourceView(nullptr, desc, descriptorsCbvSrvUav.getCpuHandle(1));
+    ensureDescriptorAllocationIsPresent(descriptorsCbvSrvUav, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, cbvSrvUavDescriptorsCount);
+    ApplicationImpl::getInstance().getDevice()->CreateShaderResourceView(resource.Get(), nullptr, descriptorsCbvSrvUav.getCpuHandle(srvIndexInAllocation));
 }
 
 void Resource::createCbv(D3D12_CONSTANT_BUFFER_VIEW_DESC *desc) {
-    ID3D12DevicePtr device = {};
-    throwIfFailed(resource->GetDevice(IID_PPV_ARGS(&device)));
-    device->CreateConstantBufferView(desc, descriptorsCbvSrvUav.getCpuHandle(0));
+    ensureDescriptorAllocationIsPresent(descriptorsCbvSrvUav, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, cbvSrvUavDescriptorsCount);
+    ApplicationImpl::getInstance().getDevice()->CreateConstantBufferView(desc, descriptorsCbvSrvUav.getCpuHandle(cbvIndexInAllocation));
 }
 
 void Resource::createSrv(D3D12_SHADER_RESOURCE_VIEW_DESC *desc) {
-    ID3D12DevicePtr device = {};
-    throwIfFailed(resource->GetDevice(IID_PPV_ARGS(&device)));
-    device->CreateShaderResourceView(resource.Get(), desc, descriptorsCbvSrvUav.getCpuHandle(1));
+    ensureDescriptorAllocationIsPresent(descriptorsCbvSrvUav, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, cbvSrvUavDescriptorsCount);
+    ApplicationImpl::getInstance().getDevice()->CreateShaderResourceView(resource.Get(), desc, descriptorsCbvSrvUav.getCpuHandle(srvIndexInAllocation));
 }
 
 void Resource::createUav(D3D12_UNORDERED_ACCESS_VIEW_DESC *desc) {
-    ID3D12DevicePtr device = {};
-    throwIfFailed(resource->GetDevice(IID_PPV_ARGS(&device)));
-    device->CreateUnorderedAccessView(resource.Get(), nullptr, desc, descriptorsCbvSrvUav.getCpuHandle(2));
+    ensureDescriptorAllocationIsPresent(descriptorsCbvSrvUav, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, cbvSrvUavDescriptorsCount);
+    ApplicationImpl::getInstance().getDevice()->CreateUnorderedAccessView(resource.Get(), nullptr, desc, descriptorsCbvSrvUav.getCpuHandle(uavIndexInAllocation));
 }
 
 void Resource::createDsv(D3D12_DEPTH_STENCIL_VIEW_DESC *desc) {
-    ID3D12DevicePtr device = {};
-    throwIfFailed(resource->GetDevice(IID_PPV_ARGS(&device)));
-    device->CreateDepthStencilView(resource.Get(), desc, descriptorsDsv.getCpuHandle());
+    ensureDescriptorAllocationIsPresent(descriptorsDsv, D3D12_DESCRIPTOR_HEAP_TYPE_DSV, 1);
+    ApplicationImpl::getInstance().getDevice()->CreateDepthStencilView(resource.Get(), desc, descriptorsDsv.getCpuHandle());
 }
 
 void Resource::createRtv(D3D12_RENDER_TARGET_VIEW_DESC *desc) {
-    ID3D12DevicePtr device = {};
-    throwIfFailed(resource->GetDevice(IID_PPV_ARGS(&device)));
-    device->CreateRenderTargetView(resource.Get(), desc, descriptorsRtv.getCpuHandle());
+    ensureDescriptorAllocationIsPresent(descriptorsRtv, D3D12_DESCRIPTOR_HEAP_TYPE_RTV, 1);
+    ApplicationImpl::getInstance().getDevice()->CreateRenderTargetView(resource.Get(), desc, descriptorsRtv.getCpuHandle());
 }
 
 // ------------------------------------------------------------------------------------- Resource::ResourceState class

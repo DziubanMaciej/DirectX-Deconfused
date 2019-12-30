@@ -38,6 +38,7 @@ public:
     auto getParentHeap() const { return heap; }
     auto getOffsetInHeap() const { return offsetInHeap; };
     auto getHandlesCount() const { return handlesCount; }
+    auto isNull() const { return heap == nullptr; }
     CD3DX12_CPU_DESCRIPTOR_HANDLE getCpuHandle() const;
     CD3DX12_CPU_DESCRIPTOR_HANDLE getCpuHandle(UINT offset) const;
     CD3DX12_GPU_DESCRIPTOR_HANDLE getGpuHandle() const;

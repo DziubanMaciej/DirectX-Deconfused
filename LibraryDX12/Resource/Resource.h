@@ -45,12 +45,12 @@ public:
 
     /// Allocates new resource
     explicit Resource(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeapProperties, D3D12_HEAP_FLAGS heapFlags,
-                      const D3D12_RESOURCE_DESC *pDesc, D3D12_RESOURCE_STATES initialResourceState,
-                      const D3D12_CLEAR_VALUE *pOptimizedClearValue);
+        const D3D12_RESOURCE_DESC *pDesc, D3D12_RESOURCE_STATES initialResourceState,
+        const D3D12_CLEAR_VALUE *pOptimizedClearValue);
 
     /// Allocates new buffer resource
     explicit Resource(ID3D12DevicePtr device, D3D12_HEAP_TYPE heapType, D3D12_HEAP_FLAGS heapFlags, UINT64 bufferSize,
-                      D3D12_RESOURCE_STATES initialResourceState, const D3D12_CLEAR_VALUE *pOptimizedClearValue);
+        D3D12_RESOURCE_STATES initialResourceState, const D3D12_CLEAR_VALUE *pOptimizedClearValue);
     virtual ~Resource() = default;
     Resource(Resource &&other) = default;
     Resource &operator=(Resource &&other) = default;
@@ -73,16 +73,16 @@ public:
     void createUav(D3D12_UNORDERED_ACCESS_VIEW_DESC *desc);
     void createDsv(D3D12_DEPTH_STENCIL_VIEW_DESC *desc);
     void createRtv(D3D12_RENDER_TARGET_VIEW_DESC *desc);
-    D3D12_CPU_DESCRIPTOR_HANDLE getCbv() const { return descriptorsCbvSrvUav.getCpuHandle(0); }
-    D3D12_CPU_DESCRIPTOR_HANDLE getSrv() const { return descriptorsCbvSrvUav.getCpuHandle(1); }
-    D3D12_CPU_DESCRIPTOR_HANDLE getUav() const { return descriptorsCbvSrvUav.getCpuHandle(2); }
+    D3D12_CPU_DESCRIPTOR_HANDLE getCbv() const { return descriptorsCbvSrvUav.getCpuHandle(cbvIndexInAllocation); }
+    D3D12_CPU_DESCRIPTOR_HANDLE getSrv() const { return descriptorsCbvSrvUav.getCpuHandle(srvIndexInAllocation); }
+    D3D12_CPU_DESCRIPTOR_HANDLE getUav() const { return descriptorsCbvSrvUav.getCpuHandle(uavIndexInAllocation); }
     D3D12_CPU_DESCRIPTOR_HANDLE getDsv() const { return descriptorsDsv.getCpuHandle(); }
     D3D12_CPU_DESCRIPTOR_HANDLE getRtv() const { return descriptorsRtv.getCpuHandle(); }
 
 protected:
     static ID3D12ResourcePtr createResource(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeapProperties, D3D12_HEAP_FLAGS heapFlags,
-                                            const D3D12_RESOURCE_DESC *pDesc, D3D12_RESOURCE_STATES initialResourceState,
-                                            const D3D12_CLEAR_VALUE *pOptimizedClearValue);
+        const D3D12_RESOURCE_DESC *pDesc, D3D12_RESOURCE_STATES initialResourceState,
+        const D3D12_CLEAR_VALUE *pOptimizedClearValue);
 
     // Gpu dependency functions
     void waitOnGpuForGpuUpload(CommandQueue &queue);
@@ -90,19 +90,30 @@ protected:
     void recordGpuUploadCommands(ID3D12DevicePtr device, CommandList &commandList, const void *data, UINT rowPitch, UINT slicePitch);
 
 private:
+    // helpers
+    void ensureDescriptorAllocationIsPresent(DescriptorAllocation &allocation, D3D12_DESCRIPTOR_HEAP_TYPE type, UINT count);
+
     // state accessors, should be used only by classes making transitions, hence the friend declarations
     const ResourceState &getState() const { return state; }
     void setState(const ResourceState &state) { this->state = state; }
     friend class CommandList;
     friend class AcquiredD2DWrappedResource;
 
-    // Data
+    // General data
     ResourceState state;
     ID3D12ResourcePtr resource = {};
     UINT subresourcesCount = 1u;
     GpuDependencies gpuDependencies = {};
-    DescriptorAllocation descriptorsCbvSrvUav;
-    DescriptorAllocation descriptorsDsv;
-    DescriptorAllocation descriptorsRtv;
+
+    // Gpu dependencies
     std::mutex gpuDependenciesLock = {};
+
+    // Descriptors
+    DescriptorAllocation descriptorsCbvSrvUav = {};
+    DescriptorAllocation descriptorsDsv = {};
+    DescriptorAllocation descriptorsRtv = {};
+    constexpr static UINT srvIndexInAllocation = 0;
+    constexpr static UINT cbvIndexInAllocation = 1;
+    constexpr static UINT uavIndexInAllocation = 2;
+    constexpr static UINT cbvSrvUavDescriptorsCount = 3;
 };

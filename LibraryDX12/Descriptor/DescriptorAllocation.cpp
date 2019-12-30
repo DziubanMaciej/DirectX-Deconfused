@@ -61,30 +61,30 @@ DescriptorAllocation::~DescriptorAllocation() {
 }
 
 void DescriptorAllocation::deallocate() {
-    if (heap != nullptr) {
+    if (!isNull()) {
         heap->deallocate(*this);
         heap = nullptr;
     }
 }
 
 CD3DX12_CPU_DESCRIPTOR_HANDLE DescriptorAllocation::getCpuHandle() const {
-    assert(heap != nullptr);
+    assert(!isNull());
     return CD3DX12_CPU_DESCRIPTOR_HANDLE{cpuHandle};
 }
 
 CD3DX12_CPU_DESCRIPTOR_HANDLE DescriptorAllocation::getCpuHandle(UINT offset) const {
-    assert(heap != nullptr);
+    assert(!isNull());
     return CD3DX12_CPU_DESCRIPTOR_HANDLE{cpuHandle, static_cast<INT>(offset), descriptorIncrementSize};
 }
 
 CD3DX12_GPU_DESCRIPTOR_HANDLE DescriptorAllocation::getGpuHandle() const {
-    assert(heap != nullptr);
+    assert(!isNull());
     assert(isGpuVisible);
     return CD3DX12_GPU_DESCRIPTOR_HANDLE{gpuHandle};
 }
 
 CD3DX12_GPU_DESCRIPTOR_HANDLE DescriptorAllocation::getGpuHandle(UINT offset) const {
-    assert(heap != nullptr);
+    assert(!isNull());
     assert(isGpuVisible);
     return CD3DX12_GPU_DESCRIPTOR_HANDLE{gpuHandle, static_cast<INT>(offset), descriptorIncrementSize};
 }
