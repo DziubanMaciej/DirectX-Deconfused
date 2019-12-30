@@ -70,13 +70,15 @@ void GpuDescriptorHeapController::commit(ResourceBindingType::ResourceBindingTyp
     // TODO check if we have enough available handles
 
     // Allocate space for gpu-visible desciptors
-    auto allocationResult = commandList.getDescriptorController().allocateGpu(heapType, calculateStagedDescriptorsCount());
-    this->gpuDescriptorAllocations.push_back(std::move(std::get<DescriptorAllocation>(allocationResult)));
-    CD3DX12_CPU_DESCRIPTOR_HANDLE currentCpuHandle = gpuDescriptorAllocations.back().getCpuHandle();
-    CD3DX12_GPU_DESCRIPTOR_HANDLE currentGpuHandle = gpuDescriptorAllocations.back().getGpuHandle();
+    DescriptorAllocation allocation = commandList.getDescriptorController().allocateGpu(heapType, calculateStagedDescriptorsCount());
+    CD3DX12_CPU_DESCRIPTOR_HANDLE currentCpuHandle = allocation.getCpuHandle();
+    CD3DX12_GPU_DESCRIPTOR_HANDLE currentGpuHandle = allocation.getGpuHandle();
 
     // Bind descriptor heap
-    commandList.setDescriptorHeap(heapType, std::get<ID3D12DescriptorHeapPtr>(allocationResult));
+    commandList.setDescriptorHeap(heapType, allocation.getParentHeap()->getDescriptorHeap());
+
+    // Make sure allocation is not freed too early
+    this->gpuDescriptorAllocations.push_back(std::move(allocation));
 
     // Process each descriptor table
     for (auto it = stagedDescriptorTables.begin(); it != stagedDescriptorTables.end(); it++) {

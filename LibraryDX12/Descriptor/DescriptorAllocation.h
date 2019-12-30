@@ -35,6 +35,7 @@ public:
     DescriptorAllocation &operator=(DescriptorAllocation &&other);
     ~DescriptorAllocation();
 
+    auto getParentHeap() const { return heap; }
     auto getOffsetInHeap() const { return offsetInHeap; };
     auto getHandlesCount() const { return handlesCount; }
     CD3DX12_CPU_DESCRIPTOR_HANDLE getCpuHandle() const;
