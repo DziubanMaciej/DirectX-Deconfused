@@ -49,12 +49,14 @@ public:
     /// Creates window with given position and size at the center of screen
     /// \param windowTitle title displayed at the top of the window
     /// \param hInstance handle to the win32 application
+    /// \param backBuffersCount number of back buffers managed by the engine. Minimum value is 2, which means double buffering
     /// \param bounds position and size of created window
     static std::unique_ptr<Window> create(const std::wstring &windowTitle, HINSTANCE hInstance, unsigned int backBuffersCount, Bounds bounds);
 
     /// Creates window with given size at the center of screen
     /// \param windowTitle title displayed at the top of the window
     /// \hInstance handle to the win32 application
+    /// \param backBuffersCount number of back buffers managed by the engine. Minimum value is 2, which means double buffering
     /// \param width window width
     /// \param height window height
     static std::unique_ptr<Window> create(const std::wstring &windowTitle, HINSTANCE hInstance, unsigned int backBuffersCount, int width, int height);
