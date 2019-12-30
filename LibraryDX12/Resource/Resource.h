@@ -45,12 +45,12 @@ public:
 
     /// Allocates new resource
     explicit Resource(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeapProperties, D3D12_HEAP_FLAGS heapFlags,
-        const D3D12_RESOURCE_DESC *pDesc, D3D12_RESOURCE_STATES initialResourceState,
-        const D3D12_CLEAR_VALUE *pOptimizedClearValue);
+                      const D3D12_RESOURCE_DESC *pDesc, D3D12_RESOURCE_STATES initialResourceState,
+                      const D3D12_CLEAR_VALUE *pOptimizedClearValue);
 
     /// Allocates new buffer resource
     explicit Resource(ID3D12DevicePtr device, D3D12_HEAP_TYPE heapType, D3D12_HEAP_FLAGS heapFlags, UINT64 bufferSize,
-        D3D12_RESOURCE_STATES initialResourceState, const D3D12_CLEAR_VALUE *pOptimizedClearValue);
+                      D3D12_RESOURCE_STATES initialResourceState, const D3D12_CLEAR_VALUE *pOptimizedClearValue);
     virtual ~Resource() = default;
     Resource(Resource &&other) = default;
     Resource &operator=(Resource &&other) = default;
@@ -81,8 +81,8 @@ public:
 
 protected:
     static ID3D12ResourcePtr createResource(ID3D12DevicePtr device, const D3D12_HEAP_PROPERTIES *pHeapProperties, D3D12_HEAP_FLAGS heapFlags,
-        const D3D12_RESOURCE_DESC *pDesc, D3D12_RESOURCE_STATES initialResourceState,
-        const D3D12_CLEAR_VALUE *pOptimizedClearValue);
+                                            const D3D12_RESOURCE_DESC *pDesc, D3D12_RESOURCE_STATES initialResourceState,
+                                            const D3D12_CLEAR_VALUE *pOptimizedClearValue);
 
     // Gpu dependency functions
     void waitOnGpuForGpuUpload(CommandQueue &queue);
