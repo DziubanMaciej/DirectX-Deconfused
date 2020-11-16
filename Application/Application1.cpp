@@ -4,6 +4,7 @@
 #include <DXD/DXD.h>
 #include <algorithm>
 #include <cmath>
+#include <functional>
 #include <iostream>
 #include <sstream>
 #include <string>
@@ -486,7 +487,7 @@ private:
         postProcesses["FXAA"]->setEnabled(false);
 
         postProcesses["gammaCorrection"] = DXD::PostProcess::create();
-        postProcesses["gammaCorrection"]->setGammaCorrection(2.2);
+        postProcesses["gammaCorrection"]->setGammaCorrection(2.2f);
         postProcesses["gammaCorrection"]->setEnabled(false);
     }
     void prepSprites() {
