@@ -108,7 +108,7 @@ void Resource::ensureDescriptorAllocationIsPresent(DescriptorAllocation &allocat
 
 void Resource::createNullSrv(D3D12_SHADER_RESOURCE_VIEW_DESC *desc) {
     ensureDescriptorAllocationIsPresent(descriptorsCbvSrvUav, D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV, cbvSrvUavDescriptorsCount);
-    ApplicationImpl::getInstance().getDevice()->CreateShaderResourceView(resource.Get(), nullptr, descriptorsCbvSrvUav.getCpuHandle(srvIndexInAllocation));
+    ApplicationImpl::getInstance().getDevice()->CreateShaderResourceView(resource.Get(), desc, descriptorsCbvSrvUav.getCpuHandle(srvIndexInAllocation));
 }
 
 void Resource::createCbv(D3D12_CONSTANT_BUFFER_VIEW_DESC *desc) {
