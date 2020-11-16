@@ -253,9 +253,11 @@ void TextureImpl::generateMips() {
         createDescriptorsForMipMapGeneration(cpuDescriptors, getResource(), description.Format, sourceMipLevel, outputMipsCount, maxOutputMipsCount);
         transitionSubresourcesForMipMapGeneration(commandList, sourceMipLevel, outputMipsCount);
 
+        // Size of destination texture will be two times smaller, but cannot be 0
+        const uint32_t dstWidth = std::max(currentSourceWidth / 2, 1u);
+        const uint32_t dstHeight = std::max(currentSourceHeight / 2, 1u);
+
         // Bind resources
-        const uint32_t dstWidth = currentSourceWidth / 2;
-        const uint32_t dstHeight = currentSourceHeight / 2;
         GenerateMipsCB cb = {};
         cb.texelSize = XMFLOAT2{1.0f / dstWidth, 1.0f / dstHeight};
         cb.sourceMipLevel = sourceMipLevel;
@@ -271,9 +273,8 @@ void TextureImpl::generateMips() {
         commandList.dispatch(threadGroupCountX, threadGroupCountY, 1u);
         commandList.uavBarrier(*this);
 
-        // Size of source texture in next iteration will be two times smaller, but cannot be 0
-        currentSourceWidth = std::max(currentSourceWidth / 2, 1u);
-        currentSourceHeight = std::max(currentSourceHeight / 2, 1u);
+        currentSourceWidth = dstWidth;
+        currentSourceHeight = dstHeight;
     }
 
     // Epilogue
